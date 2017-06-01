@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.karsaig.approvalcrest.providers.test</groupId>
+        <artifactId>functional-test-jackson</artifactId>
+        <version>0.16-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>2.6.3-test</artifactId>
+    <name>Approvalcrest-functional-test-jackson-2.6.3</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.karsaig.approvalcrest</groupId>
+            <artifactId>spi</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.approvalcrest.providers.jackson</groupId>
+            <artifactId>2.6.3</artifactId>
+            <version>0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
