@@ -131,10 +131,10 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
 						testClassName + "." + testMethodName);
 				String message;
 				if (testClassNameHash == null) {
-					message = "Not approved file created '" + createdFileName
+					message = "Not approved file created: '" + createdFileName
 							+ "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
 				} else {
-					message = "Not approved file created '" + testClassNameHash + File.separator + createdFileName
+					message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
 							+ "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
 				}
 				fail(message);
