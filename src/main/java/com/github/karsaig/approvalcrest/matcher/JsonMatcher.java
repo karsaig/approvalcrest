@@ -287,10 +287,10 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
 				String message;
 				if (testClassNameHash == null) {
 					message = "Not approved file created '" + createdFileName
-							+ "', please verify it's contents and rename it to '" + approvedFileName + "'.";
+							+ "', please verify its contents and rename it to '" + approvedFileName + "'.";
 				} else {
 					message = "Not approved file created '" + testClassNameHash + File.separator + createdFileName
-							+ "', please verify it's contents and rename it to '" + approvedFileName + "'.";
+							+ "', please verify its contents and rename it to '" + approvedFileName + "'.";
 				}
 				fail(message);
 
