@@ -286,10 +286,10 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
 				String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content, testClassName + "." + testMethodName);
 				String message;
 				if (testClassNameHash == null) {
-					message = "Not approved file created '" + createdFileName
+					message = "Not approved file created: '" + createdFileName
 							+ "'; please verify its contents and rename it to '" + approvedFileName + "'.";
 				} else {
-					message = "Not approved file created '" + testClassNameHash + File.separator + createdFileName
+					message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
 							+ "'; please verify its contents and rename it to '" + approvedFileName + "'.";
 				}
 				fail(message);
