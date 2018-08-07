@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Method;
 
 import org.junit.Test;
 
@@ -116,7 +117,7 @@ public class FileStoreMatcherUtils {
 	 */
 	public String getCallerTestClassName() {
 		StackTraceElement testStackTraceElement = getTestStackTraceElement(Thread.currentThread().getStackTrace());
-		return testStackTraceElement.getClassName();
+		return testStackTraceElement != null ? testStackTraceElement.getClassName() : null;
 	}
 
 	/**
@@ -152,13 +153,24 @@ public class FileStoreMatcherUtils {
 		Class<?> clazz;
 		try {
 			clazz = Class.forName(fullClassName);
-			isTest = clazz.getMethod(element.getMethodName()).isAnnotationPresent(Test.class);
-
+			Method method = findMethod(clazz, element.getMethodName());
+			isTest = method != null && method.isAnnotationPresent(Test.class);
 		} catch (Throwable e) {
 			isTest = false;
 		}
 
 		return isTest;
+	}
+
+	private Method findMethod(Class clazz, String methodName) {
+		Method[] methods = clazz.getMethods();
+		for (int i = 0; i < methods.length; i++) {
+			Method method = methods[i];
+			if (method.getName().equals(methodName)) {
+				return method;
+			}
+		}
+		return null;
 	}
 
 	public String getFullFileName(final String fileName, final boolean approved) {
