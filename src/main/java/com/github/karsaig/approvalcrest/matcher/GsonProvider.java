@@ -129,7 +129,7 @@ class GsonProvider {
 
         registerExclusionStrategies(gsonBuilder, typesToIgnore, fieldsToIgnore);
 
-		gsonBuilder.registerTypeAdapterFactory(GMTBasedDateTypeAdapter.FACTORY);
+		gsonBuilder.registerTypeAdapterFactory(FixedZoneDateAdapter.FACTORY);
     }
 
 	private static void additionalConfiguration(final GsonConfiguration additionalConfig, final GsonBuilder gsonBuilder) {
@@ -305,10 +305,10 @@ class GsonProvider {
         }
     }
 
-	private static class GMTBasedDateTypeAdapter extends TypeAdapter<Date> {
+	private static class FixedZoneDateAdapter extends TypeAdapter<Date> {
 		static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
 			@Override public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
-				return Date.class.isAssignableFrom(typeToken.getRawType()) ? (TypeAdapter<T>) new GMTBasedDateTypeAdapter() : null;
+				return Date.class.isAssignableFrom(typeToken.getRawType()) ? (TypeAdapter<T>) new FixedZoneDateAdapter() : null;
 			}
 		};
 
