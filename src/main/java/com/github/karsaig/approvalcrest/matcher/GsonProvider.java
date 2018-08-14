@@ -13,13 +13,18 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
@@ -35,8 +40,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.graph.GraphAdapterBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 import org.hamcrest.Matcher;
 
@@ -46,6 +55,13 @@ import org.hamcrest.Matcher;
  */
 @SuppressWarnings("rawtypes")
 class GsonProvider {
+	private static final DateFormat FIXED_ZONE_DATE_FORMAT;
+
+	static {
+		FIXED_ZONE_DATE_FORMAT = new SimpleDateFormat("MMM dd, YYYY h:mm:ss a");
+		FIXED_ZONE_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
+
 	/**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
@@ -112,9 +128,11 @@ class GsonProvider {
         markSetAndMapFields(gsonBuilder);
 
         registerExclusionStrategies(gsonBuilder, typesToIgnore, fieldsToIgnore);
+
+		gsonBuilder.registerTypeAdapterFactory(GMTBasedDateTypeAdapter.FACTORY);
     }
 
-    private static void additionalConfiguration(final GsonConfiguration additionalConfig, final GsonBuilder gsonBuilder) {
+	private static void additionalConfiguration(final GsonConfiguration additionalConfig, final GsonBuilder gsonBuilder) {
         for (TypeAdapterFactory factory : additionalConfig.getTypeAdapterFactories()) {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
@@ -286,4 +304,26 @@ class GsonProvider {
             return result;
         }
     }
+
+	private static class GMTBasedDateTypeAdapter extends TypeAdapter<Date> {
+		static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
+			@Override public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
+				return Date.class.isAssignableFrom(typeToken.getRawType()) ? (TypeAdapter<T>) new GMTBasedDateTypeAdapter() : null;
+			}
+		};
+
+		@Override public void write(JsonWriter jsonWriter, Date date) throws IOException {
+			if (date == null) {
+				jsonWriter.nullValue();
+			} else {
+				synchronized (FIXED_ZONE_DATE_FORMAT) {
+					jsonWriter.value(FIXED_ZONE_DATE_FORMAT.format(date));
+				}
+			}
+		}
+
+		@Override public Date read(JsonReader jsonReader) {
+			throw new UnsupportedOperationException("This adapter supposed to be used for serialization (in tests)");
+		}
+	}
 }
