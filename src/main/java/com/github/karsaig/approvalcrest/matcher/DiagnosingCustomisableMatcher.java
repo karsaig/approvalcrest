@@ -15,10 +15,8 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,6 +29,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.PathNullPointerException;
 import com.google.common.base.Function;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -43,7 +42,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
   protected final Set<Class<?>> circularReferenceTypes = new HashSet<Class<?>>();
   protected final T expected;
   private GsonConfiguration configuration;
-  protected MatcherConfiguration matcherConfiguration = new MatcherConfiguration(); 
+  protected MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
 
     public DiagnosingCustomisableMatcher(T expected) {
         this.expected = expected;
@@ -84,8 +83,13 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 	private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
 		Map<Object, Matcher<?>> customMatching = new HashMap<Object, Matcher<?>>();
 		for (Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-			Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
-			customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
+			try {
+				Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
+				customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
+			} catch (PathNullPointerException e) {
+				mismatchDescription.appendText(String.format("parent bean of %s is null", e.getPath()));
+				return false;
+			}
 		}
 
 		for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
@@ -189,7 +193,7 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
 		matcherConfiguration.addPathToIgnore(fieldPaths);
 		return this;
 	}
-	
+
 	@Override
 	public CustomisableMatcher<T> ignoring(Class<?>... clazzs) {
 		matcherConfiguration.addTypeToIgnore(clazzs);
