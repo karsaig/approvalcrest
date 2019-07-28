@@ -4,7 +4,7 @@ public class PathNullPointerException extends NullPointerException {
 
     private final String path;
 
-    public PathNullPointerException(String path) {
+    PathNullPointerException(String path) {
         this.path = path;
     }
 
