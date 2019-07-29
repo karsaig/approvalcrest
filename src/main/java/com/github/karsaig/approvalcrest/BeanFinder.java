@@ -33,6 +33,9 @@ public class BeanFinder {
 	}
 
 	private static Object findBeanAt(List<String> fields, Object object) {
+		if (object == null) {
+			throw new PathNullPointerException(fields.get(0));
+		}
 		for (Field field : getEveryField(object.getClass())) {
 			field.setAccessible(true);
 			if (headOf(fields).equals(field.getName())) {

@@ -79,4 +79,18 @@ public class MatcherAssertCustomMatchingDiagnosticTest {
 			MatcherAssert.assertThat(e.getMessage(), endsWith("childBean.nonExistingField does not exist"));
 		}
 	}
+
+    @Test
+    public void doesNotIncludeParentBeanFromFieldPath() {
+        ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+        ParentBean.Builder actual = parent();
+
+        try {
+            assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("apple")));
+            fail("Expected assertion error");
+        } catch (AssertionError e) {
+            MatcherAssert.assertThat(e.getMessage(), endsWith("and childBean.childString \"apple\"\n"
+                    + "     but: parent bean of childString is null"));
+        }
+    }
 }
