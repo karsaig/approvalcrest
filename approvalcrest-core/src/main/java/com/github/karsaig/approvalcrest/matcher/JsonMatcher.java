@@ -63,13 +63,14 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
 
     private static final int NUM_OF_HASH_CHARS = 6;
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
-	private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
+    private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
 
-	private String pathName;
+    private String pathName;
     private String fileName;
     private String customFileName;
     private String fileNameWithPath;
     private String uniqueId;
+    private TestMetaInformation testMetaInformation;
     private String testClassName;
     private String testMethodName;
     private String testClassNameHash;
@@ -80,6 +81,10 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
 
     private GsonConfiguration configuration;
+
+    public JsonMatcher(TestMetaInformation testMetaInformation) {
+        this.testMetaInformation = testMetaInformation;
+    }
 
     @Override
     public void describeTo(Description description) {
@@ -192,8 +197,8 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     private void init() {
-        testMethodName = fileStoreMatcherUtils.getCallerTestMethodName();
-        testClassName = fileStoreMatcherUtils.getCallerTestClassName();
+        testMethodName = testMetaInformation.testMethodName();
+        testClassName = testMetaInformation.testClassName();
 
         if (customFileName == null || customFileName.trim().isEmpty()) {
             fileName = hashFileName(testMethodName);
@@ -205,7 +210,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         }
         if (pathName == null || pathName.trim().isEmpty()) {
             testClassNameHash = hashFileName(testClassName);
-            pathName = fileStoreMatcherUtils.getCallerTestClassPath() + File.separator + testClassNameHash;
+            pathName = testMetaInformation.getTestClassPath() + File.separator + testClassNameHash;
         }
 
         fileNameWithPath = pathName + File.separator + fileName;

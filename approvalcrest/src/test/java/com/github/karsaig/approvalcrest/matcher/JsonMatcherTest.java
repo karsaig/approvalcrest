@@ -21,9 +21,8 @@ import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
 /**
  * Unit test for the {@link JsonMatcher}.
  * Verifies creation of not approved files.
- * 
- * @author Andras_Gyuro
  *
+ * @author Andras_Gyuro
  */
 @RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class JsonMatcherTest extends AbstractJsonMatcherTest {
@@ -37,21 +36,25 @@ public class JsonMatcherTest extends AbstractJsonMatcherTest {
     private static final String METHOD_HASH = "f8e392";
     private static final String DUMMY_FILE_NAME_WITH_PATH = DUMMY_TEST_PATH + File.separator + CLASS_HASH + File.separator + METHOD_HASH;
     private static final String DUMMY_COMMENT = DUMMY_CLASS_NAME + "." + DUMMY_METHOD_NAME;
-    
+
     @Mock
     private FileStoreMatcherUtils utils;
+
+    @Mock
+    private TestMetaInformation testMetaInformation;
 
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExists() throws IOException {
         File dummyFile = new File(DUMMY_APPROVED_FILE_NAME);
         BeanWithPrimitives actual = getBeanWithPrimitives();
 
-        when(utils.getCallerTestMethodName()).thenReturn(DUMMY_METHOD_NAME);
-        when(utils.getCallerTestClassName()).thenReturn(DUMMY_CLASS_NAME);
+
+        when(testMetaInformation.testMethodName()).thenReturn(DUMMY_METHOD_NAME);
+        when(testMetaInformation.testClassName()).thenReturn(DUMMY_CLASS_NAME);
         when(utils.getApproved(DUMMY_FILE_NAME_WITH_PATH)).thenReturn(dummyFile);
-        when(utils.getCallerTestClassPath()).thenReturn(DUMMY_TEST_PATH);
+        when(testMetaInformation.getTestClassPath()).thenReturn(DUMMY_TEST_PATH);
         when(utils.createNotApproved(Mockito.eq(DUMMY_FILE_NAME_WITH_PATH), anyString(), eq(DUMMY_COMMENT))).thenReturn(DUMMY_FILE_NAME);
-        JsonMatcher<BeanWithPrimitives> matcher = new JsonMatcher<BeanWithPrimitives>();
+        JsonMatcher<BeanWithPrimitives> matcher = new JsonMatcher<>(testMetaInformation);
         matcher.setJsonMatcherUtils(utils);
 
         try {
@@ -66,12 +69,12 @@ public class JsonMatcherTest extends AbstractJsonMatcherTest {
         File dummyFile = new File(DUMMY_APPROVED_FILE_NAME);
         String actual = getBeanAsJsonString();
 
-        when(utils.getCallerTestMethodName()).thenReturn(DUMMY_METHOD_NAME);
-        when(utils.getCallerTestClassName()).thenReturn(DUMMY_CLASS_NAME);
+        when(testMetaInformation.testMethodName()).thenReturn(DUMMY_METHOD_NAME);
+        when(testMetaInformation.testClassName()).thenReturn(DUMMY_CLASS_NAME);
         when(utils.getApproved(DUMMY_FILE_NAME_WITH_PATH)).thenReturn(dummyFile);
-        when(utils.getCallerTestClassPath()).thenReturn(DUMMY_TEST_PATH);
+        when(testMetaInformation.getTestClassPath()).thenReturn(DUMMY_TEST_PATH);
         when(utils.createNotApproved(Mockito.eq(DUMMY_FILE_NAME_WITH_PATH), anyString(), eq(DUMMY_COMMENT))).thenReturn(DUMMY_FILE_NAME);
-        JsonMatcher<String> matcher = new JsonMatcher<String>();
+        JsonMatcher<String> matcher = new JsonMatcher<>(testMetaInformation);
         matcher.setJsonMatcherUtils(utils);
 
         try {

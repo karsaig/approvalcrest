@@ -45,8 +45,9 @@ public final class GraphAdapterBuilder {
     private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators);
 
     public GraphAdapterBuilder addType(Type type) {
-        final ObjectConstructor<?> objectConstructor = constructorConstructor.get(TypeToken.get(type));
+        ObjectConstructor<?> objectConstructor = constructorConstructor.get(TypeToken.get(type));
         InstanceCreator<Object> instanceCreator = new InstanceCreator<Object>() {
+            @Override
             public Object createInstance(Type type) {
                 return objectConstructor.construct();
             }
@@ -78,6 +79,7 @@ public final class GraphAdapterBuilder {
             this.instanceCreators = instanceCreators;
         }
 
+        @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
             if (!instanceCreators.containsKey(type.getType())) {
                 return null;
@@ -202,6 +204,7 @@ public final class GraphAdapterBuilder {
          * Gson should only ever call this method when we're expecting it to; that is only when we've called back into
          * Gson to deserialize a tree.
          */
+        @Override
         @SuppressWarnings("unchecked")
         public Object createInstance(Type type) {
             Graph graph = graphThreadLocal.get();

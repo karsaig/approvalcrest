@@ -11,6 +11,8 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import com.github.karsaig.approvalcrest.Junit4TestMeta;
+
 /**
  * Entry point for the matchers available in Shazamcrest.
  */
@@ -45,7 +47,7 @@ public class Matchers {
      * @return a new {@link JsonMatcher} instance
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved() {
-        return new JsonMatcher<>();
+        return new JsonMatcher<>(new Junit4TestMeta());
     }
 
     /**
@@ -55,6 +57,6 @@ public class Matchers {
      * @return a new {@link ContentMatcher} instance
      */
     public static <T> ContentMatcher<T> sameContentAsApproved() {
-        return new ContentMatcher<>();
+        return new ContentMatcher<>(new Junit4TestMeta());
     }
 }

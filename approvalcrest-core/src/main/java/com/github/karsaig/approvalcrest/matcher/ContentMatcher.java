@@ -50,6 +50,7 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     private String customFileName;
     private String fileNameWithPath;
     private String uniqueId;
+    private TestMetaInformation testMetaInformation;
     private String testClassName;
     private String testMethodName;
     private String testClassNameHash;
@@ -57,6 +58,10 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".content");
 
     private String expectedContent;
+
+    public ContentMatcher(TestMetaInformation testMetaInformation) {
+        this.testMetaInformation = testMetaInformation;
+    }
 
     @Override
     public void describeTo(Description description) {
@@ -104,8 +109,8 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     }
 
     private void init() {
-        testMethodName = fileStoreMatcherUtils.getCallerTestMethodName();
-        testClassName = fileStoreMatcherUtils.getCallerTestClassName();
+        testMethodName = testMetaInformation.testMethodName();
+        testClassName = testMetaInformation.testClassName();
 
         if (customFileName == null || customFileName.trim().isEmpty()) {
             fileName = hashFileName(testMethodName);
@@ -117,7 +122,7 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
         }
         if (pathName == null || pathName.trim().isEmpty()) {
             testClassNameHash = hashFileName(testClassName);
-            pathName = fileStoreMatcherUtils.getCallerTestClassPath() + File.separator + testClassNameHash;
+            pathName = testMetaInformation.getTestClassPath() + File.separator + testClassNameHash;
         }
 
         fileNameWithPath = pathName + File.separator + fileName;
