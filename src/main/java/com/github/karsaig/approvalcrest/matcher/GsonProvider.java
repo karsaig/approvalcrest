@@ -24,6 +24,7 @@ import java.util.Set;
 import org.hamcrest.Matcher;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -47,16 +48,16 @@ import com.google.gson.graph.GraphAdapterBuilder;
  */
 @SuppressWarnings("rawtypes")
 class GsonProvider {
-	/**
+    /**
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
      *
-     * @param typesToIgnore the object types to exclude from serialisation
+     * @param typesToIgnore          the object types to exclude from serialisation
      * @param circularReferenceTypes cater for circular referenced objects
      * @return an instance of {@link Gson}
      */
-    public static Gson gson(final MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
-    	final GsonBuilder gsonBuilder = initGson();
+    public static Gson gson(MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
+        GsonBuilder gsonBuilder = initGson();
 
         if (!circularReferenceTypes.isEmpty()) {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
@@ -80,13 +81,13 @@ class GsonProvider {
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
      *
-     * @param typesToIgnore the object types to exclude from serialisation
+     * @param typesToIgnore          the object types to exclude from serialisation
      * @param circularReferenceTypes cater for circular referenced objects
-     * @param additionalConfig provides additional gson configuration
+     * @param additionalConfig       provides additional gson configuration
      * @return an instance of {@link Gson}
      */
-    public static Gson gson(final MatcherConfiguration matcherConfiguration, final Set<Class<?>> circularReferenceTypes, final GsonConfiguration additionalConfig) {
-        final GsonBuilder gsonBuilder = initGson();
+    public static Gson gson(MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes, GsonConfiguration additionalConfig) {
+        GsonBuilder gsonBuilder = initGson();
 
         defaultGsonConfiguration(gsonBuilder, matcherConfiguration, circularReferenceTypes);
         if (additionalConfig != null) {
@@ -96,7 +97,7 @@ class GsonProvider {
         return gsonBuilder.create();
     }
 
-    private static void defaultGsonConfiguration(final GsonBuilder gsonBuilder, final MatcherConfiguration matcherConfiguration, final Set<Class<?>> circularReferenceTypes) {
+    private static void defaultGsonConfiguration(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
 
         if (!circularReferenceTypes.isEmpty()) {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
@@ -113,7 +114,7 @@ class GsonProvider {
         registerExclusionStrategies(gsonBuilder, matcherConfiguration);
     }
 
-    private static void additionalConfiguration(final GsonConfiguration additionalConfig, final GsonBuilder gsonBuilder) {
+    private static void additionalConfiguration(GsonConfiguration additionalConfig, GsonBuilder gsonBuilder) {
         for (TypeAdapterFactory factory : additionalConfig.getTypeAdapterFactories()) {
             gsonBuilder.registerTypeAdapterFactory(factory);
         }
@@ -137,12 +138,12 @@ class GsonProvider {
 
     }
 
-	private static void registerExclusionStrategies(GsonBuilder gsonBuilder, final MatcherConfiguration matcherConfiguration) {
-		if (matcherConfiguration.getTypesToIgnore().isEmpty() && matcherConfiguration.getPatternsToIgnore().isEmpty()) {
-			return;
-		}
+    private static void registerExclusionStrategies(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration) {
+        if (matcherConfiguration.getTypesToIgnore().isEmpty() && matcherConfiguration.getPatternsToIgnore().isEmpty()) {
+            return;
+        }
 
-		gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
+        gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes f) {
                 for (Matcher<String> p : matcherConfiguration.getPatternsToIgnore()) {
@@ -158,123 +159,123 @@ class GsonProvider {
                 return (matcherConfiguration.getTypesToIgnore().contains(clazz));
             }
         });
-	}
-
-	private static void markSetAndMapFields(final GsonBuilder gsonBuilder) {
-		gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
-			@Override
-			public String translateName(Field f) {
-				if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
-					return MARKER + f.getName();
-				}
-				return f.getName();
-			}
-		});
-	}
-
-	private static void registerMapSerialisation(final GsonBuilder gsonBuilder) {
-		gsonBuilder.registerTypeHierarchyAdapter(Map.class, new JsonSerializer<Map>() {
-			@Override
-			public JsonElement serialize(Map map, Type type, JsonSerializationContext context) {
-				Gson gson = gsonBuilder.create();
-
-        		ArrayListMultimap<String, Object> objects = mapObjectsByTheirJsonRepresentation(map, gson);
-        		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, objects, map);
-			}
-		});
-	}
-
-	private static void registerSetSerialisation(final GsonBuilder gsonBuilder) {
-		gsonBuilder.registerTypeHierarchyAdapter(Set.class, new JsonSerializer<Set>() {
-        	@Override
-        	public JsonElement serialize(Set set, Type type, JsonSerializationContext context) {
-        		Gson gson = gsonBuilder.create();
-
-        		Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
-        		return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
-        	}
-        });
-	}
-
-	private static void registerCircularReferenceTypes(Set<Class<?>> circularReferenceTypes, GsonBuilder gsonBuilder) {
-		GraphAdapterBuilder graphAdapterBuilder = new GraphAdapterBuilder();
-		for (Class<?> circularReferenceType : circularReferenceTypes) {
-		    graphAdapterBuilder.addType(circularReferenceType);
-		}
-		graphAdapterBuilder.registerOn(gsonBuilder);
-	}
-
-    @SuppressWarnings("unchecked")
-	private static Set<Object> orderSetByElementsJsonRepresentation(Set set, final Gson gson) {
-		Set<Object> objects = newTreeSet(new Comparator<Object>() {
-			@Override
-			public int compare(Object o1, Object o2) {
-				return gson.toJson(o1).compareTo(gson.toJson(o2));
-			}
-		});
-		objects.addAll(set);
-		return objects;
-	}
-
-    @SuppressWarnings("unchecked")
-	private static ArrayListMultimap<String, Object> mapObjectsByTheirJsonRepresentation(Map map, Gson gson) {
-    	ArrayListMultimap<String, Object> objects = ArrayListMultimap.create();
-    	for (Entry<Object, Object> mapEntry : (Set<Map.Entry<Object, Object>>)map.entrySet()) {
-    		objects.put(gson.toJson(mapEntry.getKey()).concat(gson.toJson(mapEntry.getValue())), mapEntry.getKey());
-    	}
-    	return objects;
     }
 
-	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, Set<Object> objects) {
-		JsonArray array = new JsonArray();
-		for (Object object : objects) {
-			array.add(gson.toJsonTree(object));
-		}
-		return array;
-	}
+    private static void markSetAndMapFields(GsonBuilder gsonBuilder) {
+        gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
+            @Override
+            public String translateName(Field f) {
+                if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
+                    return MARKER + f.getName();
+                }
+                return f.getName();
+            }
+        });
+    }
 
-	private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, ArrayListMultimap<String, Object> objects, Map map) {
-		ImmutableList<String> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
-		JsonArray array = new JsonArray();
-		if (allKeysArePrimitiveOrStringOrEnum(sortedMapKeySet, objects)) {
-			for (String jsonRepresentation : sortedMapKeySet) {
-				List<Object> objectsInTheSet = objects.get(jsonRepresentation);
-				for (Object objectInTheSet : objectsInTheSet) {
-					JsonObject jsonObject = new JsonObject();
-					jsonObject.add(String.valueOf(objectInTheSet), gson.toJsonTree(map.get(objectInTheSet)));
-					array.add(jsonObject);
-				}
-			}
-		} else {
-			for (String jsonRepresentation : sortedMapKeySet) {
-				JsonArray keyValueArray = new JsonArray();
-				List<Object> objectsInTheSet = objects.get(jsonRepresentation);
-				for (Object objectInTheSet : objectsInTheSet) {
-					keyValueArray.add(gson.toJsonTree(objectInTheSet));
-					keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
-					array.add(keyValueArray);
-				}
-			}
-		}
+    private static void registerMapSerialisation(GsonBuilder gsonBuilder) {
+        gsonBuilder.registerTypeHierarchyAdapter(Map.class, new JsonSerializer<Map>() {
+            @Override
+            public JsonElement serialize(Map map, Type type, JsonSerializationContext context) {
+                Gson gson = gsonBuilder.create();
 
-		return array;
-	}
+                ArrayListMultimap<String, Object> objects = mapObjectsByTheirJsonRepresentation(map, gson);
+                return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, objects, map);
+            }
+        });
+    }
+
+    private static void registerSetSerialisation(GsonBuilder gsonBuilder) {
+        gsonBuilder.registerTypeHierarchyAdapter(Set.class, new JsonSerializer<Set>() {
+            @Override
+            public JsonElement serialize(Set set, Type type, JsonSerializationContext context) {
+                Gson gson = gsonBuilder.create();
+
+                Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
+                return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
+            }
+        });
+    }
+
+    private static void registerCircularReferenceTypes(Set<Class<?>> circularReferenceTypes, GsonBuilder gsonBuilder) {
+        GraphAdapterBuilder graphAdapterBuilder = new GraphAdapterBuilder();
+        for (Class<?> circularReferenceType : circularReferenceTypes) {
+            graphAdapterBuilder.addType(circularReferenceType);
+        }
+        graphAdapterBuilder.registerOn(gsonBuilder);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Set<Object> orderSetByElementsJsonRepresentation(Set set, Gson gson) {
+        Set<Object> objects = newTreeSet(new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                return gson.toJson(o1).compareTo(gson.toJson(o2));
+            }
+        });
+        objects.addAll(set);
+        return objects;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ArrayListMultimap<String, Object> mapObjectsByTheirJsonRepresentation(Map map, Gson gson) {
+        ArrayListMultimap<String, Object> objects = ArrayListMultimap.create();
+        for (Entry<Object, Object> mapEntry : (Set<Map.Entry<Object, Object>>) map.entrySet()) {
+            objects.put(gson.toJson(mapEntry.getKey()).concat(gson.toJson(mapEntry.getValue())), mapEntry.getKey());
+        }
+        return objects;
+    }
+
+    private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, Set<Object> objects) {
+        JsonArray array = new JsonArray();
+        for (Object object : objects) {
+            array.add(gson.toJsonTree(object));
+        }
+        return array;
+    }
+
+    private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, ArrayListMultimap<String, Object> objects, Map map) {
+        ImmutableList<String> sortedMapKeySet = Ordering.natural().immutableSortedCopy(objects.keySet());
+        JsonArray array = new JsonArray();
+        if (allKeysArePrimitiveOrStringOrEnum(sortedMapKeySet, objects)) {
+            for (String jsonRepresentation : sortedMapKeySet) {
+                List<Object> objectsInTheSet = objects.get(jsonRepresentation);
+                for (Object objectInTheSet : objectsInTheSet) {
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.add(String.valueOf(objectInTheSet), gson.toJsonTree(map.get(objectInTheSet)));
+                    array.add(jsonObject);
+                }
+            }
+        } else {
+            for (String jsonRepresentation : sortedMapKeySet) {
+                JsonArray keyValueArray = new JsonArray();
+                List<Object> objectsInTheSet = objects.get(jsonRepresentation);
+                for (Object objectInTheSet : objectsInTheSet) {
+                    keyValueArray.add(gson.toJsonTree(objectInTheSet));
+                    keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
+                    array.add(keyValueArray);
+                }
+            }
+        }
+
+        return array;
+    }
 
     private static boolean allKeysArePrimitiveOrStringOrEnum(ImmutableList<String> sortedMapKeySet, ArrayListMultimap<String, Object> objects) {
-    	for (String jsonRepresentation : sortedMapKeySet) {
-			List<Object> mapKeys = objects.get(jsonRepresentation);
-			for (Object object : mapKeys) {
-				if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+        for (String jsonRepresentation : sortedMapKeySet) {
+            List<Object> mapKeys = objects.get(jsonRepresentation);
+            for (Object object : mapKeys) {
+                if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
-	private static GsonBuilder initGson() {
-		return new GsonBuilder().setPrettyPrinting();
-	}
+    private static GsonBuilder initGson() {
+        return new GsonBuilder().setPrettyPrinting();
+    }
 
     private static class OptionalSerializer<T> implements JsonSerializer<Optional<T>> {
 

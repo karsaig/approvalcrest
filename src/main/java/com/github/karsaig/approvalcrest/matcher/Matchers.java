@@ -16,46 +16,45 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
  */
 public class Matchers {
 
-	/**
-	 * Returns a {@link NullMatcher} in case the expectation is null, a
-	 * {@link IsEqualMatcher} if it's a primitive, String or Enum or a
-	 * {@link DiagnosingCustomisableMatcher} otherwise.
-	 *
-	 * @param expected
-	 *            the expected bean to match against
-	 * @return an {@link CustomisableMatcher} instance
-	 */
-	public static <T> CustomisableMatcher<T> sameBeanAs(final T expected) {
-		if (expected == null) {
-			return new NullMatcher<T>(expected);
-		}
+    /**
+     * Returns a {@link NullMatcher} in case the expectation is null, a
+     * {@link IsEqualMatcher} if it's a primitive, String or Enum or a
+     * {@link DiagnosingCustomisableMatcher} otherwise.
+     *
+     * @param expected the expected bean to match against
+     * @return an {@link CustomisableMatcher} instance
+     */
+    public static <T> CustomisableMatcher<T> sameBeanAs(T expected) {
+        if (expected == null) {
+            return new NullMatcher<>(expected);
+        }
 
-		if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class
-				|| expected.getClass().isEnum()) {
-			return new IsEqualMatcher<T>(expected);
-		}
+        if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class
+                || expected.getClass().isEnum()) {
+            return new IsEqualMatcher<>(expected);
+        }
 
-		return new DiagnosingCustomisableMatcher<T>(expected);
-	}
+        return new DiagnosingCustomisableMatcher<>(expected);
+    }
 
-	/**
-	 * Returns a {@link JsonMatcher} for matching an object with a generated
-	 * file.
-	 *
-	 * @param <T> Type of object to serialize to JSON
-	 * @return a new {@link JsonMatcher} instance
-	 */
-	public static <T> JsonMatcher<T> sameJsonAsApproved() {
-		return new JsonMatcher<T>();
-	}
+    /**
+     * Returns a {@link JsonMatcher} for matching an object with a generated
+     * file.
+     *
+     * @param <T> Type of object to serialize to JSON
+     * @return a new {@link JsonMatcher} instance
+     */
+    public static <T> JsonMatcher<T> sameJsonAsApproved() {
+        return new JsonMatcher<>();
+    }
 
-	/**
-	 * Returns a {@link ContentMatcher} for matching a string with a generated file.
-	 * 
-	 * @param <T> Only {@link String} is supported at the moment.
-	 * @return a new {@link ContentMatcher} instance
-	 */
-	public static <T> ContentMatcher<T> sameContentAsApproved(){
-		return new ContentMatcher<T>();
-	}
+    /**
+     * Returns a {@link ContentMatcher} for matching a string with a generated file.
+     *
+     * @param <T> Only {@link String} is supported at the moment.
+     * @return a new {@link ContentMatcher} instance
+     */
+    public static <T> ContentMatcher<T> sameContentAsApproved() {
+        return new ContentMatcher<>();
+    }
 }
