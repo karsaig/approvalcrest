@@ -5,6 +5,10 @@ import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEP
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
@@ -44,11 +48,12 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
 
     private static final int NUM_OF_HASH_CHARS = 6;
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
+    private static final Pattern WINDOWS_NEWLINE_PATTERN = Pattern.compile("\r\n");
 
-    private String pathName;
+    private Path pathName;
     private String fileName;
     private String customFileName;
-    private String fileNameWithPath;
+    private Path fileNameWithPath;
     private String uniqueId;
     private TestMetaInformation testMetaInformation;
     private String testClassName;
@@ -76,11 +81,14 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
         initExpectedFromFile();
         String actualString = String.class.cast(actual);
 
-        if (expectedContent.equals(actualString)) {
+
+        String expectedNormalited = WINDOWS_NEWLINE_PATTERN.matcher(expectedContent).replaceAll("\n");
+        String actualNormalized = WINDOWS_NEWLINE_PATTERN.matcher(actualString).replaceAll("\n");
+        if (expectedNormalited.equals(actualNormalized)) {
             matches = true;
         } else {
             if ("true".equals(System.getProperty(UPDATE_IN_PLACE_NAME))) {
-                overwriteApprovedFile(actual);
+                overwriteApprovedFile(actualNormalized);
                 matches = true;
             } else {
                 matches = appendMismatchDescription(mismatchDescription, expectedContent, actualString,
@@ -104,7 +112,7 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
 
     @Override
     public ContentMatcher<T> withPathName(String pathName) {
-        this.pathName = pathName;
+        this.pathName = Paths.get(pathName);
         return this;
     }
 
@@ -120,12 +128,12 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
         if (uniqueId != null) {
             fileName += SEPARATOR + uniqueId;
         }
-        if (pathName == null || pathName.trim().isEmpty()) {
+        if (pathName == null) {
             testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath() + File.separator + testClassNameHash;
+            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
         }
 
-        fileNameWithPath = pathName + File.separator + fileName;
+        fileNameWithPath = pathName.resolve(fileName);
     }
 
     private String hashFileName(String fileName) {
@@ -133,11 +141,11 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove) {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
 
-        if (!approvedFile.exists()) {
+        if (Files.notExists(approvedFile)) {
             try {
-                String approvedFileName = approvedFile.getName();
+                String approvedFileName = approvedFile.getFileName().toString();
                 if (!String.class.isInstance(toApprove)) {
                     throw new IllegalArgumentException("Only String content matcher is supported!");
                 }
@@ -162,8 +170,8 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     }
 
     private void overwriteApprovedFile(Object actual) {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (approvedFile.exists()) {
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        if (Files.exists(approvedFile)) {
             try {
                 String content = String.class.cast(actual);
                 fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content, getCommentLine());
@@ -182,7 +190,7 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     }
 
     private void initExpectedFromFile() {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
         try {
             expectedContent = fileStoreMatcherUtils.readFile(approvedFile);
         } catch (IOException e) {
@@ -209,7 +217,7 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
             result = "Expected file " + fileNameWithPath + "\n" + message;
         } else {
             result = "Expected file " + testClassNameHash + File.separator
-                    + fileStoreMatcherUtils.getFullFileName(fileName, true) + "\n" + message;
+                    + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true) + "\n" + message;
         }
         return result;
     }

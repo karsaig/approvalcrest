@@ -1,11 +1,20 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.attribute.PosixFilePermission.GROUP_READ;
+import static java.nio.file.attribute.PosixFilePermission.GROUP_WRITE;
+import static java.nio.file.attribute.PosixFilePermission.OTHERS_READ;
+import static java.nio.file.attribute.PosixFilePermission.OTHERS_WRITE;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.EnumSet;
 
 /**
  * Utility class with methods for creating the JSON files for
@@ -33,43 +42,30 @@ public class FileStoreMatcherUtils {
      * @param jsonObject       the file's content
      * @throws IOException exception thrown when failed to create the file
      */
-    public String createNotApproved(String fileNameWithPath, String jsonObject, String comment)
+    public String createNotApproved(Path fileNameWithPath, String jsonObject, String comment)
             throws IOException {
-        File file = new File(getFullFileName(fileNameWithPath, false));
-        File parent = file.getParentFile();
-        parent.mkdirs();
-        parent.setExecutable(true, false);
-        parent.setReadable(true, false);
-        parent.setWritable(true, false);
+        Path file = getFullFileName(fileNameWithPath, false);
+        Path parent = file.getParent();
+        Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(EnumSet.allOf(PosixFilePermission.class)));
         return writeToFile(file, jsonObject, comment);
     }
 
-    public String overwriteApprovedFile(String fileNameWithPath, String jsonObject, String comment) throws IOException {
-        File file = new File(getFullFileName(fileNameWithPath, true));
-        return writeToFile(file, jsonObject, comment);
+    public String overwriteApprovedFile(Path fileNameWithPath, String jsonObject, String comment) throws IOException {
+        return writeToFile(getFullFileName(fileNameWithPath, true), jsonObject, comment);
     }
 
-    private String writeToFile(File file, String jsonObject, String comment) throws IOException {
-        BufferedWriter writer = null;
-        try {
-            writer = Files.newWriter(file, Charsets.UTF_8);
-            writer.append("/*" + comment + "*/");
-            writer.append("\n");
-            writer.append(jsonObject);
-            writer.close();
-            file.setReadable(true, false);
-            file.setWritable(true, false);
-            return file.getName();
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
+    private String writeToFile(Path file, String jsonObject, String comment) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(file, UTF_8)) {
+            writer.write("/*" + comment + "*/");
+            writer.write("\n");
+            writer.write(jsonObject);
         }
+        Files.setPosixFilePermissions(file, EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OTHERS_WRITE));
+        return file.getFileName().toString();
     }
 
-    public String readFile(File file) throws IOException {
-        String fileContent = Files.toString(file, Charsets.UTF_8);
-
+    public String readFile(Path file) throws IOException {
+        String fileContent = new String(Files.readAllBytes(file), UTF_8);
         if (fileContent.startsWith("/*")) {
             int index = fileContent.indexOf("*/\n");
             if (-1 < index) {
@@ -85,19 +81,19 @@ public class FileStoreMatcherUtils {
      * @param fileNameWithPath the name of the file with full path (relative to project root)
      * @return the {@link File} object
      */
-    public File getApproved(String fileNameWithPath) {
-        File file = new File(getFullFileName(fileNameWithPath, true));
-        return file;
+    public Path getApproved(Path fileNameWithPath) {
+        return getFullFileName(fileNameWithPath, true);
     }
 
-    public String getFullFileName(String fileName, boolean approved) {
+    public Path getFullFileName(Path fileName, boolean approved) {
         return getFileNameWithExtension(fileName, approved);
     }
 
-    private String getFileNameWithExtension(String fileName, boolean approved) {
-        StringBuilder stringBuilder = new StringBuilder();
+    private Path getFileNameWithExtension(Path fileName, boolean approved) {
+        Path parent = fileName.getParent();
 
-        stringBuilder.append(fileName);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(fileName.getFileName().toString());
         stringBuilder.append(SEPARATOR);
         if (approved) {
             stringBuilder.append(APPROVED_NAME_PART);
@@ -106,6 +102,9 @@ public class FileStoreMatcherUtils {
         }
         stringBuilder.append(fileExtension);
 
-        return stringBuilder.toString();
+        if (parent == null) {
+            return Paths.get(stringBuilder.toString());
+        }
+        return parent.resolve(stringBuilder.toString());
     }
 }

@@ -6,11 +6,14 @@ import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClasse
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,10 +68,10 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
 
-    private String pathName;
+    private Path pathName;
     private String fileName;
     private String customFileName;
-    private String fileNameWithPath;
+    private Path fileNameWithPath;
     private String uniqueId;
     private TestMetaInformation testMetaInformation;
     private String testClassName;
@@ -141,7 +144,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
 
     @Override
     public JsonMatcher<T> withPathName(String pathName) {
-        this.pathName = pathName;
+        this.pathName = Paths.get(pathName);
         return this;
     }
 
@@ -208,12 +211,12 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         if (uniqueId != null) {
             fileName += SEPARATOR + uniqueId;
         }
-        if (pathName == null || pathName.trim().isEmpty()) {
+        if (pathName == null) {
             testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath() + File.separator + testClassNameHash;
+            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
         }
 
-        fileNameWithPath = pathName + File.separator + fileName;
+        fileNameWithPath = pathName.resolve(fileName);
     }
 
     private String hashFileName(String fileName) {
@@ -233,7 +236,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     private void initExpectedFromFile() {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
 
         try {
             String approvedJsonStr = readFile(approvedFile);
@@ -245,8 +248,8 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         }
     }
 
-    private String readFile(File file) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+    private String readFile(Path file) throws IOException {
+        try (BufferedReader br = Files.newBufferedReader(file, UTF_8)) {
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
 
@@ -286,7 +289,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         if (testClassNameHash == null) {
             result = "Expected file " + fileNameWithPath + "\n" + t.getMessage();
         } else {
-            result = "Expected file " + testClassNameHash + File.separator + fileStoreMatcherUtils.getFullFileName(fileName, true)
+            result = "Expected file " + testClassNameHash + File.separator + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true)
                     + "\n" + t.getMessage();
         }
         return result;
@@ -297,10 +300,10 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (!approvedFile.exists()) {
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        if (Files.notExists(approvedFile)) {
             try {
-                String approvedFileName = approvedFile.getName();
+                String approvedFileName = approvedFile.getFileName().toString();
                 String content = serializeToJson(toApprove, gson);
                 String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content, getCommentLine());
                 String message;
@@ -321,8 +324,8 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     private void overwriteApprovedFile(Object actual, Gson gson) {
-        File approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (approvedFile.exists()) {
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        if (Files.exists(approvedFile)) {
             try {
                 String content = serializeToJson(actual, gson);
                 fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content, getCommentLine());

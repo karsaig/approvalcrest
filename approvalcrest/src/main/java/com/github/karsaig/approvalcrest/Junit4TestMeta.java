@@ -2,6 +2,8 @@ package com.github.karsaig.approvalcrest;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,10 +24,10 @@ public class Junit4TestMeta implements TestMetaInformation {
     }
 
     @Override
-    public String getTestClassPath() {
+    public Path getTestClassPath() {
         String fileName = testStackTraceElement.getFileName().substring(0, testStackTraceElement.getFileName().lastIndexOf("."));
-        return SRC_TEST_JAVA_PATH
-                + DOT_LITERAL_PATTERN.matcher(testStackTraceElement.getClassName()).replaceAll(Matcher.quoteReplacement(File.separator)).replace(fileName, "");
+        return Paths.get(SRC_TEST_JAVA_PATH
+                + DOT_LITERAL_PATTERN.matcher(testStackTraceElement.getClassName()).replaceAll(Matcher.quoteReplacement(File.separator)).replace(fileName, ""));
     }
 
     @Override

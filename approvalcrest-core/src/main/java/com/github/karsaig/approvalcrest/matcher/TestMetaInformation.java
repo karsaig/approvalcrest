@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import java.nio.file.Path;
+
 public interface TestMetaInformation {
 
     /**
@@ -8,7 +10,7 @@ public interface TestMetaInformation {
      *
      * @return test method name in String
      */
-    String getTestClassPath();
+    Path getTestClassPath();
 
     /**
      * Returns the name of the test class file which the call was originated
