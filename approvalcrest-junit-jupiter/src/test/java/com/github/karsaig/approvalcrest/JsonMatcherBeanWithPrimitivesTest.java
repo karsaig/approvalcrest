@@ -11,6 +11,8 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
@@ -92,13 +94,19 @@ public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 		assertThat(model, sameJsonAsApproved());
 	}
 
-	@Test
-	public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithGsonConfiguration(){
-		GsonConfiguration config = new GsonConfiguration();
-		config.addTypeAdapter(Long.class, new DummyStringJsonSerializer());
+    @Test
+    public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithGsonConfiguration(){
+        GsonConfiguration config = new GsonConfiguration();
+        config.addTypeAdapter(Long.class, new DummyStringJsonSerializer());
 
-		assertThat(actual, sameJsonAsApproved().withGsonConfiguration(config));
-	}
+        assertThat(actual, sameJsonAsApproved().withGsonConfiguration(config));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = "@ParameterizedTest annotation present")
+    public void shouldNotThrowAssertionErrorWhenAnnotationIsTestTemplate(String input){
+        assertThat(actual, sameJsonAsApproved());
+    }
 
 	private class DummyStringJsonSerializer implements JsonDeserializer<Long>,JsonSerializer<Long>  {
 

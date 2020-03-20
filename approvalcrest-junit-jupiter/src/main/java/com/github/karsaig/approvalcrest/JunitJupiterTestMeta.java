@@ -1,13 +1,23 @@
 package com.github.karsaig.approvalcrest;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.platform.commons.annotation.Testable;
+import org.junit.platform.commons.util.AnnotationUtils;
+import org.junit.platform.commons.util.ReflectionUtils;
 
 import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
 
@@ -60,12 +70,42 @@ public class JunitJupiterTestMeta implements TestMetaInformation {
         try {
             clazz = Class.forName(fullClassName);
             Method method = findMethod(clazz, element.getMethodName());
-            isTest = method != null && method.isAnnotationPresent(Test.class);
+            isTest = method != null && hasTestMethodAnnotation(method);
         } catch (Throwable e) {
             isTest = false;
         }
 
         return isTest;
+    }
+
+    private boolean hasTestMethodAnnotation(Method method) {
+      Annotation[] declaredAnnotations = method.getDeclaredAnnotations();
+      return Arrays.stream(declaredAnnotations).anyMatch(a -> isTestAnnotation(a));
+    }
+
+    private boolean isTestAnnotation(Annotation annotation) {
+      Set<Class<? extends Annotation>> annotationClasses = collectAnnotationClasses(annotation);
+      
+      return annotationClasses.contains(Test.class) || annotationClasses.contains(TestTemplate.class);
+    }
+    
+    private Set<Class<? extends Annotation>> collectAnnotationClasses(Annotation annotation) {
+      Set<Class<? extends Annotation>> annotationClasses = new HashSet<>();
+      
+      collectAnnotationClasses(annotationClasses, annotation);
+      
+      return annotationClasses;
+    }
+
+    private void collectAnnotationClasses(Set<Class<? extends Annotation>> annotationClasses,
+        Annotation annotation) {
+      Class<? extends Annotation> annotationClass = annotation.annotationType();
+      
+      if (!annotationClasses.contains(annotationClass)) {
+        annotationClasses.add(annotationClass); 
+        
+        Arrays.stream(annotationClass.getDeclaredAnnotations()).forEach(a -> collectAnnotationClasses(annotationClasses, a));
+      }
     }
 
     private Method findMethod(Class clazz, String methodName) {
