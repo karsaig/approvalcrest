@@ -1,0 +1,19 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph*/
+{
+  "0x1": {
+    "subClassField": "0x2",
+    "threeObject": "0x3"
+  },
+  "0x2": {
+    "threeObject": "0x4"
+  },
+  "0x3": {
+    "threeObject": "0x1"
+  },
+  "0x4": {
+    "oneObject": "0x5"
+  },
+  "0x5": {
+    "oneObject": "0x4"
+  }
+}

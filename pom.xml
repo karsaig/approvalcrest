@@ -7,6 +7,7 @@
     <modules>
         <module>approvalcrest-core</module>
         <module>approvalcrest</module>
+        <module>approvalcrest-junit-jupiter</module>
     </modules>
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>

@@ -1,0 +1,57 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotFailWithClosableFields*/
+{
+  "input": {
+    "buf": [
+      68,
+      117,
+      109,
+      109,
+      121,
+      73,
+      110,
+      112,
+      117,
+      116
+    ],
+    "pos": 0,
+    "mark": 0,
+    "count": 10
+  },
+  "output": {
+    "buf": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "count": 0
+  }
+}

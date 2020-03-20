@@ -1,0 +1,32 @@
+/*com.github.karsaig.approvalcrest.matcher.json.ignore.IgnoreMatcherTest.assertShouldBeSuccessfulWhenMultiplePropertyWithDifferenceIsIgnored*/
+{
+  "email": "e1@e.mail",
+  "birthDate": {
+    "date": {
+      "year": 2016,
+      "month": 4,
+      "day": 1
+    },
+    "time": {
+      "hour": 13,
+      "minute": 42,
+      "second": 11,
+      "nano": 0
+    }
+  },
+  "birthCountry": "BELGIUM",
+  "currentAddress": {
+    "country": "BELGIUM",
+    "city": "CityName1",
+    "streetNumber": 43,
+    "postCode": "PostCode64"
+  },
+  "previousAddresses": [
+    {
+      "country": "EGYPT",
+      "city": "CityName11",
+      "streetNumber": 53,
+      "postCode": "PostCode74"
+    }
+  ]
+}

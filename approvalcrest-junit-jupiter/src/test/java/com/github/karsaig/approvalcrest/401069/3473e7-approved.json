@@ -1,0 +1,18 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNothingWhenAutoDetectCircularReferenceIsCalled*/
+{
+  "parent": {
+    "0x1": {
+      "children": [
+        {
+          "parent": "0x1",
+          "childAttribute": "child1"
+        },
+        {
+          "parent": "0x1",
+          "childAttribute": "child2"
+        }
+      ],
+      "parentAttribute": "parent"
+    }
+  }
+}

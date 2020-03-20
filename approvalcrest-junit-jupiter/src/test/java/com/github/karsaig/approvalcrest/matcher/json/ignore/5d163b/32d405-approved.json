@@ -1,0 +1,46 @@
+/*com.github.karsaig.approvalcrest.matcher.json.IgnorePathTest.assertShouldFailWhenSimplePathWithDifferenceIsNotIgnored*/
+{
+  "firstName": "FirstName1",
+  "lastName": "LastName1",
+  "email": "e1@e.mail",
+  "birthDate": {
+    "date": {
+      "year": 2016,
+      "month": 4,
+      "day": 1
+    },
+    "time": {
+      "hour": 13,
+      "minute": 42,
+      "second": 11,
+      "nano": 0
+    }
+  },
+  "birthCountry": "BELGIUM",
+  "currentAddress": {
+    "country": "BELGIUM",
+    "city": "CityName1",
+    "streetName": "StreetName60",
+    "streetNumber": 43,
+    "postCode": "PostCode64",
+    "since": {
+      "year": 2017,
+      "month": 4,
+      "day": 2
+    }
+  },
+  "previousAddresses": [
+    {
+      "country": "EGYPT",
+      "city": "CityName11",
+      "streetName": "StreetName70",
+      "streetNumber": 53,
+      "postCode": "PostCode74",
+      "since": {
+        "year": 2017,
+        "month": 4,
+        "day": 12
+      }
+    }
+  ]
+}
