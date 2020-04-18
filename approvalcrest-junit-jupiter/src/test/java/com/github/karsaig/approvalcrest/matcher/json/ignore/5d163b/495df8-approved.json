@@ -1,0 +1,196 @@
+/*com.github.karsaig.approvalcrest.matcher.json.ignore.IgnorePathTest.assertShouldBeSuccessfulWhenMultiLevelPathInCollectionWithNullDifferenceInFileIsIgnored*/
+{
+  "name": "TeamName2",
+  "lead": {
+    "firstName": "FirstName13",
+    "lastName": "LastName13",
+    "email": "e13@e.mail",
+    "birthDate": {
+      "date": {
+        "year": 2004,
+        "month": 4,
+        "day": 1
+      },
+      "time": {
+        "hour": 13,
+        "minute": 42,
+        "second": 11,
+        "nano": 0
+      }
+    },
+    "birthCountry": "HUNGARY",
+    "currentAddress": {
+      "country": "HUNGARY",
+      "city": "CityName13",
+      "streetName": "StreetName72",
+      "streetNumber": 55,
+      "postCode": "PostCode76",
+      "since": {
+        "year": 2017,
+        "month": 4,
+        "day": 14
+      }
+    },
+    "previousAddresses": [
+      {
+        "country": "CANADA",
+        "city": "CityName23",
+        "streetName": "StreetName82",
+        "streetNumber": 65,
+        "postCode": "PostCode86",
+        "since": {
+          "year": 2017,
+          "month": 4,
+          "day": 24
+        }
+      },
+      {
+        "country": "DENMARK",
+        "city": "CityName24",
+        "streetName": "StreetName83",
+        "streetNumber": 66,
+        "postCode": "PostCode87",
+        "since": {
+          "year": 2017,
+          "month": 4,
+          "day": 25
+        }
+      },
+      {
+        "country": "EGYPT",
+        "city": "CityName25",
+        "streetName": "StreetName84",
+        "streetNumber": 67,
+        "postCode": "PostCode88",
+        "since": {
+          "year": 2017,
+          "month": 4,
+          "day": 26
+        }
+      }
+    ]
+  },
+  "members": [
+    {
+      "firstName": "FirstName102",
+      "lastName": "LastName102",
+      "email": "e102@e.mail",
+      "birthDate": {
+        "date": {
+          "year": 1915,
+          "month": 4,
+          "day": 1
+        },
+        "time": {
+          "hour": 13,
+          "minute": 42,
+          "second": 11,
+          "nano": 0
+        }
+      },
+      "birthCountry": "EGYPT",
+      "currentAddress": {
+        "country": "EGYPT",
+        "city": "CityName102",
+        "streetName": "StreetName161",
+        "streetNumber": 144,
+        "postCode": "PostCode165"
+      },
+      "previousAddresses": [
+        {
+          "country": "AUSTRIA",
+          "city": "CityName112",
+          "streetName": "StreetName171",
+          "streetNumber": 154,
+          "postCode": "PostCode175",
+          "since": {
+            "year": 2017,
+            "month": 7,
+            "day": 22
+          }
+        },
+        {
+          "country": "BELGIUM",
+          "city": "CityName113",
+          "streetName": "StreetName172",
+          "streetNumber": 155,
+          "postCode": "PostCode176",
+          "since": {
+            "year": 2017,
+            "month": 7,
+            "day": 23
+          }
+        }
+      ]
+    },
+    {
+      "firstName": "FirstName103",
+      "lastName": "LastName103",
+      "email": "e103@e.mail",
+      "birthDate": {
+        "date": {
+          "year": 1914,
+          "month": 4,
+          "day": 1
+        },
+        "time": {
+          "hour": 13,
+          "minute": 42,
+          "second": 11,
+          "nano": 0
+        }
+      },
+      "birthCountry": "FRANCE",
+      "currentAddress": {
+        "country": "FRANCE",
+        "city": "CityName103",
+        "streetName": "StreetName162",
+        "streetNumber": 145,
+        "postCode": "PostCode166",
+        "since": {
+          "year": 2017,
+          "month": 7,
+          "day": 13
+        }
+      },
+      "previousAddresses": [
+        {
+          "country": "BELGIUM",
+          "city": "CityName113",
+          "streetName": "StreetName172",
+          "streetNumber": 155,
+          "postCode": "PostCode176",
+          "since": {
+            "year": 2017,
+            "month": 7,
+            "day": 23
+          }
+        },
+        {
+          "country": "CANADA",
+          "city": "CityName114",
+          "streetName": "StreetName173",
+          "streetNumber": 156,
+          "postCode": "PostCode177",
+          "since": {
+            "year": 2017,
+            "month": 7,
+            "day": 24
+          }
+        },
+        {
+          "country": "DENMARK",
+          "city": "CityName115",
+          "streetName": "StreetName174",
+          "streetNumber": 157,
+          "postCode": "PostCode178",
+          "since": {
+            "year": 2017,
+            "month": 7,
+            "day": 25
+          }
+        }
+      ]
+    }
+  ]
+}

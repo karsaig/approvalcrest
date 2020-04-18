@@ -1,0 +1,22 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowExceptionWithAMoreNestedObject*/
+{
+  "detailMessage": "java.lang.Exception: java.lang.RuntimeException: java.lang.ClassCastException",
+  "cause": {
+    "detailMessage": "java.lang.RuntimeException: java.lang.ClassCastException",
+    "cause": {
+      "detailMessage": "java.lang.ClassCastException",
+      "cause": {
+        "0x1": {
+          "stackTrace": [],
+          "suppressedExceptions": []
+        }
+      },
+      "stackTrace": [],
+      "suppressedExceptions": []
+    },
+    "stackTrace": [],
+    "suppressedExceptions": []
+  },
+  "stackTrace": [],
+  "suppressedExceptions": []
+}

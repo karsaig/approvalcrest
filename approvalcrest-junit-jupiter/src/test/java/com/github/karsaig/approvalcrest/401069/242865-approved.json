@@ -1,0 +1,7 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass*/
+{
+  "0x1": {
+    "stackTrace": [],
+    "suppressedExceptions": []
+  }
+}
