@@ -13,7 +13,6 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.List;
@@ -32,7 +31,6 @@ import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateTimeAdapte
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
-import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
@@ -41,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Ordering;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
-import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -99,7 +96,6 @@ class GsonProvider {
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
         gsonBuilder.registerTypeAdapterFactory(DateAdapter.FACTORY);
         gsonBuilder.registerTypeAdapterFactory(ClassAdapter.FACTORY);
-        gsonBuilder.registerTypeAdapterFactory(PathTypeAdapter.FACTORY);
         gsonBuilder.registerTypeAdapter(InstantAdapter.INSTANT_TYPE, new InstantAdapter());
         gsonBuilder.registerTypeAdapter(LocalDateAdapter.LOCAL_DATE_TYPE, new LocalDateAdapter());
         gsonBuilder.registerTypeAdapter(LocalDateTimeAdapter.LOCAL_DATE_TIME_TYPE, new LocalDateTimeAdapter());
@@ -165,38 +161,29 @@ class GsonProvider {
     }
 
     private static void markSetAndMapFields(GsonBuilder gsonBuilder) {
-        gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
-            @Override
-            public String translateName(Field f) {
-                if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
-                    return MARKER + f.getName();
-                }
-                return f.getName();
+        gsonBuilder.setFieldNamingStrategy(f -> {
+            if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
+                return MARKER + f.getName();
             }
+            return f.getName();
         });
     }
 
     private static void registerMapSerialisation(GsonBuilder gsonBuilder) {
-        gsonBuilder.registerTypeHierarchyAdapter(Map.class, new JsonSerializer<Map>() {
-            @Override
-            public JsonElement serialize(Map map, Type type, JsonSerializationContext context) {
-                Gson gson = gsonBuilder.create();
+        gsonBuilder.registerTypeHierarchyAdapter(Map.class, (JsonSerializer<Map>) (map, type, context) -> {
+            Gson gson = gsonBuilder.create();
 
-                ArrayListMultimap<String, Object> objects = mapObjectsByTheirJsonRepresentation(map, gson);
-                return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, objects, map);
-            }
+            ArrayListMultimap<String, Object> objects = mapObjectsByTheirJsonRepresentation(map, gson);
+            return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, objects, map);
         });
     }
 
     private static void registerSetSerialisation(GsonBuilder gsonBuilder) {
-        gsonBuilder.registerTypeHierarchyAdapter(Set.class, new JsonSerializer<Set>() {
-            @Override
-            public JsonElement serialize(Set set, Type type, JsonSerializationContext context) {
-                Gson gson = gsonBuilder.create();
+        gsonBuilder.registerTypeHierarchyAdapter(Set.class, (JsonSerializer<Set>) (set, type, context) -> {
+            Gson gson = gsonBuilder.create();
 
-                Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
-                return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
-            }
+            Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
+            return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
         });
     }
 
@@ -210,12 +197,7 @@ class GsonProvider {
 
     @SuppressWarnings("unchecked")
     private static Set<Object> orderSetByElementsJsonRepresentation(Set set, Gson gson) {
-        Set<Object> objects = newTreeSet(new Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                return gson.toJson(o1).compareTo(gson.toJson(o2));
-            }
-        });
+        Set<Object> objects = newTreeSet(Comparator.comparing(gson::toJson));
         objects.addAll(set);
         return objects;
     }
