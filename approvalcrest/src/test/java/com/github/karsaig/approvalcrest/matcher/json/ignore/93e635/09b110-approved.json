@@ -3,19 +3,7 @@
   "firstName": "FirstName1",
   "lastName": "LastName1",
   "email": "e1@e.mail",
-  "birthDate": {
-    "date": {
-      "year": 2016,
-      "month": 4,
-      "day": 1
-    },
-    "time": {
-      "hour": 13,
-      "minute": 42,
-      "second": 11,
-      "nano": 0
-    }
-  },
+  "birthDate": "2016-04-01T13:42:11",
   "birthCountry": "BELGIUM",
   "currentAddress": {
     "country": "BELGIUM",

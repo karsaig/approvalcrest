@@ -1,16 +1,9 @@
-/*com.github.karsaig.approvalcrest.matcher.json.IgnoreClassTest.assertShouldBeSuccessfulWhenClassWithDifferenceIsIgnored*/
+/*com.github.karsaig.approvalcrest.matcher.json.ignore.IgnoreClassTest.assertShouldBeSuccessfulWhenClassWithDifferenceIsIgnored*/
 {
   "firstName": "FirstName1",
   "lastName": "LastName1",
   "email": "e1@e.mail",
-  "birthDate": {
-    "time": {
-      "hour": 13,
-      "minute": 42,
-      "second": 11,
-      "nano": 0
-    }
-  },
+  "birthDate": "2016-04-01T13:42:11",
   "birthCountry": "BELGIUM",
   "currentAddress": {
     "country": "BELGIUM",

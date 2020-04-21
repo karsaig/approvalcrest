@@ -71,6 +71,6 @@ public class MatcherAssert {
             assertThat(reason, throwable, matcher);
             return throwable;
         }
-        return null;
+        throw new AssertionFailedError("Expected exception but no exception was thrown!");
     }
 }

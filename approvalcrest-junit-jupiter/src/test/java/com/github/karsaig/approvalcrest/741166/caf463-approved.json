@@ -1,0 +1,8 @@
+/*com.github.karsaig.approvalcrest.MatcherAssertExceptionMatchingTests.assertThrowsWithSameJsonAsShouldFailWhenMessageIsDifferent*/
+{
+  "0x1": {
+    "detailMessage": "Different excpetion message...",
+    "stackTrace": [],
+    "suppressedExceptions": []
+  }
+}

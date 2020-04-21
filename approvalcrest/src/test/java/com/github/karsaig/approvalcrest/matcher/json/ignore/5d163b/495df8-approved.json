@@ -5,19 +5,7 @@
     "firstName": "FirstName13",
     "lastName": "LastName13",
     "email": "e13@e.mail",
-    "birthDate": {
-      "date": {
-        "year": 2004,
-        "month": 4,
-        "day": 1
-      },
-      "time": {
-        "hour": 13,
-        "minute": 42,
-        "second": 11,
-        "nano": 0
-      }
-    },
+    "birthDate": "2004-04-01T13:42:11",
     "birthCountry": "HUNGARY",
     "currentAddress": {
       "country": "HUNGARY",
@@ -25,11 +13,7 @@
       "streetName": "StreetName72",
       "streetNumber": 55,
       "postCode": "PostCode76",
-      "since": {
-        "year": 2017,
-        "month": 4,
-        "day": 14
-      }
+      "since": "2017-04-14"
     },
     "previousAddresses": [
       {
@@ -38,11 +22,7 @@
         "streetName": "StreetName82",
         "streetNumber": 65,
         "postCode": "PostCode86",
-        "since": {
-          "year": 2017,
-          "month": 4,
-          "day": 24
-        }
+        "since": "2017-04-24"
       },
       {
         "country": "DENMARK",
@@ -50,11 +30,7 @@
         "streetName": "StreetName83",
         "streetNumber": 66,
         "postCode": "PostCode87",
-        "since": {
-          "year": 2017,
-          "month": 4,
-          "day": 25
-        }
+        "since": "2017-04-25"
       },
       {
         "country": "EGYPT",
@@ -62,11 +38,7 @@
         "streetName": "StreetName84",
         "streetNumber": 67,
         "postCode": "PostCode88",
-        "since": {
-          "year": 2017,
-          "month": 4,
-          "day": 26
-        }
+        "since": "2017-04-26"
       }
     ]
   },
@@ -75,19 +47,7 @@
       "firstName": "FirstName102",
       "lastName": "LastName102",
       "email": "e102@e.mail",
-      "birthDate": {
-        "date": {
-          "year": 1915,
-          "month": 4,
-          "day": 1
-        },
-        "time": {
-          "hour": 13,
-          "minute": 42,
-          "second": 11,
-          "nano": 0
-        }
-      },
+      "birthDate": "1915-04-01T13:42:11",
       "birthCountry": "EGYPT",
       "currentAddress": {
         "country": "EGYPT",
@@ -103,11 +63,7 @@
           "streetName": "StreetName171",
           "streetNumber": 154,
           "postCode": "PostCode175",
-          "since": {
-            "year": 2017,
-            "month": 7,
-            "day": 22
-          }
+          "since": "2017-07-22"
         },
         {
           "country": "BELGIUM",
@@ -115,11 +71,7 @@
           "streetName": "StreetName172",
           "streetNumber": 155,
           "postCode": "PostCode176",
-          "since": {
-            "year": 2017,
-            "month": 7,
-            "day": 23
-          }
+          "since": "2017-07-23"
         }
       ]
     },
@@ -127,19 +79,7 @@
       "firstName": "FirstName103",
       "lastName": "LastName103",
       "email": "e103@e.mail",
-      "birthDate": {
-        "date": {
-          "year": 1914,
-          "month": 4,
-          "day": 1
-        },
-        "time": {
-          "hour": 13,
-          "minute": 42,
-          "second": 11,
-          "nano": 0
-        }
-      },
+      "birthDate": "1914-04-01T13:42:11",
       "birthCountry": "FRANCE",
       "currentAddress": {
         "country": "FRANCE",
@@ -147,11 +87,7 @@
         "streetName": "StreetName162",
         "streetNumber": 145,
         "postCode": "PostCode166",
-        "since": {
-          "year": 2017,
-          "month": 7,
-          "day": 13
-        }
+        "since": "2017-07-13"
       },
       "previousAddresses": [
         {
@@ -160,11 +96,7 @@
           "streetName": "StreetName172",
           "streetNumber": 155,
           "postCode": "PostCode176",
-          "since": {
-            "year": 2017,
-            "month": 7,
-            "day": 23
-          }
+          "since": "2017-07-23"
         },
         {
           "country": "CANADA",
@@ -172,11 +104,7 @@
           "streetName": "StreetName173",
           "streetNumber": 156,
           "postCode": "PostCode177",
-          "since": {
-            "year": 2017,
-            "month": 7,
-            "day": 24
-          }
+          "since": "2017-07-24"
         },
         {
           "country": "DENMARK",
@@ -184,11 +112,7 @@
           "streetName": "StreetName174",
           "streetNumber": 157,
           "postCode": "PostCode178",
-          "since": {
-            "year": 2017,
-            "month": 7,
-            "day": 25
-          }
+          "since": "2017-07-25"
         }
       ]
     }
