@@ -18,9 +18,7 @@ public class ContentMatcherTests {
 	@Test
 	public void shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent() {
 		String actual = "Modified content";
-		assertThrows(AssertionFailedError.class, () -> {
-			assertThat(actual, sameContentAsApproved());
-		});
+		assertThrows(AssertionFailedError.class, () -> assertThat(actual, sameContentAsApproved()));
 	}
 
 	@Test

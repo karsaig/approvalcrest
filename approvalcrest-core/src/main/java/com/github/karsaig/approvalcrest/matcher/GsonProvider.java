@@ -24,6 +24,16 @@ import java.util.Set;
 import org.hamcrest.Matcher;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.ClassAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.DateAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.InstantAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateTimeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalTimeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
@@ -57,24 +67,7 @@ class GsonProvider {
      * @return an instance of {@link Gson}
      */
     public static Gson gson(MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
-        GsonBuilder gsonBuilder = initGson();
-
-        if (!circularReferenceTypes.isEmpty()) {
-            registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
-        }
-
-        gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
-
-        registerSetSerialisation(gsonBuilder);
-
-        registerMapSerialisation(gsonBuilder);
-
-        markSetAndMapFields(gsonBuilder);
-
-        registerExclusionStrategies(gsonBuilder, matcherConfiguration);
-
-
-        return gsonBuilder.create();
+        return gson(matcherConfiguration, circularReferenceTypes, null);
     }
 
     /**
@@ -104,6 +97,16 @@ class GsonProvider {
         }
 
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
+        gsonBuilder.registerTypeAdapterFactory(DateAdapter.FACTORY);
+        gsonBuilder.registerTypeAdapterFactory(ClassAdapter.FACTORY);
+        gsonBuilder.registerTypeAdapterFactory(PathTypeAdapter.FACTORY);
+        gsonBuilder.registerTypeAdapter(InstantAdapter.INSTANT_TYPE, new InstantAdapter());
+        gsonBuilder.registerTypeAdapter(LocalDateAdapter.LOCAL_DATE_TYPE, new LocalDateAdapter());
+        gsonBuilder.registerTypeAdapter(LocalDateTimeAdapter.LOCAL_DATE_TIME_TYPE, new LocalDateTimeAdapter());
+        gsonBuilder.registerTypeAdapter(LocalTimeAdapter.LOCAL_TIME_TYPE, new LocalTimeAdapter());
+        gsonBuilder.registerTypeAdapter(OffsetDateTimeAdapter.OFFSET_DATE_TIME_TYPE, new OffsetDateTimeAdapter());
+        gsonBuilder.registerTypeAdapter(OffsetTimeAdapter.OFFSET_TIME_TYPE, new OffsetTimeAdapter());
+        gsonBuilder.registerTypeAdapter(ZonedDateTimeAdapter.ZONED_DATE_TIME_TYPE, new ZonedDateTimeAdapter());
 
         registerSetSerialisation(gsonBuilder);
 
