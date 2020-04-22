@@ -16,7 +16,7 @@ import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatcher
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.checkThat;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.expected;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.message;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Sets.newHashSet;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -33,7 +33,7 @@ import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.model.Bean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 
 /**
  * MatcherAssert tests checking the diagnostic of the failure cases

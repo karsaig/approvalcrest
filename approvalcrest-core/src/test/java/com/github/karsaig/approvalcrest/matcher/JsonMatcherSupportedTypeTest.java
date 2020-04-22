@@ -1,10 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -17,24 +13,22 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
-
-class JsonMatcherSupportedTypeTest {
+class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
 
     public static Object[][] typeSerializationTestCases() {
         return new Object[][]{
                 {Optional.empty(), "{}", true},
                 {Optional.of(13L), "{\n  \"value\": 13\n}", true},
-                {Optional.of(13L), "{\n  \"value\": 14\n}", false},
+                {Optional.of(13L), "{}", false},
                 {Optional.of(15L), "{\n  \"value\": 13\n}", false},
+                {com.google.common.base.Optional.absent(), "{}", true},
+                {com.google.common.base.Optional.of(23L), "{\n  \"reference\": 23\n}", true},
+                {com.google.common.base.Optional.of(23L), "{}", false},
+                {com.google.common.base.Optional.of(23L), "{\n  \"reference\": 42\n}", false},
                 {Date.from(Instant.ofEpochSecond(13)), "\"1970-01-01T00:00:13.000Z\"", true},
                 {Date.from(Instant.ofEpochSecond(13)), "\"1970-01-01T00:00:14.000Z\"", false},
                 {Date.from(Instant.ofEpochMilli(1L)), "\"1970-01-01T00:00:00.001Z\"", true},
@@ -65,42 +59,8 @@ class JsonMatcherSupportedTypeTest {
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
     void supportedTypeTest(Object input, String expected, boolean result) throws IOException {
-        Configuration config = Configuration.unix()
-                .toBuilder()
-                .setAttributeViews("basic", "owner", "posix", "unix")
-                .build();
-        try (FileSystem fs = Jimfs.newFileSystem(config)) {
-            Path testPath = fs.getPath("test", "path");
-            Path pathWithDirs = Files.createDirectories(testPath);
-            Path jsonDir = pathWithDirs.resolve("4ac405");
-            Path testFile = Files.createDirectories(jsonDir).resolve("11b2ef-approved.json");
-            Files.write(testFile, ImmutableList.of(expected), StandardCharsets.UTF_8);
-            MatcherAssert.assertThat(new JsonMatcher<>(new DummyInformation(pathWithDirs)).matches(input), Matchers.is(result));
-        }
+        inMemoryFsWithDummyTestInfo(input, expected, result);
     }
 
 
-    private class DummyInformation implements TestMetaInformation {
-
-        private final Path path;
-
-        public DummyInformation(Path path) {
-            this.path = path;
-        }
-
-        @Override
-        public Path getTestClassPath() {
-            return path;
-        }
-
-        @Override
-        public String testClassName() {
-            return "dummyTestClassName";
-        }
-
-        @Override
-        public String testMethodName() {
-            return "dummyTestMethodName";
-        }
-    }
 }

@@ -11,12 +11,12 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 
 import org.junit.Test;
 
-import com.github.karsaig.approvalcrest.model.Bean;
-import com.github.karsaig.approvalcrest.model.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 
 /**
  * MatcherAssert tests checking the happy day scenarios.

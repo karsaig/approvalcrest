@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
@@ -28,11 +29,9 @@ import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.PathNullPointerException;
 
-import com.google.common.base.Function;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
@@ -40,7 +39,7 @@ import com.google.gson.JsonElement;
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
  * ignore in the comparison, or fields to be matched with a custom matcher
  */
-class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements CustomisableMatcher<T> {
+class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> implements CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>> {
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
     protected final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     protected final T expected;
@@ -109,54 +108,40 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(String fieldPath) {
+    public DiagnosingCustomisableMatcher<T> ignoring(String fieldPath) {
         matcherConfiguration.addPathToIgnore(fieldPath);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(Class<?> clazz) {
+    public DiagnosingCustomisableMatcher<T> ignoring(Class<?> clazz) {
         matcherConfiguration.addTypeToIgnore(clazz);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern) {
+    public DiagnosingCustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern) {
         matcherConfiguration.addPatternToIgnore(fieldNamePattern);
         return this;
     }
 
     @Override
-    public <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
+    public <V> DiagnosingCustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
         matcherConfiguration.addCustomMatcher(fieldPath, matcher);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
+    public DiagnosingCustomisableMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
         this.configuration = configuration;
         return this;
     }
 
 
-    protected boolean appendMismatchDescription(Description mismatchDescription, String expectedJson, String actualJson, String message) {
-        if (mismatchDescription instanceof ComparisonDescription) {
-            ComparisonDescription shazamMismatchDescription = (ComparisonDescription) mismatchDescription;
-            shazamMismatchDescription.setComparisonFailure(true);
-            shazamMismatchDescription.setExpected(expectedJson);
-            shazamMismatchDescription.setActual(actualJson);
-            shazamMismatchDescription.setDifferencesMessage(message);
-        }
-        mismatchDescription.appendText(message);
-        return false;
-    }
-
     private boolean assertEquals(String expectedJson, String actualJson, Description mismatchDescription) {
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, true);
-        } catch (AssertionError e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
-        } catch (JSONException e) {
+        } catch (AssertionError | JSONException e) {
             return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
         }
 
@@ -192,25 +177,25 @@ class DiagnosingCustomisableMatcher<T> extends DiagnosingMatcher<T> implements C
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(String... fieldPaths) {
+    public DiagnosingCustomisableMatcher<T> ignoring(String... fieldPaths) {
         matcherConfiguration.addPathToIgnore(fieldPaths);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(Class<?>... clazzs) {
+    public DiagnosingCustomisableMatcher<T> ignoring(Class<?>... clazzs) {
         matcherConfiguration.addTypeToIgnore(clazzs);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher) {
+    public DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
+    public DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matchers);
         return this;
     }

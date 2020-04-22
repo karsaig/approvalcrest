@@ -1,6 +1,8 @@
 package com.github.karsaig.approvalcrest;
 
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+
 /**
  * Abstract class for common methods used by the JsonMatcher tests.
  * @author Andras_Gyuro

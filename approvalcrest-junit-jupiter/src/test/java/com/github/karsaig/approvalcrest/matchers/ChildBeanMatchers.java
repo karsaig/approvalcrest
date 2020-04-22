@@ -14,7 +14,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 
-import com.github.karsaig.approvalcrest.model.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 
 /**
  * Collection of Hamcrest matchers for {@link ChildBean}

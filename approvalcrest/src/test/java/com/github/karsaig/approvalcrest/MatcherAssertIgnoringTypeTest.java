@@ -11,16 +11,16 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
-import static com.github.karsaig.approvalcrest.model.ChildBean.Builder.child;
-import static com.github.karsaig.approvalcrest.model.ParentBean.Builder.parent;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
-import com.github.karsaig.approvalcrest.model.Bean;
-import com.github.karsaig.approvalcrest.model.ChildBean;
-import com.github.karsaig.approvalcrest.model.ParentBean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 
 /**
  * Tests for {@link MatcherAssert} which verify that fields of specific object types can be ignored from the comparison.

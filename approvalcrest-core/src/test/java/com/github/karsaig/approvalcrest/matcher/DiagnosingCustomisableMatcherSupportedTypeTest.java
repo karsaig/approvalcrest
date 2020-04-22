@@ -17,8 +17,9 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class DiagnosingCustomisableMatcherSupportedTypeTest {
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 
+class DiagnosingCustomisableMatcherSupportedTypeTest {
 
     public static Object[][] typeSerializationTestCases() {
         return new Object[][]{
@@ -26,6 +27,10 @@ class DiagnosingCustomisableMatcherSupportedTypeTest {
                 {Optional.of(13L), Optional.of(13L), true},
                 {Optional.of(13L), Optional.empty(), false},
                 {Optional.of(15L), Optional.of(12L), false},
+                {com.google.common.base.Optional.absent(), com.google.common.base.Optional.absent(), true},
+                {com.google.common.base.Optional.of(13L), com.google.common.base.Optional.of(13L), true},
+                {com.google.common.base.Optional.of(13L), com.google.common.base.Optional.absent(), false},
+                {com.google.common.base.Optional.of(13L), com.google.common.base.Optional.of(42L), false},
                 {Date.from(Instant.ofEpochSecond(13)), Date.from(Instant.ofEpochSecond(13)), true},
                 {Date.from(Instant.ofEpochSecond(13)), Date.from(Instant.ofEpochSecond(14)), false},
                 {Date.from(Instant.ofEpochMilli(1L)), Date.from(Instant.ofEpochMilli(1L)), true},
@@ -57,5 +62,11 @@ class DiagnosingCustomisableMatcherSupportedTypeTest {
     @MethodSource("typeSerializationTestCases")
     void supportedTypeTest(Object input, Object expected, boolean result) {
         MatcherAssert.assertThat(new DiagnosingCustomisableMatcher<>(expected).matches(input), Matchers.is(result));
+    }
+
+    @ParameterizedTest
+    @MethodSource("typeSerializationTestCases")
+    void supportedTypeAsPropertyTest(Object input, Object expected, boolean result) {
+        MatcherAssert.assertThat(new DiagnosingCustomisableMatcher<>(BeanWithGeneric.of("dummy", expected)).matches(BeanWithGeneric.of("dummy", input)), Matchers.is(result));
     }
 }

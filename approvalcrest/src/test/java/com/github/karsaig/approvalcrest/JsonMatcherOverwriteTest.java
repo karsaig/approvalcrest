@@ -1,7 +1,7 @@
 package com.github.karsaig.approvalcrest;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 import com.github.karsaig.approvalcrest.matcher.Matchers;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 

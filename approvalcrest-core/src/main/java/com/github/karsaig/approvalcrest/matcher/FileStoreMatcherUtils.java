@@ -79,7 +79,7 @@ public class FileStoreMatcherUtils {
      * Gets file with '-approved' suffix and .json extension and returns it.
      *
      * @param fileNameWithPath the name of the file with full path (relative to project root)
-     * @return the {@link File} object
+     * @return the {@link Path} object
      */
     public Path getApproved(Path fileNameWithPath) {
         return getFullFileName(fileNameWithPath, true);

@@ -14,7 +14,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,12 +28,12 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import com.github.karsaig.approvalcrest.model.cyclic.Element;
-import com.github.karsaig.approvalcrest.model.cyclic.Five;
-import com.github.karsaig.approvalcrest.model.cyclic.Four;
-import com.github.karsaig.approvalcrest.model.cyclic.One;
-import com.github.karsaig.approvalcrest.model.cyclic.Three;
-import com.github.karsaig.approvalcrest.model.cyclic.Two;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Five;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
+import com.github.karsaig.approvalcrest.testdata.cyclic.One;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Three;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
 import com.google.common.base.Function;
 
 /**
@@ -105,7 +105,7 @@ public class CyclicReferenceDetectorTest {
         Two two = new Two();
         two.setGenericObject(one);
         one.setGenericObject(two);
-        List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
+        List<Class<?>> typesToIgnore = new ArrayList<>();
         typesToIgnore.add(Two.class);
         MatcherConfiguration matcherConfig = new MatcherConfiguration().addTypeToIgnore(typesToIgnore).addPatternToIgnore(EMPTY_PATTERNS_TO_IGNORE).addPathToIgnore(EMPTY_PATHS_TO_IGNORE);
         
@@ -122,13 +122,7 @@ public class CyclicReferenceDetectorTest {
         one.setGenericObject(two);
         List<Class<?>> typesToIgnore = new ArrayList<Class<?>>();
         typesToIgnore.add(Two.class);
-        Function<Object, Boolean> fieldSkipper = new Function<Object, Boolean>() {
-			
-			@Override
-			public Boolean apply(Object input) {
-				return Two.class.isInstance(input);
-			}
-		};
+        Function<Object, Boolean> fieldSkipper = input -> Two.class.isInstance(input);
         
         MatcherConfiguration matcherConfig = new MatcherConfiguration().addTypeToIgnore(EMPTY_TYPES_TO_IGNORE).addPatternToIgnore(EMPTY_PATTERNS_TO_IGNORE).addPathToIgnore(EMPTY_PATHS_TO_IGNORE)
         		.addSkipCircularReferenceChecker(fieldSkipper);

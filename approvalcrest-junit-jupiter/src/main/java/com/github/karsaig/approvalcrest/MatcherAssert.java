@@ -58,12 +58,12 @@ public class MatcherAssert {
     }
 
     @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
-    public static Throwable assertThrows(CustomisableMatcher<Throwable> matcher, Executable executable) {
+    public static Throwable assertThrows(CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
         return assertThrows(null, matcher, executable);
     }
 
     @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
-    public static Throwable assertThrows(String reason, CustomisableMatcher<Throwable> matcher, Executable executable) {
+    public static Throwable assertThrows(String reason, CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
         try {
             executable.execute();
         } catch (Throwable throwable) {

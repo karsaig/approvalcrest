@@ -26,7 +26,7 @@ public class Matchers {
      * @param expected the expected bean to match against
      * @return an {@link CustomisableMatcher} instance
      */
-    public static <T> CustomisableMatcher<T> sameBeanAs(T expected) {
+    public static <T> CustomisableMatcher<T, ?> sameBeanAs(T expected) {
         if (expected == null) {
             return new NullMatcher<>(expected);
         }

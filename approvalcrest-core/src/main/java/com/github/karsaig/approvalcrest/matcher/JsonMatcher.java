@@ -5,7 +5,6 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
-import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
@@ -13,27 +12,22 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
-import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -43,17 +37,17 @@ import com.google.gson.JsonParser;
  * Matcher for asserting expected DTOs. Searches for an approved JSON file in
  * the same directory as the test file:
  * <ul>
- * 		<li>If found, the matcher will assert the contents of the JSON file to the actual object,
+ * <li>If found, the matcher will assert the contents of the JSON file to the actual object,
  * which is serialized to a JSON String. </li>
- * 		<li>If not found, a non-approved JSON file is created, that must be
+ * <li>If not found, a non-approved JSON file is created, that must be
  * verified and renamed to "*-approved.json" by the developer. </li>
  * </ul>
  * The files and directories are hashed with SHA-1 algorithm by default to avoid too long file
  * and path names.
  * These are generated in the following way:
  * <ul>
- *   <li> the directory name is the first {@value #NUM_OF_HASH_CHARS} characters of the hashed <b>class name</b>. </li>
- *   <li> the file name is the first {@value #NUM_OF_HASH_CHARS} characters of the hashed <b>test method name</b>. </li>
+ * <li> the directory name is the first {@value #NUM_OF_HASH_CHARS} characters of the hashed <b>class name</b>. </li>
+ * <li> the file name is the first {@value #NUM_OF_HASH_CHARS} characters of the hashed <b>test method name</b>. </li>
  * </ul>
  * <p>
  * This default behaviour can be overridden by using the {@link #withFileName(String)} for
@@ -62,23 +56,11 @@ import com.google.gson.JsonParser;
  *
  * @author Andras_Gyuro
  */
-public class JsonMatcher<T> extends DiagnosingMatcher<T> implements CustomisableMatcher<T>, ApprovedFileMatcher<JsonMatcher<T>> {
-
-    private static final int NUM_OF_HASH_CHARS = 6;
+public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
 
-    private Path pathName;
-    private String fileName;
-    private String customFileName;
-    private Path fileNameWithPath;
-    private String uniqueId;
-    private TestMetaInformation testMetaInformation;
-    private String testClassName;
-    private String testMethodName;
-    private String testClassNameHash;
-
-    private MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
+    private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     private JsonElement expected;
     private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
@@ -86,7 +68,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     private GsonConfiguration configuration;
 
     public JsonMatcher(TestMetaInformation testMetaInformation) {
-        this.testMetaInformation = testMetaInformation;
+        super(testMetaInformation);
     }
 
     @Override
@@ -131,24 +113,6 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     @Override
-    public JsonMatcher<T> withUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withFileName(String customFileName) {
-        this.customFileName = customFileName;
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withPathName(String pathName) {
-        this.pathName = Paths.get(pathName);
-        return this;
-    }
-
-    @Override
     protected boolean matches(Object actual, Description mismatchDescription) {
         boolean matches = false;
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));
@@ -180,13 +144,13 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(String... fieldPaths) {
+    public JsonMatcher<T> ignoring(String... fieldPaths) {
         matcherConfiguration.addPathToIgnore(fieldPaths);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> ignoring(Class<?>... clazzs) {
+    public JsonMatcher<T> ignoring(Class<?>... clazzs) {
         matcherConfiguration.addTypeToIgnore(clazzs);
         return this;
     }
@@ -197,30 +161,6 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
             return true;
         }
         return false;
-    }
-
-    private void init() {
-        testMethodName = testMetaInformation.testMethodName();
-        testClassName = testMetaInformation.testClassName();
-
-        if (customFileName == null || customFileName.trim().isEmpty()) {
-            fileName = hashFileName(testMethodName);
-        } else {
-            fileName = customFileName;
-        }
-        if (uniqueId != null) {
-            fileName += SEPARATOR + uniqueId;
-        }
-        if (pathName == null) {
-            testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
-        }
-
-        fileNameWithPath = pathName.resolve(fileName);
-    }
-
-    private String hashFileName(String fileName) {
-        return Hashing.sha1().hashString(fileName, Charsets.UTF_8).toString().substring(0, NUM_OF_HASH_CHARS);
     }
 
     private JsonElement getAsJsonElement(Gson gson, Object object) {
@@ -276,23 +216,12 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, true);
         } catch (AssertionError e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(e));
+            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(fileStoreMatcherUtils, e));
         } catch (JSONException e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(e));
+            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(fileStoreMatcherUtils, e));
         }
 
         return true;
-    }
-
-    private String getAssertMessage(Throwable t) {
-        String result;
-        if (testClassNameHash == null) {
-            result = "Expected file " + fileNameWithPath + "\n" + t.getMessage();
-        } else {
-            result = "Expected file " + testClassNameHash + File.separator + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true)
-                    + "\n" + t.getMessage();
-        }
-        return result;
     }
 
     private String removeSetMarker(String json) {
@@ -354,18 +283,6 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
         return content;
     }
 
-    private boolean appendMismatchDescription(Description mismatchDescription, String expectedJson,
-                                              String actualJson, String message) {
-        if (mismatchDescription instanceof ComparisonDescription) {
-            ComparisonDescription shazamMismatchDescription = (ComparisonDescription) mismatchDescription;
-            shazamMismatchDescription.setComparisonFailure(true);
-            shazamMismatchDescription.setExpected(expectedJson);
-            shazamMismatchDescription.setActual(actualJson);
-            shazamMismatchDescription.setDifferencesMessage(message);
-        }
-        mismatchDescription.appendText(message);
-        return false;
-    }
 
     private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription,
                                               Gson gson) {
@@ -410,13 +327,13 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     @Override
-    public CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher) {
+    public JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher);
         return this;
     }
 
     @Override
-    public CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
+    public JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matchers);
         return this;
     }

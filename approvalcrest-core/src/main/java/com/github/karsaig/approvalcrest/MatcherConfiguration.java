@@ -7,10 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.hamcrest.Matcher;
 
-import com.google.common.base.Function;
 
 public class MatcherConfiguration {
 

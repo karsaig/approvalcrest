@@ -9,15 +9,16 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import java.util.function.Function;
+
 import org.hamcrest.Matcher;
 
-import com.google.common.base.Function;
 
 /**
  * {@link Matcher} implementation where fields and object types can be skipped from the comparison, or matched with
  * custom matchers.
  */
-public interface CustomisableMatcher<T> extends Matcher<T> {
+public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> extends Matcher<T> {
 
     /**
      * Specify the path of the field to be skipped from the matcher comparison.
@@ -27,7 +28,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param fieldPath the path of the field to be skipped from the comparison.
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> ignoring(String fieldPath);
+    U ignoring(String fieldPath);
 
     /**
      * Specify the path of the field to be skipped from the matcher comparison.
@@ -37,7 +38,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param fieldPaths the paths of fields to be skipped from the comparison.
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> ignoring(String... fieldPaths);
+    U ignoring(String... fieldPaths);
 
     /**
      * Specify the object type of the fields to be skipped from the matcher comparison.
@@ -47,7 +48,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param clazz the object type to be skipped from the comparison.
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> ignoring(Class<?> clazz);
+    U ignoring(Class<?> clazz);
 
     /**
      * Specify the object types of the fields to be skipped from the matcher comparison.
@@ -57,7 +58,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param clazz the object types to be skipped from the comparison.
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> ignoring(Class<?>... clazz);
+    U ignoring(Class<?>... clazz);
 
     /**
      * Specify the path of the field to be matched with a specific matcher.
@@ -68,7 +69,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param matcher   the Hamcrest matcher used to match the specified field.
      * @return the instance of the matcher
      */
-    <V> CustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher);
+    <V> U with(String fieldPath, Matcher<V> matcher);
 
     /**
      * Specify a custom configuration for the Gson, for example, providing additional TypeAdapters.
@@ -77,7 +78,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      *                      TypeHierarchyAdapters.
      * @return the instance of the matcher
      */
-    <V> CustomisableMatcher<T> withGsonConfiguration(GsonConfiguration configuration);
+    U withGsonConfiguration(GsonConfiguration configuration);
 
     /**
      * Specify the pattern of field names to ignore. Any bean property with a name that
@@ -88,7 +89,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param fieldNamePattern the Hamcrest matcher used to match field names.
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> ignoring(Matcher<String> fieldNamePattern);
+    U ignoring(Matcher<String> fieldNamePattern);
 
     /**
      * Specify function to be applied on fields in order to decide weather to include the field in circular reference check or not.
@@ -96,7 +97,7 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param matcher
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher);
+    U skipCircularReferenceCheck(Function<Object, Boolean> matcher);
 
     /**
      * Specify function to be applied on fields in order to decide weather to include the field in circular reference check or not.
@@ -104,5 +105,5 @@ public interface CustomisableMatcher<T> extends Matcher<T> {
      * @param matchers
      * @return the instance of the matcher
      */
-    CustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers);
+    U skipCircularReferenceCheck(Function<Object, Boolean>... matchers);
 }
