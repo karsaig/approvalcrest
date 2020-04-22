@@ -115,35 +115,6 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
-    public JsonMatcher<T> withUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withFileName(String customFileName) {
-        this.customFileName = customFileName;
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withFileName(Path customFileName) {
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withPathName(String pathName) {
-        this.pathName = Paths.get(pathName);
-        return this;
-    }
-
-    @Override
-    public JsonMatcher<T> withPath(Path path) {
-        this.pathName = path;
-        return this;
-    }
-
-    @Override
     protected boolean matches(Object actual, Description mismatchDescription) {
         boolean matches = false;
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));

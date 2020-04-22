@@ -3,13 +3,14 @@ package com.github.karsaig.approvalcrest.matcher;
 import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.hamcrest.DiagnosingMatcher;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 
-public abstract class AbstractDiagnosingFileMatcher<T, U extends ApprovedFileMatcher<U>> extends DiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
+public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnosingFileMatcher<T, U>> extends DiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
 
     protected static final int NUM_OF_HASH_CHARS = 6;
     private TestMetaInformation testMetaInformation;
@@ -44,6 +45,35 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends ApprovedFileMat
         }
 
         fileNameWithPath = pathName.resolve(fileName);
+    }
+
+    @Override
+    public U withUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
+        return (U) this;
+    }
+
+    @Override
+    public U withFileName(String customFileName) {
+        this.customFileName = customFileName;
+        return (U) this;
+    }
+
+    @Override
+    public U withFileName(Path customFileName) {
+        return (U) this;
+    }
+
+    @Override
+    public U withPathName(String pathName) {
+        this.pathName = Paths.get(pathName);
+        return (U) this;
+    }
+
+    @Override
+    public U withPath(Path path) {
+        this.pathName = path;
+        return (U) this;
     }
 
     private String hashFileName(String fileName) {

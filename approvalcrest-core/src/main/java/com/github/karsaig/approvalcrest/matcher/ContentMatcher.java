@@ -81,36 +81,6 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         return matches;
     }
 
-    @Override
-    public ContentMatcher<T> withUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
-        return this;
-    }
-
-    @Override
-    public ContentMatcher<T> withFileName(String customFileName) {
-        this.customFileName = customFileName;
-        return this;
-    }
-
-    @Override
-    public ContentMatcher<T> withFileName(Path customFileName) {
-        return this;
-    }
-
-    @Override
-    public ContentMatcher<T> withPathName(String pathName) {
-        this.pathName = Paths.get(pathName);
-        return this;
-    }
-
-    @Override
-    public ContentMatcher<T> withPath(Path path) {
-        this.pathName = path;
-        return this;
-    }
-
-
     private void createNotApprovedFileIfNotExists(Object toApprove) {
         Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
 
