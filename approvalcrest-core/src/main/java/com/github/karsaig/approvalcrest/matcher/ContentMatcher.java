@@ -1,7 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import static com.github.karsaig.approvalcrest.AssertUtil.fail;
-import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,12 +10,8 @@ import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
-import org.hamcrest.DiagnosingMatcher;
 
 import com.github.karsaig.approvalcrest.ComparisonDescription;
-
-import com.google.common.base.Charsets;
-import com.google.common.hash.Hashing;
 
 /**
  * <p>
@@ -44,28 +39,16 @@ import com.google.common.hash.Hashing;
  *
  * @param <T> Only {@link String} is supported at the moment.
  */
-public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedFileMatcher<ContentMatcher<T>> {
-
-    private static final int NUM_OF_HASH_CHARS = 6;
+public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentMatcher<T>> {
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     private static final Pattern WINDOWS_NEWLINE_PATTERN = Pattern.compile("\r\n");
-
-    private Path pathName;
-    private String fileName;
-    private String customFileName;
-    private Path fileNameWithPath;
-    private String uniqueId;
-    private TestMetaInformation testMetaInformation;
-    private String testClassName;
-    private String testMethodName;
-    private String testClassNameHash;
 
     private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".content");
 
     private String expectedContent;
 
     public ContentMatcher(TestMetaInformation testMetaInformation) {
-        this.testMetaInformation = testMetaInformation;
+        super(testMetaInformation);
     }
 
     @Override
@@ -111,34 +94,22 @@ public class ContentMatcher<T> extends DiagnosingMatcher<T> implements ApprovedF
     }
 
     @Override
+    public ContentMatcher<T> withFileName(Path customFileName) {
+        return this;
+    }
+
+    @Override
     public ContentMatcher<T> withPathName(String pathName) {
         this.pathName = Paths.get(pathName);
         return this;
     }
 
-    private void init() {
-        testMethodName = testMetaInformation.testMethodName();
-        testClassName = testMetaInformation.testClassName();
-
-        if (customFileName == null || customFileName.trim().isEmpty()) {
-            fileName = hashFileName(testMethodName);
-        } else {
-            fileName = customFileName;
-        }
-        if (uniqueId != null) {
-            fileName += SEPARATOR + uniqueId;
-        }
-        if (pathName == null) {
-            testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
-        }
-
-        fileNameWithPath = pathName.resolve(fileName);
+    @Override
+    public ContentMatcher<T> withPath(Path path) {
+        this.pathName = path;
+        return this;
     }
 
-    private String hashFileName(String fileName) {
-        return Hashing.sha1().hashString(fileName, Charsets.UTF_8).toString().substring(0, NUM_OF_HASH_CHARS);
-    }
 
     private void createNotApprovedFileIfNotExists(Object toApprove) {
         Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);

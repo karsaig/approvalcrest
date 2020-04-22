@@ -5,7 +5,6 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
-import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
@@ -22,7 +21,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
-import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -31,9 +29,7 @@ import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -62,23 +58,11 @@ import com.google.gson.JsonParser;
  *
  * @author Andras_Gyuro
  */
-public class JsonMatcher<T> extends DiagnosingMatcher<T> implements CustomisableMatcher<T>, ApprovedFileMatcher<JsonMatcher<T>> {
-
-    private static final int NUM_OF_HASH_CHARS = 6;
+public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T> {
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
 
-    private Path pathName;
-    private String fileName;
-    private String customFileName;
-    private Path fileNameWithPath;
-    private String uniqueId;
-    private TestMetaInformation testMetaInformation;
-    private String testClassName;
-    private String testMethodName;
-    private String testClassNameHash;
-
-    private MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
+    private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     private JsonElement expected;
     private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
@@ -86,7 +70,7 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     private GsonConfiguration configuration;
 
     public JsonMatcher(TestMetaInformation testMetaInformation) {
-        this.testMetaInformation = testMetaInformation;
+        super(testMetaInformation);
     }
 
     @Override
@@ -143,8 +127,19 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
     }
 
     @Override
+    public JsonMatcher<T> withFileName(Path customFileName) {
+        return this;
+    }
+
+    @Override
     public JsonMatcher<T> withPathName(String pathName) {
         this.pathName = Paths.get(pathName);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> withPath(Path path) {
+        this.pathName = path;
         return this;
     }
 
@@ -197,30 +192,6 @@ public class JsonMatcher<T> extends DiagnosingMatcher<T> implements Customisable
             return true;
         }
         return false;
-    }
-
-    private void init() {
-        testMethodName = testMetaInformation.testMethodName();
-        testClassName = testMetaInformation.testClassName();
-
-        if (customFileName == null || customFileName.trim().isEmpty()) {
-            fileName = hashFileName(testMethodName);
-        } else {
-            fileName = customFileName;
-        }
-        if (uniqueId != null) {
-            fileName += SEPARATOR + uniqueId;
-        }
-        if (pathName == null) {
-            testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
-        }
-
-        fileNameWithPath = pathName.resolve(fileName);
-    }
-
-    private String hashFileName(String fileName) {
-        return Hashing.sha1().hashString(fileName, Charsets.UTF_8).toString().substring(0, NUM_OF_HASH_CHARS);
     }
 
     private JsonElement getAsJsonElement(Gson gson, Object object) {

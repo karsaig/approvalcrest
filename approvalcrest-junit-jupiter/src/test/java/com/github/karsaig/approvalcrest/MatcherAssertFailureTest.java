@@ -11,14 +11,14 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.model.Bean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 
 /**
  * MatcherAssert tests checking the failure cases

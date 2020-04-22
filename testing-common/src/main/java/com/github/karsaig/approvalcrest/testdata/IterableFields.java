@@ -1,8 +1,8 @@
-package com.github.karsaig.approvalcrest.model;
+package com.github.karsaig.approvalcrest.testdata;
 
 import java.util.Collection;
 
-import com.github.karsaig.approvalcrest.model.cyclic.Two;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
 
 public class IterableFields {
 

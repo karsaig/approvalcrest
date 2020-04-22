@@ -10,9 +10,9 @@
 package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
-import static com.github.karsaig.approvalcrest.model.ChildBean.Builder.child;
-import static com.github.karsaig.approvalcrest.model.ParentBean.Builder.parent;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.assertThat;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.sameBeanAs;
 import static org.hamcrest.Matchers.startsWith;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.karsaig.approvalcrest.model.ParentBean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 
 /**
  * Tests which verify the possibility to match beans applying hamcrest matchers on specific fields.

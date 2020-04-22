@@ -5,7 +5,6 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApprov
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.reflect.Type;
-import java.util.GregorianCalendar;
 
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -16,7 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;

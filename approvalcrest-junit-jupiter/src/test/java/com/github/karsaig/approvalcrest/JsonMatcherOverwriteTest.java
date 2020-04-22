@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.github.karsaig.approvalcrest.matcher.Matchers;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 

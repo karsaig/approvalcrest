@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import java.nio.file.Path;
+
 public interface ApprovedFileMatcher<T extends ApprovedFileMatcher<T>> {
 
     /**
@@ -24,11 +26,30 @@ public interface ApprovedFileMatcher<T extends ApprovedFileMatcher<T>> {
     T withFileName(String customFileName);
 
     /**
+     * Sets the file name to the given parameter.
+     *
+     * @param customFileName a {@link Path} object, which will be the base file name. The
+     *                       approved/not-approved identifier and file extension will still be
+     *                       concatenated to this.
+     * @return current instance
+     */
+    T withFileName(Path customFileName);
+
+    /**
      * Sets the file path to the given parameter.
      * Directory represented by the given path will be used instead of the default directory name (hash code).
      *
-     * @param fileName a {@link String} object, which will be the file path.
+     * @param pathName a {@link String} object, which will be the file path.
      * @return current instance
      */
     T withPathName(String pathName);
+
+    /**
+     * Sets the file path to the given parameter.
+     * Directory represented by the given path will be used instead of the default directory name (hash code).
+     *
+     * @param path a {@link Path} object, which will be the file path.
+     * @return current instance
+     */
+    T withPath(Path path);
 }

@@ -2,7 +2,7 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Arrays.asList;
 
@@ -14,7 +14,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import com.github.karsaig.approvalcrest.model.Bean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 
 /**
  * Tests which verifies maps comparison is not affected by the order of the entries.

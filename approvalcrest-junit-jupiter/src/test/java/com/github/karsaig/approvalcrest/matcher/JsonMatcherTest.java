@@ -13,12 +13,11 @@ import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.github.karsaig.approvalcrest.AbstractJsonMatcherTest;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 
 /**
  * Unit test for the {@link JsonMatcher}.

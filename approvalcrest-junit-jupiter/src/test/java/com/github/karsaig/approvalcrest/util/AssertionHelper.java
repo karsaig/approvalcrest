@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Assertions;
 import com.github.karsaig.approvalcrest.MatcherAssert;
 import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 import com.github.karsaig.approvalcrest.matcher.Matchers;
-import com.github.karsaig.approvalcrest.model.Bean;
-import com.github.karsaig.approvalcrest.model.ChildBean;
-import com.github.karsaig.approvalcrest.model.ParentBean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 
 /**
  * Provides helper methods to reduce the noise in the test classes

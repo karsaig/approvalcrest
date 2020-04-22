@@ -18,7 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.github.karsaig.approvalcrest.AbstractJsonMatcherTest;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 
 /**
  * Unit test for the {@link JsonMatcher}.

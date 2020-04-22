@@ -1,9 +1,8 @@
 package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;
-import static com.github.karsaig.approvalcrest.model.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.fail;
@@ -18,13 +17,13 @@ import org.junit.Test;
 import org.junit.Test.None;
 
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
-import com.github.karsaig.approvalcrest.model.ClosableFields;
-import com.github.karsaig.approvalcrest.model.IterableFields;
-import com.github.karsaig.approvalcrest.model.cyclic.CircularReferenceBean;
-import com.github.karsaig.approvalcrest.model.cyclic.Element;
-import com.github.karsaig.approvalcrest.model.cyclic.Four;
-import com.github.karsaig.approvalcrest.model.cyclic.One;
-import com.github.karsaig.approvalcrest.model.cyclic.Two;
+import com.github.karsaig.approvalcrest.testdata.ClosableFields;
+import com.github.karsaig.approvalcrest.testdata.IterableFields;
+import com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
+import com.github.karsaig.approvalcrest.testdata.cyclic.One;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
 import com.google.common.base.Function;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonDeserializationContext;

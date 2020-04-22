@@ -11,6 +11,10 @@
 
     <artifactId>approvalcrest-core</artifactId>
 
+    <properties>
+        <junit5.version>5.6.2</junit5.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.skyscreamer</groupId>
@@ -41,19 +45,25 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>RELEASE</version>
+            <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>RELEASE</version>
+            <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.google.jimfs</groupId>
             <artifactId>jimfs</artifactId>
             <version>1.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>testing-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

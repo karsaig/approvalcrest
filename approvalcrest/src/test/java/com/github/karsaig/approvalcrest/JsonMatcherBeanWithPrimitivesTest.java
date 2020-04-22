@@ -15,7 +15,7 @@ import org.junit.Test;
 import org.junit.Test.None;
 
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
-import com.github.karsaig.approvalcrest.model.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;

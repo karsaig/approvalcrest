@@ -28,12 +28,12 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
-import com.github.karsaig.approvalcrest.model.cyclic.Element;
-import com.github.karsaig.approvalcrest.model.cyclic.Five;
-import com.github.karsaig.approvalcrest.model.cyclic.Four;
-import com.github.karsaig.approvalcrest.model.cyclic.One;
-import com.github.karsaig.approvalcrest.model.cyclic.Three;
-import com.github.karsaig.approvalcrest.model.cyclic.Two;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Five;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
+import com.github.karsaig.approvalcrest.testdata.cyclic.One;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Three;
+import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
 import com.google.common.base.Function;
 
 /**

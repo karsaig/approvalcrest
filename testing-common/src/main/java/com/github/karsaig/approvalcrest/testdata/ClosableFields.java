@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.model;
+package com.github.karsaig.approvalcrest.testdata;
 
 import java.io.InputStream;
 import java.io.OutputStream;

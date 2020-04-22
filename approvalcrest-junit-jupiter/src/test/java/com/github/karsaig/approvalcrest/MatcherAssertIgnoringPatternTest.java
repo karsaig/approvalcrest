@@ -11,9 +11,9 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
-import static com.github.karsaig.approvalcrest.model.ChildBean.Builder.child;
-import static com.github.karsaig.approvalcrest.model.ParentBean.Builder.parent;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.model.Bean;
-import com.github.karsaig.approvalcrest.model.ParentBean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 
 /**
  * Tests for {@link MatcherAssert} which verify that fields that match supplied pattern are ignored.

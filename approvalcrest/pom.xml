@@ -41,6 +41,12 @@
             </exclusions>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>testing-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

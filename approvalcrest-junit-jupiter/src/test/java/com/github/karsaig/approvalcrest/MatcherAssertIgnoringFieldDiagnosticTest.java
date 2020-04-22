@@ -14,7 +14,7 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.actual;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.checkThat;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.expected;
-import static com.github.karsaig.approvalcrest.model.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.model.Bean;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 
 /**
  * MatcherAssert tests checking the diagnostic of failure cases when some fields
