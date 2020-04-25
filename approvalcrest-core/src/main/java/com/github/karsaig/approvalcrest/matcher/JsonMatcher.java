@@ -1,6 +1,5 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import static com.github.karsaig.approvalcrest.AssertUtil.fail;
 import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
@@ -8,7 +7,6 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +25,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -57,18 +54,17 @@ import com.google.gson.JsonParser;
  * @author Andras_Gyuro
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
-    private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
+    private static final FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     private JsonElement expected;
-    private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
 
     private GsonConfiguration configuration;
 
     public JsonMatcher(TestMetaInformation testMetaInformation) {
-        super(testMetaInformation);
+        super(testMetaInformation, fileStoreMatcherUtils);
     }
 
     @Override
@@ -156,7 +152,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private boolean handleInPlaceOverwrite(Object actual, Gson gson) {
-        if ("true".equals(System.getProperty(UPDATE_IN_PLACE_NAME))) {
+        if (isOverwriteInPlaceEnabled()) {
             overwriteApprovedFile(actual, gson);
             return true;
         }
@@ -229,27 +225,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (Files.notExists(approvedFile)) {
-            try {
-                String approvedFileName = approvedFile.getFileName().toString();
-                String content = serializeToJson(toApprove, gson);
-                String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content, getCommentLine());
-                String message;
-                if (testClassNameHash == null) {
-                    message = "Not approved file created: '" + createdFileName
-                            + "'; please verify its contents and rename it to '" + approvedFileName + "'.";
-                } else {
-                    message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
-                            + "'; please verify its contents and rename it to '" + approvedFileName + "'.";
-                }
-                fail(message);
-
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        String.format("Exception while creating not approved file %s", toApprove.toString()), e);
-            }
-        }
+        createNotApprovedFileIfNotExists(toApprove, () -> serializeToJson(toApprove, gson));
     }
 
     private void overwriteApprovedFile(Object actual, Gson gson) {
@@ -265,10 +241,6 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         } else {
             throw new IllegalStateException("Approved file " + fileNameWithPath + " must exist in order to overwrite it! ");
         }
-    }
-
-    private String getCommentLine() {
-        return testClassName + "." + testMethodName;
     }
 
     private String serializeToJson(Object toApprove, Gson gson) {
@@ -319,11 +291,6 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 mismatchDescription.appendText(entry.getKey()).appendText(" ");
             }
         }
-    }
-
-    @VisibleForTesting
-    void setJsonMatcherUtils(FileStoreMatcherUtils jsonMatcherUtils) {
-        this.fileStoreMatcherUtils = jsonMatcherUtils;
     }
 
     @Override

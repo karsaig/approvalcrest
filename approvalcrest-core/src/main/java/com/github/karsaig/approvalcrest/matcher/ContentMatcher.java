@@ -1,16 +1,11 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import static com.github.karsaig.approvalcrest.AssertUtil.fail;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
-
-import com.github.karsaig.approvalcrest.ComparisonDescription;
 
 /**
  * <p>
@@ -39,15 +34,15 @@ import com.github.karsaig.approvalcrest.ComparisonDescription;
  * @param <T> Only {@link String} is supported at the moment.
  */
 public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentMatcher<T>> {
-    private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
+
     private static final Pattern WINDOWS_NEWLINE_PATTERN = Pattern.compile("\r\n");
 
-    private FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".content");
+    private static final FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".content");
 
     private String expectedContent;
 
     public ContentMatcher(TestMetaInformation testMetaInformation) {
-        super(testMetaInformation);
+        super(testMetaInformation, fileStoreMatcherUtils);
     }
 
     @Override
@@ -69,7 +64,7 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         if (expectedNormalited.equals(actualNormalized)) {
             matches = true;
         } else {
-            if ("true".equals(System.getProperty(UPDATE_IN_PLACE_NAME))) {
+            if (isOverwriteInPlaceEnabled()) {
                 overwriteApprovedFile(actualNormalized);
                 matches = true;
             } else {
@@ -81,32 +76,12 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-
-        if (Files.notExists(approvedFile)) {
-            try {
-                String approvedFileName = approvedFile.getFileName().toString();
-                if (!String.class.isInstance(toApprove)) {
-                    throw new IllegalArgumentException("Only String content matcher is supported!");
-                }
-                String content = String.class.cast(toApprove);
-                String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content,
-                        getCommentLine());
-                String message;
-                if (testClassNameHash == null) {
-                    message = "Not approved file created: '" + createdFileName
-                            + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
-                } else {
-                    message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
-                            + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
-                }
-                fail(message);
-
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        String.format("Exception while creating not approved file %s", toApprove.toString()), e);
+        createNotApprovedFileIfNotExists(toApprove, () -> {
+            if (!String.class.isInstance(toApprove)) {
+                throw new IllegalArgumentException("Only String content matcher is supported!");
             }
-        }
+            return String.class.cast(toApprove);
+        });
     }
 
     private void overwriteApprovedFile(Object actual) {
@@ -125,9 +100,6 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         }
     }
 
-    private String getCommentLine() {
-        return testClassName + "." + testMethodName;
-    }
 
     private void initExpectedFromFile() {
         Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);

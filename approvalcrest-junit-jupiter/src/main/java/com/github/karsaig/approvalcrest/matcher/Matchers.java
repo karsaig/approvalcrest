@@ -47,7 +47,11 @@ public class Matchers {
      * @return a new {@link JsonMatcher} instance
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved() {
-        return new JsonMatcher<>(new JunitJupiterTestMeta());
+        return sameJsonAsApproved(new JunitJupiterTestMeta());
+    }
+
+    static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
+        return new JsonMatcher<>(testMetaInformation);
     }
 
     /**
@@ -57,6 +61,10 @@ public class Matchers {
      * @return a new {@link ContentMatcher} instance
      */
     public static <T> ContentMatcher<T> sameContentAsApproved() {
-        return new ContentMatcher<>(new JunitJupiterTestMeta());
+        return sameContentAsApproved(new JunitJupiterTestMeta());
+    }
+
+    static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
+        return new ContentMatcher<>(testMetaInformation);
     }
 }

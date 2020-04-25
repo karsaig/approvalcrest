@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-parent</artifactId>
@@ -38,7 +38,7 @@
         </license>
     </licenses>
 
-    <developers />
+    <developers/>
 
     <scm>
         <connection>scm:git:git://github.com/karsaig/approvalcrest.git</connection>
@@ -67,8 +67,7 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>8</release>
                 </configuration>
             </plugin>
             <plugin>

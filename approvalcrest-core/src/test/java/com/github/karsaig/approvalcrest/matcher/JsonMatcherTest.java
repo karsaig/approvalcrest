@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 
 /**
  * Unit test for the {@link JsonMatcher}.
@@ -30,14 +31,14 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExists() throws IOException {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryFs((fs, path) -> {
+        inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
-            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498/183d71-not-approved.json", "183d71-approved.json"), actualError.getMessage());
+            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "183d71-not-approved.json", "183d71-approved.json"), actualError.getMessage());
 
             List<InMemoryFiles> files = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("8c5498/183d71-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
@@ -59,14 +60,14 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString() throws IOException {
         String actual = getBeanAsJsonString();
-        inMemoryFs((fs, path) -> {
+        inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString");
             JsonMatcher<String> underTest = new JsonMatcher<>(dummyTestInfo);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
-            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498/675159-not-approved.json", "675159-approved.json"), actualError.getMessage());
+            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "675159-not-approved.json", "675159-approved.json"), actualError.getMessage());
 
             List<InMemoryFiles> files = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("8c5498/675159-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString*/\n" +
