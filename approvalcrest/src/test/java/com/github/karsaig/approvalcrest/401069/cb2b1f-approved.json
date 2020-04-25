@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull*/
+/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull*/
 {
   "parent": null
 }

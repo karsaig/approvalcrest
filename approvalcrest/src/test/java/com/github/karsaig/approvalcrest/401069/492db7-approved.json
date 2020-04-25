@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotTakeAges*/
+/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotTakeAges*/
 {
   "element": "one"
 }

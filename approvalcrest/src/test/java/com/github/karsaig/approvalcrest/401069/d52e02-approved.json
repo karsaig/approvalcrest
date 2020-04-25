@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotReturn0x1InDiagnosticWhenUnnecessary*/
+/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotReturn0x1InDiagnosticWhenUnnecessary*/
 {
   "element": null
 }

@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass*/
+/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass*/
 {
   "0x1": {
     "stackTrace": [],

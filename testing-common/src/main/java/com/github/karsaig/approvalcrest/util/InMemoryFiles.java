@@ -32,4 +32,12 @@ public class InMemoryFiles {
     public int hashCode() {
         return Objects.hash(path, content);
     }
+
+    @Override
+    public String toString() {
+        return "InMemoryFiles{" +
+                "path='" + path + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

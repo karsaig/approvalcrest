@@ -2,6 +2,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -52,6 +53,19 @@ public abstract class AbstractFileMatcherTest {
 
     protected String getBeanAsJsonString() {
         return "{ beanLong: 5, beanString: \"dummyString\", beanInt: 10  }";
+    }
+
+    protected String getBeanWithPrimitivesAsJsonString() {
+        return "{\n" +
+                "  \"beanInteger\": 4,\n" +
+                "  \"beanByte\": 2,\n" +
+                "  \"beanChar\": \"c\",\n" +
+                "  \"beanShort\": 1,\n" +
+                "  \"beanLong\": 6,\n" +
+                "  \"beanFloat\": 3.0,\n" +
+                "  \"beanDouble\": 5.0,\n" +
+                "  \"beanBoolean\": true\n" +
+                "}";
     }
 
     protected void inMemoryFsWithDummyTestInfo(Object input, String expected, boolean result) {
@@ -132,5 +146,15 @@ public abstract class AbstractFileMatcherTest {
 
     protected void writeFile(Path path, String content) {
         InMemoryFsUtil.writeFile(path, content);
+    }
+
+
+    protected Path approveFile(Path from) {
+        try {
+            Path to = from.getParent().resolve(from.getFileName().toString().replace("-not", ""));
+            return Files.move(from, to);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

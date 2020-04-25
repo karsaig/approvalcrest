@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.testdata.Person;
-import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
+import com.github.karsaig.approvalcrest.util.TestDataGenerator;
 
 public class IgnoreMatcherTest {
 

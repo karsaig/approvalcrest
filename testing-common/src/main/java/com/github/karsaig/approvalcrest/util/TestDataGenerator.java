@@ -1,10 +1,15 @@
-package com.github.karsaig.approvalcrest.testdata;
+package com.github.karsaig.approvalcrest.util;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.github.karsaig.approvalcrest.testdata.Address;
+import com.github.karsaig.approvalcrest.testdata.Country;
+import com.github.karsaig.approvalcrest.testdata.Person;
+import com.github.karsaig.approvalcrest.testdata.Team;
 
 public class TestDataGenerator {
 

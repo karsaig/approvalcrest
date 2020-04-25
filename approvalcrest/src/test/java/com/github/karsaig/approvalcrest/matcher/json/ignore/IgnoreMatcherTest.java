@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import com.github.karsaig.approvalcrest.testdata.Person;
-import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
+import com.github.karsaig.approvalcrest.util.TestDataGenerator;
 
 public class IgnoreMatcherTest {
 

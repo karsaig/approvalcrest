@@ -28,11 +28,11 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("c716ab", "b1fd39-not-approved.content", "b1fd39-approved.content"), actualError.getMessage());
 
-            List<InMemoryFiles> files = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("c716ab/b1fd39-not-approved.content", "/*ContentMatcherOverwriteTest.shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist*/\n" +
                     "Test input data...");
 
-            assertIterableEquals(files, singletonList(expected));
+            assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
 
@@ -49,11 +49,11 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("c716ab", "d5edaa-not-approved.content", "d5edaa-approved.content"), actualError.getMessage());
 
-            List<InMemoryFiles> files = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("c716ab\\d5edaa-not-approved.content", "/*ContentMatcherOverwriteTest.shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows*/\n" +
                     "Test input data...");
 
-            assertIterableEquals(files, singletonList(expected));
+            assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
 
@@ -69,11 +69,11 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> files = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("c716ab/24db15-approved.content", "/*ContentMatcherOverwriteTest.shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists*/\n" +
                     "Test input data...");
 
-            assertIterableEquals(files, singletonList(expected));
+            assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
 
@@ -94,10 +94,10 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
                     "     but: Expected file c716ab\\ccb1cc-approved.content\n" +
                     "Content does not match!"));
 
-            List<InMemoryFiles> files = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(fs);
             InMemoryFiles expected = new InMemoryFiles("c716ab/ccb1cc-approved.content", "differentContent");
 
-            assertIterableEquals(files, singletonList(expected));
+            assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
 }

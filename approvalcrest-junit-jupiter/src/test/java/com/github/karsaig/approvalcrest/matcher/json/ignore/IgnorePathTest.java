@@ -13,7 +13,7 @@ import org.opentest4j.AssertionFailedError;
 import com.github.karsaig.approvalcrest.testdata.Country;
 import com.github.karsaig.approvalcrest.testdata.Person;
 import com.github.karsaig.approvalcrest.testdata.Team;
-import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
+import com.github.karsaig.approvalcrest.util.TestDataGenerator;
 
 public class IgnorePathTest {
     @Test

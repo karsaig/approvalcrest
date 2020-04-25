@@ -48,7 +48,11 @@ public class FileStoreMatcherUtils {
             throws IOException {
         Path file = getFullFileName(fileNameWithPath, false);
         Path parent = file.getParent();
-        Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(EnumSet.allOf(PosixFilePermission.class)));
+        if (isPosixCompatible(parent)) {
+            Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(EnumSet.allOf(PosixFilePermission.class)));
+        } else {
+            Files.createDirectories(parent);
+        }
         return writeToFile(file, jsonObject, comment);
     }
 
@@ -62,7 +66,9 @@ public class FileStoreMatcherUtils {
             writer.write("\n");
             writer.write(jsonObject);
         }
-        Files.setPosixFilePermissions(file, EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OTHERS_WRITE));
+        if (isPosixCompatible(file)) {
+            Files.setPosixFilePermissions(file, EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OTHERS_WRITE));
+        }
         return file.getFileName().toString();
     }
 
@@ -108,5 +114,9 @@ public class FileStoreMatcherUtils {
             return Paths.get(stringBuilder.toString());
         }
         return parent.resolve(stringBuilder.toString());
+    }
+
+    private boolean isPosixCompatible(Path path) {
+        return path.getFileSystem().supportedFileAttributeViews().contains("posix");
     }
 }

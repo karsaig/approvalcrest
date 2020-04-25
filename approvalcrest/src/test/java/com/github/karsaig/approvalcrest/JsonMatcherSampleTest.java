@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import org.junit.Test;
 
 import com.github.karsaig.approvalcrest.matcher.Matchers;
+import com.github.karsaig.approvalcrest.testdata.DummyBean;
 
 /**
  * Sample test for using {@link com.github.karsaig.approvalcrest.matcher.Matchers#sameJsonAsApproved()}.
@@ -31,38 +32,5 @@ public class JsonMatcherSampleTest {
 		MatcherAssert.assertThat(beanChild, Matchers.sameJsonAsApproved());
 	}
 
-
-	private class DummyBean{
-
-		private int beanInt;
-		private String beanString;
-		private boolean beanBoolean;
-		private DummyBean beanParent;
-
-		public DummyBean(int beanInt, String beanString, boolean beanBoolean, DummyBean beanParent) {
-			super();
-			this.beanInt = beanInt;
-			this.beanString = beanString;
-			this.beanBoolean = beanBoolean;
-			this.beanParent = beanParent;
-		}
-
-		public int getBeanInt() {
-			return beanInt;
-		}
-
-		public String getBeanString() {
-			return beanString;
-		}
-
-		public boolean isBeanBoolean() {
-			return beanBoolean;
-		}
-
-		public DummyBean getBeanParent() {
-			return beanParent;
-		}
-
-	}
 
 }

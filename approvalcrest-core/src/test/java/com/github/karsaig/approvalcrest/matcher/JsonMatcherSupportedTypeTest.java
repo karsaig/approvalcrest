@@ -1,6 +1,5 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.io.IOException;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -58,7 +57,7 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
-    void supportedTypeTest(Object input, String expected, boolean result) throws IOException {
+    void supportedTypeTest(Object input, String expected, boolean result) {
         inMemoryFsWithDummyTestInfo(input, expected, result);
     }
 

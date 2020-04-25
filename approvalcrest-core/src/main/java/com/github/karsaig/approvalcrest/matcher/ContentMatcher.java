@@ -1,8 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
@@ -85,31 +83,10 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     }
 
     private void overwriteApprovedFile(Object actual) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (Files.exists(approvedFile)) {
-            try {
-                String content = String.class.cast(actual);
-                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content, getCommentLine());
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        String.format("Exception while overwriting approved file %s", actual.toString()), e);
-            }
-        } else {
-            throw new IllegalStateException(
-                    "Approved file " + fileNameWithPath + " must exist in order to overwrite it! ");
-        }
+        overwriteApprovedFile(actual, () -> String.class.cast(actual));
     }
-
 
     private void initExpectedFromFile() {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        try {
-            expectedContent = fileStoreMatcherUtils.readFile(approvedFile);
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    String.format("Exception while initializing expected from file: %s", approvedFile.toString()), e);
-        }
+        expectedContent = getExpectedFromFile(Function.identity());
     }
-
-
 }

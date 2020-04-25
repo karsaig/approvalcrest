@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -19,7 +20,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     public static final int NUM_OF_HASH_CHARS = 6;
     private boolean overwriteInPlaceEnabled = "true".equals(System.getProperty(UPDATE_IN_PLACE_NAME));
-    private FileStoreMatcherUtils fileStoreMatcherUtils;
+    private final FileStoreMatcherUtils fileStoreMatcherUtils;
     private final TestMetaInformation testMetaInformation;
     protected String fileName;
     protected String testMethodName;
@@ -141,8 +142,28 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         return testClassName + "." + testMethodName;
     }
 
-    @VisibleForTesting
-    void setJsonMatcherUtils(FileStoreMatcherUtils jsonMatcherUtils) {
-        this.fileStoreMatcherUtils = jsonMatcherUtils;
+    protected void overwriteApprovedFile(Object actual, Supplier<String> content) {
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        if (Files.exists(approvedFile)) {
+            try {
+                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content.get(), getCommentLine());
+            } catch (IOException e) {
+                throw new IllegalStateException(
+                        String.format("Exception while overwriting approved file %s", actual.toString()), e);
+            }
+        } else {
+            throw new IllegalStateException("Approved file " + fileNameWithPath + " must exist in order to overwrite it! ");
+        }
+    }
+
+    protected <V> V getExpectedFromFile(Function<String, V> processorAfterRead) {
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        try {
+            String fileContent = fileStoreMatcherUtils.readFile(approvedFile);
+            return processorAfterRead.apply(fileContent);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    String.format("Exception while initializing expected from file: %s", approvedFile.toString()), e);
+        }
     }
 }

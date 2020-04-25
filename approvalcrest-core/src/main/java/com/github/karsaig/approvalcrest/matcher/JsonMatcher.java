@@ -4,12 +4,7 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -172,30 +167,10 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private void initExpectedFromFile() {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-
-        try {
-            String approvedJsonStr = readFile(approvedFile);
+        expected = getExpectedFromFile(s -> {
             JsonParser jsonParser = new JsonParser();
-            expected = jsonParser.parse(approvedJsonStr);
-        } catch (IOException e) {
-            throw new IllegalStateException(
-                    String.format("Exception while initializing expected from file: %s", approvedFile.toString()), e);
-        }
-    }
-
-    private String readFile(Path file) throws IOException {
-        try (BufferedReader br = Files.newBufferedReader(file, UTF_8)) {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                sb.append("\n");
-                line = br.readLine();
-            }
-            return sb.toString();
-        }
+            return jsonParser.parse(s);
+        });
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement) {
@@ -229,18 +204,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private void overwriteApprovedFile(Object actual, Gson gson) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
-        if (Files.exists(approvedFile)) {
-            try {
-                String content = serializeToJson(actual, gson);
-                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content, getCommentLine());
-            } catch (IOException e) {
-                throw new IllegalStateException(
-                        String.format("Exception while overwriting approved file %s", actual.toString()), e);
-            }
-        } else {
-            throw new IllegalStateException("Approved file " + fileNameWithPath + " must exist in order to overwrite it! ");
-        }
+        overwriteApprovedFile(actual, () -> serializeToJson(actual, gson));
     }
 
     private String serializeToJson(Object toApprove, Gson gson) {

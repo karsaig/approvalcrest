@@ -1,12 +1,1 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotFailWithIterableFields*/
-{
-  "ones": {},
-  "twos": [
-    {
-      "twoObject": "Dummy1"
-    },
-    {
-      "twoObject": "Dummy1"
-    }
-  ]
-}
+10

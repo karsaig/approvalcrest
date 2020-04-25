@@ -20,7 +20,6 @@ public class InMemoryFsUtil {
     public static void inMemoryUnixFs(BiConsumer<FileSystem, Path> test) {
         Configuration config = Configuration.unix()
                 .toBuilder()
-                .setAttributeViews("basic", "owner", "posix", "unix")
                 .build();
         inMemoryFs(config, test);
     }
@@ -28,7 +27,6 @@ public class InMemoryFsUtil {
     public static void inMemoryWindowsFs(BiConsumer<FileSystem, Path> test) {
         Configuration config = Configuration.windows()
                 .toBuilder()
-                .setAttributeViews("basic", "owner", "posix", "unix")
                 .build();
         inMemoryFs(config, test);
     }
