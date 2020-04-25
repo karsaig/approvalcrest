@@ -299,8 +299,10 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         return this;
     }
 
+    @SuppressWarnings({"unchecked", "varargs"})
     @Override
-    public JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
+    public final JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
+        matcherConfiguration.addSkipCircularReferenceChecker(matcher);
         matcherConfiguration.addSkipCircularReferenceChecker(matchers);
         return this;
     }

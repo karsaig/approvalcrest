@@ -45,7 +45,8 @@ public class ComparisonFailureMatchers {
 			}
 		};
 	}
-	
+
+	@SuppressWarnings({"unchecked", "varargs"})
 	public static void checkThat(ComparisonFailure e, Matcher<ComparisonFailure>... matchers) {
 		org.hamcrest.MatcherAssert.assertThat(e, allOf(matchers));
 	}

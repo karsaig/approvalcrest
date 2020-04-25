@@ -20,7 +20,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     public static final int NUM_OF_HASH_CHARS = 6;
     private boolean overwriteInPlaceEnabled = "true".equals(System.getProperty(UPDATE_IN_PLACE_NAME));
     private FileStoreMatcherUtils fileStoreMatcherUtils;
-    private TestMetaInformation testMetaInformation;
+    private final TestMetaInformation testMetaInformation;
     protected String fileName;
     protected String testMethodName;
     protected String testClassName;
@@ -56,30 +56,35 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         fileNameWithPath = pathName.resolve(fileName);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public U withUniqueId(String uniqueId) {
         this.uniqueId = uniqueId;
         return (U) this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public U withFileName(String customFileName) {
         this.customFileName = customFileName;
         return (U) this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public U withPathName(String pathName) {
         this.pathName = Paths.get(pathName);
         return (U) this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public U withPath(Path path) {
         this.pathName = path;
         return (U) this;
     }
 
+    @SuppressWarnings("deprecation")
     private String hashFileName(String fileName) {
         return Hashing.sha1().hashString(fileName, Charsets.UTF_8).toString().substring(0, NUM_OF_HASH_CHARS);
     }

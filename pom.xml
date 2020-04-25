@@ -68,6 +68,11 @@
                 <inherited>true</inherited>
                 <configuration>
                     <release>8</release>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

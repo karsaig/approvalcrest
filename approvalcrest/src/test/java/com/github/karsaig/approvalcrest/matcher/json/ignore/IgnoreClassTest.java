@@ -14,7 +14,8 @@ import com.github.karsaig.approvalcrest.testdata.Person;
 import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
 
 public class IgnoreClassTest {
-	
+
+	@SuppressWarnings("deprecation")
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 	

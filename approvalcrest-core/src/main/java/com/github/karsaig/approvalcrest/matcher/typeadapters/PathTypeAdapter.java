@@ -13,6 +13,7 @@ import com.google.gson.stream.JsonWriter;
 public class PathTypeAdapter extends TypeAdapter<Path> {
 
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
+        @SuppressWarnings("unchecked")
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
             return Path.class.isAssignableFrom(typeToken.getRawType()) ? (TypeAdapter<T>) new PathTypeAdapter() : null;
@@ -29,7 +30,7 @@ public class PathTypeAdapter extends TypeAdapter<Path> {
     }
 
     @Override
-    public Path read(JsonReader in) throws IOException {
+    public Path read(JsonReader in) {
         throw new UnsupportedOperationException("Only for serialization!");
     }
 }

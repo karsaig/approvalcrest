@@ -68,7 +68,7 @@ public class Junit4TestMeta implements TestMetaInformation {
         return isTest;
     }
 
-    private Method findMethod(Class clazz, String methodName) {
+    private Method findMethod(Class<?> clazz, String methodName) {
         Method[] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];

@@ -18,6 +18,7 @@ public class DateAdapter extends TypeAdapter<Date> {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX").withLocale(Locale.ENGLISH).withZone(ZoneId.of("UTC"));
 
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
+        @SuppressWarnings("unchecked")
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
             return Date.class.isAssignableFrom(typeToken.getRawType()) ? (TypeAdapter<T>) new DateAdapter() : null;
@@ -34,7 +35,7 @@ public class DateAdapter extends TypeAdapter<Date> {
     }
 
     @Override
-    public Date read(JsonReader jsonReader) throws IOException {
+    public Date read(JsonReader jsonReader) {
         throw new UnsupportedOperationException("Only for serialization!");
     }
 }

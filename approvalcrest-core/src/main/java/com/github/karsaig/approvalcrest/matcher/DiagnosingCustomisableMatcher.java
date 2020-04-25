@@ -194,9 +194,10 @@ class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> impl
         return this;
     }
 
+    @SuppressWarnings({"unchecked", "varargs"})
     @Override
-    public DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean>... matchers) {
-        matcherConfiguration.addSkipCircularReferenceChecker(matchers);
+    public final DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
+        matcherConfiguration.addSkipCircularReferenceChecker(matcher).addSkipCircularReferenceChecker(matchers);
         return this;
     }
 }

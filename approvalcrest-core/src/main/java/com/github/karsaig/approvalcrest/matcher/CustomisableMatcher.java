@@ -67,6 +67,7 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      *
      * @param fieldPath the path of the field to be matched with the provided matcher.
      * @param matcher   the Hamcrest matcher used to match the specified field.
+     * @param <V>       type of actual object to match
      * @return the instance of the matcher
      */
     <V> U with(String fieldPath, Matcher<V> matcher);
@@ -94,7 +95,7 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     /**
      * Specify function to be applied on fields in order to decide weather to include the field in circular reference check or not.
      *
-     * @param matcher
+     * @param matcher The {@link Function} to skip check, if it returns true the matching object the function applies to won't be checked for circular references.
      * @return the instance of the matcher
      */
     U skipCircularReferenceCheck(Function<Object, Boolean> matcher);
@@ -102,8 +103,10 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     /**
      * Specify function to be applied on fields in order to decide weather to include the field in circular reference check or not.
      *
-     * @param matchers
+     * @param matcher  The {@link Function} to skip check, if it returns true the matching object the function applies to won't be checked for circular references.
+     * @param matchers The {@link Function}s to skip check
      * @return the instance of the matcher
      */
-    U skipCircularReferenceCheck(Function<Object, Boolean>... matchers);
+    @SuppressWarnings({"unchecked", "varargs"})
+    U skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers);
 }

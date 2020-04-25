@@ -12,6 +12,7 @@ import junit.framework.AssertionFailedError;
 
 public class MatcherAssertExceptionMatchingTests {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 

@@ -24,6 +24,7 @@ public class Matchers {
      * {@link DiagnosingCustomisableMatcher} otherwise.
      *
      * @param expected the expected bean to match against
+     * @param <T>      type of actual object
      * @return an {@link CustomisableMatcher} instance
      */
     public static <T> CustomisableMatcher<T, ?> sameBeanAs(T expected) {

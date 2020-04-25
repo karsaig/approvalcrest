@@ -37,7 +37,8 @@ public class CyclicReferenceDetector {
     /**
      * Returns a set of classes that have circular reference.
      *
-     * @param object the object to check if it has circular reference fields
+     * @param object               the object to check if it has circular reference fields
+     * @param matcherConfiguration current {@link MatcherConfiguration} to use
      * @return a {@link Set} of {@link Class}es.
      */
     public static Set<Class<?>> getClassesWithCircularReferences(Object object, MatcherConfiguration matcherConfiguration) {

@@ -15,6 +15,7 @@ import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
 
 public class IgnoreMatcherTest {
 
+	@SuppressWarnings("deprecation")
 	@Rule
     public ExpectedException thrown = ExpectedException.none();
 	

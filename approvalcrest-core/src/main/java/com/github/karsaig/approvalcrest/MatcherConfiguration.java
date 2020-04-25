@@ -94,6 +94,7 @@ public class MatcherConfiguration {
         return this;
     }
 
+
     public MatcherConfiguration addSkipCircularReferenceChecker(Function<Object, Boolean>[] checkers) {
         for (Function<Object, Boolean> actual : checkers) {
             skipCircularReferenceCheck.add(actual);

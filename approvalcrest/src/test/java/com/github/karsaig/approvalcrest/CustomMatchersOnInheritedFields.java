@@ -11,6 +11,7 @@ import org.junit.rules.ExpectedException;
 @SuppressWarnings("unused")
 public class CustomMatchersOnInheritedFields {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 

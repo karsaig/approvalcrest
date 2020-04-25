@@ -16,6 +16,7 @@ import com.github.karsaig.approvalcrest.testdata.TestDataGenerator;
 
 public class IgnorePathTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 

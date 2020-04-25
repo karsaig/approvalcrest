@@ -19,34 +19,35 @@ import org.opentest4j.AssertionFailedError;
  * AssertionFailedError hamcrest matchers.
  */
 public class ComparisonFailureMatchers {
-	public static Matcher<AssertionFailedError> expected(final Matcher<String> expectedMatcher) {
-		return new FeatureMatcher<AssertionFailedError, String>(expectedMatcher, "AssertionFailedError with expected string", "expected string") {
-			@Override
-			protected String featureValueOf(final AssertionFailedError actual) {
-				return actual.getExpected().getValue().toString();
-			}
-		};
-	}
+    public static Matcher<AssertionFailedError> expected(final Matcher<String> expectedMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(expectedMatcher, "AssertionFailedError with expected string", "expected string") {
+            @Override
+            protected String featureValueOf(final AssertionFailedError actual) {
+                return actual.getExpected().getValue().toString();
+            }
+        };
+    }
 
-	public static Matcher<AssertionFailedError> actual(final Matcher<String> actualMatcher) {
-		return new FeatureMatcher<AssertionFailedError, String>(actualMatcher, "AssertionFailedError with actual string", "actual string") {
-			@Override
-			protected String featureValueOf(final AssertionFailedError actual) {
-				return actual.getActual().getValue().toString();
-			}
-		};
-	}
+    public static Matcher<AssertionFailedError> actual(final Matcher<String> actualMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(actualMatcher, "AssertionFailedError with actual string", "actual string") {
+            @Override
+            protected String featureValueOf(final AssertionFailedError actual) {
+                return actual.getActual().getValue().toString();
+            }
+        };
+    }
 
-	public static Matcher<AssertionFailedError> message(final Matcher<String> messageMatcher) {
-		return new FeatureMatcher<AssertionFailedError, String>(messageMatcher, "AssertionFailedError with message string", "message string") {
-			@Override
-			protected String featureValueOf(final AssertionFailedError actual) {
-				return actual.getMessage();
-			}
-		};
-	}
+    public static Matcher<AssertionFailedError> message(final Matcher<String> messageMatcher) {
+        return new FeatureMatcher<AssertionFailedError, String>(messageMatcher, "AssertionFailedError with message string", "message string") {
+            @Override
+            protected String featureValueOf(final AssertionFailedError actual) {
+                return actual.getMessage();
+            }
+        };
+    }
 
-	public static void checkThat(final AssertionFailedError e, final Matcher<AssertionFailedError>... matchers) {
-		org.hamcrest.MatcherAssert.assertThat(e, allOf(matchers));
-	}
+    @SuppressWarnings({"unchecked", "varargs"})
+    public static void checkThat(final AssertionFailedError e, final Matcher<AssertionFailedError>... matchers) {
+        org.hamcrest.MatcherAssert.assertThat(e, allOf(matchers));
+    }
 }

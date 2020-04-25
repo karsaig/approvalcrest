@@ -9,8 +9,10 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+@SuppressWarnings("rawtypes")
 public class ClassAdapter extends TypeAdapter<Class> {
     public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
+        @SuppressWarnings("unchecked")
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
             return Class.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new ClassAdapter() : null;
@@ -27,7 +29,7 @@ public class ClassAdapter extends TypeAdapter<Class> {
     }
 
     @Override
-    public Class read(JsonReader in) throws IOException {
+    public Class read(JsonReader in) {
         throw new UnsupportedOperationException("Only for serialization!");
     }
 }

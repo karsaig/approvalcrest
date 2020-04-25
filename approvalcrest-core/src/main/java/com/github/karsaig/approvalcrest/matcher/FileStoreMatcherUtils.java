@@ -40,6 +40,8 @@ public class FileStoreMatcherUtils {
      * @param fileNameWithPath specifies the name of the file with full path (relative to
      *                         project root)
      * @param jsonObject       the file's content
+     * @param comment          the first line of file
+     * @return the filename
      * @throws IOException exception thrown when failed to create the file
      */
     public String createNotApproved(Path fileNameWithPath, String jsonObject, String comment)

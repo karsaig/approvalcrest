@@ -32,6 +32,7 @@ public class MatcherAssert {
     /**
      * @param actual  the object that will be matched against the matcher
      * @param matcher defines the condition the object have to fulfill in order to match
+     * @param <T>     type of actual object
      * @see org.hamcrest.MatcherAssert#assertThat(Object, Matcher)
      */
     public static <T> void assertThat(T actual, Matcher<? super T> matcher) {
@@ -44,6 +45,7 @@ public class MatcherAssert {
      * @param reason  describes the assertion
      * @param actual  the object that will be matched against the matcher
      * @param matcher defines the condition the object have to fulfill in order to match
+     * @param <T>     type of actual object
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
         if (!matcher.matches(actual)) {
@@ -62,11 +64,30 @@ public class MatcherAssert {
 
     private static final List<Class<? extends Throwable>> BLACKLIST = singletonList(OutOfMemoryError.class);
 
+    /**
+     * Asserts that {@code Executable} throws an exception when executed.
+     * If it does, the exception object is asserted with {@link MatcherAssert#assertThat(String, Object, Matcher)} then returned.
+     * If it does not throw an exception, an {@link AssertionFailedError} is thrown.
+     *
+     * @param matcher    defines the condition the exception have to fulfill in order to match
+     * @param executable the executable which supposed to throw the exception
+     * @return the exception thrown
+     */
     @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
     public static Throwable assertThrows(CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
         return assertThrows(null, matcher, executable);
     }
 
+    /**
+     * Asserts that {@code Executable} throws an exception when executed.
+     * If it does, the exception object is asserted with {@link MatcherAssert#assertThat(String, Object, Matcher)} then returned.
+     * If it does not throw an exception, an {@link AssertionFailedError} is thrown.
+     *
+     * @param reason     describes the assertion
+     * @param matcher    defines the condition the exception have to fulfill in order to match
+     * @param executable the executable which supposed to throw the exception
+     * @return the exception thrown
+     */
     @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
     public static Throwable assertThrows(String reason, CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
         try {

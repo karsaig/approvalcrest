@@ -73,7 +73,7 @@ public class FieldsIgnorer {
         if (jsonElement.isJsonArray()) {
             Iterator<JsonElement> iterator = jsonElement.getAsJsonArray().iterator();
             while (iterator.hasNext()) {
-                JsonElement arrayElement = (JsonElement) iterator.next();
+                JsonElement arrayElement = iterator.next();
                 if (arrayElement.isJsonNull()) {
                     continue;
                 }
