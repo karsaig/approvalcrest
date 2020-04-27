@@ -13,5 +13,6 @@ mvn -f release-pom.xml versions:commit
 git commit -a -m "Next release version"
 
 mvn clean install
+mvn clean
 
-mvn -f release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml
+mvn -X -f release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml
