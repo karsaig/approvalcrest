@@ -1,13 +1,54 @@
 Changelog
 ===========
 
+Version 0.54 - 2020/04/28
+-----
+
+ - Dropped Java 6 support, requires Java 8 now
+ - Dependency upgrades
+ - Junit 5 support
+ - Being a popular request, added new Gson serializers for util.Date, java.time.*, java.lang.Class
+ - Preliminary assertThrows implementation (serialization format will change shortly)
+ - NPE fix
+
+Version 0.21 - 2019/02/21
+-----
+
+ - Added support to skip circle detection for a field
+ - Upgraded GSON to the latest version
+
+Version 0.19 - 2018/09/06
+-----
+
+ - Fixed cycle check to skip ignored fields
+ - Enabled custom fields matchers in JsonMatcher
+ - Added convenience method for setting field ignores
+
+Version 0.18 - 2018/08/09
+-----
+
+ - Fixed NPE with sameJsonAs while using it with data driven tests.
+
+Version 0.17 - 2018/01/29
+-----
+
+ - Added flag for in place update of existing approved files.
+   This helps to change existing files in a test library for every test affected by a change simply adding a command line property. (jsonMatcherUpdateInPlace=true)
+ - Fixed custom matching for inherited fields
+
+Version 0.16 - 2017/08/20
+-----
+
+ - Fixed an NPE in path ignore
+ - Minor error message wording changes
+
 Version 0.15 - 2017/04/22
 -----
 
  - First release of ApprovalCrest
  - Added new matchers sameJsonAsApproved and sameContentAsApproved
  - Updated dependencies
- - Added possibility to configre custom type adapters
+ - Added possibility to configure custom type adapters
 
 Version 0.11 - 2015/03/04
 -----

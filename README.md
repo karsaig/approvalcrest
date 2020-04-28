@@ -147,9 +147,19 @@ QuickStart
 -----
 
 To use add the following to your project's pom.xml:
- 
+
+### JUnit 4
+
     <dependency>
-		<groupId>com.github.karsaig</groupId>
-		<artifactId>approvalcrest</artifactId>
-		<version>0.21</version>
-	</dependency>
+      <groupId>com.github.karsaig</groupId>
+      <artifactId>approvalcrest</artifactId>
+      <version>0.54</version>
+    </dependency>
+
+### JUnit 5
+
+    <dependency>
+      <groupId>com.github.karsaig</groupId>
+      <artifactId>approvalcrest-junit-jupiter</artifactId>
+      <version>0.54</version>
+    </dependency>
