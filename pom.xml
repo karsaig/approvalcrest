@@ -3,12 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-parent</artifactId>
-    <version>0.54</version>
+    <version>0.55-SNAPSHOT</version>
     <modules>
         <module>testing-common</module>
         <module>approvalcrest-core</module>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
+        <module>approvalcrest-integration-tests</module>
+        <module>approvalcrest-junit-jupiter-integration-tests</module>
     </modules>
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>
@@ -27,7 +29,7 @@
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
         <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
         <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
-        <maven.surefire.plugin.version>2.22.2</maven.surefire.plugin.version>
+        <maven.surefire.plugin.version>3.0.0-M4</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.2.3</maven.shade.plugin.version>
     </properties>
 
@@ -119,6 +121,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
+                    <configuration>
+                        <argLine>-Dfile.encoding=UTF-8</argLine>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

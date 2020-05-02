@@ -69,8 +69,8 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
-    public static Throwable assertThrows(CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked"})
+    public static Throwable assertThrows(CustomisableMatcher matcher, Executable executable) {
         return assertThrows(null, matcher, executable);
     }
 
@@ -84,8 +84,8 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException"})
-    public static Throwable assertThrows(String reason, CustomisableMatcher<Throwable, ?> matcher, Executable executable) {
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked"})
+    public static Throwable assertThrows(String reason, CustomisableMatcher matcher, Executable executable) {
         try {
             executable.execute();
         } catch (Throwable throwable) {

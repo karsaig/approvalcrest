@@ -5,7 +5,7 @@
     <parent>
         <artifactId>approvalcrest-parent</artifactId>
         <groupId>com.github.karsaig</groupId>
-        <version>0.54</version>
+        <version>0.55-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest-core</artifactId>
-            <version>0.54</version>
+            <version>0.55-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -39,12 +39,12 @@
                     <artifactId>hamcrest-core</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>testing-common</artifactId>
-            <version>0.54</version>
+            <version>0.55-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -62,6 +62,7 @@
                 <configuration>
                     <!-- put your configurations here -->
                     <minimizeJar>true</minimizeJar>
+                    <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
                     <createSourcesJar>true</createSourcesJar>
                     <artifactSet>
                         <excludes>
