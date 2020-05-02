@@ -13,8 +13,10 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import com.github.karsaig.approvalcrest.Junit4TestMeta;
 
+import com.google.common.annotations.Beta;
+
 /**
- * Entry point for the matchers available in Shazamcrest.
+ * Entry point for the matchers available in Approvalcrest.
  */
 public class Matchers {
 
@@ -24,7 +26,7 @@ public class Matchers {
      * {@link DiagnosingCustomisableMatcher} otherwise.
      *
      * @param expected the expected bean to match against
-     * @param <T> type of actual object
+     * @param <T>      type of actual object
      * @return an {@link CustomisableMatcher} instance
      */
     public static <T> CustomisableMatcher<T, ?> sameBeanAs(T expected) {
@@ -51,7 +53,19 @@ public class Matchers {
         return sameJsonAsApproved(new Junit4TestMeta());
     }
 
-    static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
+    /**
+     * Returns a {@link JsonMatcher} for matching an object with a generated
+     * file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     * <p>
+     * <b>!! Beta, as such subject to change !!</b>
+     *
+     * @param testMetaInformation
+     * @param <T>                 Type of object to serialize to JSON
+     * @return a new {@link JsonMatcher} instance
+     */
+    @Beta
+    public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
         return new JsonMatcher<>(testMetaInformation);
     }
 
@@ -65,7 +79,18 @@ public class Matchers {
         return sameContentAsApproved(new Junit4TestMeta());
     }
 
-    static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
+    /**
+     * Returns a {@link ContentMatcher} for matching a string with a generated file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     * <p>
+     * <b>!! Beta, as such subject to change !!</b>
+     *
+     * @param testMetaInformation Information used to generate file names and path to use.
+     * @param <T>                 Only {@link String} is supported at the moment.
+     * @return a new {@link ContentMatcher} instance
+     */
+    @Beta
+    public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
         return new ContentMatcher<>(testMetaInformation);
     }
 }

@@ -13,8 +13,10 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import com.github.karsaig.approvalcrest.JunitJupiterTestMeta;
 
+import com.google.common.annotations.Beta;
+
 /**
- * Entry point for the matchers available in Shazamcrest.
+ * Entry point for the matchers available in Approvalcrest.
  */
 public class Matchers {
 
@@ -51,7 +53,19 @@ public class Matchers {
         return sameJsonAsApproved(new JunitJupiterTestMeta());
     }
 
-    static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
+    /**
+     * Returns a {@link JsonMatcher} for matching an object with a generated
+     * file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     * <p>
+     * <b>!! Beta, as such subject to change !!</b>
+     *
+     * @param testMetaInformation Information used to generate file names and path to use.
+     * @param <T>                 Type of object to serialize to JSON
+     * @return a new {@link JsonMatcher} instance
+     */
+    @Beta
+    public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
         return new JsonMatcher<>(testMetaInformation);
     }
 
@@ -65,7 +79,18 @@ public class Matchers {
         return sameContentAsApproved(new JunitJupiterTestMeta());
     }
 
-    static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
+    /**
+     * Returns a {@link ContentMatcher} for matching a string with a generated file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     * <p>
+     * <b>!! Beta, as such subject to change !!</b>
+     *
+     * @param testMetaInformation Information used to generate file names and path to use.
+     * @param <T>                 Only {@link String} is supported at the moment.
+     * @return a new {@link ContentMatcher} instance
+     */
+    @Beta
+    public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
         return new ContentMatcher<>(testMetaInformation);
     }
 }
