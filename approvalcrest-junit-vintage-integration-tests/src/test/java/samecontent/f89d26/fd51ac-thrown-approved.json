@@ -1,0 +1,10 @@
+/*samecontent.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+{
+  "0x1": {
+    "fExpected": "Different content",
+    "fActual": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
+    "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!",
+    "stackTrace": [],
+    "suppressedExceptions": []
+  }
+}
