@@ -93,7 +93,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {}\n" +
-                    "     but: Expected file b16968\\cb2b1f-approved.json\n" +
+                    "     but: Expected file b16968/cb2b1f-approved.json\n" +
                     "\n" +
                     "Unexpected: parent\n", actualError.getMessage());
 
@@ -188,7 +188,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "    \"twoObject\": \"0x1\"\n" +
                     "  }\n" +
                     "}\n" +
-                    "     but: Expected file b16968\\d75e15-approved.json\n" +
+                    "     but: Expected file b16968/d75e15-approved.json\n" +
                     "0x1\n" +
                     "Expected: twoObject\n" +
                     "     but none found\n" +
@@ -226,7 +226,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                         "Expected: {\n" +
                         "  \"element\": \"one\"\n" +
                         "}\n" +
-                        "     but: Expected file b16968\\492db7-approved.json\n" +
+                        "     but: Expected file b16968/492db7-approved.json\n" +
                         "element\n" +
                         "Expected: one\n" +
                         "     got: two\n", actualError.getMessage());
@@ -324,7 +324,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {}\n" +
-                    "     but: Expected file b16968\\d52e02-approved.json\n" +
+                    "     but: Expected file b16968/d52e02-approved.json\n" +
                     "\n" +
                     "Unexpected: element\n", actualError.getMessage());
 

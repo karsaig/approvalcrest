@@ -91,7 +91,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
                     () -> MatcherAssert.assertThat(actual, underTest));
 
             MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: differentContent\n" +
-                    "     but: Expected file c716ab\\ccb1cc-approved.content\n" +
+                    "     but: Expected file c716ab/ccb1cc-approved.content\n" +
                     "Content does not match!"));
 
             List<InMemoryFiles> actualFiles = getFiles(fs);

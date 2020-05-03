@@ -119,7 +119,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
                     () -> MatcherAssert.assertThat(actual, underTest));
 
             MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: \"differentContent\"\n" +
-                    "     but: Expected file 11ee79\\ccb1cc-approved.json\n" +
+                    "     but: Expected file 11ee79/ccb1cc-approved.json\n" +
                     "\n"));
 
             List<InMemoryFiles> actualFiles = getFiles(fs);

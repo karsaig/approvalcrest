@@ -100,7 +100,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: Modified content\n" +
-                    "     but: Expected file 87668f\\0d08c2-approved.content\n" +
+                    "     but: Expected file 87668f/0d08c2-approved.content\n" +
                     "Content does not match!", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(fs);
@@ -143,7 +143,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
-                    "     but: Expected file 87668f\\39e1a0-idTest-approved.content\n" +
+                    "     but: Expected file 87668f/39e1a0-idTest-approved.content\n" +
                     "Content does not match!", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(fs);
@@ -185,7 +185,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
-                    "     but: Expected file 87668f\\single-line-approved.content\n" +
+                    "     but: Expected file 87668f/single-line-approved.content\n" +
                     "Content does not match!", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(fs);

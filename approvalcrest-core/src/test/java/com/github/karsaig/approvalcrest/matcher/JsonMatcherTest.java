@@ -129,7 +129,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     "  \"beanString\": \"Modified content\",\n" +
                     "  \"beanInt\": 10\n" +
                     "}\n" +
-                    "     but: Expected file 87668f\\0d08c2-approved.json\n" +
+                    "     but: Expected file 87668f/0d08c2-approved.json\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
@@ -199,7 +199,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     "  \"beanString\": \"Different content\",\n" +
                     "  \"beanInt\": 10\n" +
                     "}\n" +
-                    "     but: Expected file 87668f\\39e1a0-idTest-approved.json\n" +
+                    "     but: Expected file 87668f/39e1a0-idTest-approved.json\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
@@ -268,7 +268,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     "  \"beanString\": \"Different content\",\n" +
                     "  \"beanInt\": 10\n" +
                     "}\n" +
-                    "     but: Expected file 87668f\\single-line-approved.json\n" +
+                    "     but: Expected file 87668f/single-line-approved.json\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +

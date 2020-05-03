@@ -94,10 +94,10 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     protected String getAssertMessage(FileStoreMatcherUtils fileStoreMatcherUtils, String message) {
         String result;
         if (testClassNameHash == null) {
-            result = "Expected file " + fileNameWithPath + "\n" + message;
+            result = "Expected file " + fileNameWithPath.toString().replace(File.separator, "/") + "\n" + message;
         } else {
-            result = "Expected file " + testClassNameHash + File.separator
-                    + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true) + "\n" + message;
+            result = "Expected file " + testClassNameHash + "/"
+                    + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true).toString().replace(File.separator, "/") + "\n" + message;
         }
         return result;
     }
