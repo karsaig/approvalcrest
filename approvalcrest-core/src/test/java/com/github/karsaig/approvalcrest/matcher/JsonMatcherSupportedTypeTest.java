@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -50,8 +51,8 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                 {ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, ZoneId.of("Asia/Tokyo")), "\"2020-04-01T22:01:02.000000003Z[UTC]\"", false},
                 {Instant.class, "\"java.time.Instant\"", true},
                 {LocalDateTime.class, "\"java.time.Instant\"", false},
-                //{Paths.get("/something/anything"), "", true},
-                //{Paths.get("/something/anything"), "", false},
+                {Paths.get("/something/anything"), "\"/something/anything\"", true},
+                {Paths.get("/something/anything"), "\"/somethingElse\"", false},
         };
     }
 

@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -25,7 +26,7 @@ public class PathTypeAdapter extends TypeAdapter<Path> {
         if (value == null) {
             out.nullValue();
         } else {
-            out.value(value.toString());
+            out.value(value.toString().replace(File.separator, "/"));
         }
     }
 

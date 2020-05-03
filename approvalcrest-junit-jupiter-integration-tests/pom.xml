@@ -32,6 +32,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>testing-common</artifactId>
             <version>0.55-SNAPSHOT</version>

@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,27 +23,38 @@ public class JunitJupiterTestMeta implements TestMetaInformation {
             + File.separator;
     private static final Pattern DOT_LITERAL_PATTERN = Pattern.compile(".", Pattern.LITERAL);
 
-    private final StackTraceElement testStackTraceElement;
+    private final Path testClassPath;
+    private final String testClassName;
+    private final String testMethodName;
 
     public JunitJupiterTestMeta() {
-        testStackTraceElement = getTestStackTraceElement(Thread.currentThread().getStackTrace());
+        StackTraceElement testStackTraceElement = Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for JunitJupiterTestMeta, custom implementation of TestMetaInformation required!");
+        String fileName = testStackTraceElement.getFileName().substring(0, testStackTraceElement.getFileName().lastIndexOf("."));
+        testClassPath = Paths.get(SRC_TEST_JAVA_PATH
+                + DOT_LITERAL_PATTERN.matcher(testStackTraceElement.getClassName()).replaceAll(Matcher.quoteReplacement(File.separator)).replace(fileName, ""));
+        testClassName = testStackTraceElement.getClassName();
+        testMethodName = testStackTraceElement.getMethodName();
+    }
+
+    JunitJupiterTestMeta(Path testClassPath, String testClassName, String testMethodName) {
+        this.testClassPath = testClassPath;
+        this.testClassName = testClassName;
+        this.testMethodName = testMethodName;
     }
 
     @Override
     public Path getTestClassPath() {
-        String fileName = testStackTraceElement.getFileName().substring(0, testStackTraceElement.getFileName().lastIndexOf("."));
-        return Paths.get(SRC_TEST_JAVA_PATH
-                + DOT_LITERAL_PATTERN.matcher(testStackTraceElement.getClassName()).replaceAll(Matcher.quoteReplacement(File.separator)).replace(fileName, ""));
+        return testClassPath;
     }
 
     @Override
     public String testClassName() {
-        return testStackTraceElement != null ? testStackTraceElement.getClassName() : null;
+        return testClassName;
     }
 
     @Override
     public String testMethodName() {
-        return testStackTraceElement != null ? testStackTraceElement.getMethodName() : null;
+        return testMethodName;
     }
 
     private StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {

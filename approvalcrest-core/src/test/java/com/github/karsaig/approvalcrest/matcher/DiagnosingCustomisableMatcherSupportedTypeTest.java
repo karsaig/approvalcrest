@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -53,8 +54,8 @@ class DiagnosingCustomisableMatcherSupportedTypeTest {
                 {ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, ZoneId.of("UTC")), ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, ZoneId.of("Asia/Tokyo")), false},
                 {Instant.class, Instant.class, true},
                 {Instant.class, LocalDateTime.class, false},
-                //{Paths.get("/something/anything"), Paths.get("/something/anything"), true},
-                //{Paths.get("/something/anything"), Paths.get("/somethingElse/anything"), false},
+                {Paths.get("/something/anything"), Paths.get("/something/anything"), true},
+                {Paths.get("/something/anything"), Paths.get("/somethingElse/anything"), false},
         };
     }
 

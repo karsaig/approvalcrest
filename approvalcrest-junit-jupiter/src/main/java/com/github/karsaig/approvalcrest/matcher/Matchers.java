@@ -11,6 +11,13 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.junit.jupiter.api.TestInfo;
+
+import com.github.karsaig.approvalcrest.Junit5InfoBasedTestMeta;
 import com.github.karsaig.approvalcrest.JunitJupiterTestMeta;
 
 import com.google.common.annotations.Beta;
@@ -70,6 +77,21 @@ public class Matchers {
     }
 
     /**
+     * Returns a {@link JsonMatcher} for matching an object with a generated
+     * file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     *
+     * @param testInfo JUnit5 provided test information. {@link TestInfo}.
+     * @param <T>      Type of object to serialize to JSON
+     * @return a new {@link JsonMatcher} instance
+     */
+    public static <T> JsonMatcher<T> sameJsonAsApproved(TestInfo testInfo) {
+        return getUniqueIndex(testInfo)
+                .map(s -> new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)).withUniqueId(s))
+                .orElse(new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)));
+    }
+
+    /**
      * Returns a {@link ContentMatcher} for matching a string with a generated file.
      *
      * @param <T> Only {@link String} is supported at the moment.
@@ -92,5 +114,29 @@ public class Matchers {
     @Beta
     public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
         return new ContentMatcher<>(testMetaInformation);
+    }
+
+    /**
+     * Returns a {@link ContentMatcher} for matching a string with a generated file.
+     * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
+     *
+     * @param testInfo JUnit5 provided test information. {@link TestInfo}.
+     * @param <T>      Only {@link String} is supported at the moment.
+     * @return a new {@link ContentMatcher} instance
+     */
+    public static <T> ContentMatcher<T> sameContentAsApproved(TestInfo testInfo) {
+        return getUniqueIndex(testInfo)
+                .map(s -> new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)).withUniqueId(s))
+                .orElse(new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)));
+    }
+
+    private static final Pattern TEST_INDEX_MATCHER = Pattern.compile("^\\[(\\d+)\\].*");
+
+    private static Optional<String> getUniqueIndex(TestInfo testInfo) {
+        Matcher m = TEST_INDEX_MATCHER.matcher(testInfo.getDisplayName());
+        if (m.matches()) {
+            return Optional.of(m.group(1));
+        }
+        return Optional.empty();
     }
 }

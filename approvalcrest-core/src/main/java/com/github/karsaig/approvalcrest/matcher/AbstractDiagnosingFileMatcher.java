@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.function.Function;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -33,8 +34,8 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     protected Path fileNameWithPath;
 
     public AbstractDiagnosingFileMatcher(TestMetaInformation testMetaInformation, FileStoreMatcherUtils fileStoreMatcherUtils) {
-        this.testMetaInformation = testMetaInformation;
-        this.fileStoreMatcherUtils = fileStoreMatcherUtils;
+        this.testMetaInformation = Objects.requireNonNull(testMetaInformation, "TestMetaInformation must not be null!");
+        this.fileStoreMatcherUtils = Objects.requireNonNull(fileStoreMatcherUtils, "FileStoreMatcherUtils must not be null!");
     }
 
     protected void init() {

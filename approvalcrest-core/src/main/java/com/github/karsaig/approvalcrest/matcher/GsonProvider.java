@@ -31,6 +31,7 @@ import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateTimeAdapte
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
@@ -59,7 +60,7 @@ class GsonProvider {
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
      *
-     * @param typesToIgnore          the object types to exclude from serialisation
+     * @param matcherConfiguration
      * @param circularReferenceTypes cater for circular referenced objects
      * @return an instance of {@link Gson}
      */
@@ -71,7 +72,7 @@ class GsonProvider {
      * Returns a {@link Gson} instance containing {@link ExclusionStrategy} based on the object types to ignore during
      * serialisation.
      *
-     * @param typesToIgnore          the object types to exclude from serialisation
+     * @param matcherConfiguration
      * @param circularReferenceTypes cater for circular referenced objects
      * @param additionalConfig       provides additional gson configuration
      * @return an instance of {@link Gson}
@@ -103,6 +104,8 @@ class GsonProvider {
         gsonBuilder.registerTypeAdapter(OffsetDateTimeAdapter.OFFSET_DATE_TIME_TYPE, new OffsetDateTimeAdapter());
         gsonBuilder.registerTypeAdapter(OffsetTimeAdapter.OFFSET_TIME_TYPE, new OffsetTimeAdapter());
         gsonBuilder.registerTypeAdapter(ZonedDateTimeAdapter.ZONED_DATE_TIME_TYPE, new ZonedDateTimeAdapter());
+
+        gsonBuilder.registerTypeAdapterFactory(PathTypeAdapter.FACTORY);
 
         registerSetSerialisation(gsonBuilder);
 

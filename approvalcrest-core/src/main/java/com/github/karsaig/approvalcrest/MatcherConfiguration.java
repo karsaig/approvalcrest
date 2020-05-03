@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,6 +20,10 @@ public class MatcherConfiguration {
     private final List<Class<?>> typesToIgnore = new ArrayList<>();
     private final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
+
+    public MatcherConfiguration() {
+        skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
+    }
 
     public Map<String, Matcher<?>> getCustomMatchers() {
         return customMatchers;
