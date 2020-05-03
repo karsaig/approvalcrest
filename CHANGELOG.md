@@ -1,6 +1,14 @@
 Changelog
 ===========
 
+Version 0.55 - 2020/05/03
+-----
+
+ - Fixed dependencies in released pom file
+ - Added support for custom TestMetaInformation
+ - Parameterized Junit 5 support
+ - Added nio.Path serialization support
+
 Version 0.54 - 2020/04/28
 -----
 
