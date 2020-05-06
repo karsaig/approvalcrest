@@ -62,7 +62,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNothingWhenAutoDetectCircularReferenceIsCalled");
-            JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("3473e7-approved.json"), apprivedFileContent);
 
@@ -84,7 +84,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull");
-            JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("cb2b1f-approved.json"), apprivedFileContent);
 
@@ -141,7 +141,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph");
-            JsonMatcher<Four> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<Four> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("b47cca-approved.json"), apprivedFileContent);
 
@@ -172,7 +172,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences");
-            JsonMatcher<Object> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<Object> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("d75e15-approved.json"), apprivedFileContent);
 
@@ -218,7 +218,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotTakeAges");
             writeFile(path.resolve("b16968").resolve("492db7-approved.json"), apprivedFileContent);
             assertTimeout(Duration.ofMillis(150), () -> {
-                JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo);
+                JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
                 AssertionError actualError = assertThrows(AssertionError.class,
                         () -> MatcherAssert.assertThat(actual, underTest));
 
@@ -252,7 +252,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass");
-            JsonMatcher<RuntimeException> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<RuntimeException> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("242865-approved.json"), apprivedFileContent);
 
@@ -293,7 +293,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowExceptionWithAMoreNestedObject");
-            JsonMatcher<Throwable> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<Throwable> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("d3315e-approved.json"), apprivedFileContent);
 
@@ -315,7 +315,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotReturn0x1InDiagnosticWhenUnnecessary");
-            JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("d52e02-approved.json"), apprivedFileContent);
 
@@ -401,7 +401,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotFailWithClosableFields");
-            JsonMatcher<ClosableFields> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<ClosableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("d75f36-approved.json"), apprivedFileContent);
 
@@ -439,7 +439,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotFailWithIterableFields");
-            JsonMatcher<IterableFields> underTest = new JsonMatcher<>(dummyTestInfo);
+            JsonMatcher<IterableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("b16968").resolve("57143d-approved.json"), apprivedFileContent);
 
@@ -480,7 +480,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized");
-            JsonMatcher<Four> underTest = new JsonMatcher<Four>(dummyTestInfo).skipCircularReferenceCheck(skipper1).withGsonConfiguration(config);
+            JsonMatcher<Four> underTest = new JsonMatcher<Four>(dummyTestInfo, getDefaultFileMatcherConfig()).skipCircularReferenceCheck(skipper1).withGsonConfiguration(config);
 
             writeFile(path.resolve("b16968").resolve("60ec6f-approved.json"), apprivedFileContent);
 

@@ -11,17 +11,17 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
 
-import com.google.common.annotations.VisibleForTesting;
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
+
 import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
 import com.google.common.hash.Hashing;
 
 public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnosingFileMatcher<T, U>> extends AbstractDiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
 
-    private static final String UPDATE_IN_PLACE_NAME = "jsonMatcherUpdateInPlace";
     public static final int NUM_OF_HASH_CHARS = 6;
-    private boolean overwriteInPlaceEnabled = "true".equals(System.getProperty(UPDATE_IN_PLACE_NAME));
-    private final FileStoreMatcherUtils fileStoreMatcherUtils;
+    protected final FileStoreMatcherUtils fileStoreMatcherUtils;
+    protected final FileMatcherConfig fileMatcherConfig;
     private final TestMetaInformation testMetaInformation;
     protected String fileName;
     protected String testMethodName;
@@ -33,9 +33,10 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
 
     protected Path fileNameWithPath;
 
-    public AbstractDiagnosingFileMatcher(TestMetaInformation testMetaInformation, FileStoreMatcherUtils fileStoreMatcherUtils) {
+    public AbstractDiagnosingFileMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig, FileStoreMatcherUtils fileStoreMatcherUtils) {
         this.testMetaInformation = Objects.requireNonNull(testMetaInformation, "TestMetaInformation must not be null!");
         this.fileStoreMatcherUtils = Objects.requireNonNull(fileStoreMatcherUtils, "FileStoreMatcherUtils must not be null!");
+        this.fileMatcherConfig = Objects.requireNonNull(fileMatcherConfig, "FileMatcherConfig must not be null!");
     }
 
     protected void init() {
@@ -106,15 +107,6 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         return getAssertMessage(fileStoreMatcherUtils, t.getMessage());
     }
 
-    protected boolean isOverwriteInPlaceEnabled() {
-        return overwriteInPlaceEnabled;
-    }
-
-    @VisibleForTesting
-    void setOverwriteInPlaceEnabled(boolean overwriteInPlaceEnabled) {
-        this.overwriteInPlaceEnabled = overwriteInPlaceEnabled;
-    }
-
     protected void createNotApprovedFileIfNotExists(Object toApprove, Supplier<String> content) {
         Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
 
@@ -122,15 +114,17 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
             try {
                 String approvedFileName = approvedFile.getFileName().toString();
                 String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content.get(), getCommentLine());
-                String message;
-                if (testClassNameHash == null) {
-                    message = "Not approved file created: '" + createdFileName
-                            + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
-                } else {
-                    message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
-                            + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
+                if (!fileMatcherConfig.isPassOnCreateEnabled()) {
+                    String message;
+                    if (testClassNameHash == null) {
+                        message = "Not approved file created: '" + createdFileName
+                                + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
+                    } else {
+                        message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
+                                + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
+                    }
+                    fail(message);
                 }
-                fail(message);
 
             } catch (IOException e) {
                 throw new IllegalStateException(

@@ -21,8 +21,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -51,8 +50,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryWindowsFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -81,8 +79,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             writeFile(path.resolve("11ee79").resolve("24db15-approved.json"), "dummyContent");
 
@@ -110,8 +107,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenApprovedFileDiffersAndFlagIsFalse");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(false);
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("11ee79").resolve("ccb1cc-approved.json"), "differentContent");
 

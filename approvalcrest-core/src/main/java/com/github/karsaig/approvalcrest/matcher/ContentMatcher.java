@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 
 import org.hamcrest.Description;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
+
 /**
  * <p>
  * Matcher for asserting expected {@link String}s. Searches for an approved file
@@ -35,12 +37,12 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
 
     private static final Pattern WINDOWS_NEWLINE_PATTERN = Pattern.compile("\r\n");
 
-    private static final FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".content");
+    private static final FileStoreMatcherUtils FSMU = new FileStoreMatcherUtils(".content");
 
     private String expectedContent;
 
-    public ContentMatcher(TestMetaInformation testMetaInformation) {
-        super(testMetaInformation, fileStoreMatcherUtils);
+    public ContentMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig) {
+        super(testMetaInformation, fileMatcherConfig, FSMU);
     }
 
     @Override
@@ -53,6 +55,9 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         boolean matches = false;
         init();
         createNotApprovedFileIfNotExists(actual);
+        if (fileMatcherConfig.isPassOnCreateEnabled()) {
+            return true;
+        }
         initExpectedFromFile();
         String actualString = String.class.cast(actual);
 
@@ -62,7 +67,7 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         if (expectedNormalited.equals(actualNormalized)) {
             matches = true;
         } else {
-            if (isOverwriteInPlaceEnabled()) {
+            if (fileMatcherConfig.isOverwriteInPlaceEnabled()) {
                 overwriteApprovedFile(actualNormalized);
                 matches = true;
             } else {
@@ -71,6 +76,8 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
             }
         }
         return matches;
+
+
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove) {

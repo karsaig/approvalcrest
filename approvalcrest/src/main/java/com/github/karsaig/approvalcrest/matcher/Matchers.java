@@ -11,6 +11,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.Junit4TestMeta;
 
 import com.google.common.annotations.Beta;
@@ -66,7 +67,7 @@ public class Matchers {
      */
     @Beta
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
-        return new JsonMatcher<>(testMetaInformation);
+        return new JsonMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 
     /**
@@ -91,6 +92,6 @@ public class Matchers {
      */
     @Beta
     public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
-        return new ContentMatcher<>(testMetaInformation);
+        return new ContentMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 }

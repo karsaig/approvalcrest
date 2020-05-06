@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.TestInfo;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.Junit5InfoBasedTestMeta;
 import com.github.karsaig.approvalcrest.JunitJupiterTestMeta;
 
@@ -73,7 +74,7 @@ public class Matchers {
      */
     @Beta
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
-        return new JsonMatcher<>(testMetaInformation);
+        return new JsonMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 
     /**
@@ -87,8 +88,8 @@ public class Matchers {
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
-                .map(s -> new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)).withUniqueId(s))
-                .orElse(new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)));
+                .map(s -> new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo), new FileMatcherConfig()).withUniqueId(s))
+                .orElse(new JsonMatcher<T>(new Junit5InfoBasedTestMeta(testInfo), new FileMatcherConfig()));
     }
 
     /**
@@ -113,7 +114,7 @@ public class Matchers {
      */
     @Beta
     public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
-        return new ContentMatcher<>(testMetaInformation);
+        return new ContentMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 
     /**
@@ -126,8 +127,8 @@ public class Matchers {
      */
     public static <T> ContentMatcher<T> sameContentAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
-                .map(s -> new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)).withUniqueId(s))
-                .orElse(new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo)));
+                .map(s -> new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo), new FileMatcherConfig()).withUniqueId(s))
+                .orElse(new ContentMatcher<T>(new Junit5InfoBasedTestMeta(testInfo), new FileMatcherConfig()));
     }
 
     private static final Pattern TEST_INDEX_MATCHER = Pattern.compile("^\\[(\\d+)\\].*");

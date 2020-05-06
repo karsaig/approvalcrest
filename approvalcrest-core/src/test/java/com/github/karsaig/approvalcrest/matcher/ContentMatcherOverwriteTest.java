@@ -20,8 +20,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
         String actual = "Test input data...";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -41,8 +40,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
         String actual = "Test input data...";
         inMemoryWindowsFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -62,8 +60,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
         String actual = "Test input data...";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherOverwriteTest", "shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(true);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             writeFile(path.resolve("c716ab").resolve("24db15-approved.content"), "dummyContent");
 
@@ -82,8 +79,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
         String actual = "Test input data...";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherOverwriteTest", "shouldThrowExceptionWhenApprovedFileDiffersAndFlagIsFalse");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
-            underTest.setOverwriteInPlaceEnabled(false);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("c716ab").resolve("ccb1cc-approved.content"), "differentContent");
 

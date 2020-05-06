@@ -9,10 +9,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
@@ -27,6 +30,8 @@ import com.google.common.collect.ImmutableList;
  * @author Andras_Gyuro
  */
 public abstract class AbstractFileMatcherTest {
+
+    private static final Pattern NOT_APPROVED_PATTERN = Pattern.compile("-not", Pattern.LITERAL);
 
     protected BeanWithPrimitives getBeanWithPrimitives() {
         return PreBuilt.getBeanWithPrimitives();
@@ -49,7 +54,7 @@ public abstract class AbstractFileMatcherTest {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            MatcherAssert.assertThat(new JsonMatcher<>(new DummyInformation(path)).matches(input), Matchers.is(result));
+            MatcherAssert.assertThat(new JsonMatcher<>(new DummyInformation(path), getDefaultFileMatcherConfig()).matches(input), Matchers.is(result));
         });
     }
 
@@ -123,10 +128,22 @@ public abstract class AbstractFileMatcherTest {
 
     protected Path approveFile(Path from) {
         try {
-            Path to = from.getParent().resolve(from.getFileName().toString().replace("-not", ""));
+            Path to = from.getParent().resolve(NOT_APPROVED_PATTERN.matcher(from.getFileName().toString()).replaceAll(Matcher.quoteReplacement("")));
             return Files.move(from, to);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static FileMatcherConfig getDefaultFileMatcherConfig() {
+        return new FileMatcherConfig(false, false);
+    }
+
+    public static FileMatcherConfig enableInPlaceOverwrite() {
+        return new FileMatcherConfig(true, false);
+    }
+
+    public static FileMatcherConfig enablePassOnCreate() {
+        return new FileMatcherConfig(false, true);
     }
 }

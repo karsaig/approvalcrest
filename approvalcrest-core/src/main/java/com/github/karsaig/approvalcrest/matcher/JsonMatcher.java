@@ -18,6 +18,7 @@ import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 
 import com.google.gson.Gson;
@@ -50,7 +51,7 @@ import com.google.gson.JsonParser;
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
-    private static final FileStoreMatcherUtils fileStoreMatcherUtils = new FileStoreMatcherUtils(".json");
+    private static final FileStoreMatcherUtils FSMU = new FileStoreMatcherUtils(".json");
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
@@ -58,8 +59,8 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private GsonConfiguration configuration;
 
-    public JsonMatcher(TestMetaInformation testMetaInformation) {
-        super(testMetaInformation, fileStoreMatcherUtils);
+    public JsonMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig) {
+        super(testMetaInformation, fileMatcherConfig, FSMU);
     }
 
     @Override
@@ -110,6 +111,9 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         init();
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
         createNotApprovedFileIfNotExists(actual, gson);
+        if (fileMatcherConfig.isPassOnCreateEnabled()) {
+            return true;
+        }
         initExpectedFromFile();
 
         if (areCustomMatchersMatching(actual, mismatchDescription, gson)) {
@@ -147,7 +151,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private boolean handleInPlaceOverwrite(Object actual, Gson gson) {
-        if (isOverwriteInPlaceEnabled()) {
+        if (fileMatcherConfig.isOverwriteInPlaceEnabled()) {
             overwriteApprovedFile(actual, gson);
             return true;
         }

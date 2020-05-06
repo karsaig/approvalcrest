@@ -32,7 +32,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Example content";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -48,11 +48,28 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
     }
 
     @Test
+    public void testRunShouldCreateNotApprovedFileAndPassWhenNotExistsAnsPassOnCreateEnabled() {
+        String actual = "Example content";
+        inMemoryUnixFs((fs, path) -> {
+            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(fs);
+            InMemoryFiles expected = new InMemoryFiles("87668f/183d71-not-approved.content", "/*ContentMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
+                    "Example content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows() {
         String actual = "Example content";
         inMemoryWindowsFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -72,7 +89,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Example content";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("39c4dd-approved.content"), actual);
 
@@ -91,7 +108,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String apprivedFileContent = "Modified content";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("0d08c2-approved.content"), apprivedFileContent);
 
@@ -116,7 +133,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Content";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueId");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withUniqueId("idTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId("idTest");
 
             writeFile(path.resolve("87668f").resolve("3f0945-idTest-approved.content"), actual);
 
@@ -134,7 +151,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Content";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueIdAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withUniqueId("idTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId("idTest");
 
             writeFile(path.resolve("87668f").resolve("39e1a0-idTest-approved.content"), "Different content");
 
@@ -158,7 +175,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileName");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withFileName("single-line");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withFileName("single-line");
 
             writeFile(path.resolve("87668f").resolve("single-line-approved.content"), actual);
 
@@ -176,7 +193,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withFileName("single-line");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withFileName("single-line");
 
             writeFile(path.resolve("87668f").resolve("single-line-approved.content"), "Different content");
 
@@ -200,7 +217,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
 
             writeFile(path.getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.content"), actual);
 
@@ -218,7 +235,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
 
             writeFile(path.getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.content"), "Different content");
 
@@ -242,7 +259,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
 
             writeFile(path.getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.content"), actual);
 
@@ -260,7 +277,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
 
             writeFile(path.getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.content"), "Different content");
 
@@ -284,7 +301,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nMauris gravida varius dolor, vel imperdiet urna consectetur a.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenMultiLineContentIsSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("d23053-approved.content"), actual);
 
@@ -303,7 +320,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nMauris gravida varius dolor, vel imperdiet urna consectetur a.\n";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenMultiLineContentWithEmptyLineIsSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("0438f6-approved.content"), actual);
 
@@ -325,7 +342,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
                 + "\n\nQuisque consectetur, sapien non aliquam luctus, est urna aliquam purus, eu feugiat diam ex in ex. Phasellus ut nibh vitae libero iaculis accumsan. Morbi vitae orci ut eros tempus rhoncus ut eget justo. Vestibulum a accumsan urna. Cras sit amet lectus sed eros sollicitudin maximus. Fusce at vulputate eros, in bibendum ipsum. Etiam vitae malesuada metus, ac mattis felis. Nullam in facilisis justo. Morbi elementum vestibulum eros in vehicula.";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenManyLineContentWithEmptyLineIsSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("020b55-approved.content"), actual);
 
@@ -351,7 +368,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\r\nMauris gravida varius dolor, vel imperdiet urna consectetur a.\r\n";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenMultiLineContentWithEmptyLineAndWindowsNewLineInputSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("972efc-approved.content"), "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nMauris gravida varius dolor, vel imperdiet urna consectetur a.\n");
 
@@ -369,7 +386,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\nMauris gravida varius dolor, vel imperdiet urna consectetur a.\n";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenMultiLineContentWithEmptyLineAndWindowsNewLineInputSameContentAsApproved");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             writeFile(path.resolve("87668f").resolve("972efc-approved.content"), "Lorem ipsum dolor sit amet, consectetur adipiscing elit.\r\nMauris gravida varius dolor, vel imperdiet urna consectetur a.\r\n");
 
@@ -387,7 +404,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = null;
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowExceptionrWhenContentIsNull");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             IllegalArgumentException actualError = assertThrows(IllegalArgumentException.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -405,7 +422,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         Long actual = 1L;
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowExceptionrWhenContentIsANumber");
-            ContentMatcher<Long> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<Long> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             IllegalArgumentException actualError = assertThrows(IllegalArgumentException.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -423,7 +440,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Testing workflow of ContentMatcher";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "contentMatcherWorkflowVerifierTest");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -447,7 +464,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Árvízűtűrőtükörfúrógép\\nL’apostrophe 用的名字☺\\nд1@00000☺☹❤\\naA@AA1A猫很可爱";
         inMemoryUnixFs((fs, path) -> {
             DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "contentMatcherWorkflowWithNonAsciiCharacters");
-            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo);
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
