@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.matcher.file;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.attribute.PosixFilePermission.GROUP_READ;
@@ -15,6 +15,8 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
+
+import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 
 /**
  * Utility class with methods for creating the JSON files for

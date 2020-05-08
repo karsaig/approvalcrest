@@ -1,7 +1,7 @@
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.matcher.file;
 
 import static com.github.karsaig.approvalcrest.AssertUtil.fail;
-import static com.github.karsaig.approvalcrest.matcher.FileStoreMatcherUtils.SEPARATOR;
+import static com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils.SEPARATOR;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +12,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher;
+import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;

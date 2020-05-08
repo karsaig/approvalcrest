@@ -6,6 +6,8 @@ import java.util.regex.Pattern;
 import org.hamcrest.Description;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
+import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 
 /**
  * <p>

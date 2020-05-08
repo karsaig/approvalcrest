@@ -20,6 +20,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
+import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

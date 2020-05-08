@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.matcher.file;
 
 import java.nio.file.Path;
 
