@@ -19,8 +19,8 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
     @Test
     public void shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -28,7 +28,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("11ee79", "b1fd39-not-approved.json", "b1fd39-approved.json"), actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("11ee79/b1fd39-not-approved.json", "/*JsonMatcherOverwriteTest.shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExist*/\n" +
                     "{\n" +
                     "  \"beanInteger\": 4,\n" +
@@ -48,8 +48,8 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
     @Test
     public void shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryWindowsFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows");
+        inMemoryWindowsFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -57,7 +57,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("11ee79", "d5edaa-not-approved.json", "d5edaa-approved.json"), actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("11ee79\\d5edaa-not-approved.json", "/*JsonMatcherOverwriteTest.shouldThrowExceptionWhenOverwriteInPlaceEnabledAndApprovedFileDoesNotExistOnWindows*/\n" +
                     "{\n" +
                     "  \"beanInteger\": 4,\n" +
@@ -77,15 +77,15 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
     @Test
     public void shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherOverwriteTest", "shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
 
-            writeFile(path.resolve("11ee79").resolve("24db15-approved.json"), "dummyContent");
+            writeFile(imfsi.getTestPath().resolve("11ee79").resolve("24db15-approved.json"), "dummyContent");
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("11ee79/24db15-approved.json", "/*JsonMatcherOverwriteTest.shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExists*/\n" +
                     "{\n" +
                     "  \"beanInteger\": 4,\n" +
@@ -105,11 +105,11 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
     @Test
     public void shouldThrowExceptionWhenApprovedFileDiffersAndFlagIsFalse() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenApprovedFileDiffersAndFlagIsFalse");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherOverwriteTest", "shouldThrowExceptionWhenApprovedFileDiffersAndFlagIsFalse");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("11ee79").resolve("ccb1cc-approved.json"), "differentContent");
+            writeFile(imfsi.getTestPath().resolve("11ee79").resolve("ccb1cc-approved.json"), "differentContent");
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -118,7 +118,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
                     "     but: Expected file 11ee79/ccb1cc-approved.json\n" +
                     "\n"));
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("11ee79/ccb1cc-approved.json", "differentContent");
 
             assertIterableEquals(singletonList(expected), actualFiles);

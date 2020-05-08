@@ -27,4 +27,6 @@ public interface TestMetaInformation {
      * @return test method name in String
      */
     String testMethodName();
+
+    Path getApprovedDirectory();
 }

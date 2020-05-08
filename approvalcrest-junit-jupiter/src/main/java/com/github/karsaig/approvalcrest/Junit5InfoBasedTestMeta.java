@@ -19,6 +19,7 @@ public class Junit5InfoBasedTestMeta implements TestMetaInformation {
     private final Path testClassPath;
     private final String testClassName;
     private final String testMethodName;
+    private final Path approvedDirectory;
 
     public Junit5InfoBasedTestMeta(TestInfo testInfo) {
         Class<?> clazz = testInfo.getTestClass().orElseThrow(() -> new IllegalStateException("Cannot get class from Testinfo, custom implementation of TestMetaInformation required!"));
@@ -26,12 +27,14 @@ public class Junit5InfoBasedTestMeta implements TestMetaInformation {
                 DOT_LITERAL_PATTERN.matcher(clazz.getName()).replaceAll(Matcher.quoteReplacement(File.separator))).getParent();
         this.testClassName = clazz.getName();
         this.testMethodName = testInfo.getTestMethod().map(m -> m.getName()).orElseGet(() -> testInfo.getDisplayName());
+        approvedDirectory = Paths.get("src" + File.separator + "test" + File.separator + "resources" + File.separator + "approvalcrest");
     }
 
-    public Junit5InfoBasedTestMeta(Path testClassPath, String testClassName, String testMethodName) {
+    public Junit5InfoBasedTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
         this.testClassPath = testClassPath;
         this.testClassName = testClassName;
         this.testMethodName = testMethodName;
+        this.approvedDirectory = approvedDirectory;
     }
 
     @Override
@@ -47,5 +50,10 @@ public class Junit5InfoBasedTestMeta implements TestMetaInformation {
     @Override
     public String testMethodName() {
         return testMethodName;
+    }
+
+    @Override
+    public Path getApprovedDirectory() {
+        return approvedDirectory;
     }
 }

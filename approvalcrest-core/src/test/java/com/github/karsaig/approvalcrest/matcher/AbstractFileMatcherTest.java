@@ -8,7 +8,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +18,7 @@ import org.hamcrest.Matchers;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
+import com.github.karsaig.approvalcrest.util.InMemoryFsInfo;
 import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
 
@@ -46,23 +47,23 @@ public abstract class AbstractFileMatcherTest {
     }
 
     protected void inMemoryFsWithDummyTestInfo(Object input, String expected, boolean result) {
-        inMemoryUnixFs((fs, path) -> {
+        inMemoryUnixFs(imfsi -> {
             try {
-                Path jsonDir = path.resolve("4ac405");
+                Path jsonDir = imfsi.getTestPath().resolve("4ac405");
                 Path testFile = Files.createDirectories(jsonDir).resolve("11b2ef-approved.json");
                 Files.write(testFile, ImmutableList.of(expected), StandardCharsets.UTF_8);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            MatcherAssert.assertThat(new JsonMatcher<>(new DummyInformation(path), getDefaultFileMatcherConfig()).matches(input), Matchers.is(result));
+            MatcherAssert.assertThat(new JsonMatcher<>(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig()).matches(input), Matchers.is(result));
         });
     }
 
-    protected void inMemoryUnixFs(BiConsumer<FileSystem, Path> test) {
+    protected void inMemoryUnixFs(Consumer<InMemoryFsInfo> test) {
         InMemoryFsUtil.inMemoryUnixFs(test);
     }
 
-    protected void inMemoryWindowsFs(BiConsumer<FileSystem, Path> test) {
+    protected void inMemoryWindowsFs(Consumer<InMemoryFsInfo> test) {
         InMemoryFsUtil.inMemoryWindowsFs(test);
     }
 
@@ -71,15 +72,17 @@ public abstract class AbstractFileMatcherTest {
         private final Path path;
         private final String testClassName;
         private final String testMethodName;
+        private final Path approvedDirectory;
 
-        public DummyInformation(Path path) {
-            this(path, "dummyTestClassName", "dummyTestMethodName");
+        public DummyInformation(Path path, Path approvedDirectory) {
+            this(path, "dummyTestClassName", "dummyTestMethodName", approvedDirectory);
         }
 
-        public DummyInformation(Path path, String testClassName, String testMethodName) {
+        public DummyInformation(Path path, String testClassName, String testMethodName, Path approvedDirectory) {
             this.path = path;
             this.testClassName = testClassName;
             this.testMethodName = testMethodName;
+            this.approvedDirectory = approvedDirectory;
         }
 
         @Override
@@ -96,8 +99,25 @@ public abstract class AbstractFileMatcherTest {
         public String testMethodName() {
             return testMethodName;
         }
+
+        @Override
+        public Path getApprovedDirectory() {
+            return approvedDirectory;
+        }
     }
 
+
+    protected DummyInformation dummyInformation(InMemoryFsInfo imfsi) {
+        return new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath());
+    }
+
+    protected DummyInformation dummyInformation(InMemoryFsInfo imfsi, String testClassName, String testMethodName) {
+        return new DummyInformation(imfsi.getTestPath(), testClassName, testMethodName, imfsi.getResourcePath());
+    }
+
+    protected List<InMemoryFiles> getFiles(InMemoryFsInfo imfsi) {
+        return InMemoryFsUtil.getFiles(imfsi);
+    }
 
     protected List<InMemoryFiles> getFiles(FileSystem fs) {
         return InMemoryFsUtil.getFiles(fs);
@@ -136,14 +156,14 @@ public abstract class AbstractFileMatcherTest {
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfig() {
-        return new FileMatcherConfig(false, false);
+        return new FileMatcherConfig(false, false, false, false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwrite() {
-        return new FileMatcherConfig(true, false);
+        return new FileMatcherConfig(true, false, false, false);
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-        return new FileMatcherConfig(false, true);
+        return new FileMatcherConfig(false, true, false, false);
     }
 }

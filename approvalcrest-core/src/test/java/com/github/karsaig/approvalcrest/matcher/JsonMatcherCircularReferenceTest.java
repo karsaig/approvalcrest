@@ -60,15 +60,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNothingWhenAutoDetectCircularReferenceIsCalled");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNothingWhenAutoDetectCircularReferenceIsCalled");
             JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("3473e7-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("3473e7-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/3473e7-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -82,11 +82,11 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "{\n" +
                 "  \"parent\": null\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull");
             JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("cb2b1f-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("cb2b1f-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -97,7 +97,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "\n" +
                     "Unexpected: parent\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/cb2b1f-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -139,15 +139,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    \"oneObject\": \"0x4\"\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph");
             JsonMatcher<Four> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("b47cca-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("b47cca-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/b47cca-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -170,11 +170,11 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    \"twoObject\": \"0x1\"\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences");
             JsonMatcher<Object> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("d75e15-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75e15-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -200,7 +200,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     " ; 0x2\n" +
                     "Unexpected: oneObject\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/d75e15-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -214,9 +214,9 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "{\n" +
                 "  \"element\": \"one\"\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotTakeAges");
-            writeFile(path.resolve("b16968").resolve("492db7-approved.json"), apprivedFileContent);
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotTakeAges");
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("492db7-approved.json"), apprivedFileContent);
             assertTimeout(Duration.ofMillis(150), () -> {
                 JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
                 AssertionError actualError = assertThrows(AssertionError.class,
@@ -232,7 +232,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                         "     got: two\n", actualError.getMessage());
 
             });
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/492db7-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -250,15 +250,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    \"suppressedExceptions\": []\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass");
             JsonMatcher<RuntimeException> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("242865-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("242865-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/242865-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -291,15 +291,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "  \"stackTrace\": [],\n" +
                 "  \"suppressedExceptions\": []\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowExceptionWithAMoreNestedObject");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowExceptionWithAMoreNestedObject");
             JsonMatcher<Throwable> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("d3315e-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d3315e-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/d3315e-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -313,11 +313,11 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "{\n" +
                 "  \"element\": null\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotReturn0x1InDiagnosticWhenUnnecessary");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotReturn0x1InDiagnosticWhenUnnecessary");
             JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("d52e02-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d52e02-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -328,7 +328,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "\n" +
                     "Unexpected: element\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/d52e02-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -399,15 +399,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    \"count\": 0\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotFailWithClosableFields");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotFailWithClosableFields");
             JsonMatcher<ClosableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("d75f36-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75f36-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/d75f36-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -437,15 +437,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "doesNotFailWithIterableFields");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotFailWithIterableFields");
             JsonMatcher<IterableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("b16968").resolve("57143d-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("57143d-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/57143d-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -478,15 +478,15 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  \"threeObject\": {}\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized");
             JsonMatcher<Four> underTest = new JsonMatcher<Four>(dummyTestInfo, getDefaultFileMatcherConfig()).skipCircularReferenceCheck(skipper1).withGsonConfiguration(config);
 
-            writeFile(path.resolve("b16968").resolve("60ec6f-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("60ec6f-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("b16968/60ec6f-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);

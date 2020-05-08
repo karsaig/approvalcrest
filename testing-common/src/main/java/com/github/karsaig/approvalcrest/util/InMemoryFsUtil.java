@@ -5,7 +5,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -17,28 +17,34 @@ public class InMemoryFsUtil {
     private InMemoryFsUtil() {
     }
 
-    public static void inMemoryUnixFs(BiConsumer<FileSystem, Path> test) {
+    public static void inMemoryUnixFs(Consumer<InMemoryFsInfo> test) {
         Configuration config = Configuration.unix()
                 .toBuilder()
                 .build();
         inMemoryFs(config, test);
     }
 
-    public static void inMemoryWindowsFs(BiConsumer<FileSystem, Path> test) {
+    public static void inMemoryWindowsFs(Consumer<InMemoryFsInfo> test) {
         Configuration config = Configuration.windows()
                 .toBuilder()
                 .build();
         inMemoryFs(config, test);
     }
 
-    public static void inMemoryFs(Configuration config, BiConsumer<FileSystem, Path> test) {
+    public static void inMemoryFs(Configuration config, Consumer<InMemoryFsInfo> test) {
         try (FileSystem fs = Jimfs.newFileSystem(config)) {
             Path testPath = fs.getPath("test", "path");
+            Path resourcePath = fs.getPath("resources");
             Path pathWithDirs = Files.createDirectories(testPath);
-            test.accept(fs, pathWithDirs);
+            resourcePath = Files.createDirectories(resourcePath);
+            test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static List<InMemoryFiles> getFiles(InMemoryFsInfo imfsi) {
+        return getFiles(imfsi.getInMemoryFileSystem());
     }
 
     public static List<InMemoryFiles> getFiles(FileSystem fs) {

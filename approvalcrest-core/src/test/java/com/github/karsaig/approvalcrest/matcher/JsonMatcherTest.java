@@ -26,8 +26,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExists() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -35,7 +35,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "183d71-not-approved.json", "183d71-approved.json"), actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("8c5498/183d71-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
                     getBeanWithPrimitivesAsJsonString());
 
@@ -46,13 +46,13 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileAndPassWhenNotExistsAnsPassOnCreateEnabled() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExists");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enablePassOnCreate());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("8c5498/183d71-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
                     getBeanWithPrimitivesAsJsonString());
 
@@ -63,8 +63,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString() {
         String actual = getBeanAsJsonString();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString");
             JsonMatcher<String> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -72,7 +72,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "675159-not-approved.json", "675159-approved.json"), actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("8c5498/675159-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString*/\n" +
                     "{\n" +
                     "  \"beanLong\": 5,\n" +
@@ -88,8 +88,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryWindowsFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows");
+        inMemoryWindowsFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -97,7 +97,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("87668f", "e6fb22-not-approved.json", "e6fb22-approved.json"), actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f\\e6fb22-not-approved.json", "/*ContentMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExistsOnWindows*/\n" +
                     getBeanWithPrimitivesAsJsonString());
 
@@ -108,15 +108,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApproved() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApproved");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApproved");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("87668f").resolve("39c4dd-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("39c4dd-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/39c4dd-approved.json", getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -127,11 +127,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     public void shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         String apprivedFileContent = "{ beanLong: 5, beanString: \"Modified content\", beanInt: 10  }";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("87668f").resolve("0d08c2-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("0d08c2-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -167,7 +167,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanShort\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/0d08c2-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -178,15 +178,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueId() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueId");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueId");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId("idTest");
 
-            writeFile(path.resolve("87668f").resolve("3f0945-idTest-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("3f0945-idTest-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/3f0945-idTest-approved.json", getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -197,11 +197,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueIdAndContentDiffers() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         String apprivedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueIdAndContentDiffers");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithUniqueIdAndContentDiffers");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId("idTest");
 
-            writeFile(path.resolve("87668f").resolve("39e1a0-idTest-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("39e1a0-idTest-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -237,7 +237,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanShort\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/39e1a0-idTest-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -247,15 +247,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileName() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileName");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileName");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withFileName("single-line");
 
-            writeFile(path.resolve("87668f").resolve("single-line-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("single-line-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/single-line-approved.json", getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -266,11 +266,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndContentDiffers() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         String apprivedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndContentDiffers");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndContentDiffers");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withFileName("single-line");
 
-            writeFile(path.resolve("87668f").resolve("single-line-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("single-line-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -306,7 +306,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanShort\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/single-line-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -316,15 +316,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(path.getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("src/test/contents/single-line-2-approved.json", getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -335,11 +335,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         String apprivedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("src/test/contents")).withFileName("single-line-2");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(path.getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -375,7 +375,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanShort\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("src/test/contents/single-line-2-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -385,15 +385,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(path.getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("/src/test/contents/single-line-2-approved.json", getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -404,11 +404,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         String apprivedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers");
-            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(path.resolve("/src/test/contents")).withFileName("single-line-2");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<BeanWithPrimitives>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(path.getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), apprivedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -444,7 +444,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanShort\n", actualError.getMessage());
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("/src/test/contents/single-line-2-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -464,15 +464,15 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                 "  \"beanDouble\": 5.0,\r\n" +
                 "  \"beanBoolean\": true\r\n" +
                 "}";
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenJsonWithWindowsNewLineExpectedContentSameContentAsApproved");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenJsonWithWindowsNewLineExpectedContentSameContentAsApproved");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(path.resolve("87668f").resolve("78a94f-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("78a94f-approved.json"), apprivedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/78a94f-approved.json", apprivedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -482,8 +482,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void contentMatcherWorkflowVerifierTest() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "contentMatcherWorkflowVerifierTest");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "contentMatcherWorkflowVerifierTest");
             JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -491,11 +491,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("87668f", "e4bc67-not-approved.json", "e4bc67-approved.json"), actualError.getMessage());
 
-            approveFile(path.resolve("87668f").resolve("e4bc67-not-approved.json"));
+            approveFile(imfsi.getTestPath().resolve("87668f").resolve("e4bc67-not-approved.json"));
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/e4bc67-approved.json", "/*ContentMatcherTest.contentMatcherWorkflowVerifierTest*/\n" +
                     getBeanWithPrimitivesAsJsonString());
 
@@ -506,8 +506,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void contentMatcherWorkflowWithNonAsciiCharacters() {
         BeanWithGeneric<String> actual = BeanWithGeneric.of("dummyValue", "Árvízűtűrőtükörfúrógép\\nL’apostrophe 用的名字☺\\nд1@00000☺☹❤\\naA@AA1A猫很可爱");
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "contentMatcherWorkflowWithNonAsciiCharacters");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "contentMatcherWorkflowWithNonAsciiCharacters");
             JsonMatcher<BeanWithGeneric<String>> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -515,11 +515,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("87668f", "c5f725-not-approved.json", "c5f725-approved.json"), actualError.getMessage());
 
-            approveFile(path.resolve("87668f").resolve("c5f725-not-approved.json"));
+            approveFile(imfsi.getTestPath().resolve("87668f").resolve("c5f725-not-approved.json"));
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/c5f725-approved.json", "/*ContentMatcherTest.contentMatcherWorkflowWithNonAsciiCharacters*/\n" +
                     "{\n" +
                     "  \"dummyString\": \"dummyValue\",\n" +
@@ -533,8 +533,8 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void runningFromCommandLineFailedWithCharacterProblemsWithThis() {
         BeanWithGeneric<List<String>> actual = BeanWithGeneric.of("dummyValue", Collections.singletonList("5 三月 1984 07:15:17"));
-        inMemoryUnixFs((fs, path) -> {
-            DummyInformation dummyTestInfo = new DummyInformation(path, "ContentMatcherTest", "runningFromCommandLineFailedWithCharacterProblemsWithThis");
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "runningFromCommandLineFailedWithCharacterProblemsWithThis");
             JsonMatcher<BeanWithGeneric<List<String>>> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
             AssertionError actualError = assertThrows(AssertionError.class,
@@ -542,11 +542,11 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals(getNotApprovedCreationMessage("87668f", "dc100a-not-approved.json", "dc100a-approved.json"), actualError.getMessage());
 
-            approveFile(path.resolve("87668f").resolve("dc100a-not-approved.json"));
+            approveFile(imfsi.getTestPath().resolve("87668f").resolve("dc100a-not-approved.json"));
 
             MatcherAssert.assertThat(actual, underTest);
 
-            List<InMemoryFiles> actualFiles = getFiles(fs);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/dc100a-approved.json", "/*ContentMatcherTest.runningFromCommandLineFailedWithCharacterProblemsWithThis*/\n" +
                     "{\n" +
                     "  \"dummyString\": \"dummyValue\",\n" +

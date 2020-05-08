@@ -21,6 +21,7 @@ public class Junit4TestMeta implements TestMetaInformation {
     private final Path testClassPath;
     private final String testClassName;
     private final String testMethodName;
+    private final Path approvedDirectory;
 
     public Junit4TestMeta() {
         StackTraceElement testStackTraceElement = Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for Junit4TestMeta, custom implementation of TestMetaInformation required!");
@@ -29,6 +30,7 @@ public class Junit4TestMeta implements TestMetaInformation {
                 + DOT_LITERAL_PATTERN.matcher(testStackTraceElement.getClassName()).replaceAll(Matcher.quoteReplacement(File.separator)).replace(fileName, ""));
         testClassName = testStackTraceElement.getClassName();
         testMethodName = testStackTraceElement.getMethodName();
+        approvedDirectory = Paths.get("src" + File.separator + "test" + File.separator + "resources" + File.separator + "approvalcrest");
     }
 
     @Override
@@ -44,6 +46,11 @@ public class Junit4TestMeta implements TestMetaInformation {
     @Override
     public String testMethodName() {
         return testMethodName;
+    }
+
+    @Override
+    public Path getApprovedDirectory() {
+        return approvedDirectory;
     }
 
     private StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
