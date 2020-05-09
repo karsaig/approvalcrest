@@ -53,7 +53,6 @@ import com.google.gson.JsonParser;
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
-    private static final FileStoreMatcherUtils FSMU = new FileStoreMatcherUtils(".json");
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
@@ -62,7 +61,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     private GsonConfiguration configuration;
 
     public JsonMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig) {
-        super(testMetaInformation, fileMatcherConfig, FSMU);
+        super(testMetaInformation, fileMatcherConfig, new FileStoreMatcherUtils("json", fileMatcherConfig));
     }
 
     @Override

@@ -16,6 +16,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 
 /**
@@ -29,10 +30,14 @@ public class FileStoreMatcherUtils {
     public static final Object SEPARATOR = "-";
     private static final String APPROVED_NAME_PART = "approved";
     private static final String NOT_APPROVED_NAME_PART = "not-approved";
+    private final String fileType;
     private final String fileExtension;
+    private final FileMatcherConfig fileMatcherConfig;
 
-    public FileStoreMatcherUtils(String fileExtension) {
-        this.fileExtension = fileExtension;
+    public FileStoreMatcherUtils(String fileType, FileMatcherConfig fileMatcherConfig) {
+        this.fileType = fileType;
+        this.fileExtension = "." + fileType;
+        this.fileMatcherConfig = fileMatcherConfig;
     }
 
     /**

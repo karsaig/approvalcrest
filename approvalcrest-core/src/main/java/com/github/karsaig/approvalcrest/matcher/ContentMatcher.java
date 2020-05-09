@@ -39,12 +39,10 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
 
     private static final Pattern WINDOWS_NEWLINE_PATTERN = Pattern.compile("\r\n");
 
-    private static final FileStoreMatcherUtils FSMU = new FileStoreMatcherUtils(".content");
-
     private String expectedContent;
 
     public ContentMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig) {
-        super(testMetaInformation, fileMatcherConfig, FSMU);
+        super(testMetaInformation, fileMatcherConfig, new FileStoreMatcherUtils("content", fileMatcherConfig));
     }
 
     @Override
@@ -63,23 +61,23 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         initExpectedFromFile();
         String actualString = String.class.cast(actual);
 
-
-        String expectedNormalited = WINDOWS_NEWLINE_PATTERN.matcher(expectedContent).replaceAll("\n");
-        String actualNormalized = WINDOWS_NEWLINE_PATTERN.matcher(actualString).replaceAll("\n");
-        if (expectedNormalited.equals(actualNormalized)) {
+        String actualNormalized = normalize(actualString);
+        if (expectedContent.equals(actualNormalized)) {
             matches = true;
         } else {
             if (fileMatcherConfig.isOverwriteInPlaceEnabled()) {
                 overwriteApprovedFile(actualNormalized);
                 matches = true;
             } else {
-                matches = appendMismatchDescription(mismatchDescription, expectedContent, actualString,
+                matches = appendMismatchDescription(mismatchDescription, expectedContent, actualNormalized,
                         getAssertMessage(fileStoreMatcherUtils, "Content does not match!"));
             }
         }
         return matches;
+    }
 
-
+    private String normalize(String input) {
+        return WINDOWS_NEWLINE_PATTERN.matcher(input).replaceAll("\n");
     }
 
     private void createNotApprovedFileIfNotExists(Object toApprove) {
@@ -87,7 +85,7 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
             if (!String.class.isInstance(toApprove)) {
                 throw new IllegalArgumentException("Only String content matcher is supported!");
             }
-            return String.class.cast(toApprove);
+            return normalize(String.class.cast(toApprove));
         });
     }
 
@@ -96,6 +94,6 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     }
 
     private void initExpectedFromFile() {
-        expectedContent = getExpectedFromFile(Function.identity());
+        expectedContent = normalize(getExpectedFromFile(Function.identity()));
     }
 }
