@@ -15,8 +15,8 @@ git commit -a -m "Release version ${version}"
 mvn clean install
 mvn clean
 
-mvn -f for-release-pom.xml clean deploy -P sign-release -DskipRemoteStaging=true
-#mvn -f for-release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml -DskipRemoteStaging=true
+
+mvn -f for-release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml -DskipRemoteStaging=true
 
 mvn -f for-release-pom.xml nexus:deploy-staged -P ossrh --settings ../../Installed/settings.xml -DstagingDescription="Description of the staged repository"
 
