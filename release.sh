@@ -21,4 +21,4 @@ mvn -f for-release-pom.xml clean deploy -P sign-release,ossrh --settings ../../I
 mvn -f for-release-pom.xml nexus-staging:deploy-staged -P ossrh --settings ../../Installed/settings.xml -DstagingDescription="Description of the staged repository"
 
 git clean -f
-git push
+#git push
