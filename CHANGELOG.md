@@ -1,6 +1,17 @@
 Changelog
 ===========
 
+Version 0.55.3 - 2020/05/12
+-----
+
+ - pom file was still missing from release
+
+Version 0.55.2 - 2020/05/09
+-----
+
+ - fileMatcherUpdateInPlace alias for jsonMatcherUpdateInPlace
+ - fixed partial previous release
+
 Version 0.55 - 2020/05/03
 -----
 
