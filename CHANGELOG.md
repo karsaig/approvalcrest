@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.55.4 - 2020/05/18
+-----
+
+ - Fixed illegal reflective access warnings
+
 Version 0.55.3 - 2020/05/12
 -----
 
