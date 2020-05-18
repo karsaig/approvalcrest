@@ -148,7 +148,7 @@ QuickStart
 
 To use add the following to your project's pom.xml:
 
-### JUnit 4
+### JUnit 4 & 5 Vintage
 
     <dependency>
       <groupId>com.github.karsaig</groupId>
