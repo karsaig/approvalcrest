@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-parent</artifactId>
-    <version>0.55.4</version>
+    <version>0.56-SNAPSHOT</version>
     <modules>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
