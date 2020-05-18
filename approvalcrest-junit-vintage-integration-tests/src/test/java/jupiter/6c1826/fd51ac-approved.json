@@ -1,0 +1,4 @@
+/*jupiter.SameJsonTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+{
+  "different" : "content"
+}

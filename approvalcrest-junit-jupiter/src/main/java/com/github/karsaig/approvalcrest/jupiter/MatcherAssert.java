@@ -7,9 +7,9 @@
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-package com.github.karsaig.approvalcrest;
+package com.github.karsaig.approvalcrest.jupiter;
 
-import static com.github.karsaig.approvalcrest.ResultComparison.containsComparableJson;
+import static com.github.karsaig.approvalcrest.jupiter.ResultComparison.containsComparableJson;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -17,6 +17,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.platform.commons.util.BlacklistedExceptions;
 import org.opentest4j.AssertionFailedError;
 
+import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 
 /**

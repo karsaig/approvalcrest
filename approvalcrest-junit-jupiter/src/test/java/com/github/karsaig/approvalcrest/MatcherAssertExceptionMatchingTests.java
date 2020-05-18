@@ -1,11 +1,13 @@
 package com.github.karsaig.approvalcrest;
 
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
+
+import com.github.karsaig.approvalcrest.jupiter.MatcherAssert;
 
 public class MatcherAssertExceptionMatchingTests {
 

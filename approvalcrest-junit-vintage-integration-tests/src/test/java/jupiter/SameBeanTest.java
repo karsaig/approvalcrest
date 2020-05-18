@@ -1,4 +1,4 @@
-package samebean;
+package jupiter;
 
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThrows;

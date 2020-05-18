@@ -1,20 +1,15 @@
-package samejson;
+package jupiter;
 
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThrows;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
 import static org.hamcrest.Matchers.is;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 
-//f4eff9
+//6c1826
 public class SameJsonTest {
 
     //dac21e
@@ -31,20 +26,6 @@ public class SameJsonTest {
         BeanWithPrimitives actual = getBeanWithPrimitivesMaxValues();
 
         assertThrows(sameJsonAsApproved().withUniqueId("thrown").ignoring(is("identityHashCode")), () -> assertThat(actual, sameJsonAsApproved()));
-    }
-
-    public static Object[][] parameterizedTestCases() {
-        return new Object[][]{
-                {Optional.empty()},
-                {Optional.of(13L)},
-                {Optional.of("14")},
-        };
-    }
-
-    @ParameterizedTest
-    @MethodSource("parameterizedTestCases")
-    void parameterizedTest(Object input, TestInfo testInfo) {
-        assertThat(input, sameJsonAsApproved(testInfo));
     }
 
     protected BeanWithPrimitives getBeanWithPrimitivesMaxValues() {

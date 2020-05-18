@@ -11,10 +11,20 @@
 
     <artifactId>approvalcrest-junit-vintage-integration-tests</artifactId>
 
+    <properties>
+        <junit5.version>5.5.2</junit5.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest</artifactId>
+            <version>0.56-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-jupiter</artifactId>
             <version>0.56-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
@@ -27,7 +37,19 @@
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
-            <version>5.5.2</version>
+            <version>${junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit5.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${junit5.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

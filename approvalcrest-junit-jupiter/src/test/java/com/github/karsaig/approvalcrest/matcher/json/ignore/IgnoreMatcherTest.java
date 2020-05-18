@@ -1,7 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.json.ignore;
 
-import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;
+import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.assertContains;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

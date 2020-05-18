@@ -39,7 +39,7 @@ import com.google.gson.JsonElement;
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
  * ignore in the comparison, or fields to be matched with a custom matcher
  */
-class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> implements CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>> {
+public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> implements CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>> {
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
     protected final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     protected final T expected;

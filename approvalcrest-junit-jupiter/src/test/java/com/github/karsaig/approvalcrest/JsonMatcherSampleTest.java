@@ -2,10 +2,11 @@ package com.github.karsaig.approvalcrest;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.karsaig.approvalcrest.matcher.Matchers;
+import com.github.karsaig.approvalcrest.jupiter.MatcherAssert;
+import com.github.karsaig.approvalcrest.jupiter.matcher.Matchers;
 
 /**
- * Sample test for using {@link com.github.karsaig.approvalcrest.matcher.Matchers#sameJsonAsApproved()}.
+ * Sample test for using {@link com.github.karsaig.approvalcrest.jupiter.matcher.Matchers#sameJsonAsApproved()}.
  * @author Andras_Gyuro
  *
  */

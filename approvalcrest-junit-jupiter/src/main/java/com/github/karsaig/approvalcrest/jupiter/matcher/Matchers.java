@@ -7,7 +7,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.jupiter.matcher;
 
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -18,8 +18,15 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.TestInfo;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
-import com.github.karsaig.approvalcrest.Junit5InfoBasedTestMeta;
-import com.github.karsaig.approvalcrest.JunitJupiterTestMeta;
+import com.github.karsaig.approvalcrest.jupiter.Junit5InfoBasedTestMeta;
+import com.github.karsaig.approvalcrest.jupiter.JunitJupiterTestMeta;
+import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
+import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
+import com.github.karsaig.approvalcrest.matcher.IsEqualMatcher;
+import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
+import com.github.karsaig.approvalcrest.matcher.NullMatcher;
+import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
 
 import com.google.common.annotations.Beta;
 

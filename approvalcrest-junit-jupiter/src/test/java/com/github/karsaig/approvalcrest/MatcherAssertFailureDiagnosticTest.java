@@ -10,8 +10,8 @@
 package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
-import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
+import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.actual;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.checkThat;
 import static com.github.karsaig.approvalcrest.matchers.ComparisonFailureMatchers.expected;

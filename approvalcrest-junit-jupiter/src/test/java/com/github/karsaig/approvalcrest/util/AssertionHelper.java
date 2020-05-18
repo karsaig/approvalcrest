@@ -11,9 +11,9 @@ package com.github.karsaig.approvalcrest.util;
 
 import org.junit.jupiter.api.Assertions;
 
-import com.github.karsaig.approvalcrest.MatcherAssert;
+import com.github.karsaig.approvalcrest.jupiter.MatcherAssert;
 import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
-import com.github.karsaig.approvalcrest.matcher.Matchers;
+import com.github.karsaig.approvalcrest.jupiter.matcher.Matchers;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;

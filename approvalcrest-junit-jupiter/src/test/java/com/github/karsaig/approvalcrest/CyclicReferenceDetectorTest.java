@@ -10,7 +10,7 @@
 package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;

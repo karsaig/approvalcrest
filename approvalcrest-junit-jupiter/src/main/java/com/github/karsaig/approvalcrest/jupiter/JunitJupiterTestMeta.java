@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest;
+package com.github.karsaig.approvalcrest.jupiter;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
