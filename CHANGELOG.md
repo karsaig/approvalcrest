@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.56 - 2020/05/18
+-----
+
+ - New package for JUnit5 Jupiter matcher, so gradual migration of existing JUnit 4 projects are possible
+
 Version 0.55.4 - 2020/05/18
 -----
 
