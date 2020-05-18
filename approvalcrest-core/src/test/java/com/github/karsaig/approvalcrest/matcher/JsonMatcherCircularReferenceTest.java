@@ -239,7 +239,6 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         });
     }
 
-    //TODO: fix illegal reflective access
     @Test
     public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
         RuntimeException actual = new RuntimeException();
@@ -265,7 +264,6 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         });
     }
 
-    //TODO: fix illegal reflective access
     @Test
     public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
         Throwable actual = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
@@ -335,7 +333,6 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         });
     }
 
-    //TODO: fix illegal reflective access
     @Test
     public void doesNotFailWithClosableFields() {
         ClosableFields actual = new ClosableFields();

@@ -25,6 +25,9 @@ import java.util.function.Function;
 
 import org.hamcrest.Matcher;
 
+import com.gilecode.reflection.ReflectionAccessUtils;
+import com.gilecode.reflection.ReflectionAccessor;
+
 
 /**
  * Detects classes with fields that have circular reference and returns a set of those classes.
@@ -33,6 +36,7 @@ public class CyclicReferenceDetector {
 
     private Set<Object> nodesInPaths = newSetFromMap(new IdentityHashMap<>());
     private Set<Object> objectsWithCircularReferences = newSetFromMap(new IdentityHashMap<>());
+    private ReflectionAccessor accessor = ReflectionAccessUtils.getReflectionAccessor();
 
     /**
      * Returns a set of classes that have circular reference.
@@ -78,7 +82,7 @@ public class CyclicReferenceDetector {
         }
 
         for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
+            accessor.makeAccessible(field);
 
             if (!isStatic(field.getModifiers())) {
                 try {

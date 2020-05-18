@@ -17,6 +17,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.gilecode.reflection.ReflectionAccessUtils;
+import com.gilecode.reflection.ReflectionAccessor;
+
 /**
  * Returns the object corresponding to the path specified
  */
@@ -36,8 +39,9 @@ public class BeanFinder {
         if (object == null) {
             throw new PathNullPointerException(fields.get(0));
         }
+        ReflectionAccessor accessor = ReflectionAccessUtils.getReflectionAccessor();
         for (Field field : getEveryField(object.getClass())) {
-            field.setAccessible(true);
+            accessor.makeAccessible(field);
             if (headOf(fields).equals(field.getName())) {
                 try {
                     if (fields.size() == 1) {
