@@ -9,8 +9,8 @@ public class BeanWithGeneric<T> {
         return new BeanWithGeneric<>(dummyString, genericValue);
     }
 
-    public BeanWithGeneric(String dummyString, T genericValu) {
+    public BeanWithGeneric(String dummyString, T genericValue) {
         this.dummyString = dummyString;
-        this.genericValue = genericValu;
+        this.genericValue = genericValue;
     }
 }

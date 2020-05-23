@@ -16,7 +16,7 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 
 public class OffsetTimeAdapter implements JsonSerializer<OffsetTime>, JsonDeserializer<OffsetTime> {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_TIME.withZone(ZoneId.of("UTC")).withLocale(Locale.ENGLISH);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_TIME.withLocale(Locale.ENGLISH);
     public static final Type OFFSET_TIME_TYPE = (new TypeToken<OffsetTime>() {
     }).getType();
 
