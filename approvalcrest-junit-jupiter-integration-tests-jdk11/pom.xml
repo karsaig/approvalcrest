@@ -10,13 +10,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.karsaig.integration.tests</groupId>
-    <artifactId>approvalcrest-integration-tests</artifactId>
-
+    <artifactId>approvalcrest-junit-jupiter-integration-tests-jdk11</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>com.github.karsaig</groupId>
-            <artifactId>approvalcrest</artifactId>
+            <artifactId>approvalcrest-junit-jupiter</artifactId>
             <version>0.57-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
@@ -27,15 +26,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-core</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.5.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.5.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -54,7 +53,7 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <release>${java.target.version}</release>
+                    <release>11</release>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>

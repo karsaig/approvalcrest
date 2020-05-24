@@ -12,6 +12,7 @@
         <module>approvalcrest-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
+        <module>approvalcrest-junit-jupiter-integration-tests-jdk11</module>
     </modules>
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>
@@ -25,6 +26,7 @@
     </parent>
 
     <properties>
+        <java.target.version>8</java.target.version>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.2.0</maven.source.plugin.version>
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
@@ -72,7 +74,7 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <release>8</release>
+                    <release>${java.target.version}</release>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>

@@ -61,7 +61,7 @@ public class Matchers {
      * <p>
      * <b>!! Beta, as such subject to change !!</b>
      *
-     * @param testMetaInformation
+     * @param testMetaInformation Information used to generate file names and path to use.
      * @param <T>                 Type of object to serialize to JSON
      * @return a new {@link JsonMatcher} instance
      */

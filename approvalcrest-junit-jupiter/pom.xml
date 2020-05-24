@@ -56,6 +56,20 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <release>${java.target.version}</release>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>${maven.deploy.plugin.version}</version>
                 <configuration>
@@ -97,7 +111,7 @@
                             <exclude>org.checkerframework:checker-qual</exclude>
                             <exclude>com.google.errorprone:error_prone_annotations</exclude>
                             <exclude>com.google.j2objc:j2objc-annotations</exclude>
-                            <exclude> org.codehaus.mojo:animal-sniffer-annotations</exclude>
+                            <exclude>org.codehaus.mojo:animal-sniffer-annotations</exclude>
                             <exclude>com.google.code.gson:gson</exclude>
                             <exclude>org.apache.commons:commons-lang3</exclude>
                             <exclude>org.junit.jupiter:junit-jupiter-engine</exclude>
@@ -106,6 +120,7 @@
                             <exclude>org.opentest4j:opentest4j</exclude>
                             <exclude>org.junit.platform:junit-platform-commons</exclude>
                             <exclude>org.junit.jupiter:junit-jupiter-api</exclude>
+                            <exclude>com.gilecode.yagson:j9-reflection-utils</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
