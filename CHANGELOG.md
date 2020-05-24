@@ -1,6 +1,12 @@
 Changelog
 ===========
 
+Version 0.56.1 - 2020/05/24
+-----
+
+ - Fixed OffsetTime serialization issue
+ - Upgraded Guava and Gson versions
+
 Version 0.56 - 2020/05/18
 -----
 
