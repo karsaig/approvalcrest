@@ -162,8 +162,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     private JsonElement getAsJsonElement(Gson gson, Object object) {
         JsonElement result;
         if (object instanceof String) {
-            JsonParser jsonParser = new JsonParser();
-            result = jsonParser.parse((String) object);
+            result = JsonParser.parseString((String) object);
         } else {
             result = gson.toJsonTree(object);
         }
@@ -172,10 +171,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private void initExpectedFromFile() {
-        expected = getExpectedFromFile(s -> {
-            JsonParser jsonParser = new JsonParser();
-            return jsonParser.parse(s);
-        });
+        expected = getExpectedFromFile(JsonParser::parseString);
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement) {
@@ -215,8 +211,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     private String serializeToJson(Object toApprove, Gson gson) {
         String content;
         if (String.class.isInstance(toApprove)) {
-            JsonParser jsonParser = new JsonParser();
-            JsonElement toApproveJsonElement = jsonParser.parse(String.class.cast(toApprove));
+            JsonElement toApproveJsonElement = JsonParser.parseString(String.class.cast(toApprove));
             content = removeSetMarker(gson.toJson(toApproveJsonElement));
         } else {
             content = removeSetMarker(gson.toJson(toApprove));

@@ -36,8 +36,7 @@ public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
 
     public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind) {
-        JsonParser jsonParser = new JsonParser();
-        JsonElement jsonElement = jsonParser.parse(gson.toJson(object));
+        JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
