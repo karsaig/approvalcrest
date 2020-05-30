@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.56.2 - 2020/05/30
+-----
+
+ - Fixed sameBeanAs return value
+
 Version 0.56.1 - 2020/05/24
 -----
 
