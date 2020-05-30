@@ -28,9 +28,9 @@ public class Matchers {
      *
      * @param expected the expected bean to match against
      * @param <T>      type of actual object
-     * @return an {@link CustomisableMatcher} instance
+     * @return an {@link DiagnosingCustomisableMatcher} instance
      */
-    public static <T> CustomisableMatcher<T, ?> sameBeanAs(T expected) {
+    public static <T> DiagnosingCustomisableMatcher<T> sameBeanAs(T expected) {
         if (expected == null) {
             return new NullMatcher<>(expected);
         }
