@@ -6,6 +6,7 @@ import static java.nio.file.attribute.PosixFilePermission.GROUP_WRITE;
 import static java.nio.file.attribute.PosixFilePermission.OTHERS_READ;
 import static java.nio.file.attribute.PosixFilePermission.OTHERS_WRITE;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
+import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,7 +15,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Set;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
@@ -30,6 +33,8 @@ public class FileStoreMatcherUtils {
     public static final Object SEPARATOR = "-";
     private static final String APPROVED_NAME_PART = "approved";
     private static final String NOT_APPROVED_NAME_PART = "not-approved";
+    private static final Set<PosixFilePermission> APPROVED_FILE_PERMISSIONS = Collections.unmodifiableSet(EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OWNER_WRITE));
+    private static final Set<PosixFilePermission> APPROVED_DIRECTORY_PERMISSIONS = Collections.unmodifiableSet(EnumSet.allOf(PosixFilePermission.class));
     private final String fileType;
     private final String fileExtension;
     private final FileMatcherConfig fileMatcherConfig;
@@ -56,7 +61,7 @@ public class FileStoreMatcherUtils {
         Path file = getFullFileName(fileNameWithPath, false);
         Path parent = file.getParent();
         if (isPosixCompatible(parent)) {
-            Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(EnumSet.allOf(PosixFilePermission.class)));
+            Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(APPROVED_DIRECTORY_PERMISSIONS));
         } else {
             Files.createDirectories(parent);
         }
@@ -74,7 +79,7 @@ public class FileStoreMatcherUtils {
             writer.write(jsonObject);
         }
         if (isPosixCompatible(file)) {
-            Files.setPosixFilePermissions(file, EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OTHERS_WRITE));
+            Files.setPosixFilePermissions(file, APPROVED_FILE_PERMISSIONS);
         }
         return file.getFileName().toString();
     }
