@@ -109,7 +109,14 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         return getAssertMessage(fileStoreMatcherUtils, t.getMessage());
     }
 
-    protected void createNotApprovedFileIfNotExists(Object toApprove, Supplier<String> content) {
+    /**
+     * Creates a file suffixed with -not-approved for the developer to verify, and rename.
+     *
+     * @param toApprove ?
+     * @param content The content to be added to the -not-approved file.
+     * @return true if the not-approved file was created, false otherwise.
+     */
+    protected boolean createNotApprovedFileIfNotExists(Object toApprove, Supplier<String> content) {
         Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
 
         if (Files.notExists(approvedFile)) {
@@ -127,12 +134,13 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                     }
                     fail(message);
                 }
-
+                return true;
             } catch (IOException e) {
                 throw new IllegalStateException(
                         String.format("Exception while creating not approved file %s", toApprove.toString()), e);
             }
         }
+        return false;
     }
 
     protected String getCommentLine() {

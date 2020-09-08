@@ -111,8 +111,8 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));
         init();
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        createNotApprovedFileIfNotExists(actual, gson);
-        if (fileMatcherConfig.isPassOnCreateEnabled()) {
+        if (createNotApprovedFileIfNotExists(actual, gson)
+                && fileMatcherConfig.isPassOnCreateEnabled()) {
             return true;
         }
         initExpectedFromFile();
@@ -200,8 +200,8 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         return MARKER_PATTERN.matcher(json).replaceAll("");
     }
 
-    private void createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {
-        createNotApprovedFileIfNotExists(toApprove, () -> serializeToJson(toApprove, gson));
+    private boolean createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {
+        return createNotApprovedFileIfNotExists(toApprove, () -> serializeToJson(toApprove, gson));
     }
 
     private void overwriteApprovedFile(Object actual, Gson gson) {

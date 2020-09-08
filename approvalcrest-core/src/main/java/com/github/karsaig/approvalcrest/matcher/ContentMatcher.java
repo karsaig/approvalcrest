@@ -54,8 +54,8 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     protected boolean matches(Object actual, Description mismatchDescription) {
         boolean matches = false;
         init();
-        createNotApprovedFileIfNotExists(actual);
-        if (fileMatcherConfig.isPassOnCreateEnabled()) {
+        if (createNotApprovedFileIfNotExists(actual)
+                && fileMatcherConfig.isPassOnCreateEnabled()) {
             return true;
         }
         initExpectedFromFile();
@@ -80,8 +80,8 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         return WINDOWS_NEWLINE_PATTERN.matcher(input).replaceAll("\n");
     }
 
-    private void createNotApprovedFileIfNotExists(Object toApprove) {
-        createNotApprovedFileIfNotExists(toApprove, () -> {
+    private boolean createNotApprovedFileIfNotExists(Object toApprove) {
+        return createNotApprovedFileIfNotExists(toApprove, () -> {
             if (!String.class.isInstance(toApprove)) {
                 throw new IllegalArgumentException("Only String content matcher is supported!");
             }
