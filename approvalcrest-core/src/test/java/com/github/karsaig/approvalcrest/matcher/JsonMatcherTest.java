@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +55,88 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("8c5498/183d71-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
+                    getBeanWithPrimitivesAsJsonString());
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwriteAndPassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("8c5498").resolve("0821e3-approved.json"), "{ dummyProperty: dummyContent }");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("8c5498/0821e3-approved.json", "/*JsonMatcherTest.shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled*/\n" +
+                    getBeanWithPrimitivesAsJsonString());
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldFailWhenApprovedFileDiffersAndPassOnCreateIsEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "shouldFailWhenApprovedFileDiffersAndPassOnCreateIsEnabled");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("8c5498").resolve("247f32-approved.json"), "{ dummyProperty: dummyContent }");
+
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+
+            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: dummyContent\n" +
+                    "     but: Expected file 8c5498/247f32-approved.json\n" +
+                    "Content does not match!"));
+
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("c716ab/247f32-approved.json", "{ dummyProperty: dummyContent }");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("8c5498").resolve("901d38-not-approved.json"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("8c5498/901d38-not-approved.json", "/*JsonMatcherTest.shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled*/\n" +
+                    getBeanWithPrimitivesAsJsonString());
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enableInPlaceOverwriteAndPassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("8c5498").resolve("df20a0-not-approved.json"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("8c5498/df20a0-not-approved.json", "/*JsonMatcherTest.shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled*/\n" +
                     getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);

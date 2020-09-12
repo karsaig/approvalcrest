@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +60,86 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             List<InMemoryFiles> actualFiles = getFiles(imfsi.getInMemoryFileSystem());
             InMemoryFiles expected = new InMemoryFiles("87668f/183d71-not-approved.content", "/*ContentMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExists*/\n" +
                     "Example content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled() {
+        String actual = "Test input data...";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherOverwriteTest", "shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwriteAndPassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("c716ab").resolve("0821e3-approved.content"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("c716ab/0821e3-approved.content", "/*ContentMatcherOverwriteTest.shouldOverwriteApprovedFileWhenDiffersFromActualAndBothInPlaceOverwriteAndContinueOnCreateIsEnabled*/\n" +
+                    "Test input data...");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldFailWhenApprovedFileDiffersAndPassOnCreateIsEnabled() {
+        String actual = "Test input data...";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherOverwriteTest", "shouldFailWhenApprovedFileDiffersAndPassOnCreateIsEnabled");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("c716ab").resolve("247f32-approved.content"), "dummyContent");
+
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: dummyContent\n" +
+                    "     but: Expected file c716ab/247f32-approved.content\n" +
+                    "Content does not match!"));
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("c716ab/247f32-approved.content", "dummyContent");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled() {
+        String actual = "Test input data...";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherOverwriteTest", "shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("c716ab").resolve("901d38-not-approved.content"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("c716ab/901d38-not-approved.content", "/*ContentMatcherOverwriteTest.shouldOverwriteNotApprovedFileWhenPassOnCreateIsEnabled*/\n" +
+                    "Test input data...");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled() {
+        String actual = "Test input data...";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherOverwriteTest", "shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwriteAndPassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("c716ab").resolve("df20a0-not-approved.content"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("c716ab/df20a0-not-approved.content", "/*ContentMatcherOverwriteTest.shouldOverwriteNotApprovedFileWhenBothPassOnCreateAndInPlaceOverwriteAreEnabled*/\n" +
+                    "Test input data...");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });

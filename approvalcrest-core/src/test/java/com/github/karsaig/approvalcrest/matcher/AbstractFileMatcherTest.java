@@ -166,4 +166,8 @@ public abstract class AbstractFileMatcherTest {
     public static FileMatcherConfig enablePassOnCreate() {
         return new FileMatcherConfig(false, true, false, false);
     }
+
+    public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
+        return new FileMatcherConfig(true, true, false, false);
+    }
 }
