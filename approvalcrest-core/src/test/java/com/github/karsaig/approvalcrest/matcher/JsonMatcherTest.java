@@ -93,13 +93,34 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     () -> MatcherAssert.assertThat(actual, underTest));
 
 
-            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: dummyContent\n" +
+            Assertions.assertEquals("\n" +
+                    "Expected: {\n" +
+                    "  \"dummyProperty\": \"dummyContent\"\n" +
+                    "}\n" +
                     "     but: Expected file 8c5498/247f32-approved.json\n" +
-                    "Content does not match!"));
+                    "\n" +
+                    "Expected: dummyProperty\n" +
+                    "     but none found\n" +
+                    " ; \n" +
+                    "Unexpected: beanBoolean\n" +
+                    " ; \n" +
+                    "Unexpected: beanByte\n" +
+                    " ; \n" +
+                    "Unexpected: beanChar\n" +
+                    " ; \n" +
+                    "Unexpected: beanDouble\n" +
+                    " ; \n" +
+                    "Unexpected: beanFloat\n" +
+                    " ; \n" +
+                    "Unexpected: beanInteger\n" +
+                    " ; \n" +
+                    "Unexpected: beanLong\n" +
+                    " ; \n" +
+                    "Unexpected: beanShort\n", actualError.getMessage());
 
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("c716ab/247f32-approved.json", "{ dummyProperty: dummyContent }");
+            InMemoryFiles expected = new InMemoryFiles("8c5498/247f32-approved.json", "{ dummyProperty: dummyContent }");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
