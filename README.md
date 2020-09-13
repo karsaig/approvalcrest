@@ -1,6 +1,7 @@
 Approvalcrest
 ===========
 [![Build Status](https://travis-ci.org/karsaig/approvalcrest.svg?branch=master)](https://travis-ci.org/karsaig/approvalcrest)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.karsaig/approvalcrest.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.karsaig%22%20AND%20a:%22approvalcrest%22)
 
 
 'Approvalcrest' is a library that extends the functionality of [Shazamcrest](https://github.com/shazam/shazamcrest).
