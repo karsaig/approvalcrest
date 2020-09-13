@@ -34,6 +34,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Three;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
+
 import com.google.common.base.Function;
 
 /**

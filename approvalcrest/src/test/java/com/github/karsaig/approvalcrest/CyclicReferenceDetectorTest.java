@@ -13,8 +13,8 @@ import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClasse
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +34,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Three;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
+
 import com.google.common.base.Function;
 
 /**

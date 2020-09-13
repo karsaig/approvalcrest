@@ -13,14 +13,10 @@ import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
 import static java.util.Arrays.stream;
 
-import java.util.Collection;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
-import com.google.common.collect.Streams;
 
 /**
  * Tests that the matcher works as expected with primitives, Strings and Enums

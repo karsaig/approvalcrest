@@ -11,7 +11,6 @@ package com.github.karsaig.approvalcrest;
 
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
-import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
 import static com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
@@ -31,6 +30,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
+
 import com.google.common.base.Function;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;

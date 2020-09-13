@@ -2,7 +2,6 @@ package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
 import java.lang.reflect.Type;
 import java.time.OffsetTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 

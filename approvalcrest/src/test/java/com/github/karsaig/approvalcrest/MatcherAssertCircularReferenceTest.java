@@ -28,6 +28,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
+
 import com.google.common.base.Function;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
