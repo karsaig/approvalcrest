@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-parent</artifactId>
-    <version>0.56.3</version>
+    <version>0.57-SNAPSHOT</version>
     <modules>
         <module>testing-common</module>
         <module>approvalcrest-core</module>
