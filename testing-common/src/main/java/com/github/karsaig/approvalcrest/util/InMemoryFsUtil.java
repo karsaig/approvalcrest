@@ -1,10 +1,19 @@
 package com.github.karsaig.approvalcrest.util;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -14,12 +23,50 @@ import com.google.common.jimfs.Jimfs;
 
 public class InMemoryFsUtil {
 
+    public static final Set<PosixFilePermission> FILE_CREATE_PERMISSONS = unmodifiableSet(EnumSet.of(PosixFilePermission.GROUP_WRITE,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.OTHERS_WRITE,
+            PosixFilePermission.OTHERS_READ,
+            PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_READ));
+    public static final Set<PosixFilePermission> DIRECTORY_CREATE_PERMISSONS = unmodifiableSet(EnumSet.of(PosixFilePermission.GROUP_WRITE,
+            PosixFilePermission.GROUP_READ,
+            PosixFilePermission.GROUP_EXECUTE,
+            PosixFilePermission.OTHERS_WRITE,
+            PosixFilePermission.OTHERS_READ,
+            PosixFilePermission.OTHERS_EXECUTE,
+            PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.OWNER_EXECUTE));
+    public static final Set<PosixFilePermission> DEFAULT_JIMFS_PERMISSIONS = unmodifiableSet(EnumSet.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE, PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
+    private static final Set<InMemoryPermissions> PRE_EXISTING_PATHS_WITH_PERMISSIONS;
+
+    static {
+
+        Set<InMemoryPermissions> preExisting = new HashSet<>();
+        preExisting.add(new InMemoryPermissions("/", DEFAULT_JIMFS_PERMISSIONS));
+        preExisting.add(new InMemoryPermissions("/work", DEFAULT_JIMFS_PERMISSIONS));
+        preExisting.add(new InMemoryPermissions("/work/resources", DEFAULT_JIMFS_PERMISSIONS));
+        preExisting.add(new InMemoryPermissions("/work/test", DEFAULT_JIMFS_PERMISSIONS));
+        preExisting.add(new InMemoryPermissions("/work/test/path", DEFAULT_JIMFS_PERMISSIONS));
+        PRE_EXISTING_PATHS_WITH_PERMISSIONS = unmodifiableSet(preExisting);
+    }
+
+
     private InMemoryFsUtil() {
     }
 
     public static void inMemoryUnixFs(Consumer<InMemoryFsInfo> test) {
         Configuration config = Configuration.unix()
                 .toBuilder()
+                .build();
+        inMemoryFs(config, test);
+    }
+
+    public static void inMemoryUnixFsWithFileAttributeSupport(Consumer<InMemoryFsInfo> test) {
+        Configuration config = Configuration.unix()
+                .toBuilder()
+                .setAttributeViews("basic", "owner", "posix", "unix")
                 .build();
         inMemoryFs(config, test);
     }
@@ -65,6 +112,42 @@ public class InMemoryFsUtil {
                     }
                     return new InMemoryFiles(fullPath, readFile(p));
                 })
+                .collect(Collectors.toList());
+    }
+
+    public static List<InMemoryPermissions> getPermissons(InMemoryFsInfo imfsi) {
+        return getPermissons(imfsi.getInMemoryFileSystem());
+    }
+
+    public static List<InMemoryPermissions> getPermissons(FileSystem fs) {
+        return StreamSupport.stream(fs.getRootDirectories().spliterator(), false)
+                .flatMap(rp -> {
+                    try {
+                        return Files.walk(rp);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .map(p -> {
+                    String fullPath = p.toString();
+                    if (fullPath.startsWith("/work/test/path/")) {
+                        fullPath = fullPath.substring(16);
+                    } else if (fullPath.startsWith("C:\\work\\test\\path\\")) {
+                        fullPath = fullPath.substring(18);
+                    }
+                    try {
+                        PosixFileAttributeView attributeView = Files.getFileAttributeView(p, PosixFileAttributeView.class);
+                        if (attributeView != null) {
+                            PosixFileAttributes attributes = attributeView.readAttributes();
+                            return new InMemoryPermissions(fullPath, attributes.permissions());
+                        } else {
+                            return new InMemoryPermissions(fullPath, Collections.emptySet());
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .filter(imp -> !PRE_EXISTING_PATHS_WITH_PERMISSIONS.contains(imp))
                 .collect(Collectors.toList());
     }
 

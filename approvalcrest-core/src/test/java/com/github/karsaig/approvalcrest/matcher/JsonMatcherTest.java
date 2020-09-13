@@ -1,20 +1,25 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
+import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
 
 /**
  * Unit test for the {@link JsonMatcher}.
@@ -41,6 +46,46 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     getBeanWithPrimitivesAsJsonString());
 
             assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void testRunShouldCreateNotApprovedFileWithCorrectPermissionsWhenNotExists() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        InMemoryFsUtil.inMemoryUnixFsWithFileAttributeSupport(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "testRunShouldCreateNotApprovedFileWithCorrectPermissionsWhenNotExists");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
+
+
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "4b34e9-not-approved.json", "4b34e9-approved.json"), actualError.getMessage());
+
+            List<InMemoryPermissions> actualFiles = InMemoryFsUtil.getPermissons(imfsi);
+            List<InMemoryPermissions> expected = new ArrayList<>();
+            expected.add(new InMemoryPermissions("8c5498", DIRECTORY_CREATE_PERMISSONS));
+            expected.add(new InMemoryPermissions("8c5498/4b34e9-not-approved.json", FILE_CREATE_PERMISSONS));
+            assertIterableEquals(expected, actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteNotApprovedFileWithCorrectPermissionsWhenPassOnCreateIsEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        InMemoryFsUtil.inMemoryUnixFsWithFileAttributeSupport(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "shouldOverwriteNotApprovedFileWithCorrectPermissionsWhenPassOnCreateIsEnabled");
+            JsonMatcher<BeanWithPrimitives> underTest = new JsonMatcher<>(dummyTestInfo, enablePassOnCreate());
+
+            writeFile(imfsi.getTestPath().resolve("8c5498").resolve("f587c6-not-approved.json"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryPermissions> actualFiles = InMemoryFsUtil.getPermissons(imfsi);
+            List<InMemoryPermissions> expected = new ArrayList<>();
+            expected.add(new InMemoryPermissions("8c5498", DEFAULT_JIMFS_PERMISSIONS));
+            expected.add(new InMemoryPermissions("8c5498/f587c6-not-approved.json", FILE_CREATE_PERMISSONS));
+            assertIterableEquals(expected, actualFiles);
         });
     }
 

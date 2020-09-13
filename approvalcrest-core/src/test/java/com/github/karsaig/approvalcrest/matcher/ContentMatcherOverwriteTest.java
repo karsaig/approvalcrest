@@ -1,9 +1,12 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hamcrest.MatcherAssert;
@@ -11,7 +14,10 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
+import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
 
 public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
 
@@ -71,6 +77,25 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
                     "Test input data...");
 
             assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldOverwriteApprovedFileWithCorrectPermissionsWhenOverwriteInPlaceEnabledAndApprovedFileExists() {
+        String actual = "Test input data...";
+        InMemoryFsUtil.inMemoryUnixFsWithFileAttributeSupport(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherOverwriteTest", "shouldOverwriteApprovedFileWithCorrectPermissionsWhenOverwriteInPlaceEnabledAndApprovedFileExists");
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, enableInPlaceOverwrite());
+
+            writeFile(imfsi.getTestPath().resolve("c716ab").resolve("00068b-approved.content"), "dummyContent");
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryPermissions> actualFiles = InMemoryFsUtil.getPermissons(imfsi);
+            List<InMemoryPermissions> expected = new ArrayList<>();
+            expected.add(new InMemoryPermissions("c716ab", DEFAULT_JIMFS_PERMISSIONS));
+            expected.add(new InMemoryPermissions("c716ab/00068b-approved.content", FILE_CREATE_PERMISSONS));
+            assertIterableEquals(expected, actualFiles);
         });
     }
 
