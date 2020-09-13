@@ -1,6 +1,12 @@
 Changelog
 ===========
 
+Version 0.56.3 - 2020/09/13
+-----
+
+ - Fixed permissions on created directories and files as it had a bug which caused permission problems in some cases
+ - Fixed bugs around pass on create flag 
+ 
 Version 0.56.2 - 2020/05/30
 -----
 
