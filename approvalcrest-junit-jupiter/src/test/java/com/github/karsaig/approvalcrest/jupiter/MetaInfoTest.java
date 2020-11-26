@@ -20,9 +20,9 @@ public class MetaInfoTest {
 
     @Test
     public void testJunit5InfoMetaWithSameBeanAsMatcher(TestInfo testInfo) {
-        Junit5InfoBasedTestMeta underTest = new Junit5InfoBasedTestMeta(testInfo);
+        JunitJupiterTestMeta underTest = new JunitJupiterTestMeta(testInfo);
 
-        Junit5InfoBasedTestMeta expected = new Junit5InfoBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest/jupiter"), "com.github.karsaig.approvalcrest.jupiter.MetaInfoTest", "testJunit5InfoMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"));
+        JunitJupiterTestMeta expected = new JunitJupiterTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest/jupiter"), "com.github.karsaig.approvalcrest.jupiter.MetaInfoTest", "testJunit5InfoMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"));
         assertThat(underTest, sameBeanAs(expected));
     }
 }

@@ -13,6 +13,7 @@
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests-jdk11</module>
+        <module>approvalcrest-junit-kotlin</module>
     </modules>
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>
@@ -68,6 +69,16 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
     </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.github.karsaig</groupId>
+                <artifactId>approvalcrest-junit-jupiter</artifactId>
+                <version>${version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
