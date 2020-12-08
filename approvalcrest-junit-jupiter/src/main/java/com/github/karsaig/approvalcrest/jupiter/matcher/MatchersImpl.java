@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.jupiter.matcher;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.jupiter.Junit5InfoBasedTestMeta;
 import com.github.karsaig.approvalcrest.jupiter.JunitJupiterTestMeta;
 import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
@@ -21,11 +22,11 @@ public class MatchersImpl {
         return new JunitJupiterTestMeta();
     }
 
-    protected JunitJupiterTestMeta getTestMetaInformation(TestInfo testInfo) {
-        return new JunitJupiterTestMeta(testInfo);
+    protected Junit5InfoBasedTestMeta getTestMetaInformation(TestInfo testInfo) {
+        return new Junit5InfoBasedTestMeta(testInfo);
     }
 
-    public <T> DiagnosingCustomisableMatcher<T> _sameBeanAs(T expected) {
+    public <T> DiagnosingCustomisableMatcher<T> sameBeanAs(T expected) {
         if (expected == null) {
             return new NullMatcher<>(expected);
         }
@@ -38,29 +39,29 @@ public class MatchersImpl {
         return new DiagnosingCustomisableMatcher<>(expected);
     }
 
-    public <T> JsonMatcher<T> _sameJsonAsApproved() {
+    public <T> JsonMatcher<T> sameJsonAsApproved() {
         return Matchers.sameJsonAsApproved(getTestMetaInformation());
     }
 
-    public <T> JsonMatcher<T> _sameJsonAsApproved(TestMetaInformation testMetaInformation) {
+    public <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
         return new JsonMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 
-    public <T> JsonMatcher<T> _sameJsonAsApproved(TestInfo testInfo) {
+    public <T> JsonMatcher<T> sameJsonAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
                 .map(s -> new JsonMatcher<T>(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
                 .orElse(new JsonMatcher<>(getTestMetaInformation(testInfo), new FileMatcherConfig()));
     }
 
-    public <T> ContentMatcher<T> _sameContentAsApproved() {
+    public <T> ContentMatcher<T> sameContentAsApproved() {
         return Matchers.sameContentAsApproved(getTestMetaInformation());
     }
 
-    public <T> ContentMatcher<T> _sameContentAsApproved(TestMetaInformation testMetaInformation) {
+    public <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
         return new ContentMatcher<>(testMetaInformation, new FileMatcherConfig());
     }
 
-    public <T> ContentMatcher<T> _sameContentAsApproved(TestInfo testInfo) {
+    public <T> ContentMatcher<T> sameContentAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
                 .map(s -> new ContentMatcher<T>(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
                 .orElse(new ContentMatcher<>(getTestMetaInformation(testInfo), new FileMatcherConfig()));

@@ -38,7 +38,7 @@ public class Matchers {
      * @return an {@link DiagnosingCustomisableMatcher} instance
      */
     public static <T> DiagnosingCustomisableMatcher<T> sameBeanAs(T expected) {
-        return INSTANCE._sameBeanAs(expected);
+        return INSTANCE.sameBeanAs(expected);
     }
 
 
@@ -50,7 +50,7 @@ public class Matchers {
      * @return a new {@link JsonMatcher} instance
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved() {
-        return INSTANCE._sameJsonAsApproved();
+        return INSTANCE.sameJsonAsApproved();
     }
 
 
@@ -67,7 +67,7 @@ public class Matchers {
      */
     @Beta
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
-        return INSTANCE._sameJsonAsApproved(testMetaInformation);
+        return INSTANCE.sameJsonAsApproved(testMetaInformation);
     }
 
 
@@ -81,7 +81,7 @@ public class Matchers {
      * @return a new {@link JsonMatcher} instance
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestInfo testInfo) {
-        return INSTANCE._sameJsonAsApproved(testInfo);
+        return INSTANCE.sameJsonAsApproved(testInfo);
     }
 
 
@@ -92,7 +92,7 @@ public class Matchers {
      * @return a new {@link ContentMatcher} instance
      */
     public static <T> ContentMatcher<T> sameContentAsApproved() {
-        return INSTANCE._sameContentAsApproved();
+        return INSTANCE.sameContentAsApproved();
     }
 
 
@@ -108,7 +108,7 @@ public class Matchers {
      */
     @Beta
     public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
-        return INSTANCE._sameContentAsApproved(testMetaInformation);
+        return INSTANCE.sameContentAsApproved(testMetaInformation);
     }
 
 
@@ -121,7 +121,7 @@ public class Matchers {
      * @return a new {@link ContentMatcher} instance
      */
     public static <T> ContentMatcher<T> sameContentAsApproved(TestInfo testInfo) {
-        return INSTANCE._sameContentAsApproved(testInfo);
+        return INSTANCE.sameContentAsApproved(testInfo);
     }
 
 
