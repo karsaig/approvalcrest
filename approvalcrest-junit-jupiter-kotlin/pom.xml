@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>approvalcrest-junit-kotlin</artifactId>
+    <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
 
     <properties>
         <kotlin.version>1.4.20</kotlin.version>
