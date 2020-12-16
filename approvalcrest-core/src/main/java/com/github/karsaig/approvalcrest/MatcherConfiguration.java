@@ -20,6 +20,7 @@ public class MatcherConfiguration {
     private final List<Class<?>> typesToIgnore = new ArrayList<>();
     private final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
+    private boolean stabilizeUUIDs = false;
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -105,5 +106,14 @@ public class MatcherConfiguration {
             skipCircularReferenceCheck.add(actual);
         }
         return this;
+    }
+    
+    public MatcherConfiguration setStabilizeUUIDs() {
+        this.stabilizeUUIDs = true;
+        return this;
+    }
+    
+    public boolean stabilizeUUIDs() {
+        return stabilizeUUIDs;
     }
 }

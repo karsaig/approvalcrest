@@ -200,4 +200,10 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         matcherConfiguration.addSkipCircularReferenceChecker(matcher).addSkipCircularReferenceChecker(matchers);
         return this;
     }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> stabilizeUUIDs() {
+        matcherConfiguration.setStabilizeUUIDs();
+        return this;
+    }
 }

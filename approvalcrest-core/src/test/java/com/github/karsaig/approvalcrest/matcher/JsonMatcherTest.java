@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Assertions;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.Test;
 
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
 import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
@@ -707,4 +710,54 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
+    
+    // 262575
+    @Test
+    public void testStabilizeUUIDs() {
+        String uuid1 = UUID.randomUUID().toString();
+        String uuid2 = UUID.randomUUID().toString();
+        ChildBean c1 = ChildBean.Builder.child()
+                .childString(uuid1)
+                .build();
+        ChildBean c2 = ChildBean.Builder.child()
+                .childString(uuid2)
+                .build();
+        ParentBean actual = ParentBean.Builder.parent()
+                .parentString(uuid1)
+                .addToChildBeanList(c1)
+                .addToChildBeanList(c2)
+                .build();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherTest", "testStabilizeUUIDs");
+            JsonMatcher<ParentBean> underTest = new JsonMatcher<ParentBean>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .stabilizeUUIDs();
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            Assertions.assertEquals(getNotApprovedCreationMessage("8c5498", "262575-not-approved.json", "262575-approved.json"), actualError.getMessage());
+            approveFile(imfsi.getTestPath().resolve("8c5498").resolve("262575-not-approved.json"));
+            MatcherAssert.assertThat(actual, underTest);
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("8c5498/262575-approved.json", "/*JsonMatcherTest.testStabilizeUUIDs*/\n" +
+                    "{\n" +
+                    "  \"parentString\": \"cfcd2084-95d5-35ef-a6e7-dff9f98764da\",\n" +
+                    "  \"childBeanList\": [\n" +
+                    "    {\n" +
+                    "      \"childString\": \"cfcd2084-95d5-35ef-a6e7-dff9f98764da\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"childString\": \"c4ca4238-a0b9-3382-8dcc-509a6f75849b\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+    
+    // TODO: MFA - Arrays of primitives, Maps with UUID keys, things which are nearly UUIDs 
+    
 }

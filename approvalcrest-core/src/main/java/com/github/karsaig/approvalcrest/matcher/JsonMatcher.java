@@ -7,12 +7,18 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.json.JSONException;
@@ -22,10 +28,13 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
-
+import com.google.common.collect.Streams;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 
 /**
  * <p>
@@ -53,6 +62,7 @@ import com.google.gson.JsonParser;
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
     private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
+    private static final Pattern UUID_PATTERN = Pattern.compile("[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}");
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
@@ -179,9 +189,17 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         set.addAll(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
+        
+        if (matcherConfiguration.stabilizeUUIDs()) {
+            // Walk the tree to collect all the UUIDs we have in the order they appear 
+            // Build a replacement map
+            // Walk the tree again to make the replacements
+            filteredJson = stabilizeUUIDs(filteredJson);
+        }
 
         return removeSetMarker(gson.toJson(filteredJson));
     }
+
 
     private boolean assertEquals(String expectedJson, String actualJson,
                                  Description mismatchDescription) {
@@ -212,9 +230,16 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         String content;
         if (String.class.isInstance(toApprove)) {
             JsonElement toApproveJsonElement = JsonParser.parseString(String.class.cast(toApprove));
+            if (matcherConfiguration.stabilizeUUIDs()) {
+                toApproveJsonElement = stabilizeUUIDs(toApproveJsonElement);
+            }
             content = removeSetMarker(gson.toJson(toApproveJsonElement));
         } else {
-            content = removeSetMarker(gson.toJson(toApprove));
+            String json = gson.toJson(toApprove);
+            if (matcherConfiguration.stabilizeUUIDs()) {
+                json = gson.toJson(stabilizeUUIDs(JsonParser.parseString(json)));
+            }
+            content = removeSetMarker(json);
         }
         return content;
     }
@@ -257,6 +282,103 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         }
     }
 
+
+    /**
+     * Replace UUID values with stable replacements. 
+     * It's very common to use UUIDs as pointers in a JSON document.
+     * 
+     * Usually these are randomly generated, which makes comparing them to a static
+     * file difficult.
+     * 
+     * This method replaces all UUIDs with a stable set, preserving them as pointers 
+     * but also allowing them to be simply compared to static reference file.
+     * 
+     * @param filteredJson The original JsonElement to replace UUID values in
+     * @return A JsonElement with UUIDs replaced with stable replacements.
+     */
+    private JsonElement stabilizeUUIDs(JsonElement filteredJson) {
+        LinkedHashSet<UUID> uuids = findAllUUIDs(filteredJson);
+        Stream<UUID> stableUUIDStream = IntStream
+                .iterate(0, i -> i + 1)
+                .mapToObj(i -> UUID.nameUUIDFromBytes(("" + i).getBytes()));
+        Map<UUID, UUID> replacementUUIDs = Streams.zip(uuids.stream(), stableUUIDStream, Pair::of)
+                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+        filteredJson = replaceAllUUIDs(filteredJson, replacementUUIDs);
+        return filteredJson;
+    }
+
+    /**
+     * Returns an ordered set of all the UUIDs that appear in this JSON document.
+     * That is, anything which is a string and matches UUID_PATTERN (keys and values)
+     */
+    private LinkedHashSet<UUID> findAllUUIDs(JsonElement jsonElement) {
+        LinkedHashSet<UUID> hs = new LinkedHashSet<>();
+        if (jsonElement.isJsonPrimitive()) {
+            JsonPrimitive primitive = jsonElement.getAsJsonPrimitive();
+            if (primitive.isString()) {
+                String string = primitive.getAsString();
+                if (UUID_PATTERN.matcher(string).matches()) {
+                    hs.add(UUID.fromString(string));
+                    return hs;
+                }
+            }
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            for (JsonElement element: jsonArray) {
+                hs.addAll(findAllUUIDs(element));
+            }
+        } else if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            // TODO: MFA - is entrySet a stable order?
+            for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                String key = entry.getKey();
+                if (UUID_PATTERN.matcher(key).matches()) {
+                    hs.add(UUID.fromString(key));
+                }
+                hs.addAll(findAllUUIDs(entry.getValue()));
+            }
+        }
+        return hs;
+    }
+
+    /**
+     * Replaces UUIDs in the given JSON document. 
+     * Be careful that the order of operation is exacrlt the same as above.
+     */
+    private JsonElement replaceAllUUIDs(JsonElement jsonElement, Map<UUID, UUID> replacementUUIDs) {
+        if (jsonElement.isJsonPrimitive()) {
+            JsonPrimitive primitive = jsonElement.getAsJsonPrimitive();
+            if (primitive.isString()) {
+                String string = primitive.getAsString();
+                if (UUID_PATTERN.matcher(string).matches()) {
+                    UUID replacement = replacementUUIDs.get(UUID.fromString(string));
+                    return new JsonPrimitive(replacement.toString());
+                }
+            }
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            JsonArray replacement = new JsonArray();
+            for (int i=0; i<jsonArray.size(); i++) {
+                replacement.add(replaceAllUUIDs(jsonArray.get(i), replacementUUIDs));
+            }
+            return replacement;
+        } else if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            JsonObject replacement = new JsonObject();
+            for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                String key = entry.getKey();
+                if (UUID_PATTERN.matcher(key).matches()) {
+                    key = replacementUUIDs.get(UUID.fromString(key)).toString();
+                }
+                JsonElement val = replaceAllUUIDs(entry.getValue(), replacementUUIDs);
+                replacement.add(key, val);
+            }
+            return replacement;
+        }
+        return jsonElement;
+    }
+
+
     @Override
     public JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher);
@@ -268,6 +390,12 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public final JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher);
         matcherConfiguration.addSkipCircularReferenceChecker(matchers);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> stabilizeUUIDs() {
+        matcherConfiguration.setStabilizeUUIDs();
         return this;
     }
 }

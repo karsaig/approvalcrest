@@ -109,4 +109,6 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      */
     @SuppressWarnings({"unchecked", "varargs"})
     U skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers);
+
+    U stabilizeUUIDs();
 }
