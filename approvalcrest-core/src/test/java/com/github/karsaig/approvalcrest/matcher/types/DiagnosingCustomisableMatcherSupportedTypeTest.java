@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.matcher.types;
 
 import java.nio.file.Paths;
 import java.sql.Date;
@@ -18,6 +18,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 
 class DiagnosingCustomisableMatcherSupportedTypeTest {
@@ -37,6 +38,9 @@ class DiagnosingCustomisableMatcherSupportedTypeTest {
                 {Date.from(Instant.ofEpochMilli(1L)), Date.from(Instant.ofEpochMilli(1L)), true},
                 {Date.from(Instant.ofEpochMilli(1L)), Date.from(Instant.ofEpochMilli(2L)), false},
                 {Instant.ofEpochMilli(42), Instant.ofEpochMilli(42), true},
+                {Instant.MIN.plusSeconds(31622400L), Instant.MIN.plusSeconds(31622400L), true},
+                {Instant.MAX.minusSeconds(31622400L), Instant.MAX.minusSeconds(31622400L), true},
+                {Instant.EPOCH, Instant.EPOCH, true},
                 {Instant.ofEpochMilli(42), Instant.ofEpochMilli(43), false},
                 {LocalDate.of(2019, 4, 1), LocalDate.of(2019, 4, 1), true},
                 {LocalDate.of(2019, 4, 1), LocalDate.of(2019, 4, 2), false},
@@ -56,6 +60,9 @@ class DiagnosingCustomisableMatcherSupportedTypeTest {
                 {Instant.class, LocalDateTime.class, false},
                 {Paths.get("/something/anything"), Paths.get("/something/anything"), true},
                 {Paths.get("/something/anything"), Paths.get("/somethingElse/anything"), false},
+                {new RuntimeException("X:", new IllegalStateException("This is bad!")), new RuntimeException("X:", new IllegalStateException("This is bad!")), true},
+                {new RuntimeException("X:", new IllegalStateException("This is bad! Differs")), new RuntimeException("X:", new IllegalStateException("This is bad!")), false},
+                {new RuntimeException("X differs:", new IllegalStateException("This is bad!")), new RuntimeException("X:", new IllegalStateException("This is bad!")), false},
         };
     }
 

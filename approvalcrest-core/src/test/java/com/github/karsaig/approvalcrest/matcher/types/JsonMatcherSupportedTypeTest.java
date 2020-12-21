@@ -1,4 +1,4 @@
-package com.github.karsaig.approvalcrest.matcher;
+package com.github.karsaig.approvalcrest.matcher.types;
 
 import java.nio.file.Paths;
 import java.sql.Date;
@@ -15,6 +15,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
@@ -53,6 +55,30 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                 {LocalDateTime.class, "\"java.time.Instant\"", false},
                 {Paths.get("/something/anything"), "\"/something/anything\"", true},
                 {Paths.get("/something/anything"), "\"/somethingElse\"", false},
+                {new RuntimeException("X:", new IllegalStateException("This is bad!")), "{\n" +
+                        "  \"detailMessage\": \"X:\",\n" +
+                        "  \"cause\": {\n" +
+                        "    \"0x1\": {\n" +
+                        "      \"detailMessage\": \"This is bad!\",\n" +
+                        "      \"suppressedExceptions\": [],\n" +
+                        "      \"class\": \"java.lang.IllegalStateException\"\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  \"suppressedExceptions\": [],\n" +
+                        "  \"class\": \"java.lang.RuntimeException\"\n" +
+                        "}", true},
+                {new RuntimeException("X differs:", new IllegalStateException("This is bad!")), "{\n" +
+                        "  \"detailMessage\": \"X:\",\n" +
+                        "  \"cause\": {\n" +
+                        "    \"0x1\": {\n" +
+                        "      \"detailMessage\": \"This is bad!\",\n" +
+                        "      \"suppressedExceptions\": [],\n" +
+                        "      \"class\": \"java.lang.IllegalStateException\"\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  \"suppressedExceptions\": [],\n" +
+                        "  \"class\": \"java.lang.RuntimeException\"\n" +
+                        "}", false},
         };
     }
 

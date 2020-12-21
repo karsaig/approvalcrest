@@ -42,7 +42,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
     @Test
     public void doesNothingWhenAutoDetectCircularReferenceIsCalled() {
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNothingWhenAutoDetectCircularReferenceIsCalled*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNothingWhenAutoDetectCircularReferenceIsCalled*/\n" +
                 "{\n" +
                 "  \"parent\": {\n" +
                 "    \"0x1\": {\n" +
@@ -60,25 +60,14 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs(imfsi -> {
-            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNothingWhenAutoDetectCircularReferenceIsCalled");
-            JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("3473e7-approved.json"), apprivedFileContent);
-
-            MatcherAssert.assertThat(actual, underTest);
-
-            List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/3473e7-approved.json", apprivedFileContent);
-
-            assertIterableEquals(singletonList(expected), actualFiles);
-        });
+        inMemoryFsWithDummyTestInfo(actual, approvedFileContent, null);
     }
 
     @Test
     public void shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull() {
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull*/\n" +
                 "{\n" +
                 "  \"parent\": null\n" +
                 "}";
@@ -86,7 +75,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull");
             JsonMatcher<CircularReferenceBean> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("cb2b1f-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("cb2b1f-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -98,7 +87,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "Unexpected: parent\n", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/cb2b1f-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/cb2b1f-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -120,7 +109,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
         child2.setGenericObject(subRoot);
 
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph*/\n" +
                 "{\n" +
                 "  \"0x1\": {\n" +
                 "    \"subClassField\": \"0x2\",\n" +
@@ -143,12 +132,12 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph");
             JsonMatcher<Four> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("b47cca-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("b47cca-approved.json"), approvedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/b47cca-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/b47cca-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -161,7 +150,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         ((One) actual).setGenericObject(actualChild);
         actualChild.setGenericObject(actual);
 
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences*/\n" +
                 "{\n" +
                 "  \"0x1\": {\n" +
                 "    \"twoObject\": \"0x2\"\n" +
@@ -174,7 +163,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences");
             JsonMatcher<Object> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75e15-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75e15-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -201,7 +190,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "Unexpected: oneObject\n", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/d75e15-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/d75e15-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -210,13 +199,13 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
     @Test
     public void shouldNotTakeAges() {
         Element actual = Element.TWO;
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotTakeAges*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotTakeAges*/\n" +
                 "{\n" +
                 "  \"element\": \"one\"\n" +
                 "}";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotTakeAges");
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("492db7-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("492db7-approved.json"), approvedFileContent);
             assertTimeout(Duration.ofMillis(150), () -> {
                 JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
                 AssertionError actualError = assertThrows(AssertionError.class,
@@ -233,7 +222,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
             });
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/492db7-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/492db7-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -242,33 +231,19 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
     @Test
     public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
         RuntimeException actual = new RuntimeException();
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass*/\n" +
-                "{\n" +
+        String approvedFileContent = "{\n" +
                 "  \"0x1\": {\n" +
-                "    \"stackTrace\": [],\n" +
-                "    \"suppressedExceptions\": []\n" +
+                "    \"suppressedExceptions\": [],\n" +
+                "    \"class\": \"java.lang.RuntimeException\"\n" +
                 "  }\n" +
                 "}";
-        inMemoryUnixFs(imfsi -> {
-            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass");
-            JsonMatcher<RuntimeException> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
-
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("242865-approved.json"), apprivedFileContent);
-
-            MatcherAssert.assertThat(actual, underTest);
-
-            List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/242865-approved.json", apprivedFileContent);
-
-            assertIterableEquals(singletonList(expected), actualFiles);
-        });
+        inMemoryFsWithDummyTestInfo(actual, approvedFileContent, null);
     }
 
     @Test
     public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
         Throwable actual = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowExceptionWithAMoreNestedObject*/\n" +
-                "{\n" +
+        String approvedFileContent = "{\n" +
                 "  \"detailMessage\": \"java.lang.Exception: java.lang.RuntimeException: java.lang.ClassCastException\",\n" +
                 "  \"cause\": {\n" +
                 "    \"detailMessage\": \"java.lang.RuntimeException: java.lang.ClassCastException\",\n" +
@@ -276,38 +251,26 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "      \"detailMessage\": \"java.lang.ClassCastException\",\n" +
                 "      \"cause\": {\n" +
                 "        \"0x1\": {\n" +
-                "          \"stackTrace\": [],\n" +
-                "          \"suppressedExceptions\": []\n" +
+                "          \"suppressedExceptions\": [],\n" +
+                "          \"class\": \"java.lang.ClassCastException\"\n" +
                 "        }\n" +
                 "      },\n" +
-                "      \"stackTrace\": [],\n" +
-                "      \"suppressedExceptions\": []\n" +
+                "      \"suppressedExceptions\": [],\n" +
+                "      \"class\": \"java.lang.RuntimeException\"\n" +
                 "    },\n" +
-                "    \"stackTrace\": [],\n" +
-                "    \"suppressedExceptions\": []\n" +
+                "    \"suppressedExceptions\": [],\n" +
+                "    \"class\": \"java.lang.Exception\"\n" +
                 "  },\n" +
-                "  \"stackTrace\": [],\n" +
-                "  \"suppressedExceptions\": []\n" +
+                "  \"suppressedExceptions\": [],\n" +
+                "  \"class\": \"java.lang.Throwable\"\n" +
                 "}";
-        inMemoryUnixFs(imfsi -> {
-            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotThrowStackOverflowExceptionWithAMoreNestedObject");
-            JsonMatcher<Throwable> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
-
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d3315e-approved.json"), apprivedFileContent);
-
-            MatcherAssert.assertThat(actual, underTest);
-
-            List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/d3315e-approved.json", apprivedFileContent);
-
-            assertIterableEquals(singletonList(expected), actualFiles);
-        });
+        inMemoryFsWithDummyTestInfo(actual, approvedFileContent, null);
     }
 
     @Test
     public void doesNotReturn0x1InDiagnosticWhenUnnecessary() {
         Element actual = Element.ONE;
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotReturn0x1InDiagnosticWhenUnnecessary*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.JsonMatcherCircularReferenceTest.doesNotReturn0x1InDiagnosticWhenUnnecessary*/\n" +
                 "{\n" +
                 "  \"element\": null\n" +
                 "}";
@@ -315,7 +278,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotReturn0x1InDiagnosticWhenUnnecessary");
             JsonMatcher<Element> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d52e02-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d52e02-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -327,7 +290,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                     "Unexpected: element\n", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/d52e02-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/d52e02-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -339,7 +302,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         actual.setInput(new ByteArrayInputStream("DummyInput".getBytes()));
         actual.setOutput(new ByteArrayOutputStream());
 
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotFailWithClosableFields*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotFailWithClosableFields*/\n" +
                 "{\n" +
                 "  \"input\": {\n" +
                 "    \"buf\": [\n" +
@@ -400,12 +363,12 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotFailWithClosableFields");
             JsonMatcher<ClosableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75f36-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("d75f36-approved.json"), approvedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/d75f36-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/d75f36-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -422,7 +385,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         actual.setTwos(Sets.newHashSet(dummy1, dummy2));
         actual.setOnes(sqlException);
 
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotFailWithIterableFields*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotFailWithIterableFields*/\n" +
                 "{\n" +
                 "  \"ones\": {},\n" +
                 "  \"twos\": [\n" +
@@ -438,12 +401,12 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "doesNotFailWithIterableFields");
             JsonMatcher<IterableFields> underTest = new JsonMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("57143d-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("57143d-approved.json"), approvedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/57143d-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/57143d-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -468,7 +431,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
         child2.setGenericObject(subRoot);
 
-        String apprivedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized*/\n" +
+        String approvedFileContent = "/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized*/\n" +
                 "{\n" +
                 "  \"subClassField\": {\n" +
                 "    \"threeObject\": \"customSerializedOneCircle\"\n" +
@@ -479,12 +442,12 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherCircularReferenceTest", "shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized");
             JsonMatcher<Four> underTest = new JsonMatcher<Four>(dummyTestInfo, getDefaultFileMatcherConfig()).skipCircularReferenceCheck(skipper1).withGsonConfiguration(config);
 
-            writeFile(imfsi.getTestPath().resolve("b16968").resolve("60ec6f-approved.json"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("b16968").resolve("60ec6f-approved.json"), approvedFileContent);
 
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("b16968/60ec6f-approved.json", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("b16968/60ec6f-approved.json", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });

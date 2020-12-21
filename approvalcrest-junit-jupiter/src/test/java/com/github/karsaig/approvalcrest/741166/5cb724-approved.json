@@ -2,7 +2,7 @@
 {
   "0x1": {
     "detailMessage": "Test excpetion message...",
-    "stackTrace": [],
-    "suppressedExceptions": []
+    "suppressedExceptions": [],
+    "class": "java.lang.IllegalStateException"
   }
 }

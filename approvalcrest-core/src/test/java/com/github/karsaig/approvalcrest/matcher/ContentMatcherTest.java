@@ -232,12 +232,12 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
     @Test
     public void shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent() {
         String actual = "Example content";
-        String apprivedFileContent = "Modified content";
+        String approvedFileContent = "Modified content";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentDiffersFromApprovedContent");
             ContentMatcher<String> underTest = new ContentMatcher<>(dummyTestInfo, getDefaultFileMatcherConfig());
 
-            writeFile(imfsi.getTestPath().resolve("87668f").resolve("0d08c2-approved.content"), apprivedFileContent);
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("0d08c2-approved.content"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -248,7 +248,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
                     "Content does not match!", actualError.getMessage());
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("87668f/0d08c2-approved.content", apprivedFileContent);
+            InMemoryFiles expected = new InMemoryFiles("87668f/0d08c2-approved.content", approvedFileContent);
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });

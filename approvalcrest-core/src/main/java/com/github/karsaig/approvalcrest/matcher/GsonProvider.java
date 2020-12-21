@@ -32,6 +32,7 @@ import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.ThrowableTypeAdapterFactory;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
@@ -94,6 +95,7 @@ class GsonProvider {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
         }
 
+        gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
         gsonBuilder.registerTypeAdapterFactory(DateAdapter.FACTORY);
         gsonBuilder.registerTypeAdapterFactory(ClassAdapter.FACTORY);
