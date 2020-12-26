@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences*/
+/*com.github.karsaig.approvalcrest.matcher.circular.JsonMatcherCircularReferenceTest.doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences*/
 {
   "0x1": {
     "twoObject": "0x2"

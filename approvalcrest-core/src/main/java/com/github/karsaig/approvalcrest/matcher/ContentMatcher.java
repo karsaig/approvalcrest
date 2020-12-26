@@ -52,14 +52,18 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
 
     @Override
     protected boolean matches(Object actual, Description mismatchDescription) {
+        if (!String.class.isInstance(actual)) {
+            throw new IllegalArgumentException("Only String content matcher is supported!");
+        }
         boolean matches = false;
         init();
-        if (createNotApprovedFileIfNotExists(actual)
+        String actualString = String.class.cast(actual);
+        if (createNotApprovedFileIfNotExists(actualString)
                 && fileMatcherConfig.isPassOnCreateEnabled()) {
             return true;
         }
         initExpectedFromFile();
-        String actualString = String.class.cast(actual);
+
 
         String actualNormalized = normalize(actualString);
         if (expectedContent.equals(actualNormalized)) {
@@ -77,16 +81,11 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     }
 
     private String normalize(String input) {
-        return WINDOWS_NEWLINE_PATTERN.matcher(input).replaceAll("\n");
+        return input == null ? null : WINDOWS_NEWLINE_PATTERN.matcher(input).replaceAll("\n");
     }
 
-    private boolean createNotApprovedFileIfNotExists(Object toApprove) {
-        return createNotApprovedFileIfNotExists(toApprove, () -> {
-            if (!String.class.isInstance(toApprove)) {
-                throw new IllegalArgumentException("Only String content matcher is supported!");
-            }
-            return normalize(String.class.cast(toApprove));
-        });
+    private boolean createNotApprovedFileIfNotExists(String toApprove) {
+        return createNotApprovedFileIfNotExists(toApprove, () -> normalize(toApprove));
     }
 
     private void overwriteApprovedFile(Object actual) {

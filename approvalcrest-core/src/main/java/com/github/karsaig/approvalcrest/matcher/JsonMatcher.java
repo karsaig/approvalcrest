@@ -7,11 +7,14 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -24,7 +27,9 @@ import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatch
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
@@ -89,6 +94,14 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public JsonMatcher<T> ignoring(Matcher<String> fieldNamePattern) {
         matcherConfiguration.addPatternToIgnore(fieldNamePattern);
+        return this;
+    }
+
+    @SuppressWarnings({"varargs","unchecked"})
+    @SafeVarargs
+    @Override
+    public final JsonMatcher<T> ignoring(Matcher<String>... fieldNamePatterns) {
+        matcherConfiguration.addPatternToIgnore(fieldNamePatterns);
         return this;
     }
 
@@ -179,8 +192,42 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         set.addAll(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
-
+        filterByFieldMatchers(filteredJson, matcherConfiguration.getPatternsToIgnore());
         return removeSetMarker(gson.toJson(filteredJson));
+    }
+
+    private void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+        if (jsonElement != null && !matchers.isEmpty()) {
+            filterFieldsByFieldMatchers(jsonElement, matchers);
+        }
+    }
+
+    private void filterFieldsByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            List<String> fieldsToRemove = getFieldsToRemove(jsonObject.keySet(), matchers);
+            fieldsToRemove.forEach(jsonObject::remove);
+            jsonObject.entrySet().forEach(je -> filterFieldsByFieldMatchers(je.getValue(), matchers));
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            Iterator<JsonElement> iterator = jsonArray.iterator();
+            while (iterator.hasNext()) {
+                filterFieldsByFieldMatchers(iterator.next(), matchers);
+            }
+        }
+    }
+
+    private List<String> getFieldsToRemove(Set<String> fieldNames, List<Matcher<String>> matchers) {
+        return fieldNames.stream().filter(fn -> anyMatchesFieldName(fn, matchers)).collect(Collectors.toList());
+    }
+
+    private boolean anyMatchesFieldName(String fieldName, List<Matcher<String>> matchers) {
+        for (Matcher<String> actual : matchers) {
+            if (actual.matches(fieldName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean assertEquals(String expectedJson, String actualJson,
@@ -209,14 +256,8 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private String serializeToJson(Object toApprove, Gson gson) {
-        String content;
-        if (String.class.isInstance(toApprove)) {
-            JsonElement toApproveJsonElement = JsonParser.parseString(String.class.cast(toApprove));
-            content = removeSetMarker(gson.toJson(toApproveJsonElement));
-        } else {
-            content = removeSetMarker(gson.toJson(toApprove));
-        }
-        return content;
+        JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
+        return filterJson(gson, actualJsonElement);
     }
 
 

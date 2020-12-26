@@ -9,12 +9,10 @@
  */
 package com.github.karsaig.approvalcrest;
 
-import static com.github.karsaig.approvalcrest.ResultComparison.containsComparableJson;
 import static java.util.Collections.singletonList;
 
 import java.util.List;
 
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.ComparisonFailure;
 
@@ -23,12 +21,14 @@ import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 import junit.framework.AssertionFailedError;
 
 /**
- * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, uses
- * {@link ResultComparison#containsComparableJson(String, Description)} to determine if a {@link ComparisonFailure} should be
+ * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, determine if a {@link ComparisonFailure} should be
  * thrown. The exception is thrown instead of {@link AssertionError}, so that IDE like eclipse and IntelliJ can display a
  * pop-up window highlighting the String differences.
  */
 public class MatcherAssert {
+
+    private static final AssertImplProxy ASSERT_IMPL = new AssertImplProxy();
+
     /**
      * @param actual  the object that will be matched against the matcher
      * @param matcher defines the condition the object have to fulfill in order to match
@@ -48,18 +48,13 @@ public class MatcherAssert {
      * @param <T>     type of actual object
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
-        if (!matcher.matches(actual)) {
-            Description description = new ComparisonDescription();
-            description.appendText(reason)
-                    .appendText("\nExpected: ")
-                    .appendDescriptionOf(matcher)
-                    .appendText("\n     but: ");
-            matcher.describeMismatch(actual, description);
-
-            containsComparableJson(reason, description);
-
-            throw new AssertionError(description.toString());
-        }
+        ASSERT_IMPL.assertThat(reason, actual, matcher, (message, comparisonDescription) -> {
+            throw new ComparisonFailure(
+                    message,
+                    comparisonDescription.getExpected(),
+                    comparisonDescription.getActual()
+            );
+        });
     }
 
     private static final List<Class<? extends Throwable>> BLACKLIST = singletonList(OutOfMemoryError.class);
@@ -73,7 +68,7 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked","ThrowableNotThrown"})
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked", "ThrowableNotThrown"})
     public static Throwable assertThrows(CustomisableMatcher matcher, Executable executable) {
         return assertThrows(null, matcher, executable);
     }
@@ -88,7 +83,7 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked","ThrowableNotThrown"})
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked", "ThrowableNotThrown"})
     public static Throwable assertThrows(String reason, CustomisableMatcher matcher, Executable executable) {
         try {
             executable.execute();

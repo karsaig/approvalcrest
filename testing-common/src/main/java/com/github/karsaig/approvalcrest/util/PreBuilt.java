@@ -7,7 +7,7 @@ public class PreBuilt {
     private PreBuilt() {
     }
 
-    public static BeanWithPrimitives getBeanWithPrimitives() {
+    public static BeanWithPrimitives.Builder getBeanWithPrimitivesBuilder() {
         short beanShort = 1;
         boolean beanBoolean = true;
         byte beanByte = 2;
@@ -17,7 +17,7 @@ public class PreBuilt {
         double beanDouble = 5d;
         long beanLong = 6L;
 
-        BeanWithPrimitives bean = BeanWithPrimitives.Builder.beanWithPrimitives()
+        return BeanWithPrimitives.Builder.beanWithPrimitives()
                 .beanShort(beanShort)
                 .beanBoolean(beanBoolean)
                 .beanByte(beanByte)
@@ -25,10 +25,11 @@ public class PreBuilt {
                 .beanFloat(beanFloat)
                 .beanInt(beanInt)
                 .beanDouble(beanDouble)
-                .beanLong(beanLong)
-                .build();
+                .beanLong(beanLong);
+    }
 
-        return bean;
+    public static BeanWithPrimitives getBeanWithPrimitives() {
+        return getBeanWithPrimitivesBuilder().build();
     }
 
     public static String getBeanWithPrimitivesAsJsonString() {

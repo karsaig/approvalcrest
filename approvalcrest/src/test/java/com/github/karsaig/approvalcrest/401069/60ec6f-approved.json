@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized*/
+/*com.github.karsaig.approvalcrest.matcher.circular.JsonMatcherCircularReferenceTest.shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized*/
 {
   "subClassField": {
     "threeObject": "customSerializedOneCircle"

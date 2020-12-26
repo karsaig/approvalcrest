@@ -1,4 +1,4 @@
-/*com.github.karsaig.approvalcrest.matcher.JsonMatcherCircularReferenceTest.doesNotFailWithClosableFields*/
+/*com.github.karsaig.approvalcrest.matcher.circular.JsonMatcherCircularReferenceTest.doesNotFailWithClosableFields*/
 {
   "input": {
     "buf": [

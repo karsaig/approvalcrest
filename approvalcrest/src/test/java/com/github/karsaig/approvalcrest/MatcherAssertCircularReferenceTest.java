@@ -43,116 +43,17 @@ import com.google.gson.JsonSerializer;
  */
 public class MatcherAssertCircularReferenceTest {
 
-    @Test(expected = None.class)
-    public void doesNothingWhenAutoDetectCircularReferenceIsCalled() {
-        CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
-        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertThat(actual, sameBeanAs(expected));
-    }
 
-    @Test(expected = ComparisonFailure.class)
-    public void shouldNotThrowStackOverFlowExceptionWhenExpectedBeanIsNullAndTheActualNotNull() {
-        CircularReferenceBean expected = null;
-        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertThat(actual, sameBeanAs(expected));
-    }
 
-    @Test(expected = None.class)
-    public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsInAComplexGraph() {
-        Four root = new Four();
-        Four child1 = new Four();
-        Four child2 = new Four();
-        root.setGenericObject(child1);
-        child1.setGenericObject(root); // circular
-        root.setSubClassField(child2);
 
-        One subRoot = new One();
-        One subRootChild = new One();
-        subRoot.setGenericObject(subRootChild);
-        subRootChild.setGenericObject(subRoot); // circular
 
-        child2.setGenericObject(subRoot);
 
-        assertThat(root, sameBeanAs(root));
-    }
 
-    @Test(expected = None.class)
-    public void shouldNotThrowStackOverflowExceptionWhenCircularReferenceExistsIsSkippedButCustomSerialized() {
-        Four root = new Four();
-        Four child1 = new Four();
-        Four child2 = new Four();
-        root.setGenericObject(child1);
-        root.setSubClassField(child2);
 
-        One subRoot = new One();
-        One subRootChild = new One();
-        subRoot.setGenericObject(subRootChild);
-        subRootChild.setGenericObject(subRoot); // circular
-        Function<Object, Boolean> skipper1 = new Function<Object, Boolean>() {
-			
-			@Override
-			public Boolean apply(Object input) {
-				return One.class.isInstance(input);
-			}
-		};
-		GsonConfiguration config = new GsonConfiguration();
-		config.addTypeAdapter(One.class, new DummyOneJsonSerializer());
-		
-        
-        child2.setGenericObject(subRoot);
 
-        assertThat(root, sameBeanAs(root).skipCircularReferenceCheck(skipper1).withGsonConfiguration(config));
-    }
-    
-    private class DummyOneJsonSerializer implements JsonDeserializer<One>,JsonSerializer<One>  {
 
-		private static final String LONG_SUFFIX = " Long_variable";
-
-		@Override
-		public One deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context) throws JsonParseException {
-		        return null;
-		    }
-
-		@Override
-		public JsonElement serialize(final One src, final Type typeOfSrc, final JsonSerializationContext context) {
-		    return new JsonPrimitive("customSerializedOneCircle");
-		}
-
-    }
-    
-    @Test(expected = ComparisonFailure.class)
-    public void doesNotThrowStackOverflowErrorWhenComparedObjectsHaveDifferentCircularReferences() {
-        Object expected = new One();
-        One expectedChild = new One();
-        ((One)expected).setGenericObject(expectedChild);
-        expectedChild.setGenericObject(expected);
-
-        Object actual = new Two();
-        Two actualChild = new Two();
-        ((Two)actual).setGenericObject(actualChild);
-        actualChild.setGenericObject(actual);
-
-        assertThat(actual, sameBeanAs(expected));
-    }
-
-    @Test(expected = ComparisonFailure.class, timeout = 150)
-    public void shouldNotTakeAges() {
-        assertThat(Element.ONE, sameBeanAs(Element.TWO));
-    }
-
-    @Test
-    public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
-        assertThat(new RuntimeException(), sameBeanAs(new RuntimeException()));
-    }
-
-    @Test
-    public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
-        final Throwable throwable = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
-        
-        assertThat(throwable, sameBeanAs(throwable));
-    }
 
     @Test
     public void doesNotReturn0x1InDiagnosticWhenUnnecessary() {

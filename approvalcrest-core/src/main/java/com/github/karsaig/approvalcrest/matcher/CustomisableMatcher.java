@@ -33,7 +33,7 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     /**
      * Specify the path of the field to be skipped from the matcher comparison.
      * Example:
-     * <pre>sameBeanAs(expected).ignoring("beanField.subBeanField")</pre>
+     * <pre>sameBeanAs(expected).ignoring("beanField.subBeanField","beanField2.subBeanField3")</pre>
      *
      * @param fieldPaths the paths of fields to be skipped from the comparison.
      * @return the instance of the matcher
@@ -53,7 +53,7 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     /**
      * Specify the object types of the fields to be skipped from the matcher comparison.
      * Example:
-     * <pre>sameBeanAs(expected).ignoring(Bean.class)</pre>
+     * <pre>sameBeanAs(expected).ignoring(Bean.class,Bean2.class)</pre>
      *
      * @param clazz the object types to be skipped from the comparison.
      * @return the instance of the matcher
@@ -91,6 +91,18 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      */
     U ignoring(Matcher<String> fieldNamePattern);
+
+    /**
+     * Specify the pattern of field names to ignore. Any bean property with a name that
+     * matches the supplied pattern will be ignored.
+     * Example:
+     * <pre>assertThat(myBean, sameBeanAs(myResultBean).ignoring(is("mutationdate",containsString("version"))))</pre>
+     *
+     * @param fieldNamePatterns the Hamcrest matchers used to match field names.
+     * @return the instance of the matcher
+     */
+    @SuppressWarnings({"varargs","unchecked"})
+    U ignoring(Matcher<String>... fieldNamePatterns);
 
     /**
      * Specify function to be applied on fields in order to decide weather to include the field in circular reference check or not.

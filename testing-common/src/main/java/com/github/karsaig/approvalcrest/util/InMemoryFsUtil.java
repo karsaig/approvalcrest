@@ -56,13 +56,6 @@ public class InMemoryFsUtil {
     private InMemoryFsUtil() {
     }
 
-    public static void inMemoryUnixFs(Consumer<InMemoryFsInfo> test) {
-        Configuration config = Configuration.unix()
-                .toBuilder()
-                .build();
-        inMemoryFs(config, test);
-    }
-
     public static void inMemoryUnixFsWithFileAttributeSupport(Consumer<InMemoryFsInfo> test) {
         Configuration config = Configuration.unix()
                 .toBuilder()

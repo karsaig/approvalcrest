@@ -89,6 +89,13 @@ public class MatcherConfiguration {
         return this;
     }
 
+    public MatcherConfiguration addPatternToIgnore(Matcher<String>[] fieldNamePatterns) {
+        for (Matcher<String> matcher : fieldNamePatterns) {
+            patternsToIgnore.add(matcher);
+        }
+        return this;
+    }
+
     public MatcherConfiguration addPatternToIgnore(Collection<Matcher<String>> fieldNamePattern) {
         patternsToIgnore.addAll(fieldNamePattern);
         return this;

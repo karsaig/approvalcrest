@@ -1,23 +1,23 @@
 package com.github.karsaig.approvalcrest.jupiter.matcher;
 
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.junit.jupiter.api.TestInfo;
+
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.jupiter.Junit5InfoBasedTestMeta;
 import com.github.karsaig.approvalcrest.jupiter.JunitJupiterTestMeta;
 import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
-import com.github.karsaig.approvalcrest.matcher.IsEqualMatcher;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
-import com.github.karsaig.approvalcrest.matcher.NullMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
-import org.junit.jupiter.api.TestInfo;
-
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 public class MatchersImpl {
+
+    private static final MatcherFactory MATCHER_FACTORY = new MatcherFactory();
+
     protected TestMetaInformation getTestMetaInformation() {
         return new JunitJupiterTestMeta();
     }
@@ -27,16 +27,7 @@ public class MatchersImpl {
     }
 
     public <T> DiagnosingCustomisableMatcher<T> sameBeanAs(T expected) {
-        if (expected == null) {
-            return new NullMatcher<>(expected);
-        }
-
-        if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class
-                || expected.getClass().isEnum()) {
-            return new IsEqualMatcher<>(expected);
-        }
-
-        return new DiagnosingCustomisableMatcher<>(expected);
+        return MATCHER_FACTORY.beanMatcher(expected);
     }
 
     public <T> JsonMatcher<T> sameJsonAsApproved() {
@@ -44,13 +35,13 @@ public class MatchersImpl {
     }
 
     public <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
-        return new JsonMatcher<>(testMetaInformation, new FileMatcherConfig());
+        return MATCHER_FACTORY.jsonMatcher(testMetaInformation, new FileMatcherConfig());
     }
 
     public <T> JsonMatcher<T> sameJsonAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
-                .map(s -> new JsonMatcher<T>(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
-                .orElse(new JsonMatcher<>(getTestMetaInformation(testInfo), new FileMatcherConfig()));
+                .map(s -> MATCHER_FACTORY.<T>jsonMatcher(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
+                .orElse(MATCHER_FACTORY.jsonMatcher(getTestMetaInformation(testInfo), new FileMatcherConfig()));
     }
 
     public <T> ContentMatcher<T> sameContentAsApproved() {
@@ -58,13 +49,13 @@ public class MatchersImpl {
     }
 
     public <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
-        return new ContentMatcher<>(testMetaInformation, new FileMatcherConfig());
+        return MATCHER_FACTORY.contentMatcher(testMetaInformation, new FileMatcherConfig());
     }
 
     public <T> ContentMatcher<T> sameContentAsApproved(TestInfo testInfo) {
         return getUniqueIndex(testInfo)
-                .map(s -> new ContentMatcher<T>(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
-                .orElse(new ContentMatcher<>(getTestMetaInformation(testInfo), new FileMatcherConfig()));
+                .map(s -> MATCHER_FACTORY.<T>contentMatcher(getTestMetaInformation(testInfo), new FileMatcherConfig()).withUniqueId(s))
+                .orElse(MATCHER_FACTORY.contentMatcher(getTestMetaInformation(testInfo), new FileMatcherConfig()));
     }
 
     private static final Pattern TEST_INDEX_MATCHER = Pattern.compile("^\\[(\\d+)].*");

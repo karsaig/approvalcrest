@@ -10,7 +10,7 @@
     "type": "java.lang.String",
     "stringRepresentation": "Lorem ipsum dolor sit amet, inani nullam oportere no cum."
   },
-  "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match! expected:\u003c[Different content]\u003e but was:\u003c[Lorem ipsum dolor sit amet, inani nullam oportere no cum.]\u003e",
+  "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!",
   "suppressedExceptions": [],
   "class": "org.opentest4j.AssertionFailedError"
 }

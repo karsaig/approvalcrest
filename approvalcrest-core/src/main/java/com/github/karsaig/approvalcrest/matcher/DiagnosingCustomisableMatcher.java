@@ -125,6 +125,14 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         return this;
     }
 
+    @SuppressWarnings({"varargs","unchecked"})
+    @SafeVarargs
+    @Override
+    public final DiagnosingCustomisableMatcher<T> ignoring(Matcher<String>... fieldNamePatterns) {
+        matcherConfiguration.addPatternToIgnore(fieldNamePatterns);
+        return this;
+    }
+
     @Override
     public <V> DiagnosingCustomisableMatcher<T> with(String fieldPath, Matcher<V> matcher) {
         matcherConfiguration.addCustomMatcher(fieldPath, matcher);

@@ -9,24 +9,21 @@
  */
 package com.github.karsaig.approvalcrest.jupiter;
 
-import static com.github.karsaig.approvalcrest.jupiter.ResultComparison.containsComparableJson;
-
-import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.platform.commons.util.BlacklistedExceptions;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 
 /**
- * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, uses
- * {@link ResultComparison#containsComparableJson(String, Description)} to determine if a {@link AssertionFailedError} should be
+ * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, determine if a {@link AssertionFailedError} should be
  * thrown. The exception is thrown instead of {@link AssertionError}, so that IDE like eclipse and IntelliJ can display a
  * pop-up window highlighting the String differences.
  */
 public class MatcherAssert {
+
+    private static final AssertImpl ASSERT_IMPL = new AssertImpl();
 
     /**
      * @param actual  the object that will be matched against the matcher
@@ -47,18 +44,13 @@ public class MatcherAssert {
      * @param matcher defines the condition the object have to fulfill in order to match
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
-        if (!matcher.matches(actual)) {
-            Description description = new ComparisonDescription();
-            description.appendText(reason)
-                    .appendText("\nExpected: ")
-                    .appendDescriptionOf(matcher)
-                    .appendText("\n     but: ");
-            matcher.describeMismatch(actual, description);
-
-            containsComparableJson(reason, description);
-
-            throw new AssertionError(description.toString());
-        }
+        ASSERT_IMPL.assertThat(reason, actual, matcher, (message, comparisonDescription) -> {
+            throw new AssertionFailedError(
+                    message,
+                    comparisonDescription.getExpected(),
+                    comparisonDescription.getActual()
+            );
+        });
     }
 
     /**
@@ -70,7 +62,7 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked","ThrowableNotThrown"})
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked", "ThrowableNotThrown"})
     public static Throwable assertThrows(CustomisableMatcher matcher, Executable executable) {
         return assertThrows(null, matcher, executable);
     }
@@ -85,7 +77,7 @@ public class MatcherAssert {
      * @param executable the executable which supposed to throw the exception
      * @return the exception thrown
      */
-    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked","ThrowableNotThrown"})
+    @SuppressWarnings({"ProhibitedExceptionCaught", "ThrowInsideCatchBlockWhichIgnoresCaughtException", "rawtypes", "unchecked", "ThrowableNotThrown"})
     public static Throwable assertThrows(String reason, CustomisableMatcher matcher, Executable executable) {
         try {
             executable.execute();

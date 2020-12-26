@@ -264,7 +264,7 @@ class GsonProvider {
     }
 
     private static GsonBuilder initGson() {
-        return new GsonBuilder().setPrettyPrinting();
+        return new GsonBuilder().serializeSpecialFloatingPointValues().setPrettyPrinting();
     }
 
     private static class OptionalSerializer<T> implements JsonSerializer<Optional<T>> {

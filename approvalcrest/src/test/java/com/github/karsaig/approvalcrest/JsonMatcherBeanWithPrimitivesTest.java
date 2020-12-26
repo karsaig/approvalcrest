@@ -62,9 +62,6 @@ public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
     @Test
     public void shouldNotThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnoredWithClass() {
-        Matcher<String> endsWithLongMatcher = Matchers.endsWith("Long");
-        Matcher<String> endsWithBooleanMatcher = Matchers.endsWith("Boolean");
-
         assertThat(actual, sameJsonAsApproved().ignoring(Long.class).ignoring(Boolean.class));
     }
 

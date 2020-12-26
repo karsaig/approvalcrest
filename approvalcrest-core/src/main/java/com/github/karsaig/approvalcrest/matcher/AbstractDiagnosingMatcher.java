@@ -7,8 +7,10 @@ import com.github.karsaig.approvalcrest.ComparisonDescription;
 
 public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> {
 
+    private boolean comparisonDescriptionNeeded = false;
+
     protected boolean appendMismatchDescription(Description mismatchDescription, String expected, String actual, String message) {
-        if (mismatchDescription instanceof ComparisonDescription) {
+        if (comparisonDescriptionNeeded && ComparisonDescription.class.isInstance(mismatchDescription)) {
             ComparisonDescription shazamMismatchDescription = (ComparisonDescription) mismatchDescription;
             shazamMismatchDescription.setComparisonFailure(true);
             shazamMismatchDescription.setExpected(expected);
@@ -17,5 +19,13 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
         }
         mismatchDescription.appendText(message);
         return false;
+    }
+
+    protected void setComparisonDescriptionNeeded(boolean comparisonDescriptionNeeded) {
+        this.comparisonDescriptionNeeded = comparisonDescriptionNeeded;
+    }
+
+    protected boolean isComparisonDescriptionNeeded() {
+        return comparisonDescriptionNeeded;
     }
 }

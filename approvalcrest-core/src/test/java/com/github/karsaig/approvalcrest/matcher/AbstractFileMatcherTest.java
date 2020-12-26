@@ -1,6 +1,8 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,20 +13,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
+import org.opentest4j.AssertionFailedError;
 
+import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import com.github.karsaig.approvalcrest.util.InMemoryFsInfo;
 import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
 
 import com.google.common.collect.ImmutableList;
@@ -35,8 +40,9 @@ import com.google.common.collect.ImmutableList;
  *
  * @author Andras_Gyuro
  */
-public abstract class AbstractFileMatcherTest {
+public abstract class AbstractFileMatcherTest extends AbstractTest {
 
+    protected static final TestMatcherFactory MATCHER_FACTORY = new TestMatcherFactory();
     private static final Pattern NOT_APPROVED_PATTERN = Pattern.compile("-not", Pattern.LITERAL);
 
     protected BeanWithPrimitives getBeanWithPrimitives() {
@@ -51,7 +57,7 @@ public abstract class AbstractFileMatcherTest {
         return PreBuilt.getBeanWithPrimitivesAsJsonString();
     }
 
-    protected void inMemoryFsWithDummyTestInfo(Object input, String expectedFileContent, boolean result) {
+    protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, boolean result) {
         inMemoryUnixFs(imfsi -> {
             try {
                 Path jsonDir = imfsi.getTestPath().resolve("4ac405");
@@ -60,12 +66,40 @@ public abstract class AbstractFileMatcherTest {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            JsonMatcher<Object> jsonMatcher = new JsonMatcher<>(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
-            MatcherAssert.assertThat(jsonMatcher.matches(input), Matchers.is(result));
+            JsonMatcher<Object> jsonMatcher = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            if (jsonMatcher.matches(input) != result) {
+                handleAssertFailure(input, jsonMatcher);
+            }
         });
     }
 
-    protected void inMemoryFsWithDummyTestInfo(Object input, String expectedFileContent, String expectedExceptionMessage) {
+    protected void runContentMatcherTestWithDummyTestInfo(String expectedFileContent, Consumer<TestMetaInformation> actualTest) {
+        runTestWithDummyTestInfo(expectedFileContent, "content", actualTest);
+    }
+
+    protected void runJsonMatcherTestWithDummyTestInfo(String expectedFileContent, Consumer<TestMetaInformation> actualTest) {
+        runTestWithDummyTestInfo(expectedFileContent, "json", actualTest);
+    }
+
+    protected void runTestWithDummyTestInfo(String expectedFileContent, String extension, Consumer<TestMetaInformation> actualTest) {
+        inMemoryUnixFs(imfsi -> {
+            try {
+                Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+                Path testFile = Files.createDirectories(jsonDir).resolve("11b2ef-approved." + extension);
+                Files.write(testFile, expectedFileContent.getBytes());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            TestMetaInformation dummyTestInfo = new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath());
+            actualTest.accept(dummyTestInfo);
+        });
+    }
+
+    protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, String expectedExceptionMessage) {
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, Function.identity(), expectedExceptionMessage);
+    }
+
+    protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, String expectedExceptionMessage) {
         inMemoryUnixFs(imfsi -> {
             try {
                 Path jsonDir = imfsi.getTestPath().resolve("4ac405");
@@ -74,29 +108,64 @@ public abstract class AbstractFileMatcherTest {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            JsonMatcher<Object> jsonMatcher = new JsonMatcher<>(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            List<InMemoryPermissions> beforeFileState = InMemoryFsUtil.getPermissons(imfsi);
+            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
             if (expectedExceptionMessage == null) {
-                MatcherAssert.assertThat(jsonMatcher.matches(input), Matchers.is(true));
-                assertInMemoryFsWithDummyTestInfo(imfsi, expectedFileContent);
+                assertThat(input, jsonMatcher);
             } else {
                 AssertionError actualError = assertThrows(AssertionError.class,
-                        () -> MatcherAssert.assertThat(input, jsonMatcher));
+                        () -> assertThat(input, jsonMatcher));
 
                 Assertions.assertEquals(expectedExceptionMessage, actualError.getMessage());
-                assertInMemoryFsWithDummyTestInfo(imfsi, expectedFileContent);
             }
+            assertJsonMatcherWithDummyTestInfo(imfsi, expectedFileContent + System.lineSeparator(), "4ac405/11b2ef-approved.json");
+            List<InMemoryPermissions> afterFileState = InMemoryFsUtil.getPermissons(imfsi);
+            assertIterableEquals(beforeFileState, afterFileState);
         });
     }
 
-    private void assertInMemoryFsWithDummyTestInfo(InMemoryFsInfo imfsi, String expectedFileContent) {
+    private void handleAssertFailure(Object input, JsonMatcher<Object> jsonMatcher) {
+        ComparisonDescription description = new ComparisonDescription();
+        description.appendDescriptionOf(jsonMatcher);
+        jsonMatcher.describeMismatch(input, description);
+        throw new AssertionFailedError(
+                "Actual doesn't match expected!",
+                description.getExpected(),
+                description.getActual());
+    }
+
+    protected void assertJsonMatcherWithDummyTestInfoForNotApprovedFile(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> assertThat(input, jsonMatcher));
+
+            Assertions.assertEquals(getNotApprovedCreationMessage("4ac405", "11b2ef-not-approved.json", "11b2ef-approved.json"), actualError.getMessage());
+            assertJsonMatcherWithDummyTestInfo(imfsi, "/*dummyTestClassName.dummyTestMethodName*/\n" + expectedFileContent, "4ac405/11b2ef-not-approved.json");
+
+            List<InMemoryPermissions> actualFiles = InMemoryFsUtil.getPermissons(imfsi);
+            List<InMemoryPermissions> expected = new ArrayList<>();
+            expected.add(new InMemoryPermissions("4ac405", DIRECTORY_CREATE_PERMISSONS));
+            expected.add(new InMemoryPermissions("4ac405/11b2ef-not-approved.json", FILE_CREATE_PERMISSONS));
+            assertIterableEquals(expected, actualFiles);
+        });
+    }
+
+    protected String getExcceptionMessageForDummyTestInfo(String differentPart) {
+        return "Expected file 4ac405/11b2ef-approved.json\n" + differentPart;
+    }
+
+    private void assertJsonMatcherWithDummyTestInfo(InMemoryFsInfo imfsi, String expectedFileContent, String path) {
         List<InMemoryFiles> actualFiles = getFiles(imfsi);
-        List<InMemoryFiles> expected = singletonList(new InMemoryFiles("4ac405/11b2ef-approved.json", expectedFileContent + System.lineSeparator()));
+        List<InMemoryFiles> expected = singletonList(new InMemoryFiles(path, expectedFileContent));
 
         assertIterableEquals(expected, actualFiles);
     }
 
     protected void inMemoryUnixFs(Consumer<InMemoryFsInfo> test) {
-        InMemoryFsUtil.inMemoryUnixFs(test);
+        InMemoryFsUtil.inMemoryUnixFsWithFileAttributeSupport(test);
     }
 
     protected void inMemoryWindowsFs(Consumer<InMemoryFsInfo> test) {
@@ -205,5 +274,9 @@ public abstract class AbstractFileMatcherTest {
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
         return new FileMatcherConfig(true, true, false, false);
+    }
+
+    protected static <T> T modifyObject(T input, Function<T, T> modifier) {
+        return modifier.apply(input);
     }
 }

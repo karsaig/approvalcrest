@@ -9,8 +9,6 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
-import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
-
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.Junit4TestMeta;
 
@@ -20,6 +18,8 @@ import com.google.common.annotations.Beta;
  * Entry point for the matchers available in Approvalcrest.
  */
 public class Matchers {
+
+    private static final MatcherFactory MATCHER_FACTORY = new MatcherFactory();
 
     /**
      * Returns a {@link NullMatcher} in case the expectation is null, a
@@ -31,16 +31,7 @@ public class Matchers {
      * @return an {@link DiagnosingCustomisableMatcher} instance
      */
     public static <T> DiagnosingCustomisableMatcher<T> sameBeanAs(T expected) {
-        if (expected == null) {
-            return new NullMatcher<>(expected);
-        }
-
-        if (isPrimitiveOrWrapper(expected.getClass()) || expected.getClass() == String.class
-                || expected.getClass().isEnum()) {
-            return new IsEqualMatcher<>(expected);
-        }
-
-        return new DiagnosingCustomisableMatcher<>(expected);
+        return MATCHER_FACTORY.beanMatcher(expected);
     }
 
     /**
@@ -67,7 +58,7 @@ public class Matchers {
      */
     @Beta
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
-        return new JsonMatcher<>(testMetaInformation, new FileMatcherConfig());
+        return MATCHER_FACTORY.jsonMatcher(testMetaInformation, new FileMatcherConfig());
     }
 
     /**
@@ -92,6 +83,6 @@ public class Matchers {
      */
     @Beta
     public static <T> ContentMatcher<T> sameContentAsApproved(TestMetaInformation testMetaInformation) {
-        return new ContentMatcher<>(testMetaInformation, new FileMatcherConfig());
+        return MATCHER_FACTORY.contentMatcher(testMetaInformation, new FileMatcherConfig());
     }
 }
