@@ -1,6 +1,4 @@
-package com.github.karsaig.approvalcrest.jupiter;
-
-import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
+package com.github.karsaig.approvalcrest;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -8,7 +6,9 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract class Junit5TestMetaBase implements TestMetaInformation {
+import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
+
+abstract class Junit4TestMetaBase implements TestMetaInformation {
 
     private static final String SRC_TEST_JAVA_PATH = "src" + File.separator + "test" + File.separator + "java" + File.separator;
     private static final Pattern DOT_LITERAL_PATTERN = Pattern.compile(".", Pattern.LITERAL);
@@ -19,7 +19,7 @@ abstract class Junit5TestMetaBase implements TestMetaInformation {
     private final String testMethodName;
     private final Path approvedDirectory;
 
-    protected Junit5TestMetaBase(String testClassName, String testMethodName) {
+    protected Junit4TestMetaBase(String testClassName, String testMethodName) {
         this.testClassName = testClassName;
         this.testMethodName = testMethodName;
         this.testClassPath = buildClassPath();
@@ -34,15 +34,18 @@ abstract class Junit5TestMetaBase implements TestMetaInformation {
         return SRC_TEST_JAVA_PATH;
     }
 
-    protected Junit5TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        this.testClassPath = testClassPath;
+    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
         this.testClassName = testClassName;
         this.testMethodName = testMethodName;
+        this.testClassPath = testClassPath;
         this.approvedDirectory = approvedDirectory;
     }
 
+
     @Override
-    public Path getTestClassPath() { return testClassPath; }
+    public Path getTestClassPath() {
+        return testClassPath;
+    }
 
     @Override
     public String testClassName() {
@@ -58,5 +61,4 @@ abstract class Junit5TestMetaBase implements TestMetaInformation {
     public Path getApprovedDirectory() {
         return approvedDirectory;
     }
-
 }
