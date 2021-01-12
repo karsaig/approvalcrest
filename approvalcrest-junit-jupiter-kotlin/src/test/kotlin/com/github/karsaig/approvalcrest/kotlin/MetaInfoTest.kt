@@ -11,10 +11,10 @@ class MetaInfoTest {
     fun testKotlinMetaWithSameBeanAsMatcher() {
         val underTest = KotlinTestMeta()
         val expected = KotlinTestMeta(
-            Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
-            "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
-            "testKotlinMetaWithSameBeanAsMatcher",
-            Paths.get("src/test/resources/approvalcrest")
+                Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
+                "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
+                "testKotlinMetaWithSameBeanAsMatcher",
+                Paths.get("src/test/resources/approvalcrest")
         )
         MatcherAssert.assertThat(underTest, Matchers.sameBeanAs(expected))
     }
@@ -23,11 +23,19 @@ class MetaInfoTest {
     fun testKotlinInfoBasedMetaWithSameBeanAsMatcher(testInfo: TestInfo) {
         val underTest = KotlinInfoBasedTestMeta(testInfo)
         val expected = KotlinInfoBasedTestMeta(
-            Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
-            "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
-            "testKotlinInfoBasedMetaWithSameBeanAsMatcher",
-            Paths.get("src/test/resources/approvalcrest")
+                Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin"),
+                "com.github.karsaig.approvalcrest.kotlin.MetaInfoTest",
+                "testKotlinInfoBasedMetaWithSameBeanAsMatcher",
+                Paths.get("src/test/resources/approvalcrest")
         )
         MatcherAssert.assertThat(underTest, Matchers.sameBeanAs(expected))
+    }
+
+    @Test
+    fun testStacktraceAndKotlinInfoBasedMetaHasSameResult(testInfo: TestInfo) {
+        val input1 = KotlinTestMeta()
+        val input2 = KotlinInfoBasedTestMeta(testInfo)
+
+        MatcherAssert.assertThat(input1, Matchers.sameBeanAs(input2))
     }
 }

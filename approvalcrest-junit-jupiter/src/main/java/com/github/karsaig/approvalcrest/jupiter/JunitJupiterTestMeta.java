@@ -11,7 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 
-public class JunitJupiterTestMeta  extends Junit5TestMetaBase {
+public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
 
     public JunitJupiterTestMeta() {
@@ -74,7 +74,7 @@ public class JunitJupiterTestMeta  extends Junit5TestMetaBase {
     }
 
     private static void collectAnnotationClasses(Set<Class<? extends Annotation>> annotationClasses,
-                                          Annotation annotation) {
+                                                 Annotation annotation) {
         Class<? extends Annotation> annotationClass = annotation.annotationType();
 
         if (!annotationClasses.contains(annotationClass)) {

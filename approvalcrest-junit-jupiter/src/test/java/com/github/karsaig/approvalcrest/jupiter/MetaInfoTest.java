@@ -25,4 +25,12 @@ public class MetaInfoTest {
         Junit5InfoBasedTestMeta expected = new Junit5InfoBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest/jupiter"), "com.github.karsaig.approvalcrest.jupiter.MetaInfoTest", "testJunit5InfoMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"));
         assertThat(underTest, sameBeanAs(expected));
     }
+
+    @Test
+    public void testStacktraceAndTestInfoBasedMetaHasSameResult(TestInfo testInfo) {
+        JunitJupiterTestMeta input1 = new JunitJupiterTestMeta();
+        Junit5InfoBasedTestMeta input2 = new Junit5InfoBasedTestMeta(testInfo);
+
+        assertThat(input1, sameBeanAs(input2));
+    }
 }

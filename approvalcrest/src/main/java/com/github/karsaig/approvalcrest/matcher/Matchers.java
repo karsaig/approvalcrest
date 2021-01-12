@@ -9,7 +9,10 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import org.junit.runner.Description;
+
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.Junit4DescriptionBasedTestMeta;
 import com.github.karsaig.approvalcrest.Junit4TestMeta;
 
 import com.google.common.annotations.Beta;
@@ -48,6 +51,18 @@ public class Matchers {
     /**
      * Returns a {@link JsonMatcher} for matching an object with a generated
      * file.
+     *
+     * @param <T>         Type of object to serialize to JSON
+     * @param description
+     * @return a new {@link JsonMatcher} instance
+     */
+    public static <T> JsonMatcher<T> sameJsonAsApproved(Description description) {
+        return sameJsonAsApproved(new Junit4DescriptionBasedTestMeta(description));
+    }
+
+    /**
+     * Returns a {@link JsonMatcher} for matching an object with a generated
+     * file.
      * Should be used for cases when the default implementation of {@link TestMetaInformation} doesn't work for any reason.
      * <p>
      * <b>!! Beta, as such subject to change !!</b>
@@ -59,6 +74,16 @@ public class Matchers {
     @Beta
     public static <T> JsonMatcher<T> sameJsonAsApproved(TestMetaInformation testMetaInformation) {
         return MATCHER_FACTORY.jsonMatcher(testMetaInformation, new FileMatcherConfig());
+    }
+
+    /**
+     * Returns a {@link ContentMatcher} for matching a string with a generated file.
+     *
+     * @param <T> Only {@link String} is supported at the moment.
+     * @return a new {@link ContentMatcher} instance
+     */
+    public static <T> ContentMatcher<T> sameContentAsApproved(Description description) {
+        return sameContentAsApproved(new Junit4DescriptionBasedTestMeta(description));
     }
 
     /**
