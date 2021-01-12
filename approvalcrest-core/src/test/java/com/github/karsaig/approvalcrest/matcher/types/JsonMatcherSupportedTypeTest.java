@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.time.Instant;
@@ -11,12 +13,16 @@ import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
@@ -93,6 +99,46 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                         "detailMessage\n" +
                         "Expected: X:\n" +
                         "     got: X differs:\n"},
+                {bean().string("string").integer(1).build(), "{\n" +
+                        "  \"string\": \"string\",\n" +
+                        "  \"integer\": 1\n" +
+                        "}", null},
+                {bean().string("string").integer(1).build(), "{\n" +
+                        "  \"string\": \"string2\",\n" +
+                        "  \"integer\": 2\n" +
+                        "}", "Expected file 4ac405/11b2ef-approved.json\n" +
+                        "integer\n" +
+                        "Expected: 2\n" +
+                        "     got: 1\n" +
+                        " ; string\n" +
+                        "Expected: string2\n" +
+                        "     got: string\n"},
+                {bean().string("string").integer(1).map(Collections.emptyMap()).hashMap(new HashMap<>()).hashSet(new HashSet<>()).set(Collections.emptySet()).build(), "{\n" +
+                        "  \"string\": \"string\",\n" +
+                        "  \"integer\": 1,\n" +
+                        "  \"set\": [],\n" +
+                        "  \"map\": [],\n" +
+                        "  \"hashSet\": [],\n" +
+                        "  \"hashMap\": []\n" +
+                        "}", null},
+                {bean().string("string3").integer(13)
+                        .map(new HashMap<Bean, Bean>() {{ put(bean().build(), bean().build()); }})
+                        .hashMap(new HashMap<>())
+                        .hashSet(new HashSet<>())
+                        .set(Collections.emptySet()).build(), "{\n" +
+                        "  \"string\": \"string\",\n" +
+                        "  \"integer\": 1,\n" +
+                        "  \"set\": [],\n" +
+                        "  \"map\": [],\n" +
+                        "  \"hashSet\": [],\n" +
+                        "  \"hashMap\": []\n" +
+                        "}", "Expected file 4ac405/11b2ef-approved.json\n" +
+                        "integer\n" +
+                        "Expected: 1\n" +
+                        "     got: 13\n" +
+                        " ; map[]: Expected 0 values but got 1 ; string\n" +
+                        "Expected: string\n" +
+                        "     got: string3\n"},
         };
     }
 

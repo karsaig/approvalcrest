@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Paths;
@@ -13,6 +15,9 @@ import java.time.OffsetTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Optional;
 
 import org.hamcrest.MatcherAssert;
@@ -21,13 +26,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 
 class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
 
     public static Object[][] typeSerializationTestCases() {
         return new Object[][]{
-
                 {null, null, null},
                 {"NotNull", null, "actual is not null"},
                 {null, "NotNull", "\n" +
@@ -124,6 +129,22 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                 {new RuntimeException("X differs:", new IllegalStateException("This is bad!")), new RuntimeException("X:", new IllegalStateException("This is bad!")), "detailMessage\n" +
                         "Expected: X:\n" +
                         "     got: X differs:\n"},
+                {bean().string("string").integer(1).build(), bean().string("string").integer(1).build(), null},
+                {bean().string("string").integer(1).build(), bean().string("string2").integer(2).build(), "integer\n" +
+                        "Expected: 2\n" +
+                        "     got: 1\n" +
+                        " ; string\n" +
+                        "Expected: string2\n" +
+                        "     got: string\n"},
+                {bean().string("string").integer(1).map(Collections.emptyMap()).hashMap(new HashMap<>()).hashSet(new HashSet<>()).set(Collections.emptySet()).build(), bean().string("string").integer(1).map(Collections.emptyMap()).hashMap(new HashMap<>()).hashSet(new HashSet<>()).set(Collections.emptySet()).build(), null},
+                {bean().string("string3").integer(13).map(new HashMap<Bean, Bean>() {{
+                    put(bean().build(), bean().build());
+                }}).hashMap(new HashMap<>()).hashSet(new HashSet<>()).set(Collections.emptySet()).build(), bean().string("string").integer(1).map(Collections.emptyMap()).hashMap(new HashMap<>()).hashSet(new HashSet<>()).set(Collections.emptySet()).build(), "integer\n" +
+                        "Expected: 1\n" +
+                        "     got: 13\n" +
+                        " ; map[]: Expected 0 values but got 1 ; string\n" +
+                        "Expected: string\n" +
+                        "     got: string3\n"},
         };
     }
 
