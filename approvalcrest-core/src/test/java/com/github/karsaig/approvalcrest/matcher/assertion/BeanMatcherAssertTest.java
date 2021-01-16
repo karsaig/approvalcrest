@@ -6,11 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.TestAssertImpl;
+import com.github.karsaig.approvalcrest.matcher.AbstractTest;
 import com.github.karsaig.approvalcrest.matcher.TestMatcherFactory;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
 
-public class BeanMatcherAssertTest {
+public class BeanMatcherAssertTest extends AbstractTest {
 
     private TestAssertImpl underTest = new TestAssertImpl();
     private TestMatcherFactory matcherFactory = new TestMatcherFactory();
@@ -148,13 +149,7 @@ public class BeanMatcherAssertTest {
 
         AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                 () -> underTest.assertThat(null, testInput, matcherFactory.beanMatcher(expected),
-                        (s, cd) -> {
-                            throw new AssertionFailedError(
-                                    s,
-                                    cd.getExpected(),
-                                    cd.getActual()
-                            );
-                        }));
+                        comparisonDescriptionHandler()));
 
         Assertions.assertEquals("actual is not null", thrown.getMessage());
 
@@ -189,13 +184,7 @@ public class BeanMatcherAssertTest {
 
         AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                 () -> underTest.assertThat(null, testInput, matcherFactory.beanMatcher(expected),
-                        (s, cd) -> {
-                            throw new AssertionFailedError(
-                                    s,
-                                    cd.getExpected(),
-                                    cd.getActual()
-                            );
-                        }));
+                        comparisonDescriptionHandler()));
 
         Assertions.assertEquals("beanLong\n" +
                 "Expected: 13\n" +
@@ -225,13 +214,7 @@ public class BeanMatcherAssertTest {
 
         AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                 () -> underTest.assertThat(null, testInput, matcherFactory.beanMatcher(expected),
-                        (s, cd) -> {
-                            throw new AssertionFailedError(
-                                    s,
-                                    cd.getExpected(),
-                                    cd.getActual()
-                            );
-                        }));
+                        comparisonDescriptionHandler()));
 
         Assertions.assertEquals("beanInteger\n" +
                 "Expected: 42\n" +
@@ -279,13 +262,7 @@ public class BeanMatcherAssertTest {
 
         AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                 () -> underTest.assertThat("This is a reason", testInput, matcherFactory.beanMatcher(expected),
-                        (s, cd) -> {
-                            throw new AssertionFailedError(
-                                    s,
-                                    cd.getExpected(),
-                                    cd.getActual()
-                            );
-                        }));
+                        comparisonDescriptionHandler()));
 
         Assertions.assertEquals("This is a reason\n" +
                 "beanLong\n" +

@@ -54,13 +54,7 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat(null, testInput, MATCHER_FACTORY.jsonMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("Expected file 4ac405/11b2ef-approved.json\n" +
                     "beanLong\n" +
@@ -90,13 +84,7 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat(null, testInput, MATCHER_FACTORY.jsonMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("Expected file 4ac405/11b2ef-approved.json\n" +
                     "beanInteger\n" +
@@ -129,13 +117,7 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat("This is the reason", testInput, MATCHER_FACTORY.jsonMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("This is the reason\n" +
                     "Expected file 4ac405/11b2ef-approved.json\n" +
@@ -176,13 +158,7 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat("This is the reason", testInput, MATCHER_FACTORY.jsonMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("This is the reason\n" +
                     "Expected file 4ac405/11b2ef-approved.json\n" +

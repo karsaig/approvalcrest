@@ -8,10 +8,14 @@ import static org.hamcrest.Matchers.is;
 import java.time.LocalDate;
 import java.util.Collections;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
 import com.github.karsaig.approvalcrest.testdata.Country;
 
 import com.google.common.collect.ImmutableMap;
@@ -82,9 +86,40 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName")), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
-                "Expected: Different first name\n" +
-                "     got: FirstName1\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("firstName\n" +
+                    "Expected: Different first name\n" +
+                    "     got: FirstName1\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"since\": \"2017-04-02\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\",\n" +
+                    "      \"since\": \"2017-04-12\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation());
+            Assertions.assertEquals(approvedFileContent, thrown.getExpected().getStringRepresentation());
+        }, AssertionFailedError.class);
     }
 
 
@@ -151,8 +186,39 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName")), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("\n" +
-                "Unexpected: firstName\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("\n" +
+                    "Unexpected: firstName\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"firstName\": \"Different first name\",\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"since\": \"2017-04-02\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\",\n" +
+                    "      \"since\": \"2017-04-12\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation());
+            Assertions.assertEquals(approvedFileContent, thrown.getExpected().getStringRepresentation());
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] notApprovedIgnoreCases() {
@@ -1392,6 +1458,65 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 " ; lastName\n" +
                 "Expected: LastName1\n" +
                 "     got: Different last name\n"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("lastName\n" +
+                    "Expected: LastName1\n" +
+                    "     got: Different last name\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"lastName\": \"Different last name\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"since\": \"2017-04-02\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\",\n" +
+                    "      \"since\": \"2017-04-12\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"since\": \"2017-04-02\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\",\n" +
+                    "      \"since\": \"2017-04-12\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "firstName shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "firstName shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] multipleSimpleDiffCases() {
@@ -1538,6 +1663,63 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 " ; currentAddress.since\n" +
                 "Expected: 2017-04-02\n" +
                 "     got: 2020-12-25\n"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("since")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
+                    "Expected: BELGIUM\n" +
+                    "     got: HUNGARY\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"HUNGARY\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43,\n" +
+                    "    \"postCode\": \"PostCode64\"\n" +
+                    "  },\n" +
+                    "  \"previousAddresses\": [\n" +
+                    "    {\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"city\": \"CityName11\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53,\n" +
+                    "      \"postCode\": \"PostCode74\"\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "since shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "since shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] multipleMultiLevelPathSingleIngoreWithDiffCases() {
@@ -1876,6 +2058,234 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "Expected: FRANCE\n" +
                 "     got: HUNGARY\n"));
 
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("since")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("members[1].birthCountry\n" +
+                    "Expected: FRANCE\n" +
+                    "     got: HUNGARY\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"name\": \"TeamName2\",\n" +
+                    "  \"lead\": {\n" +
+                    "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"lastName\": \"LastName13\",\n" +
+                    "    \"email\": \"e13@e.mail\",\n" +
+                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"HUNGARY\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"HUNGARY\",\n" +
+                    "      \"city\": \"CityName13\",\n" +
+                    "      \"streetName\": \"StreetName72\",\n" +
+                    "      \"streetNumber\": 55,\n" +
+                    "      \"postCode\": \"PostCode76\"\n" +
+                    "    },\n" +
+                    "    \"previousAddresses\": [\n" +
+                    "      {\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"city\": \"CityName23\",\n" +
+                    "        \"streetName\": \"StreetName82\",\n" +
+                    "        \"streetNumber\": 65,\n" +
+                    "        \"postCode\": \"PostCode86\"\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName24\",\n" +
+                    "        \"streetName\": \"StreetName83\",\n" +
+                    "        \"streetNumber\": 66,\n" +
+                    "        \"postCode\": \"PostCode87\"\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"city\": \"CityName25\",\n" +
+                    "        \"streetName\": \"StreetName84\",\n" +
+                    "        \"streetNumber\": 67,\n" +
+                    "        \"postCode\": \"PostCode88\"\n" +
+                    "      }\n" +
+                    "    ]\n" +
+                    "  },\n" +
+                    "  \"members\": [\n" +
+                    "    {\n" +
+                    "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"lastName\": \"LastName102\",\n" +
+                    "      \"email\": \"e102@e.mail\",\n" +
+                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"EGYPT\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"city\": \"CityName102\",\n" +
+                    "        \"streetName\": \"StreetName161\",\n" +
+                    "        \"streetNumber\": 144,\n" +
+                    "        \"postCode\": \"PostCode165\"\n" +
+                    "      },\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"city\": \"CityName112\",\n" +
+                    "          \"streetName\": \"StreetName171\",\n" +
+                    "          \"streetNumber\": 154,\n" +
+                    "          \"postCode\": \"PostCode175\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155,\n" +
+                    "          \"postCode\": \"PostCode176\"\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"lastName\": \"LastName103\",\n" +
+                    "      \"email\": \"e103@e.mail\",\n" +
+                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"HUNGARY\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"FRANCE\",\n" +
+                    "        \"city\": \"CityName103\",\n" +
+                    "        \"streetName\": \"StreetName162\",\n" +
+                    "        \"streetNumber\": 145,\n" +
+                    "        \"postCode\": \"PostCode166\"\n" +
+                    "      },\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155,\n" +
+                    "          \"postCode\": \"PostCode176\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"city\": \"CityName114\",\n" +
+                    "          \"streetName\": \"StreetName173\",\n" +
+                    "          \"streetNumber\": 156,\n" +
+                    "          \"postCode\": \"PostCode177\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName115\",\n" +
+                    "          \"streetName\": \"StreetName174\",\n" +
+                    "          \"streetNumber\": 157,\n" +
+                    "          \"postCode\": \"PostCode178\"\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"name\": \"TeamName2\",\n" +
+                    "  \"lead\": {\n" +
+                    "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"lastName\": \"LastName13\",\n" +
+                    "    \"email\": \"e13@e.mail\",\n" +
+                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"HUNGARY\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"HUNGARY\",\n" +
+                    "      \"city\": \"CityName13\",\n" +
+                    "      \"streetName\": \"StreetName72\",\n" +
+                    "      \"streetNumber\": 55,\n" +
+                    "      \"postCode\": \"PostCode76\"\n" +
+                    "    },\n" +
+                    "    \"previousAddresses\": [\n" +
+                    "      {\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"city\": \"CityName23\",\n" +
+                    "        \"streetName\": \"StreetName82\",\n" +
+                    "        \"streetNumber\": 65,\n" +
+                    "        \"postCode\": \"PostCode86\"\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName24\",\n" +
+                    "        \"streetName\": \"StreetName83\",\n" +
+                    "        \"streetNumber\": 66,\n" +
+                    "        \"postCode\": \"PostCode87\"\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"city\": \"CityName25\",\n" +
+                    "        \"streetName\": \"StreetName84\",\n" +
+                    "        \"streetNumber\": 67,\n" +
+                    "        \"postCode\": \"PostCode88\"\n" +
+                    "      }\n" +
+                    "    ]\n" +
+                    "  },\n" +
+                    "  \"members\": [\n" +
+                    "    {\n" +
+                    "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"lastName\": \"LastName102\",\n" +
+                    "      \"email\": \"e102@e.mail\",\n" +
+                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"EGYPT\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"city\": \"CityName102\",\n" +
+                    "        \"streetName\": \"StreetName161\",\n" +
+                    "        \"streetNumber\": 144,\n" +
+                    "        \"postCode\": \"PostCode165\"\n" +
+                    "      },\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"city\": \"CityName112\",\n" +
+                    "          \"streetName\": \"StreetName171\",\n" +
+                    "          \"streetNumber\": 154,\n" +
+                    "          \"postCode\": \"PostCode175\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155,\n" +
+                    "          \"postCode\": \"PostCode176\"\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"lastName\": \"LastName103\",\n" +
+                    "      \"email\": \"e103@e.mail\",\n" +
+                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"FRANCE\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"FRANCE\",\n" +
+                    "        \"city\": \"CityName103\",\n" +
+                    "        \"streetName\": \"StreetName162\",\n" +
+                    "        \"streetNumber\": 145,\n" +
+                    "        \"postCode\": \"PostCode166\"\n" +
+                    "      },\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155,\n" +
+                    "          \"postCode\": \"PostCode176\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"city\": \"CityName114\",\n" +
+                    "          \"streetName\": \"StreetName173\",\n" +
+                    "          \"streetNumber\": 156,\n" +
+                    "          \"postCode\": \"PostCode177\"\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName115\",\n" +
+                    "          \"streetName\": \"StreetName174\",\n" +
+                    "          \"streetNumber\": 157,\n" +
+                    "          \"postCode\": \"PostCode178\"\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "since shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "since shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] simpleDiffInList() {
@@ -2082,6 +2492,114 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "Expected: CANADA\n" +
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+                    "Expected: FirstName1\n" +
+                    "     got: Different first name\n" +
+                    " ; [1].currentAddress.country\n" +
+                    "Expected: CANADA\n" +
+                    "     got: AUSTRIA\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"Different first name\",\n" +
+                    "    \"lastName\": \"LastName1\",\n" +
+                    "    \"email\": \"e1@e.mail\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"BELGIUM\",\n" +
+                    "      \"city\": \"CityName1\",\n" +
+                    "      \"streetName\": \"StreetName60\",\n" +
+                    "      \"streetNumber\": 43,\n" +
+                    "      \"postCode\": \"PostCode64\",\n" +
+                    "      \"since\": \"2017-04-02\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"lastName\": \"LastName2\",\n" +
+                    "    \"email\": \"e2@e.mail\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"AUSTRIA\",\n" +
+                    "      \"city\": \"CityName2\",\n" +
+                    "      \"streetName\": \"StreetName61\",\n" +
+                    "      \"streetNumber\": 44,\n" +
+                    "      \"postCode\": \"PostCode65\",\n" +
+                    "      \"since\": \"2017-04-03\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"lastName\": \"LastName3\",\n" +
+                    "    \"email\": \"e3@e.mail\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"DENMARK\",\n" +
+                    "      \"city\": \"CityName3\",\n" +
+                    "      \"streetName\": \"StreetName62\",\n" +
+                    "      \"streetNumber\": 45,\n" +
+                    "      \"postCode\": \"PostCode66\",\n" +
+                    "      \"since\": \"2017-04-04\"\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName1\",\n" +
+                    "    \"lastName\": \"LastName1\",\n" +
+                    "    \"email\": \"e1@e.mail\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"BELGIUM\",\n" +
+                    "      \"city\": \"CityName1\",\n" +
+                    "      \"streetName\": \"StreetName60\",\n" +
+                    "      \"streetNumber\": 43,\n" +
+                    "      \"postCode\": \"PostCode64\",\n" +
+                    "      \"since\": \"2017-04-02\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"lastName\": \"LastName2\",\n" +
+                    "    \"email\": \"e2@e.mail\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"CANADA\",\n" +
+                    "      \"city\": \"CityName2\",\n" +
+                    "      \"streetName\": \"StreetName61\",\n" +
+                    "      \"streetNumber\": 44,\n" +
+                    "      \"postCode\": \"PostCode65\",\n" +
+                    "      \"since\": \"2017-04-03\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"lastName\": \"LastName3\",\n" +
+                    "    \"email\": \"e3@e.mail\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"DENMARK\",\n" +
+                    "      \"city\": \"CityName3\",\n" +
+                    "      \"streetName\": \"StreetName62\",\n" +
+                    "      \"streetNumber\": 45,\n" +
+                    "      \"postCode\": \"PostCode66\",\n" +
+                    "      \"since\": \"2017-04-04\"\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] simpleDiffInSet() {
@@ -2288,6 +2806,702 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "Expected: CANADA\n" +
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+                    "Expected: FirstName1\n" +
+                    "     got: Different first name\n" +
+                    " ; [1].currentAddress.country\n" +
+                    "Expected: CANADA\n" +
+                    "     got: AUSTRIA\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"Different first name\",\n" +
+                    "    \"lastName\": \"LastName1\",\n" +
+                    "    \"email\": \"e1@e.mail\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"BELGIUM\",\n" +
+                    "      \"city\": \"CityName1\",\n" +
+                    "      \"streetName\": \"StreetName60\",\n" +
+                    "      \"streetNumber\": 43,\n" +
+                    "      \"postCode\": \"PostCode64\",\n" +
+                    "      \"since\": \"2017-04-02\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"lastName\": \"LastName2\",\n" +
+                    "    \"email\": \"e2@e.mail\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"AUSTRIA\",\n" +
+                    "      \"city\": \"CityName2\",\n" +
+                    "      \"streetName\": \"StreetName61\",\n" +
+                    "      \"streetNumber\": 44,\n" +
+                    "      \"postCode\": \"PostCode65\",\n" +
+                    "      \"since\": \"2017-04-03\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"lastName\": \"LastName3\",\n" +
+                    "    \"email\": \"e3@e.mail\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"DENMARK\",\n" +
+                    "      \"city\": \"CityName3\",\n" +
+                    "      \"streetName\": \"StreetName62\",\n" +
+                    "      \"streetNumber\": 45,\n" +
+                    "      \"postCode\": \"PostCode66\",\n" +
+                    "      \"since\": \"2017-04-04\"\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName1\",\n" +
+                    "    \"lastName\": \"LastName1\",\n" +
+                    "    \"email\": \"e1@e.mail\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"BELGIUM\",\n" +
+                    "      \"city\": \"CityName1\",\n" +
+                    "      \"streetName\": \"StreetName60\",\n" +
+                    "      \"streetNumber\": 43,\n" +
+                    "      \"postCode\": \"PostCode64\",\n" +
+                    "      \"since\": \"2017-04-02\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"lastName\": \"LastName2\",\n" +
+                    "    \"email\": \"e2@e.mail\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"CANADA\",\n" +
+                    "      \"city\": \"CityName2\",\n" +
+                    "      \"streetName\": \"StreetName61\",\n" +
+                    "      \"streetNumber\": 44,\n" +
+                    "      \"postCode\": \"PostCode65\",\n" +
+                    "      \"since\": \"2017-04-03\"\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"lastName\": \"LastName3\",\n" +
+                    "    \"email\": \"e3@e.mail\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"country\": \"DENMARK\",\n" +
+                    "      \"city\": \"CityName3\",\n" +
+                    "      \"streetName\": \"StreetName62\",\n" +
+                    "      \"streetNumber\": 45,\n" +
+                    "      \"postCode\": \"PostCode66\",\n" +
+                    "      \"since\": \"2017-04-04\"\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInSetAsGenericProperty() {
+        return new Object[][]{
+                {"Object input", BeanWithGeneric.of("String1", Sets.newHashSet(modifyObject(generatePerson(1L), p -> {
+                    p.setFirstName("Different first name");
+                    return p;
+                }), modifyObject(generatePerson(2L), p2 -> {
+                    p2.getCurrentAddress().setCountry(Country.AUSTRIA);
+                    return p2;
+                }), modifyObject(generatePerson(3L), p3 -> {
+                    p3.setPreviousAddresses(Collections.emptyList());
+                    return p3;
+                })))},
+                {"Json string input", "{\n" +
+                        "  \"dummyString\": \"String1\",\n" +
+                        "  \"genericValue\": [\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"Different first name\",\n" +
+                        "      \"lastName\": \"LastName1\",\n" +
+                        "      \"email\": \"e1@e.mail\",\n" +
+                        "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"BELGIUM\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"BELGIUM\",\n" +
+                        "        \"city\": \"CityName1\",\n" +
+                        "        \"streetName\": \"StreetName60\",\n" +
+                        "        \"streetNumber\": 43,\n" +
+                        "        \"postCode\": \"PostCode64\",\n" +
+                        "        \"since\": \"2017-04-02\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": [\n" +
+                        "        {\n" +
+                        "          \"country\": \"EGYPT\",\n" +
+                        "          \"city\": \"CityName11\",\n" +
+                        "          \"streetName\": \"StreetName70\",\n" +
+                        "          \"streetNumber\": 53,\n" +
+                        "          \"postCode\": \"PostCode74\",\n" +
+                        "          \"since\": \"2017-04-12\"\n" +
+                        "        }\n" +
+                        "      ]\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"FirstName2\",\n" +
+                        "      \"lastName\": \"LastName2\",\n" +
+                        "      \"email\": \"e2@e.mail\",\n" +
+                        "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"CANADA\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"AUSTRIA\",\n" +
+                        "        \"city\": \"CityName2\",\n" +
+                        "        \"streetName\": \"StreetName61\",\n" +
+                        "        \"streetNumber\": 44,\n" +
+                        "        \"postCode\": \"PostCode65\",\n" +
+                        "        \"since\": \"2017-04-03\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": [\n" +
+                        "        {\n" +
+                        "          \"country\": \"FRANCE\",\n" +
+                        "          \"city\": \"CityName12\",\n" +
+                        "          \"streetName\": \"StreetName71\",\n" +
+                        "          \"streetNumber\": 54,\n" +
+                        "          \"postCode\": \"PostCode75\",\n" +
+                        "          \"since\": \"2017-04-13\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "          \"country\": \"HUNGARY\",\n" +
+                        "          \"city\": \"CityName13\",\n" +
+                        "          \"streetName\": \"StreetName72\",\n" +
+                        "          \"streetNumber\": 55,\n" +
+                        "          \"postCode\": \"PostCode76\",\n" +
+                        "          \"since\": \"2017-04-14\"\n" +
+                        "        }\n" +
+                        "      ]\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"FirstName3\",\n" +
+                        "      \"lastName\": \"LastName3\",\n" +
+                        "      \"email\": \"e3@e.mail\",\n" +
+                        "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"DENMARK\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"DENMARK\",\n" +
+                        "        \"city\": \"CityName3\",\n" +
+                        "        \"streetName\": \"StreetName62\",\n" +
+                        "        \"streetNumber\": 45,\n" +
+                        "        \"postCode\": \"PostCode66\",\n" +
+                        "        \"since\": \"2017-04-04\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": []\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInSetAsGenericProperty")
+    public void simpleDifferenceInSetAsGenericPropertyTest(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"dummyString\": \"String1\",\n" +
+                "  \"genericValue\": [\n" +
+                "    {\n" +
+                "      \"firstName\": \"Different first name\",\n" +
+                "      \"lastName\": \"LastName1\",\n" +
+                "      \"email\": \"e1@e.mail\",\n" +
+                "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"city\": \"CityName1\",\n" +
+                "        \"streetName\": \"StreetName60\",\n" +
+                "        \"streetNumber\": 43,\n" +
+                "        \"postCode\": \"PostCode64\",\n" +
+                "        \"since\": \"2018-04-02\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"city\": \"CityName11\",\n" +
+                "          \"streetName\": \"StreetName70\",\n" +
+                "          \"streetNumber\": 53,\n" +
+                "          \"postCode\": \"PostCode74\",\n" +
+                "          \"since\": \"2019-04-13\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"firstName\": \"FirstName2\",\n" +
+                "      \"lastName\": \"LastName2\",\n" +
+                "      \"email\": \"e2@e.mail\",\n" +
+                "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"CANADA\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"AUSTRIA\",\n" +
+                "        \"city\": \"CityName2\",\n" +
+                "        \"streetName\": \"StreetName61\",\n" +
+                "        \"streetNumber\": 44,\n" +
+                "        \"postCode\": \"PostCode65\",\n" +
+                "        \"since\": \"2017-04-03\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName12\",\n" +
+                "          \"streetName\": \"StreetName71\",\n" +
+                "          \"streetNumber\": 54,\n" +
+                "          \"postCode\": \"PostCode75\",\n" +
+                "          \"since\": \"2017-04-13\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"firstName\": \"FirstName3\",\n" +
+                "      \"lastName\": \"LastName3\",\n" +
+                "      \"email\": \"e3@e.mail\",\n" +
+                "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"DENMARK\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"city\": \"CityName3\",\n" +
+                "        \"streetName\": \"StreetName62\",\n" +
+                "        \"streetNumber\": 45,\n" +
+                "        \"postCode\": \"PostCode66\",\n" +
+                "        \"since\": \"2017-04-04\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": []\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName"), is("since")).ignoring(is("previousAddresses")), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].currentAddress.since\n" +
+                "Expected: 2018-04-02\n" +
+                "     got: 2017-04-02\n" +
+                " ; genericValue[0].previousAddresses[0].since\n" +
+                "Expected: 2019-04-13\n" +
+                "     got: 2017-04-12\n" +
+                " ; genericValue[1].previousAddresses[1].country\n" +
+                "Expected: FRANCE\n" +
+                "     got: HUNGARY\n"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName")).ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[0].currentAddress.since\n" +
+                    "Expected: 2018-04-02\n" +
+                    "     got: 2017-04-02\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"genericValue\": [\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"genericValue\": [\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2018-04-02\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "firstName and previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "firstName and previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInSetAsProperty() {
+        return new Object[][]{
+                {"Object input", BeanWithGenericIterable.Builder.bean().dummyString("String1").set(Sets.newHashSet(modifyObject(generatePerson(1L), p -> {
+                    p.setFirstName("Different first name");
+                    return p;
+                }), modifyObject(generatePerson(2L), p2 -> {
+                    p2.getCurrentAddress().setCountry(Country.AUSTRIA);
+                    return p2;
+                }), modifyObject(generatePerson(3L), p3 -> {
+                    p3.setPreviousAddresses(Collections.emptyList());
+                    return p3;
+                })))},
+                {"Json string input", "{\n" +
+                        "  \"dummyString\": \"String1\",\n" +
+                        "  \"set\": [\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"Different first name\",\n" +
+                        "      \"lastName\": \"LastName1\",\n" +
+                        "      \"email\": \"e1@e.mail\",\n" +
+                        "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"BELGIUM\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"BELGIUM\",\n" +
+                        "        \"city\": \"CityName1\",\n" +
+                        "        \"streetName\": \"StreetName60\",\n" +
+                        "        \"streetNumber\": 43,\n" +
+                        "        \"postCode\": \"PostCode64\",\n" +
+                        "        \"since\": \"2017-04-02\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": [\n" +
+                        "        {\n" +
+                        "          \"country\": \"EGYPT\",\n" +
+                        "          \"city\": \"CityName11\",\n" +
+                        "          \"streetName\": \"StreetName70\",\n" +
+                        "          \"streetNumber\": 53,\n" +
+                        "          \"postCode\": \"PostCode74\",\n" +
+                        "          \"since\": \"2017-04-12\"\n" +
+                        "        }\n" +
+                        "      ]\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"FirstName2\",\n" +
+                        "      \"lastName\": \"LastName2\",\n" +
+                        "      \"email\": \"e2@e.mail\",\n" +
+                        "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"CANADA\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"AUSTRIA\",\n" +
+                        "        \"city\": \"CityName2\",\n" +
+                        "        \"streetName\": \"StreetName61\",\n" +
+                        "        \"streetNumber\": 44,\n" +
+                        "        \"postCode\": \"PostCode65\",\n" +
+                        "        \"since\": \"2017-04-03\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": [\n" +
+                        "        {\n" +
+                        "          \"country\": \"FRANCE\",\n" +
+                        "          \"city\": \"CityName12\",\n" +
+                        "          \"streetName\": \"StreetName71\",\n" +
+                        "          \"streetNumber\": 54,\n" +
+                        "          \"postCode\": \"PostCode75\",\n" +
+                        "          \"since\": \"2017-04-13\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "          \"country\": \"HUNGARY\",\n" +
+                        "          \"city\": \"CityName13\",\n" +
+                        "          \"streetName\": \"StreetName72\",\n" +
+                        "          \"streetNumber\": 55,\n" +
+                        "          \"postCode\": \"PostCode76\",\n" +
+                        "          \"since\": \"2017-04-14\"\n" +
+                        "        }\n" +
+                        "      ]\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"firstName\": \"FirstName3\",\n" +
+                        "      \"lastName\": \"LastName3\",\n" +
+                        "      \"email\": \"e3@e.mail\",\n" +
+                        "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                        "      \"birthCountry\": \"DENMARK\",\n" +
+                        "      \"currentAddress\": {\n" +
+                        "        \"country\": \"DENMARK\",\n" +
+                        "        \"city\": \"CityName3\",\n" +
+                        "        \"streetName\": \"StreetName62\",\n" +
+                        "        \"streetNumber\": 45,\n" +
+                        "        \"postCode\": \"PostCode66\",\n" +
+                        "        \"since\": \"2017-04-04\"\n" +
+                        "      },\n" +
+                        "      \"previousAddresses\": []\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInSetAsProperty")
+    public void simpleDifferenceInSetAsPropertyTest(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"dummyString\": \"String1\",\n" +
+                "  \"set\": [\n" +
+                "    {\n" +
+                "      \"firstName\": \"Different first name\",\n" +
+                "      \"lastName\": \"LastName1\",\n" +
+                "      \"email\": \"e1@e.mail\",\n" +
+                "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"city\": \"CityName1\",\n" +
+                "        \"streetName\": \"StreetName60\",\n" +
+                "        \"streetNumber\": 43,\n" +
+                "        \"postCode\": \"PostCode64\",\n" +
+                "        \"since\": \"2018-04-02\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"city\": \"CityName11\",\n" +
+                "          \"streetName\": \"StreetName70\",\n" +
+                "          \"streetNumber\": 53,\n" +
+                "          \"postCode\": \"PostCode74\",\n" +
+                "          \"since\": \"2019-04-13\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"firstName\": \"FirstName2\",\n" +
+                "      \"lastName\": \"LastName2\",\n" +
+                "      \"email\": \"e2@e.mail\",\n" +
+                "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"CANADA\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"AUSTRIA\",\n" +
+                "        \"city\": \"CityName2\",\n" +
+                "        \"streetName\": \"StreetName61\",\n" +
+                "        \"streetNumber\": 44,\n" +
+                "        \"postCode\": \"PostCode65\",\n" +
+                "        \"since\": \"2017-04-03\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName12\",\n" +
+                "          \"streetName\": \"StreetName71\",\n" +
+                "          \"streetNumber\": 54,\n" +
+                "          \"postCode\": \"PostCode75\",\n" +
+                "          \"since\": \"2017-04-13\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"firstName\": \"FirstName3\",\n" +
+                "      \"lastName\": \"LastName3\",\n" +
+                "      \"email\": \"e3@e.mail\",\n" +
+                "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"DENMARK\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"city\": \"CityName3\",\n" +
+                "        \"streetName\": \"StreetName62\",\n" +
+                "        \"streetNumber\": 45,\n" +
+                "        \"postCode\": \"PostCode66\",\n" +
+                "        \"since\": \"2017-04-04\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": []\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName"), is("since")).ignoring(is("previousAddresses")), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("set[0].currentAddress.since\n" +
+                "Expected: 2018-04-02\n" +
+                "     got: 2017-04-02\n" +
+                " ; set[0].previousAddresses[0].since\n" +
+                "Expected: 2019-04-13\n" +
+                "     got: 2017-04-12\n" +
+                " ; set[1].previousAddresses[1].country\n" +
+                "Expected: FRANCE\n" +
+                "     got: HUNGARY\n"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName")).ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("set[0].currentAddress.since\n" +
+                    "Expected: 2018-04-02\n" +
+                    "     got: 2017-04-02\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"set\": [\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"set\": [\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2018-04-02\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "firstName and previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "firstName and previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] simpleDiffInMap() {
@@ -2506,6 +3720,826 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "Expected: CANADA\n" +
                 "     got: AUSTRIA\n" +
                 " ; [2].p3.previousAddresses[]: Expected 3 values but got 0"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
+                    "Expected: FirstName1\n" +
+                    "     got: Different first name\n" +
+                    " ; [1].p2.currentAddress.country\n" +
+                    "Expected: CANADA\n" +
+                    "     got: AUSTRIA\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  {\n" +
+                    "    \"p1\": {\n" +
+                    "      \"firstName\": \"Different first name\",\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"p2\": {\n" +
+                    "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"p3\": {\n" +
+                    "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  {\n" +
+                    "    \"p1\": {\n" +
+                    "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43,\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"p2\": {\n" +
+                    "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44,\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"p3\": {\n" +
+                    "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45,\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\"\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInMapAsGenericProperty() {
+        return new Object[][]{
+                {"Object input", BeanWithGeneric.of("String1", ImmutableMap.of("p1", modifyObject(generatePerson(1L), p -> {
+                    p.setFirstName("Different first name");
+                    return p;
+                }), "p2", modifyObject(generatePerson(2L), p2 -> {
+                    p2.getCurrentAddress().setCountry(Country.AUSTRIA);
+                    return p2;
+                }), "p3", modifyObject(generatePerson(3L), p3 -> {
+                    p3.setPreviousAddresses(Collections.emptyList());
+                    return p3;
+                })))},
+                {"Json string input", "{\n" +
+                        "  \"dummyString\": \"String1\",\n" +
+                        "  \"genericValue\": [\n" +
+                        "    {\n" +
+                        "      \"p1\": {\n" +
+                        "        \"firstName\": \"Different first name\",\n" +
+                        "        \"lastName\": \"LastName1\",\n" +
+                        "        \"email\": \"e1@e.mail\",\n" +
+                        "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"BELGIUM\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"BELGIUM\",\n" +
+                        "          \"city\": \"CityName1\",\n" +
+                        "          \"streetName\": \"StreetName60\",\n" +
+                        "          \"streetNumber\": 43,\n" +
+                        "          \"postCode\": \"PostCode64\",\n" +
+                        "          \"since\": \"2017-04-02\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": [\n" +
+                        "          {\n" +
+                        "            \"country\": \"EGYPT\",\n" +
+                        "            \"city\": \"CityName11\",\n" +
+                        "            \"streetName\": \"StreetName70\",\n" +
+                        "            \"streetNumber\": 53,\n" +
+                        "            \"postCode\": \"PostCode74\",\n" +
+                        "            \"since\": \"2017-04-12\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      }\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"p2\": {\n" +
+                        "        \"firstName\": \"FirstName2\",\n" +
+                        "        \"lastName\": \"LastName2\",\n" +
+                        "        \"email\": \"e2@e.mail\",\n" +
+                        "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"CANADA\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"AUSTRIA\",\n" +
+                        "          \"city\": \"CityName2\",\n" +
+                        "          \"streetName\": \"StreetName61\",\n" +
+                        "          \"streetNumber\": 44,\n" +
+                        "          \"postCode\": \"PostCode65\",\n" +
+                        "          \"since\": \"2017-04-03\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": [\n" +
+                        "          {\n" +
+                        "            \"country\": \"FRANCE\",\n" +
+                        "            \"city\": \"CityName12\",\n" +
+                        "            \"streetName\": \"StreetName71\",\n" +
+                        "            \"streetNumber\": 54,\n" +
+                        "            \"postCode\": \"PostCode75\",\n" +
+                        "            \"since\": \"2017-04-13\"\n" +
+                        "          },\n" +
+                        "          {\n" +
+                        "            \"country\": \"HUNGARY\",\n" +
+                        "            \"city\": \"CityName13\",\n" +
+                        "            \"streetName\": \"StreetName72\",\n" +
+                        "            \"streetNumber\": 55,\n" +
+                        "            \"postCode\": \"PostCode76\",\n" +
+                        "            \"since\": \"2017-04-14\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      }\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"p3\": {\n" +
+                        "        \"firstName\": \"FirstName3\",\n" +
+                        "        \"lastName\": \"LastName3\",\n" +
+                        "        \"email\": \"e3@e.mail\",\n" +
+                        "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"DENMARK\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"DENMARK\",\n" +
+                        "          \"city\": \"CityName3\",\n" +
+                        "          \"streetName\": \"StreetName62\",\n" +
+                        "          \"streetNumber\": 45,\n" +
+                        "          \"postCode\": \"PostCode66\",\n" +
+                        "          \"since\": \"2017-04-04\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": []\n" +
+                        "      }\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInMapAsGenericProperty")
+    public void simpleDifferenceInMapAsGenericPropertyTest(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"dummyString\": \"String1\",\n" +
+                "  \"genericValue\": [\n" +
+                "  {\n" +
+                "    \"p1\": {\n" +
+                "      \"firstName\": \"FirstName1\",\n" +
+                "      \"lastName\": \"LastName1\",\n" +
+                "      \"email\": \"e1@e.mail\",\n" +
+                "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"city\": \"CityName1\",\n" +
+                "        \"streetName\": \"StreetName60\",\n" +
+                "        \"streetNumber\": 43,\n" +
+                "        \"postCode\": \"PostCode64\",\n" +
+                "        \"since\": \"2017-04-02\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"city\": \"CityName11\",\n" +
+                "          \"streetName\": \"StreetName70\",\n" +
+                "          \"streetNumber\": 53,\n" +
+                "          \"postCode\": \"PostCode74\",\n" +
+                "          \"since\": \"2017-04-12\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"p2\": {\n" +
+                "      \"firstName\": \"FirstName2\",\n" +
+                "      \"lastName\": \"LastName2\",\n" +
+                "      \"email\": \"e2@e.mail\",\n" +
+                "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"CANADA\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"CANADA\",\n" +
+                "        \"city\": \"CityName2\",\n" +
+                "        \"streetName\": \"StreetName61\",\n" +
+                "        \"streetNumber\": 44,\n" +
+                "        \"postCode\": \"PostCode65\",\n" +
+                "        \"since\": \"2017-04-03\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName12\",\n" +
+                "          \"streetName\": \"StreetName71\",\n" +
+                "          \"streetNumber\": 54,\n" +
+                "          \"postCode\": \"PostCode75\",\n" +
+                "          \"since\": \"2017-04-13\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"p3\": {\n" +
+                "      \"firstName\": \"FirstName3\",\n" +
+                "      \"lastName\": \"LastName3\",\n" +
+                "      \"email\": \"e3@e.mail\",\n" +
+                "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"DENMARK\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"city\": \"CityName3\",\n" +
+                "        \"streetName\": \"StreetName62\",\n" +
+                "        \"streetNumber\": 45,\n" +
+                "        \"postCode\": \"PostCode66\",\n" +
+                "        \"since\": \"2017-04-04\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"AUSTRIA\",\n" +
+                "          \"city\": \"CityName14\",\n" +
+                "          \"streetName\": \"StreetName73\",\n" +
+                "          \"streetNumber\": 56,\n" +
+                "          \"postCode\": \"PostCode77\",\n" +
+                "          \"since\": \"2017-04-15\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"BELGIUM\",\n" +
+                "          \"city\": \"CityName15\",\n" +
+                "          \"streetName\": \"StreetName74\",\n" +
+                "          \"streetNumber\": 57,\n" +
+                "          \"postCode\": \"PostCode78\",\n" +
+                "          \"since\": \"2017-04-16\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName"), is("country")).ignoring(is("previousAddresses")), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
+                "Expected: FirstName1\n" +
+                "     got: Different first name\n" +
+                " ; genericValue[1].p2.currentAddress.country\n" +
+                "Expected: CANADA\n" +
+                "     got: AUSTRIA\n" +
+                " ; genericValue[2].p3.previousAddresses[]: Expected 3 values but got 0"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
+                    "Expected: FirstName1\n" +
+                    "     got: Different first name\n" +
+                    " ; genericValue[1].p2.currentAddress.country\n" +
+                    "Expected: CANADA\n" +
+                    "     got: AUSTRIA\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"genericValue\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"firstName\": \"Different first name\",\n" +
+                    "        \"lastName\": \"LastName1\",\n" +
+                    "        \"email\": \"e1@e.mail\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName1\",\n" +
+                    "          \"streetName\": \"StreetName60\",\n" +
+                    "          \"streetNumber\": 43,\n" +
+                    "          \"postCode\": \"PostCode64\",\n" +
+                    "          \"since\": \"2017-04-02\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"lastName\": \"LastName2\",\n" +
+                    "        \"email\": \"e2@e.mail\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"city\": \"CityName2\",\n" +
+                    "          \"streetName\": \"StreetName61\",\n" +
+                    "          \"streetNumber\": 44,\n" +
+                    "          \"postCode\": \"PostCode65\",\n" +
+                    "          \"since\": \"2017-04-03\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p3\": {\n" +
+                    "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"lastName\": \"LastName3\",\n" +
+                    "        \"email\": \"e3@e.mail\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName3\",\n" +
+                    "          \"streetName\": \"StreetName62\",\n" +
+                    "          \"streetNumber\": 45,\n" +
+                    "          \"postCode\": \"PostCode66\",\n" +
+                    "          \"since\": \"2017-04-04\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"genericValue\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"firstName\": \"FirstName1\",\n" +
+                    "        \"lastName\": \"LastName1\",\n" +
+                    "        \"email\": \"e1@e.mail\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName1\",\n" +
+                    "          \"streetName\": \"StreetName60\",\n" +
+                    "          \"streetNumber\": 43,\n" +
+                    "          \"postCode\": \"PostCode64\",\n" +
+                    "          \"since\": \"2017-04-02\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"lastName\": \"LastName2\",\n" +
+                    "        \"email\": \"e2@e.mail\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"city\": \"CityName2\",\n" +
+                    "          \"streetName\": \"StreetName61\",\n" +
+                    "          \"streetNumber\": 44,\n" +
+                    "          \"postCode\": \"PostCode65\",\n" +
+                    "          \"since\": \"2017-04-03\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p3\": {\n" +
+                    "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"lastName\": \"LastName3\",\n" +
+                    "        \"email\": \"e3@e.mail\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName3\",\n" +
+                    "          \"streetName\": \"StreetName62\",\n" +
+                    "          \"streetNumber\": 45,\n" +
+                    "          \"postCode\": \"PostCode66\",\n" +
+                    "          \"since\": \"2017-04-04\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInMapAsProperty() {
+        return new Object[][]{
+                {"Object input", BeanWithGenericIterable.Builder.bean().dummyString("String1").map(ImmutableMap.of("p1", modifyObject(generatePerson(1L), p -> {
+                    p.setFirstName("Different first name");
+                    return p;
+                }), "p2", modifyObject(generatePerson(2L), p2 -> {
+                    p2.getCurrentAddress().setCountry(Country.AUSTRIA);
+                    return p2;
+                }), "p3", modifyObject(generatePerson(3L), p3 -> {
+                    p3.setPreviousAddresses(Collections.emptyList());
+                    return p3;
+                })))},
+                {"Json string input", "{\n" +
+                        "  \"dummyString\": \"String1\",\n" +
+                        "  \"map\": [\n" +
+                        "    {\n" +
+                        "      \"p1\": {\n" +
+                        "        \"firstName\": \"Different first name\",\n" +
+                        "        \"lastName\": \"LastName1\",\n" +
+                        "        \"email\": \"e1@e.mail\",\n" +
+                        "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"BELGIUM\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"BELGIUM\",\n" +
+                        "          \"city\": \"CityName1\",\n" +
+                        "          \"streetName\": \"StreetName60\",\n" +
+                        "          \"streetNumber\": 43,\n" +
+                        "          \"postCode\": \"PostCode64\",\n" +
+                        "          \"since\": \"2017-04-02\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": [\n" +
+                        "          {\n" +
+                        "            \"country\": \"EGYPT\",\n" +
+                        "            \"city\": \"CityName11\",\n" +
+                        "            \"streetName\": \"StreetName70\",\n" +
+                        "            \"streetNumber\": 53,\n" +
+                        "            \"postCode\": \"PostCode74\",\n" +
+                        "            \"since\": \"2017-04-12\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      }\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"p2\": {\n" +
+                        "        \"firstName\": \"FirstName2\",\n" +
+                        "        \"lastName\": \"LastName2\",\n" +
+                        "        \"email\": \"e2@e.mail\",\n" +
+                        "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"CANADA\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"AUSTRIA\",\n" +
+                        "          \"city\": \"CityName2\",\n" +
+                        "          \"streetName\": \"StreetName61\",\n" +
+                        "          \"streetNumber\": 44,\n" +
+                        "          \"postCode\": \"PostCode65\",\n" +
+                        "          \"since\": \"2017-04-03\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": [\n" +
+                        "          {\n" +
+                        "            \"country\": \"FRANCE\",\n" +
+                        "            \"city\": \"CityName12\",\n" +
+                        "            \"streetName\": \"StreetName71\",\n" +
+                        "            \"streetNumber\": 54,\n" +
+                        "            \"postCode\": \"PostCode75\",\n" +
+                        "            \"since\": \"2017-04-13\"\n" +
+                        "          },\n" +
+                        "          {\n" +
+                        "            \"country\": \"HUNGARY\",\n" +
+                        "            \"city\": \"CityName13\",\n" +
+                        "            \"streetName\": \"StreetName72\",\n" +
+                        "            \"streetNumber\": 55,\n" +
+                        "            \"postCode\": \"PostCode76\",\n" +
+                        "            \"since\": \"2017-04-14\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      }\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"p3\": {\n" +
+                        "        \"firstName\": \"FirstName3\",\n" +
+                        "        \"lastName\": \"LastName3\",\n" +
+                        "        \"email\": \"e3@e.mail\",\n" +
+                        "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                        "        \"birthCountry\": \"DENMARK\",\n" +
+                        "        \"currentAddress\": {\n" +
+                        "          \"country\": \"DENMARK\",\n" +
+                        "          \"city\": \"CityName3\",\n" +
+                        "          \"streetName\": \"StreetName62\",\n" +
+                        "          \"streetNumber\": 45,\n" +
+                        "          \"postCode\": \"PostCode66\",\n" +
+                        "          \"since\": \"2017-04-04\"\n" +
+                        "        },\n" +
+                        "        \"previousAddresses\": []\n" +
+                        "      }\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInMapAsProperty")
+    public void simpleDifferenceInMapAsPropertyTest(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"dummyString\": \"String1\",\n" +
+                "  \"map\": [\n" +
+                "  {\n" +
+                "    \"p1\": {\n" +
+                "      \"firstName\": \"FirstName1\",\n" +
+                "      \"lastName\": \"LastName1\",\n" +
+                "      \"email\": \"e1@e.mail\",\n" +
+                "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"city\": \"CityName1\",\n" +
+                "        \"streetName\": \"StreetName60\",\n" +
+                "        \"streetNumber\": 43,\n" +
+                "        \"postCode\": \"PostCode64\",\n" +
+                "        \"since\": \"2017-04-02\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"city\": \"CityName11\",\n" +
+                "          \"streetName\": \"StreetName70\",\n" +
+                "          \"streetNumber\": 53,\n" +
+                "          \"postCode\": \"PostCode74\",\n" +
+                "          \"since\": \"2017-04-12\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"p2\": {\n" +
+                "      \"firstName\": \"FirstName2\",\n" +
+                "      \"lastName\": \"LastName2\",\n" +
+                "      \"email\": \"e2@e.mail\",\n" +
+                "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"CANADA\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"CANADA\",\n" +
+                "        \"city\": \"CityName2\",\n" +
+                "        \"streetName\": \"StreetName61\",\n" +
+                "        \"streetNumber\": 44,\n" +
+                "        \"postCode\": \"PostCode65\",\n" +
+                "        \"since\": \"2017-04-03\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"city\": \"CityName12\",\n" +
+                "          \"streetName\": \"StreetName71\",\n" +
+                "          \"streetNumber\": 54,\n" +
+                "          \"postCode\": \"PostCode75\",\n" +
+                "          \"since\": \"2017-04-13\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"p3\": {\n" +
+                "      \"firstName\": \"FirstName3\",\n" +
+                "      \"lastName\": \"LastName3\",\n" +
+                "      \"email\": \"e3@e.mail\",\n" +
+                "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "      \"birthCountry\": \"DENMARK\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"city\": \"CityName3\",\n" +
+                "        \"streetName\": \"StreetName62\",\n" +
+                "        \"streetNumber\": 45,\n" +
+                "        \"postCode\": \"PostCode66\",\n" +
+                "        \"since\": \"2017-04-04\"\n" +
+                "      },\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55,\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"AUSTRIA\",\n" +
+                "          \"city\": \"CityName14\",\n" +
+                "          \"streetName\": \"StreetName73\",\n" +
+                "          \"streetNumber\": 56,\n" +
+                "          \"postCode\": \"PostCode77\",\n" +
+                "          \"since\": \"2017-04-15\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"country\": \"BELGIUM\",\n" +
+                "          \"city\": \"CityName15\",\n" +
+                "          \"streetName\": \"StreetName74\",\n" +
+                "          \"streetNumber\": 57,\n" +
+                "          \"postCode\": \"PostCode78\",\n" +
+                "          \"since\": \"2017-04-16\"\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  }\n" +
+                "]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("firstName"), is("country")).ignoring(is("previousAddresses")), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
+                "Expected: FirstName1\n" +
+                "     got: Different first name\n" +
+                " ; map[1].p2.currentAddress.country\n" +
+                "Expected: CANADA\n" +
+                "     got: AUSTRIA\n" +
+                " ; map[2].p3.previousAddresses[]: Expected 3 values but got 0"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("previousAddresses")), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
+                    "Expected: FirstName1\n" +
+                    "     got: Different first name\n" +
+                    " ; map[1].p2.currentAddress.country\n" +
+                    "Expected: CANADA\n" +
+                    "     got: AUSTRIA\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"map\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"firstName\": \"Different first name\",\n" +
+                    "        \"lastName\": \"LastName1\",\n" +
+                    "        \"email\": \"e1@e.mail\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName1\",\n" +
+                    "          \"streetName\": \"StreetName60\",\n" +
+                    "          \"streetNumber\": 43,\n" +
+                    "          \"postCode\": \"PostCode64\",\n" +
+                    "          \"since\": \"2017-04-02\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"lastName\": \"LastName2\",\n" +
+                    "        \"email\": \"e2@e.mail\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"city\": \"CityName2\",\n" +
+                    "          \"streetName\": \"StreetName61\",\n" +
+                    "          \"streetNumber\": 44,\n" +
+                    "          \"postCode\": \"PostCode65\",\n" +
+                    "          \"since\": \"2017-04-03\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p3\": {\n" +
+                    "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"lastName\": \"LastName3\",\n" +
+                    "        \"email\": \"e3@e.mail\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName3\",\n" +
+                    "          \"streetName\": \"StreetName62\",\n" +
+                    "          \"streetNumber\": 45,\n" +
+                    "          \"postCode\": \"PostCode66\",\n" +
+                    "          \"since\": \"2017-04-04\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"map\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"firstName\": \"FirstName1\",\n" +
+                    "        \"lastName\": \"LastName1\",\n" +
+                    "        \"email\": \"e1@e.mail\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"city\": \"CityName1\",\n" +
+                    "          \"streetName\": \"StreetName60\",\n" +
+                    "          \"streetNumber\": 43,\n" +
+                    "          \"postCode\": \"PostCode64\",\n" +
+                    "          \"since\": \"2017-04-02\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"lastName\": \"LastName2\",\n" +
+                    "        \"email\": \"e2@e.mail\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"city\": \"CityName2\",\n" +
+                    "          \"streetName\": \"StreetName61\",\n" +
+                    "          \"streetNumber\": 44,\n" +
+                    "          \"postCode\": \"PostCode65\",\n" +
+                    "          \"since\": \"2017-04-03\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p3\": {\n" +
+                    "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"lastName\": \"LastName3\",\n" +
+                    "        \"email\": \"e3@e.mail\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"city\": \"CityName3\",\n" +
+                    "          \"streetName\": \"StreetName62\",\n" +
+                    "          \"streetNumber\": 45,\n" +
+                    "          \"postCode\": \"PostCode66\",\n" +
+                    "          \"since\": \"2017-04-04\"\n" +
+                    "        }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "previousAddresses shouldn't be present");
+        }, AssertionFailedError.class);
     }
 
     public static Object[][] multipleMultiLevelPathInCollectionWithDiffNotApprovedCases() {

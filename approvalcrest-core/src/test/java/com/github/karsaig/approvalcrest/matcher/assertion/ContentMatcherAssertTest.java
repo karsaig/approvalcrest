@@ -63,13 +63,7 @@ public class ContentMatcherAssertTest extends AbstractFileMatcherTest {
         runContentMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat(null, testInput, MATCHER_FACTORY.contentMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("Expected file 4ac405/11b2ef-approved.content\n" +
                     "Content does not match!", thrown.getMessage());
@@ -88,13 +82,7 @@ public class ContentMatcherAssertTest extends AbstractFileMatcherTest {
         runContentMatcherTestWithDummyTestInfo(expected, testInfo -> {
             AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
                     () -> TEST_ASSERT_IMPl.assertThat("This is a reason", testInput, MATCHER_FACTORY.contentMatcher(testInfo, getDefaultFileMatcherConfig()),
-                            (s, cd) -> {
-                                throw new AssertionFailedError(
-                                        s,
-                                        cd.getExpected(),
-                                        cd.getActual()
-                                );
-                            }));
+                            comparisonDescriptionHandler()));
 
             Assertions.assertEquals("This is a reason\n" +
                     "Expected file 4ac405/11b2ef-approved.content\n" +

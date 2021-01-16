@@ -97,7 +97,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         return this;
     }
 
-    @SuppressWarnings({"varargs","unchecked"})
+    @SuppressWarnings({"varargs", "unchecked"})
     @SafeVarargs
     @Override
     public final JsonMatcher<T> ignoring(Matcher<String>... fieldNamePatterns) {
@@ -244,6 +244,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private String removeSetMarker(String json) {
+        //return json;
         return MARKER_PATTERN.matcher(json).replaceAll("");
     }
 

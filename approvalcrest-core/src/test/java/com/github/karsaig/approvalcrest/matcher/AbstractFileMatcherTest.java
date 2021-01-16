@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -100,6 +101,10 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, String expectedExceptionMessage) {
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, error.getMessage()), AssertionError.class);
+    }
+
+    protected <T extends AssertionError> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
         inMemoryUnixFs(imfsi -> {
             try {
                 Path jsonDir = imfsi.getTestPath().resolve("4ac405");
@@ -111,13 +116,13 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
             List<InMemoryPermissions> beforeFileState = InMemoryFsUtil.getPermissons(imfsi);
             JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
             JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
-            if (expectedExceptionMessage == null) {
+            if (exceptionHandler == null) {
                 assertThat(input, jsonMatcher);
             } else {
-                AssertionError actualError = assertThrows(AssertionError.class,
+                T actualError = assertThrows(clazz,
                         () -> assertThat(input, jsonMatcher));
 
-                Assertions.assertEquals(expectedExceptionMessage, actualError.getMessage());
+                exceptionHandler.accept(actualError);
             }
             assertJsonMatcherWithDummyTestInfo(imfsi, expectedFileContent + System.lineSeparator(), "4ac405/11b2ef-approved.json");
             List<InMemoryPermissions> afterFileState = InMemoryFsUtil.getPermissons(imfsi);
@@ -129,10 +134,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         ComparisonDescription description = new ComparisonDescription();
         description.appendDescriptionOf(jsonMatcher);
         jsonMatcher.describeMismatch(input, description);
-        throw new AssertionFailedError(
-                "Actual doesn't match expected!",
-                description.getExpected(),
-                description.getActual());
+        comparisonDescriptionHandler().accept("Actual doesn't match expected!", description);
     }
 
     protected void assertJsonMatcherWithDummyTestInfoForNotApprovedFile(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
@@ -171,6 +173,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     protected void inMemoryWindowsFs(Consumer<InMemoryFsInfo> test) {
         InMemoryFsUtil.inMemoryWindowsFs(test);
     }
+
 
     protected class DummyInformation implements TestMetaInformation {
 
