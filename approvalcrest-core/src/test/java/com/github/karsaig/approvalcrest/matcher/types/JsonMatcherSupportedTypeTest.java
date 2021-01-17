@@ -24,6 +24,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+
+import com.google.common.collect.Sets;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
@@ -122,7 +125,9 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                         "  \"hashMap\": []\n" +
                         "}", null},
                 {bean().string("string3").integer(13)
-                        .map(new HashMap<Bean, Bean>() {{ put(bean().build(), bean().build()); }})
+                        .map(new HashMap<Bean, Bean>() {{
+                            put(bean().build(), bean().build());
+                        }})
                         .hashMap(new HashMap<>())
                         .hashSet(new HashSet<>())
                         .set(Collections.emptySet()).build(), "{\n" +
@@ -156,5 +161,16 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                 "  \"genericValue\": " + expected + "\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(BeanWithGeneric.of("dummy", input), expectedString, expectedExceptionMessage == null);
+    }
+
+    @ParameterizedTest
+    @MethodSource("typeSerializationTestCases")
+    void supportedTypeAsIterablePropertyTest(Object input, String expected, String expectedExceptionMessage) {
+        String expectedString = "{\n" +
+                "  \"set\": [\n" +
+                "    " + expected + "\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(input)).build(), expectedString, expectedExceptionMessage == null);
     }
 }

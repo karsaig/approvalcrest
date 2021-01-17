@@ -25,4 +25,8 @@ public abstract class AbstractTest {
             );
         };
     }
+
+    public enum EnumTest {
+        ENUM1, ENUM2
+    }
 }

@@ -1,21 +1,30 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives.Builder.beanWithPrimitives;
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
+import static com.google.common.collect.Sets.newHashSet;
 import static java.util.function.Function.identity;
 
 import java.time.LocalDate;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.Country;
+import com.github.karsaig.approvalcrest.testdata.TestEnum;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -2621,6 +2630,92 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
         }, AssertionFailedError.class);
     }
 
+    public static Object[][] ignoreInListWithNullBeansCases() {
+        return new Object[][]{
+                {"Object input", parent()
+                        .addToChildBeanList(child().childString("banana"))
+                        .addToChildBeanList((ChildBean) null)
+                        .addToChildBeanList(child().childString("grape"))},
+                {"Json string input", "{\n" +
+                        "  \"childBeanList\": [\n" +
+                        "    {\n" +
+                        "      \"childString\": \"banana\",\n" +
+                        "      \"childInteger\": 0\n" +
+                        "    },\n" +
+                        "    null,\n" +
+                        "    {\n" +
+                        "      \"childString\": \"grape\",\n" +
+                        "      \"childInteger\": 0\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("ignoreInListWithNullBeansCases")
+    public void ignoreInListWithNullBeansTest(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [\n" +
+                "    {\n" +
+                "      \"childString\": \"kiwi\",\n" +
+                "      \"childInteger\": 0\n" +
+                "    },\n" +
+                "    null,\n" +
+                "    {\n" +
+                "      \"childString\": \"plum\",\n" +
+                "      \"childInteger\": 0\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBeanList.childString"), null);
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("childBeanList[0].childString\n" +
+                    "Expected: kiwi\n" +
+                    "     got: banana\n" +
+                    " ; childBeanList[2].childString\n" +
+                    "Expected: plum\n" +
+                    "     got: grape\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"childBeanList\": [\n" +
+                    "    {\n" +
+                    "      \"childString\": \"banana\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    },\n" +
+                    "    null,\n" +
+                    "    {\n" +
+                    "      \"childString\": \"grape\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"childBeanList\": [\n" +
+                    "    {\n" +
+                    "      \"childString\": \"kiwi\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    },\n" +
+                    "    null,\n" +
+                    "    {\n" +
+                    "      \"childString\": \"plum\",\n" +
+                    "      \"childInteger\": 0\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "everything is present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "everything is present");
+        }, AssertionFailedError.class);
+    }
+
     public static Object[][] simpleDiffInSet() {
         return new Object[][]{
                 {"Object input", Sets.newHashSet(modifyObject(generatePerson(1L), p -> {
@@ -4736,6 +4831,439 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
         }, AssertionFailedError.class);
     }
 
+    public static Object[][] simpleDiffInMapWithEnumAsKey() {
+        return new Object[][]{
+                {"Object input", ImmutableMap.of(TestEnum.ONE, bean().integer(1).string("value").build(),
+                        TestEnum.TWO, bean().integer(2).string("unexpected value").build(),
+                        TestEnum.THREE, bean().integer(3).string("value3").build())},
+                {"Json string input", "[\n" +
+                        "  {\n" +
+                        "    \"ONE\": {\n" +
+                        "      \"string\": \"value\",\n" +
+                        "      \"integer\": 1\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  {\n" +
+                        "    \"THREE\": {\n" +
+                        "      \"string\": \"value3\",\n" +
+                        "      \"integer\": 3\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  {\n" +
+                        "    \"TWO\": {\n" +
+                        "      \"string\": \"unexpected value\",\n" +
+                        "      \"integer\": 2\n" +
+                        "    }\n" +
+                        "  }\n" +
+                        "]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInMapWithEnumAsKey")
+    public void simpleDifferenceInMapWithEnumAsKeyTest(String testName, Object input) {
+        String approvedFileContent = "[\n" +
+                "  {\n" +
+                "    \"ONE\": {\n" +
+                "      \"string\": \"value\",\n" +
+                "      \"integer\": 1\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"THREE\": {\n" +
+                "      \"string\": \"value3\",\n" +
+                "      \"integer\": 3\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"TWO\": {\n" +
+                "      \"string\": \"value\",\n" +
+                "      \"integer\": 2\n" +
+                "    }\n" +
+                "  }\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("TWO.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[2].TWO.string\n" +
+                    "Expected: value\n" +
+                    "     got: unexpected value\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  {\n" +
+                    "    \"ONE\": {\n" +
+                    "      \"string\": \"value\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"THREE\": {\n" +
+                    "      \"string\": \"value3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"TWO\": {\n" +
+                    "      \"string\": \"unexpected value\",\n" +
+                    "      \"integer\": 2\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  {\n" +
+                    "    \"ONE\": {\n" +
+                    "      \"string\": \"value\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"THREE\": {\n" +
+                    "      \"string\": \"value3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"TWO\": {\n" +
+                    "      \"string\": \"value\",\n" +
+                    "      \"integer\": 2\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "everything is present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "everything is present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInMapWithPrimitiveAsKey() {
+        return new Object[][]{
+                {"Object input", ImmutableMap.of(1, bean().integer(1).string("value 1").build(),
+                        2, bean().integer(2).string("unexpected value").build(),
+                        3, bean().integer(3).string("value 3").build())},
+                {"Json string input", "[\n" +
+                        "  {\n" +
+                        "    \"1\": {\n" +
+                        "      \"string\": \"value 1\",\n" +
+                        "      \"integer\": 1\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  {\n" +
+                        "    \"2\": {\n" +
+                        "      \"string\": \"unexpected value\",\n" +
+                        "      \"integer\": 2\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  {\n" +
+                        "    \"3\": {\n" +
+                        "      \"string\": \"value 3\",\n" +
+                        "      \"integer\": 3\n" +
+                        "    }\n" +
+                        "  }\n" +
+                        "]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInMapWithPrimitiveAsKey")
+    public void simpleDifferenceInMapWithPrimitiveAsKeyTest(String testName, Object input) {
+        String approvedFileContent = "[\n" +
+                "  {\n" +
+                "    \"1\": {\n" +
+                "      \"string\": \"value 1\",\n" +
+                "      \"integer\": 1\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"2\": {\n" +
+                "      \"string\": \"value 2\",\n" +
+                "      \"integer\": 2\n" +
+                "    }\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"3\": {\n" +
+                "      \"string\": \"value 3\",\n" +
+                "      \"integer\": 3\n" +
+                "    }\n" +
+                "  }\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("2.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[1].2.string\n" +
+                    "Expected: value 2\n" +
+                    "     got: unexpected value\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  {\n" +
+                    "    \"1\": {\n" +
+                    "      \"string\": \"value 1\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"2\": {\n" +
+                    "      \"string\": \"unexpected value\",\n" +
+                    "      \"integer\": 2\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"3\": {\n" +
+                    "      \"string\": \"value 3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  {\n" +
+                    "    \"1\": {\n" +
+                    "      \"string\": \"value 1\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"2\": {\n" +
+                    "      \"string\": \"value 2\",\n" +
+                    "      \"integer\": 2\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  {\n" +
+                    "    \"3\": {\n" +
+                    "      \"string\": \"value 3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "everything is present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "everything is present");
+        }, AssertionFailedError.class);
+    }
+
+    public static Object[][] simpleDiffInMapWithObjectAsKey() {
+        return new Object[][]{
+                {"Object input", ImmutableMap.of(bean().integer(1).string("1").build(), beanWithPrimitives().beanDouble(1.0).build(),
+                        bean().integer(2).build(), beanWithPrimitives().beanDouble(2.0).build(),
+                        bean().integer(3).string("3").build(), beanWithPrimitives().beanDouble(3.0).build())},
+                {"Json string input", "[\n" +
+                        "  [\n" +
+                        "    {\n" +
+                        "      \"integer\": 2\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"beanInteger\": 0,\n" +
+                        "      \"beanByte\": 0,\n" +
+                        "      \"beanChar\": \"\\u0000\",\n" +
+                        "      \"beanShort\": 0,\n" +
+                        "      \"beanLong\": 0,\n" +
+                        "      \"beanFloat\": 0.0,\n" +
+                        "      \"beanDouble\": 2.0,\n" +
+                        "      \"beanBoolean\": false\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  [\n" +
+                        "    {\n" +
+                        "      \"string\": \"1\",\n" +
+                        "      \"integer\": 1\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"beanInteger\": 0,\n" +
+                        "      \"beanByte\": 0,\n" +
+                        "      \"beanChar\": \"\\u0000\",\n" +
+                        "      \"beanShort\": 0,\n" +
+                        "      \"beanLong\": 0,\n" +
+                        "      \"beanFloat\": 0.0,\n" +
+                        "      \"beanDouble\": 1.0,\n" +
+                        "      \"beanBoolean\": false\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  [\n" +
+                        "    {\n" +
+                        "      \"string\": \"3\",\n" +
+                        "      \"integer\": 3\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"beanInteger\": 0,\n" +
+                        "      \"beanByte\": 0,\n" +
+                        "      \"beanChar\": \"\\u0000\",\n" +
+                        "      \"beanShort\": 0,\n" +
+                        "      \"beanLong\": 0,\n" +
+                        "      \"beanFloat\": 0.0,\n" +
+                        "      \"beanDouble\": 3.0,\n" +
+                        "      \"beanBoolean\": false\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffInMapWithObjectAsKey")
+    public void simpleDifferenceInMapWithObjectAsKeyTest(String testName, Object input) {
+        String approvedFileContent = "[\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"string\": \"2\",\n" +
+                "      \"integer\": 2\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"beanInteger\": 0,\n" +
+                "      \"beanByte\": 0,\n" +
+                "      \"beanChar\": \"\\u0000\",\n" +
+                "      \"beanShort\": 0,\n" +
+                "      \"beanLong\": 0,\n" +
+                "      \"beanFloat\": 0.0,\n" +
+                "      \"beanDouble\": 2.0,\n" +
+                "      \"beanBoolean\": false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"string\": \"1\",\n" +
+                "      \"integer\": 1\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"beanInteger\": 0,\n" +
+                "      \"beanByte\": 0,\n" +
+                "      \"beanChar\": \"\\u0000\",\n" +
+                "      \"beanShort\": 0,\n" +
+                "      \"beanLong\": 0,\n" +
+                "      \"beanFloat\": 0.0,\n" +
+                "      \"beanDouble\": 1.0,\n" +
+                "      \"beanBoolean\": false\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"string\": \"3\",\n" +
+                "      \"integer\": 3\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"beanInteger\": 0,\n" +
+                "      \"beanByte\": 0,\n" +
+                "      \"beanChar\": \"\\u0000\",\n" +
+                "      \"beanShort\": 0,\n" +
+                "      \"beanLong\": 0,\n" +
+                "      \"beanFloat\": 0.0,\n" +
+                "      \"beanDouble\": 3.0,\n" +
+                "      \"beanBoolean\": false\n" +
+                "    }\n" +
+                "  ]\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0][0]\n" +
+                    "Expected: string\n" +
+                    "     but none found\n"), thrown.getMessage());
+
+            String actual = "[\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"integer\": 2\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 2.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"1\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 1.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 3.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "]";
+
+            String expected = "[\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"2\",\n" +
+                    "      \"integer\": 2\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 2.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"1\",\n" +
+                    "      \"integer\": 1\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 1.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"3\",\n" +
+                    "      \"integer\": 3\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 3.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "]";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "everything is present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "everything is present");
+        }, AssertionFailedError.class);
+    }
+
     public static Object[][] multipleMultiLevelPathInCollectionWithDiffNotApprovedCases() {
         return new Object[][]{
                 {"Object input", modifyObject(generateTeam(2L), t -> {
@@ -4986,5 +5514,308 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfoForNotApprovedFile(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry", "name").ignoring("lead.lastName").ignoring("members.email"));
+    }
+
+    public static Object[][] primitiveDiffCases() {
+        return new Object[][]{
+                {"Object input", beanWithPrimitives().beanByte((byte) 2).beanInt(2).beanChar('b').beanShort((short) 3).beanLong(4).beanFloat(5).beanDouble(6).beanBoolean(false)},
+                {"Json string input", "{\n" +
+                        "  \"beanInt\": 2,\n" +
+                        "  \"beanByte\": 2,\n" +
+                        "  \"beanChar\": \"b\",\n" +
+                        "  \"beanShort\": 3,\n" +
+                        "  \"beanLong\": 4,\n" +
+                        "  \"beanFloat\": 5.0,\n" +
+                        "  \"beanDouble\": 6.0,\n" +
+                        "  \"beanBoolean\": false\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("primitiveDiffCases")
+    public void assertShouldBeSuccessfulWhenSimplePathWithPrimitiveDifferenceIsIgnored(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"beanInt\": 2,\n" +
+                "  \"beanByte\": 1,\n" +
+                "  \"beanChar\": \"a\",\n" +
+                "  \"beanShort\": 2,\n" +
+                "  \"beanLong\": 4,\n" +
+                "  \"beanFloat\": 4.0,\n" +
+                "  \"beanDouble\": 5.0,\n" +
+                "  \"beanBoolean\": true\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("beanInt").ignoring("beanByte").ignoring("beanChar").ignoring("beanShort").ignoring("beanLong").ignoring("beanFloat").ignoring("beanDouble").ignoring("beanBoolean"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
+                    "Expected: true\n" +
+                    "     got: false\n" +
+                    " ; beanByte\n" +
+                    "Expected: 1\n" +
+                    "     got: 2\n" +
+                    " ; beanChar\n" +
+                    "Expected: a\n" +
+                    "     got: b\n" +
+                    " ; beanDouble\n" +
+                    "Expected: 5.0\n" +
+                    "     got: 6.0\n" +
+                    " ; beanFloat\n" +
+                    "Expected: 4.0\n" +
+                    "     got: 5.0\n" +
+                    " ; beanShort\n" +
+                    "Expected: 2\n" +
+                    "     got: 3\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"beanInt\": 2,\n" +
+                    "  \"beanByte\": 2,\n" +
+                    "  \"beanChar\": \"b\",\n" +
+                    "  \"beanShort\": 3,\n" +
+                    "  \"beanLong\": 4,\n" +
+                    "  \"beanFloat\": 5.0,\n" +
+                    "  \"beanDouble\": 6.0,\n" +
+                    "  \"beanBoolean\": false\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation());
+            Assertions.assertEquals(approvedFileContent, thrown.getExpected().getStringRepresentation());
+        }, AssertionFailedError.class);
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("beanInt"), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
+                    "Expected: true\n" +
+                    "     got: false\n" +
+                    " ; beanByte\n" +
+                    "Expected: 1\n" +
+                    "     got: 2\n" +
+                    " ; beanChar\n" +
+                    "Expected: a\n" +
+                    "     got: b\n" +
+                    " ; beanDouble\n" +
+                    "Expected: 5.0\n" +
+                    "     got: 6.0\n" +
+                    " ; beanFloat\n" +
+                    "Expected: 4.0\n" +
+                    "     got: 5.0\n" +
+                    " ; beanShort\n" +
+                    "Expected: 2\n" +
+                    "     got: 3\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"beanByte\": 2,\n" +
+                    "  \"beanChar\": \"b\",\n" +
+                    "  \"beanShort\": 3,\n" +
+                    "  \"beanLong\": 4,\n" +
+                    "  \"beanFloat\": 5.0,\n" +
+                    "  \"beanDouble\": 6.0,\n" +
+                    "  \"beanBoolean\": false\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"beanByte\": 1,\n" +
+                    "  \"beanChar\": \"a\",\n" +
+                    "  \"beanShort\": 2,\n" +
+                    "  \"beanLong\": 4,\n" +
+                    "  \"beanFloat\": 4.0,\n" +
+                    "  \"beanDouble\": 5.0,\n" +
+                    "  \"beanBoolean\": true\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "beanInt shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "beanInt shouldn't be present");
+        }, AssertionFailedError.class);
+
+    }
+
+    public static Object[][] subpathOnNullObject() {
+        return new Object[][]{
+                {"Object input", parent().parentString("banana")},
+                {"Json string input", "{\n" +
+                        "  \"parentString\": \"banana\",\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathOnNullObject")
+    public void assertShouldBeSuccessfulWhenSubpathIsDefinedOnNullObject(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"parentString\": \"banana\",\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBean.nonExistingField"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathOnNullObject")
+    public void assertShouldBeSuccessfulWhenNullObjectIsIgnored(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"parentString\": \"banana\",\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBean"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), null);
+    }
+
+    public static Object[][] subpathWithPrimitives() {
+        return new Object[][]{
+                {"Object input", parent().childBean(child().childString("banana"))},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childString\": \"banana\",\n" +
+                        "    \"childInteger\": 0\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathWithPrimitives")
+    public void assertShouldThrowExceptionWhenSubpathIsSpecifiedOnPrimitiveField(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childString\": \"banana\",\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBean.childString.subpath"), thrown -> {
+            Assertions.assertEquals("childBean.childString.subpath does not exist", thrown.getMessage());
+
+        }, IllegalArgumentException.class);
+    }
+
+    public static Object[][] arrayCases() {
+        return new Object[][]{
+                {"Object input", bean().array(bean().string("value").build(), bean().string("value").hashSet(newHashSet(bean().build())).build()).build()},
+                {"Json string input", "{\n" +
+                        "  \"integer\": 0,\n" +
+                        "  \"array\": [\n" +
+                        "    {\n" +
+                        "      \"string\": \"value\",\n" +
+                        "      \"integer\": 0\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"string\": \"value\",\n" +
+                        "      \"integer\": 0,\n" +
+                        "      \"hashSet\": [\n" +
+                        "        {\n" +
+                        "          \"integer\": 0\n" +
+                        "        }\n" +
+                        "      ]\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("arrayCases")
+    public void ignoresFieldsInArray(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"integer\": 0,\n" +
+                "  \"array\": [\n" +
+                "    {\n" +
+                "      \"string\": \"value\",\n" +
+                "      \"integer\": 1\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"string\": \"value\",\n" +
+                "      \"integer\": 0,\n" +
+                "      \"hashSet\": [\n" +
+                "        {\n" +
+                "          \"integer\": 0\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("array.integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+                "array[0].integer\n" +
+                "Expected: 1\n" +
+                "     got: 0\n");
+    }
+
+    @Test
+    public void ignoresFieldsInArrayAtTopLevelAsObject() {
+        Bean[] input = {bean().string("value").build(), bean().string("value").hashSet(newHashSet(bean().build())).build()};
+
+        String approvedFileContent = "[\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 1\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 0,\n" +
+                "    \"hashSet\": [\n" +
+                "      {\n" +
+                "        \"integer\": 0\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+                "[0].integer\n" +
+                "Expected: 1\n" +
+                "     got: 0\n");
+    }
+
+    @Test
+    public void ignoresFieldsInArrayAtTopLevelAsJsonString() {
+        String input = "[\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 0\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 0,\n" +
+                "    \"hashSet\": [\n" +
+                "      {\n" +
+                "        \"integer\": 0\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]";
+
+        String approvedFileContent = "[\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 1\n" +
+                "  },\n" +
+                "  {\n" +
+                "    \"string\": \"value\",\n" +
+                "    \"integer\": 0,\n" +
+                "    \"hashSet\": [\n" +
+                "      {\n" +
+                "        \"integer\": 0\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+                "[0].integer\n" +
+                "Expected: 1\n" +
+                "     got: 0\n");
     }
 }

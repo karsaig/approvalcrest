@@ -15,14 +15,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Assertions;
-import org.opentest4j.AssertionFailedError;
 
 import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
@@ -104,7 +102,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, error.getMessage()), AssertionError.class);
     }
 
-    protected <T extends AssertionError> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
+    protected <T extends Throwable> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
         inMemoryUnixFs(imfsi -> {
             try {
                 Path jsonDir = imfsi.getTestPath().resolve("4ac405");

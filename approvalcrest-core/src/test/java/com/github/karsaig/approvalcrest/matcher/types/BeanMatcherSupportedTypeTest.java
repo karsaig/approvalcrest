@@ -28,6 +28,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+
+import com.google.common.collect.Sets;
 
 class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
 
@@ -50,6 +53,25 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                         "     but: was null"},
                 {1, null, "actual is not null"},
                 {1, 1, null},
+                {true, true, null},
+                {false, false, null},
+                {true, false, "\n" +
+                        "Expected: <false>\n" +
+                        "     but: was <true>"},
+                {'a', 'a', null},
+                {'a', 'b', "\n" +
+                        "Expected: \"b\"\n" +
+                        "     but: was \"a\""},
+                {Byte.MIN_VALUE, Byte.MIN_VALUE, null},
+                {Byte.MAX_VALUE, Byte.MAX_VALUE, null},
+                {Byte.MIN_VALUE, Byte.MAX_VALUE, "\n" +
+                        "Expected: <127>\n" +
+                        "     but: was <-128>"},
+                {Short.MIN_VALUE, Short.MIN_VALUE, null},
+                {Short.MAX_VALUE, Short.MAX_VALUE, null},
+                {Short.MIN_VALUE, Short.MAX_VALUE, "\n" +
+                        "Expected: <32767s>\n" +
+                        "     but: was <-32768s>"},
                 {Integer.MIN_VALUE, Integer.MIN_VALUE, null},
                 {Integer.MAX_VALUE, Integer.MAX_VALUE, null},
                 {Integer.MAX_VALUE, Integer.MIN_VALUE, "\n" +
@@ -60,6 +82,11 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                 {Long.MIN_VALUE, Long.MAX_VALUE, "\n" +
                         "Expected: <9223372036854775807L>\n" +
                         "     but: was <-9223372036854775808L>"},
+                {Float.MIN_VALUE, Float.MIN_VALUE, null},
+                {Float.MAX_VALUE, Float.MAX_VALUE, null},
+                {Float.MIN_VALUE, Float.MAX_VALUE, "\n" +
+                        "Expected: <3.4028235E38F>\n" +
+                        "     but: was <1.4E-45F>"},
                 {Double.MIN_VALUE, Double.MIN_VALUE, null},
                 {Double.MAX_VALUE, Double.MAX_VALUE, null},
                 {Double.MIN_VALUE, Double.MAX_VALUE, "\n" +
@@ -81,6 +108,11 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                 {BigDecimal.ZERO, BigDecimal.ZERO, null},
                 {BigDecimal.TEN, BigDecimal.TEN, null},
                 {BigDecimal.ZERO, BigDecimal.TEN, ""},
+                {EnumTest.ENUM1, EnumTest.ENUM1, null},
+                {EnumTest.ENUM2, EnumTest.ENUM2, null},
+                {EnumTest.ENUM2, EnumTest.ENUM1, "\n" +
+                        "Expected: <ENUM1>\n" +
+                        "     but: was <ENUM2>"},
                 {Optional.empty(), Optional.empty(), null},
                 {Optional.of(13L), Optional.of(13L), null},
                 {Optional.of(13L), Optional.empty(), "\n" +
@@ -156,8 +188,15 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
 
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
-    void supportedTypeAsPropertyTest(Object input, Object expected, String expectedExceptionMessage) {
+    void supportedTypeAsGenericPropertyTest(Object input, Object expected, String expectedExceptionMessage) {
         MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGeneric.of("dummy", expected))
                 .matches(BeanWithGeneric.of("dummy", input)), Matchers.is(expectedExceptionMessage == null));
+    }
+
+    @ParameterizedTest
+    @MethodSource("typeSerializationTestCases")
+    void supportedTypeAsIterablePropertyTest(Object input, Object expected, String expectedExceptionMessage) {
+        MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(expected)).build())
+                .matches(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(input)).build()), Matchers.is(expectedExceptionMessage == null));
     }
 }
