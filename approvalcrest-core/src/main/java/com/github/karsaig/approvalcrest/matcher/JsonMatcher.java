@@ -4,6 +4,8 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortPaths;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,7 +74,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        description.appendText(filterJson(gson, expected));
+        description.appendText(filterJson(gson, expected, fileMatcherConfig.isSortInputFile()));
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
             description.appendText("\nand ").appendText(fieldPath).appendText(" ")
                     .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
@@ -132,14 +134,14 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
         if (areCustomMatchersMatching(actual, mismatchDescription, gson)) {
 
-            String expectedJson = filterJson(gson, expected);
+            String expectedJson = filterJson(gson, expected, fileMatcherConfig.isSortInputFile());
 
             JsonElement actualJsonElement = getAsJsonElement(gson, actual);
 
             if (actual == null) {
                 matches = appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
             } else {
-                String actualJson = filterJson(gson, actualJsonElement);
+                String actualJson = filterJson(gson, actualJsonElement, true);
 
                 matches = assertEquals(expectedJson, actualJson, mismatchDescription);
                 if (!matches) {
@@ -187,12 +189,16 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         expected = getExpectedFromFile(JsonParser::parseString);
     }
 
-    private String filterJson(Gson gson, JsonElement jsonElement) {
+    private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile) {
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
         filterByFieldMatchers(filteredJson, matcherConfiguration.getPatternsToIgnore());
+        if (sortFile) {
+            sortJsonFields(filteredJson);
+            sortPaths(filteredJson);
+        }
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
@@ -258,7 +264,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
-        return filterJson(gson, actualJsonElement);
+        return filterJson(gson, actualJsonElement, true);
     }
 
 

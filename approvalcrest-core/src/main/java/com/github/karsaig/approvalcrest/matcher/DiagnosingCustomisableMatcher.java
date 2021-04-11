@@ -125,7 +125,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         return this;
     }
 
-    @SuppressWarnings({"varargs","unchecked"})
+    @SuppressWarnings({"varargs", "unchecked"})
     @SafeVarargs
     @Override
     public final DiagnosingCustomisableMatcher<T> ignoring(Matcher<String>... fieldNamePatterns) {

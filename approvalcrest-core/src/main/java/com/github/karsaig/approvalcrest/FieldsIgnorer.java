@@ -14,7 +14,9 @@ import static com.google.common.collect.Sets.newTreeSet;
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,6 +29,7 @@ import java.util.regex.Pattern;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
@@ -39,6 +42,8 @@ public class FieldsIgnorer {
         JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
+        sortJsonFields(filteredJson);
+        sortPaths(filteredJson);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
             return sortArray(filteredJson);
         }
@@ -55,13 +60,13 @@ public class FieldsIgnorer {
         try {
             findPath(jsonElement, pathToFind, pathSegments);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(pathToFind + " does not exist");
+            throw new IllegalArgumentException(pathToFind + " does not exist", e);
         }
         return findPaths(jsonElement, removePathFromSet(pathsToFind, pathToFind));
     }
 
     private static Set<String> removePathFromSet(Set<String> setToRemoveFrom, String stringToRemove) {
-        Set<String> set = new HashSet<String>(setToRemoveFrom);
+        Set<String> set = new HashSet<>(setToRemoveFrom);
         set.remove(stringToRemove);
         return set;
     }
@@ -114,6 +119,66 @@ public class FieldsIgnorer {
             jsonArray.add(element);
         }
         return jsonArray;
+    }
+
+    public static void sortPaths(JsonElement jsonElement) {
+        //TODO: add sort support
+    }
+
+    private static class KeyPair implements Comparable<KeyPair> {
+        private final String originalKey;
+        private final String newKey;
+
+        public KeyPair(String originalKey, String newKey) {
+            this.originalKey = originalKey;
+            this.newKey = newKey;
+        }
+
+        public String getOriginalKey() {
+            return originalKey;
+        }
+
+        public String getNewKey() {
+            return newKey;
+        }
+
+        @Override
+        public int compareTo(KeyPair keyPair) {
+            return newKey.compareTo(keyPair.newKey);
+        }
+    }
+
+    public static void sortJsonFields(JsonElement jsonElement) {
+        if (jsonElement != null && !jsonElement.isJsonNull()) {
+            if (jsonElement.isJsonObject()) {
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
+                List<KeyPair> toSort = new ArrayList<>(jsonObject.size());
+                for (String actual : jsonObject.keySet()) {
+                    String key = actual;
+                    if (key.startsWith(MARKER)) {
+                        key = key.substring(MARKER.length());
+                    }
+                    toSort.add(new KeyPair(actual, key));
+                }
+                Collections.sort(toSort);
+                for (KeyPair actual : toSort) {
+                    JsonElement element = jsonObject.remove(actual.originalKey);
+                    jsonObject.add(actual.newKey, element);
+                }
+                for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
+                    sortJsonFields(actual.getValue());
+                }
+            } else if (jsonElement.isJsonArray()) {
+                Iterator<JsonElement> iter = jsonElement.getAsJsonArray().iterator();
+                while (iter.hasNext()) {
+                    JsonElement current = iter.next();
+                    if (current.isJsonNull()) {
+                        continue;
+                    }
+                    sortJsonFields(current);
+                }
+            }
+        }
     }
 
     private static void ignorePath(JsonElement jsonElement, String pathToIgnore) {

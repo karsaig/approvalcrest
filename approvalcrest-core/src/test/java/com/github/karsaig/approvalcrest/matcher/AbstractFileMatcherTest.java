@@ -262,19 +262,19 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfig() {
-        return new FileMatcherConfig(false, false, false, false);
+        return new FileMatcherConfig(false, false, false, false, false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwrite() {
-        return new FileMatcherConfig(true, false, false, false);
+        return new FileMatcherConfig(true, false, false, false, false);
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-        return new FileMatcherConfig(false, true, false, false);
+        return new FileMatcherConfig(false, true, false, false,false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false);
+        return new FileMatcherConfig(true, true, false, false, false);
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {
