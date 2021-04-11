@@ -103,6 +103,10 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected <T extends Throwable> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, getDefaultFileMatcherConfig(), configurator, exceptionHandler, clazz);
+    }
+
+    protected <T extends Throwable> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, FileMatcherConfig initialConfig, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
         inMemoryUnixFs(imfsi -> {
             try {
                 Path jsonDir = imfsi.getTestPath().resolve("4ac405");
@@ -112,7 +116,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
                 throw new RuntimeException(e);
             }
             List<InMemoryPermissions> beforeFileState = InMemoryFsUtil.getPermissons(imfsi);
-            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), initialConfig);
             JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
             if (exceptionHandler == null) {
                 assertThat(input, jsonMatcher);
@@ -270,11 +274,22 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
+<<<<<<< HEAD
         return new FileMatcherConfig(false, true, false, false,false);
+=======
+        return new FileMatcherConfig(false, true, false, false, false);
+>>>>>>> Added field sorting
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
         return new FileMatcherConfig(true, true, false, false, false);
+<<<<<<< HEAD
+=======
+    }
+
+    public static FileMatcherConfig enableExpectedFileSorting() {
+        return new FileMatcherConfig(false, false, false, false, true);
+>>>>>>> Added field sorting
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {

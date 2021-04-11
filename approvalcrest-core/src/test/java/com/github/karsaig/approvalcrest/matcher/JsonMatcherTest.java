@@ -4,6 +4,7 @@ import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.util.Collections.singletonList;
+import static java.util.function.Function.identity;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -708,5 +709,20 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         });
     }
 
+    @Test
+    public void shouldNotThrowAssertionErrorWhenJsonIsNotSortedAndSortInpuIsEnabledWithSameJsonMatcher() {
+        BeanWithPrimitives input = getBeanWithPrimitives();
+        String approvedFileContent = "{\r\n" +
+                "  \"beanInteger\": 4,\r\n" +
+                "  \"beanByte\": 2,\r\n" +
+                "  \"beanChar\": \"c\",\r\n" +
+                "  \"beanShort\": 1,\r\n" +
+                "  \"beanLong\": 6,\r\n" +
+                "  \"beanFloat\": 3.0,\r\n" +
+                "  \"beanDouble\": 5.0,\r\n" +
+                "  \"beanBoolean\": true\r\n" +
+                "}";
 
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSorting(), identity(), null, null);
+    }
 }
