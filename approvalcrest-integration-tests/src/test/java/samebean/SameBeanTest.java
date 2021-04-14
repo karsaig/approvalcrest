@@ -43,14 +43,14 @@ public class SameBeanTest {
                 " ; \n" +
                 "Unexpected: beanShort\n";
         String expectedActualValue = "{\n" +
-                "  \"beanInteger\": -2147483648,\n" +
+                "  \"beanBoolean\": false,\n" +
                 "  \"beanByte\": -128,\n" +
                 "  \"beanChar\": \"\\u0000\",\n" +
-                "  \"beanShort\": -32768,\n" +
-                "  \"beanLong\": -9223372036854775808,\n" +
-                "  \"beanFloat\": 1.4E-45,\n" +
                 "  \"beanDouble\": 4.9E-324,\n" +
-                "  \"beanBoolean\": false\n" +
+                "  \"beanFloat\": 1.4E-45,\n" +
+                "  \"beanInteger\": -2147483648,\n" +
+                "  \"beanLong\": -9223372036854775808,\n" +
+                "  \"beanShort\": -32768\n" +
                 "}";
         ComparisonFailure expectedException = new ComparisonFailure(expectedMessage, "{}", expectedActualValue);
         assertThrows(sameBeanAs(expectedException), () -> assertThat(actual, sameBeanAs(expected)));

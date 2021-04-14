@@ -1,11 +1,18 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
-import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortPaths;
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
+import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,21 +25,12 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.json.JSONException;
-import org.skyscreamer.jsonassert.JSONAssert;
-
-import com.github.karsaig.approvalcrest.FileMatcherConfig;
-import com.github.karsaig.approvalcrest.MatcherConfiguration;
-import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
-import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
+import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortPaths;
 
 /**
  * <p>
@@ -74,7 +72,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        description.appendText(filterJson(gson, expected, fileMatcherConfig.isSortInputFile()));
+        description.appendText(filterJson(gson, expected, true));
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
             description.appendText("\nand ").appendText(fieldPath).appendText(" ")
                     .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));

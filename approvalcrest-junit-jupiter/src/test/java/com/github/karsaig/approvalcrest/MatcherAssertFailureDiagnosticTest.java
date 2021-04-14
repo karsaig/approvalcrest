@@ -103,8 +103,14 @@ public class MatcherAssertFailureDiagnosticTest {
             fail("Exceptionexpected");
         } catch (AssertionFailedError e) {
             checkThat(e,
-                    expected(containsString("{\n  \"string\": \"value1\",\n  \"integer\": 1\n}")),
-                    actual(containsString("{\n  \"string\": \"value2\",\n  \"integer\": 2\n}")));
+                    expected(containsString("{\n" +
+                            "  \"integer\": 1,\n" +
+                            "  \"string\": \"value1\"\n" +
+                            "}")),
+                    actual(containsString("{\n" +
+                            "  \"integer\": 2,\n" +
+                            "  \"string\": \"value2\"\n" +
+                            "}")));
         }
     }
 

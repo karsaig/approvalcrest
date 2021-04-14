@@ -225,9 +225,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("8c5498/675159-not-approved.json", "/*JsonMatcherTest.testRunShouldCreateNotApprovedFileWhenNotExistsAndModelAsString*/\n" +
                     "{\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"dummyString\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"dummyString\"\n" +
                     "}");
 
             assertIterableEquals(singletonList(expected), actualFiles);
@@ -288,9 +288,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"Modified content\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"Modified content\"\n" +
                     "}\n" +
                     "     but: Expected file 87668f/0d08c2-approved.json\n" +
                     "\n" +
@@ -358,9 +358,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"Different content\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
                     "     but: Expected file 87668f/39e1a0-idTest-approved.json\n" +
                     "\n" +
@@ -427,9 +427,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"Different content\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
                     "     but: Expected file 87668f/single-line-approved.json\n" +
                     "\n" +
@@ -496,9 +496,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"Different content\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
                     "     but: Expected file /work/test/path/src/test/contents/single-line-2\n" +
                     "\n" +
@@ -565,9 +565,9 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
 
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
-                    "  \"beanString\": \"Different content\",\n" +
-                    "  \"beanInt\": 10\n" +
+                    "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
                     "     but: Expected file /src/test/contents/single-line-2\n" +
                     "\n" +

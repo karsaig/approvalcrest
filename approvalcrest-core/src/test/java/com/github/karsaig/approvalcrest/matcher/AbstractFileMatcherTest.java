@@ -1,11 +1,16 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
-import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.github.karsaig.approvalcrest.ComparisonDescription;
+import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.util.InMemoryFiles;
+import com.github.karsaig.approvalcrest.util.InMemoryFsInfo;
+import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
+import com.github.karsaig.approvalcrest.util.PreBuilt;
+import com.google.common.collect.ImmutableList;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,18 +25,11 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.junit.jupiter.api.Assertions;
-
-import com.github.karsaig.approvalcrest.ComparisonDescription;
-import com.github.karsaig.approvalcrest.FileMatcherConfig;
-import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
-import com.github.karsaig.approvalcrest.util.InMemoryFiles;
-import com.github.karsaig.approvalcrest.util.InMemoryFsInfo;
-import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
-import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
-import com.github.karsaig.approvalcrest.util.PreBuilt;
-
-import com.google.common.collect.ImmutableList;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 /**
@@ -274,22 +272,15 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-<<<<<<< HEAD
-        return new FileMatcherConfig(false, true, false, false,false);
-=======
         return new FileMatcherConfig(false, true, false, false, false);
->>>>>>> Added field sorting
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
         return new FileMatcherConfig(true, true, false, false, false);
-<<<<<<< HEAD
-=======
     }
 
     public static FileMatcherConfig enableExpectedFileSorting() {
         return new FileMatcherConfig(false, false, false, false, true);
->>>>>>> Added field sorting
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {

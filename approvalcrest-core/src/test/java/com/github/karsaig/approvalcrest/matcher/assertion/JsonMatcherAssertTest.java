@@ -71,14 +71,14 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
     void assertThatShouldThrowNonComparisonExceptionWhenJsonMatcherForBeanMultipleDifferenceDoesNotMatchWithoutReason() {
         BeanWithPrimitives testInput = PreBuilt.getBeanWithPrimitivesBuilder().build();
         String expected = "{\n" +
-                "  \"beanInteger\": 42,\n" +
+                "  \"beanBoolean\": true,\n" +
                 "  \"beanByte\": 2,\n" +
                 "  \"beanChar\": \"c\",\n" +
-                "  \"beanShort\": 1,\n" +
-                "  \"beanLong\": 13,\n" +
-                "  \"beanFloat\": 3.0,\n" +
                 "  \"beanDouble\": 5.0,\n" +
-                "  \"beanBoolean\": true\n" +
+                "  \"beanFloat\": 3.0,\n" +
+                "  \"beanInteger\": 42,\n" +
+                "  \"beanLong\": 13,\n" +
+                "  \"beanShort\": 1\n" +
                 "}";
 
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {
@@ -104,14 +104,14 @@ public class JsonMatcherAssertTest extends AbstractFileMatcherTest {
     void assertThatShouldThrowNonComparisonExceptionWhenJsonMatcherForBeanDoesNotMatchWithReason() {
         BeanWithPrimitives testInput = PreBuilt.getBeanWithPrimitivesBuilder().build();
         String expected = "{\n" +
-                "  \"beanInteger\": 4,\n" +
+                "  \"beanBoolean\": true,\n" +
                 "  \"beanByte\": 2,\n" +
                 "  \"beanChar\": \"c\",\n" +
-                "  \"beanShort\": 1,\n" +
-                "  \"beanLong\": 13,\n" +
-                "  \"beanFloat\": 3.0,\n" +
                 "  \"beanDouble\": 5.0,\n" +
-                "  \"beanBoolean\": true\n" +
+                "  \"beanFloat\": 3.0,\n" +
+                "  \"beanInteger\": 4,\n" +
+                "  \"beanLong\": 13,\n" +
+                "  \"beanShort\": 1\n" +
                 "}";
 
         runJsonMatcherTestWithDummyTestInfo(expected, testInfo -> {

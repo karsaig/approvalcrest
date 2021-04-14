@@ -1,16 +1,16 @@
 /*jupiter.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
 {
-  "expected": {
-    "value": "Different content",
-    "type": "java.lang.String",
-    "stringRepresentation": "Different content"
-  },
   "actual": {
-    "value": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
+    "stringRepresentation": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
     "type": "java.lang.String",
-    "stringRepresentation": "Lorem ipsum dolor sit amet, inani nullam oportere no cum."
+    "value": "Lorem ipsum dolor sit amet, inani nullam oportere no cum."
   },
-  "detailMessage": "Expected file ce1be7/fd51ac-approved.content\nContent does not match! expected:\u003c[Different content]\u003e but was:\u003c[Lorem ipsum dolor sit amet, inani nullam oportere no cum.]\u003e",
-  "stackTrace": [],
+  "class": "org.opentest4j.AssertionFailedError",
+  "detailMessage": "Expected file ce1be7/fd51ac-approved.content\nContent does not match!",
+  "expected": {
+    "stringRepresentation": "Different content",
+    "type": "java.lang.String",
+    "value": "Different content"
+  },
   "suppressedExceptions": []
 }

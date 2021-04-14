@@ -1,29 +1,28 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
-import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
-import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
-import static java.util.function.Function.identity;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Collections;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.opentest4j.AssertionFailedError;
-
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.Address;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
 import com.github.karsaig.approvalcrest.testdata.Country;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.opentest4j.AssertionFailedError;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
+
+import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
+import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
+import static java.util.function.Function.identity;
 
 
+@SuppressWarnings("unused")
 public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
 
     public static Object[][] simpleDiffCases() {
@@ -74,27 +73,27 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: lastName\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"since\": \"2017-04-02\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43\n" +
+                    "  },\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
-                    "  \"email\": \"e1@e.mail\",\n" +
-                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                    "  \"birthCountry\": \"BELGIUM\",\n" +
-                    "  \"currentAddress\": {\n" +
-                    "    \"country\": \"BELGIUM\",\n" +
-                    "    \"city\": \"CityName1\",\n" +
-                    "    \"streetName\": \"StreetName60\",\n" +
-                    "    \"streetNumber\": 43,\n" +
-                    "    \"postCode\": \"PostCode64\",\n" +
-                    "    \"since\": \"2017-04-02\"\n" +
-                    "  },\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
-                    "      \"country\": \"EGYPT\",\n" +
                     "      \"city\": \"CityName11\",\n" +
-                    "      \"streetName\": \"StreetName70\",\n" +
-                    "      \"streetNumber\": 53,\n" +
+                    "      \"country\": \"EGYPT\",\n" +
                     "      \"postCode\": \"PostCode74\",\n" +
-                    "      \"since\": \"2017-04-12\"\n" +
+                    "      \"since\": \"2017-04-12\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
@@ -118,18 +117,18 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("notApprovedIgnoreCases")
     public void notApprovedFileCreatedWithIgnoredClassNotPresentInIt(String testName, Object input) {
         String approvedFileContent = "{\n" +
-                "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "  \"birthCountry\": \"BELGIUM\",\n" +
+                "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "  \"currentAddress\": {\n" +
                 "    \"country\": \"BELGIUM\",\n" +
-                "    \"streetNumber\": 43,\n" +
-                "    \"since\": \"2017-04-02\"\n" +
+                "    \"since\": \"2017-04-02\",\n" +
+                "    \"streetNumber\": 43\n" +
                 "  },\n" +
                 "  \"previousAddresses\": [\n" +
                 "    {\n" +
                 "      \"country\": \"EGYPT\",\n" +
-                "      \"streetNumber\": 53,\n" +
-                "      \"since\": \"2017-04-12\"\n" +
+                "      \"since\": \"2017-04-12\",\n" +
+                "      \"streetNumber\": 53\n" +
                 "    }\n" +
                 "  ]\n" +
                 "}";
@@ -728,26 +727,26 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
-                    "  \"firstName\": \"FirstName1\",\n" +
-                    "  \"lastName\": \"LastName1\",\n" +
-                    "  \"email\": \"e1@e.mail\",\n" +
                     "  \"birthCountry\": \"HUNGARY\",\n" +
                     "  \"currentAddress\": {\n" +
-                    "    \"country\": \"BELGIUM\",\n" +
                     "    \"city\": \"CityName1\",\n" +
-                    "    \"streetName\": \"StreetName60\",\n" +
-                    "    \"streetNumber\": 43,\n" +
+                    "    \"country\": \"BELGIUM\",\n" +
                     "    \"postCode\": \"PostCode64\",\n" +
-                    "    \"since\": \"2017-04-02\"\n" +
+                    "    \"since\": \"2017-04-02\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43\n" +
                     "  },\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
-                    "      \"country\": \"EGYPT\",\n" +
                     "      \"city\": \"CityName11\",\n" +
-                    "      \"streetName\": \"StreetName70\",\n" +
-                    "      \"streetNumber\": 53,\n" +
+                    "      \"country\": \"EGYPT\",\n" +
                     "      \"postCode\": \"PostCode74\",\n" +
-                    "      \"since\": \"2017-04-12\"\n" +
+                    "      \"since\": \"2017-04-12\",\n" +
+                    "      \"streetName\": \"StreetName70\",\n" +
+                    "      \"streetNumber\": 53\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
@@ -834,25 +833,25 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"birthCountry\": \"BELGIUM\",\n" +
+                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "  \"currentAddress\": {\n" +
+                    "    \"city\": \"CityName1\",\n" +
+                    "    \"country\": \"HUNGARY\",\n" +
+                    "    \"postCode\": \"PostCode64\",\n" +
+                    "    \"streetName\": \"StreetName60\",\n" +
+                    "    \"streetNumber\": 43\n" +
+                    "  },\n" +
+                    "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
-                    "  \"email\": \"e1@e.mail\",\n" +
-                    "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                    "  \"birthCountry\": \"BELGIUM\",\n" +
-                    "  \"currentAddress\": {\n" +
-                    "    \"country\": \"HUNGARY\",\n" +
-                    "    \"city\": \"CityName1\",\n" +
-                    "    \"streetName\": \"StreetName60\",\n" +
-                    "    \"streetNumber\": 43,\n" +
-                    "    \"postCode\": \"PostCode64\"\n" +
-                    "  },\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
-                    "      \"country\": \"EGYPT\",\n" +
                     "      \"city\": \"CityName11\",\n" +
+                    "      \"country\": \"EGYPT\",\n" +
+                    "      \"postCode\": \"PostCode74\",\n" +
                     "      \"streetName\": \"StreetName70\",\n" +
-                    "      \"streetNumber\": 53,\n" +
-                    "      \"postCode\": \"PostCode74\"\n" +
+                    "      \"streetNumber\": 53\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
@@ -1123,113 +1122,113 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
-                    "  \"name\": \"TeamName2\",\n" +
                     "  \"lead\": {\n" +
+                    "    \"birthCountry\": \"HUNGARY\",\n" +
+                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"city\": \"CityName13\",\n" +
+                    "      \"country\": \"HUNGARY\",\n" +
+                    "      \"postCode\": \"PostCode76\",\n" +
+                    "      \"streetName\": \"StreetName72\",\n" +
+                    "      \"streetNumber\": 55\n" +
+                    "    },\n" +
+                    "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
                     "    \"lastName\": \"LastName13\",\n" +
-                    "    \"email\": \"e13@e.mail\",\n" +
-                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
-                    "    \"birthCountry\": \"HUNGARY\",\n" +
-                    "    \"currentAddress\": {\n" +
-                    "      \"country\": \"HUNGARY\",\n" +
-                    "      \"city\": \"CityName13\",\n" +
-                    "      \"streetName\": \"StreetName72\",\n" +
-                    "      \"streetNumber\": 55,\n" +
-                    "      \"postCode\": \"PostCode76\"\n" +
-                    "    },\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
-                    "        \"country\": \"CANADA\",\n" +
                     "        \"city\": \"CityName23\",\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"postCode\": \"PostCode86\",\n" +
                     "        \"streetName\": \"StreetName82\",\n" +
-                    "        \"streetNumber\": 65,\n" +
-                    "        \"postCode\": \"PostCode86\"\n" +
+                    "        \"streetNumber\": 65\n" +
                     "      },\n" +
                     "      {\n" +
-                    "        \"country\": \"DENMARK\",\n" +
                     "        \"city\": \"CityName24\",\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"postCode\": \"PostCode87\",\n" +
                     "        \"streetName\": \"StreetName83\",\n" +
-                    "        \"streetNumber\": 66,\n" +
-                    "        \"postCode\": \"PostCode87\"\n" +
+                    "        \"streetNumber\": 66\n" +
                     "      },\n" +
                     "      {\n" +
-                    "        \"country\": \"EGYPT\",\n" +
                     "        \"city\": \"CityName25\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode88\",\n" +
                     "        \"streetName\": \"StreetName84\",\n" +
-                    "        \"streetNumber\": 67,\n" +
-                    "        \"postCode\": \"PostCode88\"\n" +
+                    "        \"streetNumber\": 67\n" +
                     "      }\n" +
                     "    ]\n" +
                     "  },\n" +
                     "  \"members\": [\n" +
                     "    {\n" +
+                    "      \"birthCountry\": \"EGYPT\",\n" +
+                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName102\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode165\",\n" +
+                    "        \"streetName\": \"StreetName161\",\n" +
+                    "        \"streetNumber\": 144\n" +
+                    "      },\n" +
+                    "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
                     "      \"lastName\": \"LastName102\",\n" +
-                    "      \"email\": \"e102@e.mail\",\n" +
-                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
-                    "      \"birthCountry\": \"EGYPT\",\n" +
-                    "      \"currentAddress\": {\n" +
-                    "        \"country\": \"EGYPT\",\n" +
-                    "        \"city\": \"CityName102\",\n" +
-                    "        \"streetName\": \"StreetName161\",\n" +
-                    "        \"streetNumber\": 144,\n" +
-                    "        \"postCode\": \"PostCode165\"\n" +
-                    "      },\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
-                    "          \"country\": \"AUSTRIA\",\n" +
                     "          \"city\": \"CityName112\",\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"postCode\": \"PostCode175\",\n" +
                     "          \"streetName\": \"StreetName171\",\n" +
-                    "          \"streetNumber\": 154,\n" +
-                    "          \"postCode\": \"PostCode175\"\n" +
+                    "          \"streetNumber\": 154\n" +
                     "        },\n" +
                     "        {\n" +
-                    "          \"country\": \"BELGIUM\",\n" +
                     "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
                     "          \"streetName\": \"StreetName172\",\n" +
-                    "          \"streetNumber\": 155,\n" +
-                    "          \"postCode\": \"PostCode176\"\n" +
+                    "          \"streetNumber\": 155\n" +
                     "        }\n" +
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"birthCountry\": \"HUNGARY\",\n" +
+                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName103\",\n" +
+                    "        \"country\": \"FRANCE\",\n" +
+                    "        \"postCode\": \"PostCode166\",\n" +
+                    "        \"streetName\": \"StreetName162\",\n" +
+                    "        \"streetNumber\": 145\n" +
+                    "      },\n" +
+                    "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
                     "      \"lastName\": \"LastName103\",\n" +
-                    "      \"email\": \"e103@e.mail\",\n" +
-                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
-                    "      \"birthCountry\": \"HUNGARY\",\n" +
-                    "      \"currentAddress\": {\n" +
-                    "        \"country\": \"FRANCE\",\n" +
-                    "        \"city\": \"CityName103\",\n" +
-                    "        \"streetName\": \"StreetName162\",\n" +
-                    "        \"streetNumber\": 145,\n" +
-                    "        \"postCode\": \"PostCode166\"\n" +
-                    "      },\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
-                    "          \"country\": \"BELGIUM\",\n" +
                     "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
                     "          \"streetName\": \"StreetName172\",\n" +
-                    "          \"streetNumber\": 155,\n" +
-                    "          \"postCode\": \"PostCode176\"\n" +
+                    "          \"streetNumber\": 155\n" +
                     "        },\n" +
                     "        {\n" +
-                    "          \"country\": \"CANADA\",\n" +
                     "          \"city\": \"CityName114\",\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"postCode\": \"PostCode177\",\n" +
                     "          \"streetName\": \"StreetName173\",\n" +
-                    "          \"streetNumber\": 156,\n" +
-                    "          \"postCode\": \"PostCode177\"\n" +
+                    "          \"streetNumber\": 156\n" +
                     "        },\n" +
                     "        {\n" +
-                    "          \"country\": \"DENMARK\",\n" +
                     "          \"city\": \"CityName115\",\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"postCode\": \"PostCode178\",\n" +
                     "          \"streetName\": \"StreetName174\",\n" +
-                    "          \"streetNumber\": 157,\n" +
-                    "          \"postCode\": \"PostCode178\"\n" +
+                    "          \"streetNumber\": 157\n" +
                     "        }\n" +
                     "      ]\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"name\": \"TeamName2\"\n" +
                     "}";
 
             String expected = "{\n" +
@@ -1422,23 +1421,23 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
 
             String actual = "[\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
                     "      null\n" +
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": []\n" +
                     "  }\n" +
                     "]";
@@ -1560,21 +1559,21 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
 
             String actual = "[\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"DENMARK\",\n" +
+                    "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": []\n" +
                     "  },\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"CANADA\",\n" +
+                    "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
                     "      null\n" +
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
-                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"birthCountry\": \"BELGIUM\",\n" +
+                    "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
                     "    ]\n" +
@@ -1703,21 +1702,21 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String actual = "{\n" +
                     "  \"genericValue\": [\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -1849,21 +1848,21 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String actual = "{\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -1981,15 +1980,15 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String actual = "[\n" +
                     "  {\n" +
                     "    \"p3\": {\n" +
-                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"p2\": {\n" +
-                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
@@ -1998,8 +1997,8 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  {\n" +
                     "    \"p1\": {\n" +
-                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -2126,15 +2125,15 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  \"genericValue\": [\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
-                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
-                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
                     "          null\n" +
@@ -2143,8 +2142,8 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
-                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
                     "        ]\n" +
@@ -2275,15 +2274,15 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
-                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
-                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"CANADA\",\n" +
+                    "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
                     "          null\n" +
@@ -2292,8 +2291,8 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
-                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
                     "        ]\n" +
