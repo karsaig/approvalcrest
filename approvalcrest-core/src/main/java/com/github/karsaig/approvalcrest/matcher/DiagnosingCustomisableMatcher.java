@@ -9,11 +9,15 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
-import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
-import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
-import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
+import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.PathNullPointerException;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import org.hamcrest.Description;
+import org.hamcrest.DiagnosingMatcher;
+import org.hamcrest.Matcher;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,17 +27,11 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import org.hamcrest.Description;
-import org.hamcrest.DiagnosingMatcher;
-import org.hamcrest.Matcher;
-import org.json.JSONException;
-import org.skyscreamer.jsonassert.JSONAssert;
-
-import com.github.karsaig.approvalcrest.MatcherConfiguration;
-import com.github.karsaig.approvalcrest.PathNullPointerException;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
+import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
+import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
 /**
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
@@ -175,7 +173,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        JsonElement filteredJson = findPaths(gson, object, set);
+        JsonElement filteredJson = findPaths(gson, object, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
 
         return removeSetMarker(gson.toJson(filteredJson));
     }
@@ -206,6 +204,32 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     @Override
     public final DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher).addSkipCircularReferenceChecker(matchers);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortField(Matcher<String> fieldNamePattern) {
+        matcherConfiguration.addPatternToSort(fieldNamePattern);
+        return this;
+    }
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    @SafeVarargs
+    @Override
+    public final DiagnosingCustomisableMatcher<T> sortField(Matcher<String>... fieldNamePatterns) {
+        matcherConfiguration.addPatternToSort(fieldNamePatterns);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortField(String fieldPath) {
+        matcherConfiguration.addPathToSort(fieldPath);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortField(String... fieldPaths) {
+        matcherConfiguration.addPathToSort(fieldPaths);
         return this;
     }
 }

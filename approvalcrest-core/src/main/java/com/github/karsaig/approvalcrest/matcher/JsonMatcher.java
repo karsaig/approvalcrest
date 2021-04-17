@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
 import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortPaths;
 
 /**
  * <p>
@@ -188,15 +188,13 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile) {
-        Set<String> set = new HashSet<>();
-        set.addAll(matcherConfiguration.getPathsToIgnore());
+        Set<String> set = new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
         filterByFieldMatchers(filteredJson, matcherConfiguration.getPatternsToIgnore());
-        if (sortFile) {
-            sortJsonFields(filteredJson);
-            sortPaths(filteredJson);
-        }
+        sortJsonFields(filteredJson, sortFile);
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), sortFile);
+
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
@@ -314,6 +312,32 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public final JsonMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher);
         matcherConfiguration.addSkipCircularReferenceChecker(matchers);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> sortField(Matcher<String> fieldNamePattern) {
+        matcherConfiguration.addPatternToSort(fieldNamePattern);
+        return this;
+    }
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    @SafeVarargs
+    @Override
+    public final JsonMatcher<T> sortField(Matcher<String>... fieldNamePatterns) {
+        matcherConfiguration.addPatternToSort(fieldNamePatterns);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> sortField(String fieldPath) {
+        matcherConfiguration.addPathToSort(fieldPath);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> sortField(String... fieldPaths) {
+        matcherConfiguration.addPathToSort(fieldPaths);
         return this;
     }
 }

@@ -1,5 +1,24 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
+import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
+import com.github.karsaig.approvalcrest.testdata.Country;
+import com.github.karsaig.approvalcrest.testdata.TestEnum;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.opentest4j.AssertionFailedError;
+
+import java.time.LocalDate;
+import java.util.Collections;
+
 import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives.Builder.beanWithPrimitives;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
@@ -8,27 +27,6 @@ import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePe
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.util.function.Function.identity;
-
-import java.time.LocalDate;
-import java.util.Collections;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.opentest4j.AssertionFailedError;
-
-import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
-import com.github.karsaig.approvalcrest.testdata.Bean;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
-import com.github.karsaig.approvalcrest.testdata.ChildBean;
-import com.github.karsaig.approvalcrest.testdata.Country;
-import com.github.karsaig.approvalcrest.testdata.TestEnum;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 
 public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
@@ -3329,6 +3327,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
 
     public static Object[][] simpleDiffInSetAsProperty() {
         return new Object[][]{
+
                 {"Object input", BeanWithGenericIterable.Builder.bean().dummyString("String1").set(Sets.newHashSet(modifyObject(generatePerson(1L), p -> {
                     p.setFirstName("Different first name");
                     return p;

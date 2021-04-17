@@ -9,9 +9,9 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.util.function.Function;
-
 import org.hamcrest.Matcher;
+
+import java.util.function.Function;
 
 
 /**
@@ -101,7 +101,7 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @param fieldNamePatterns the Hamcrest matchers used to match field names.
      * @return the instance of the matcher
      */
-    @SuppressWarnings({"varargs","unchecked"})
+    @SuppressWarnings({"varargs", "unchecked"})
     U ignoring(Matcher<String>... fieldNamePatterns);
 
     /**
@@ -121,4 +121,47 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      */
     @SuppressWarnings({"unchecked", "varargs"})
     U skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers);
+
+    /**
+     * Specify the pattern of field names to sort. Any bean property with a name that
+     * matches the supplied pattern will be sorted (if sortable).
+     * Example:
+     * <pre>assertThat(myBean, sameBeanAs(myResultBean).sortField(is("mutationdate")).sortField(containsString("version")))</pre>
+     *
+     * @param fieldNamePattern the Hamcrest matcher used to match field names.
+     * @return the instance of the matcher
+     */
+    U sortField(Matcher<String> fieldNamePattern);
+
+    /**
+     * Specify the pattern of field names to sort. Any bean property with a name that
+     * matches the supplied pattern will be sorted (if sortable).
+     * Example:
+     * <pre>assertThat(myBean, sameBeanAs(myResultBean).sortField(is("mutationdate",containsString("version"))))</pre>
+     *
+     * @param fieldNamePatterns the Hamcrest matchers used to match field names.
+     * @return the instance of the matcher
+     */
+    @SuppressWarnings({"varargs", "unchecked"})
+    U sortField(Matcher<String>... fieldNamePatterns);
+
+    /**
+     * Specify the path of the field to be sorted.
+     * Example:
+     * <pre>sameBeanAs(expected).sortField("beanField.subBeanField")</pre>
+     *
+     * @param fieldPath the path of the field to be sorted (if sortable).
+     * @return the instance of the matcher
+     */
+    U sortField(String fieldPath);
+
+    /**
+     * Specify the path of the field to be sorted.
+     * Example:
+     * <pre>sameBeanAs(expected).sortField("beanField.subBeanField","beanField2.subBeanField3")</pre>
+     *
+     * @param fieldPaths the paths of fields to be sorted (if sortable).
+     * @return the instance of the matcher
+     */
+    U sortField(String... fieldPaths);
 }

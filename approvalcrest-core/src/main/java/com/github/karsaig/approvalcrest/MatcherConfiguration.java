@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest;
 
+import org.hamcrest.Matcher;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,8 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.hamcrest.Matcher;
-
 
 public class MatcherConfiguration {
 
@@ -20,6 +20,8 @@ public class MatcherConfiguration {
     private final List<Class<?>> typesToIgnore = new ArrayList<>();
     private final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
+    private final Set<String> pathsToSort = new HashSet<>();
+    private final List<Matcher<String>> patternsToSort = new ArrayList<>();
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -43,6 +45,14 @@ public class MatcherConfiguration {
 
     public List<Class<?>> getTypesToIgnore() {
         return typesToIgnore;
+    }
+
+    public Set<String> getPathsToSort() {
+        return pathsToSort;
+    }
+
+    public List<Matcher<String>> getPatternsToSort() {
+        return patternsToSort;
     }
 
     public MatcherConfiguration addPathToIgnore(String path) {
@@ -111,6 +121,40 @@ public class MatcherConfiguration {
         for (Function<Object, Boolean> actual : checkers) {
             skipCircularReferenceCheck.add(actual);
         }
+        return this;
+    }
+
+    public MatcherConfiguration addPatternToSort(Matcher<String> fieldNamePattern) {
+        patternsToSort.add(fieldNamePattern);
+        return this;
+    }
+
+    public MatcherConfiguration addPatternToSort(Matcher<String>[] fieldNamePatterns) {
+        for (Matcher<String> matcher : fieldNamePatterns) {
+            patternsToSort.add(matcher);
+        }
+        return this;
+    }
+
+    public MatcherConfiguration addPatternToSort(Collection<Matcher<String>> fieldNamePattern) {
+        patternsToSort.addAll(fieldNamePattern);
+        return this;
+    }
+
+    public MatcherConfiguration addPathToSort(String path) {
+        pathsToSort.add(path);
+        return this;
+    }
+
+    public MatcherConfiguration addPathToSort(String[] fieldPaths) {
+        for (String fieldPath : fieldPaths) {
+            pathsToSort.add(fieldPath);
+        }
+        return this;
+    }
+
+    public MatcherConfiguration addPathToSort(Collection<String> fieldPaths) {
+        pathsToSort.addAll(fieldPaths);
         return this;
     }
 }

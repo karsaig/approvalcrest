@@ -1838,19 +1838,27 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "Unexpected: dummyString\n"));
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(String.class).ignoring(Address.class), thrown -> {
-            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("set[0]\n" +
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("set[0].birthDate\n" +
+                    "Expected: 2014-04-01T13:42:11\n" +
+                    "     got: 2016-04-01T13:42:11\n" +
+                    " ; set[0].previousAddresses[]: Expected 0 values but got 1 ; set[0]\n" +
                     "Unexpected: birthCountry\n" +
                     " ; set[1]\n" +
                     "Unexpected: birthCountry\n" +
-                    " ; set[2]\n" +
+                    " ; set[2].birthDate\n" +
+                    "Expected: 2016-04-01T13:42:11\n" +
+                    "     got: 2014-04-01T13:42:11\n" +
+                    " ; set[2].previousAddresses[]: Expected 1 values but got 0 ; set[2]\n" +
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
-                    "      \"birthCountry\": \"DENMARK\",\n" +
-                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
-                    "      \"previousAddresses\": []\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        null\n" +
+                    "      ]\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
@@ -1861,11 +1869,9 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"birthCountry\": \"BELGIUM\",\n" +
-                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                    "      \"previousAddresses\": [\n" +
-                    "        null\n" +
-                    "      ]\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"previousAddresses\": []\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
@@ -2207,9 +2213,11 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"map\": [\n" +
                 "    {\n" +
-                "      \"p3\": {\n" +
-                "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
-                "        \"previousAddresses\": []\n" +
+                "      \"p1\": {\n" +
+                "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "        \"previousAddresses\": [\n" +
+                "          null\n" +
+                "        ]\n" +
                 "      }\n" +
                 "    },\n" +
                 "    {\n" +
@@ -2222,22 +2230,28 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      }\n" +
                 "    },\n" +
                 "    {\n" +
-                "      \"p1\": {\n" +
-                "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                "        \"previousAddresses\": [\n" +
-                "          null\n" +
-                "        ]\n" +
+                "      \"p3\": {\n" +
+                "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "        \"previousAddresses\": []\n" +
                 "      }\n" +
                 "    }\n" +
                 "  ]\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(String.class, Country.class).ignoring(Address.class), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("map[0]\n" +
-                "Expected: p3\n" +
-                "     but none found\n" +
-                " ; map[0]\n" +
-                "Unexpected: p1\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.previousAddresses[0]\n" +
+                "Expected: null\n" +
+                "     got: a JSON object\n" +
+                " ; map[0].p1\n" +
+                "Unexpected: birthCountry\n" +
+                " ; map[0].p1\n" +
+                "Unexpected: currentAddress\n" +
+                " ; map[0].p1\n" +
+                "Unexpected: email\n" +
+                " ; map[0].p1\n" +
+                "Unexpected: firstName\n" +
+                " ; map[0].p1\n" +
+                "Unexpected: lastName\n" +
                 " ; map[1].p2.previousAddresses[0]\n" +
                 "Expected: null\n" +
                 "     got: a JSON object\n" +
@@ -2254,29 +2268,36 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "Unexpected: firstName\n" +
                 " ; map[1].p2\n" +
                 "Unexpected: lastName\n" +
-                " ; map[2]\n" +
-                "Expected: p1\n" +
-                "     but none found\n" +
-                " ; map[2]\n" +
-                "Unexpected: p3\n" +
+                " ; map[2].p3\n" +
+                "Unexpected: birthCountry\n" +
+                " ; map[2].p3\n" +
+                "Unexpected: currentAddress\n" +
+                " ; map[2].p3\n" +
+                "Unexpected: email\n" +
+                " ; map[2].p3\n" +
+                "Unexpected: firstName\n" +
+                " ; map[2].p3\n" +
+                "Unexpected: lastName\n" +
                 " ; \n" +
                 "Unexpected: dummyString\n"));
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(String.class).ignoring(Address.class), thrown -> {
-            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("map[0].p3\n" +
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("map[0].p1\n" +
                     "Unexpected: birthCountry\n" +
                     " ; map[1].p2\n" +
                     "Unexpected: birthCountry\n" +
-                    " ; map[2].p1\n" +
+                    " ; map[2].p3\n" +
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
-                    "      \"p3\": {\n" +
-                    "        \"birthCountry\": \"DENMARK\",\n" +
-                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
-                    "        \"previousAddresses\": []\n" +
+                    "      \"p1\": {\n" +
+                    "        \"birthCountry\": \"BELGIUM\",\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"previousAddresses\": [\n" +
+                    "          null\n" +
+                    "        ]\n" +
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
@@ -2290,12 +2311,10 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"p1\": {\n" +
-                    "        \"birthCountry\": \"BELGIUM\",\n" +
-                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                    "        \"previousAddresses\": [\n" +
-                    "          null\n" +
-                    "        ]\n" +
+                    "      \"p3\": {\n" +
+                    "        \"birthCountry\": \"DENMARK\",\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ]\n" +
@@ -2304,9 +2323,11 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String expected = "{\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
-                    "      \"p3\": {\n" +
-                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
-                    "        \"previousAddresses\": []\n" +
+                    "      \"p1\": {\n" +
+                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"previousAddresses\": [\n" +
+                    "          null\n" +
+                    "        ]\n" +
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
@@ -2319,11 +2340,9 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
-                    "      \"p1\": {\n" +
-                    "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
-                    "        \"previousAddresses\": [\n" +
-                    "          null\n" +
-                    "        ]\n" +
+                    "      \"p3\": {\n" +
+                    "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ]\n" +
