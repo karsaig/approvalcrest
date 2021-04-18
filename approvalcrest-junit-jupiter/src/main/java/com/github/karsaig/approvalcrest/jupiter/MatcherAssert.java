@@ -9,12 +9,11 @@
  */
 package com.github.karsaig.approvalcrest.jupiter;
 
+import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.function.Executable;
-import org.junit.platform.commons.util.BlacklistedExceptions;
+import org.junit.platform.commons.util.UnrecoverableExceptions;
 import org.opentest4j.AssertionFailedError;
-
-import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 
 /**
  * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, determine if a {@link AssertionFailedError} should be
@@ -82,7 +81,7 @@ public class MatcherAssert {
         try {
             executable.execute();
         } catch (Throwable throwable) {
-            BlacklistedExceptions.rethrowIfBlacklisted(throwable);
+            UnrecoverableExceptions.rethrowIfUnrecoverable(throwable);
             assertThat(reason, throwable, matcher);
             return throwable;
         }
