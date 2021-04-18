@@ -1,6 +1,29 @@
 Changelog
 ===========
 
+Version 0.60.0 - 2021/04/18
+-----
+
+- Upgrade JUnit to latest versions and make them provided dependencies, so it is easier to use with different versions
+- **Non-backward compatible change!** Added automatic sorting of field names, so the approved files and diff view will display fields in natural order.
+Without this there were changes on pull requests without any reason. Only the serialization order have changed.
+Doesn't affect constructs where order matters (example: Lists). This sorting is enabled by default and will fail assertions when approved file isn't sorted. 
+  Anyone wants to revert to **old behaviour**, use **"-DsortInputFile=true"**
+  This was done in order to avoid above mentioned noise on pull requests, and extending the migration and adding this noise to many pull request.
+  
+- Added support for sorting parts of json files, so collections which aren't sorted by default, and could have caused flaky tests due to non-deterministic ordering, can now be sorted to stabilize tests. When in use the approved file also have to be sorted, but can be switched with **"-DsortInputFile=true"**
+- Fixed many bugs related to not working ignores, jsonMatcher not working for String containing json correctly, same matcher for different inputs working differently, assert failures sometimes missing description and actual / expected content.
+- **Non-backward compatible change!** Ignored values should no longer be visible in approved files. It is backward compatible for some of the ignores, but not all, so approved files have to updated.
+- Unified how assertions for JUnit 4 and 5 work, so there shouldn't be any difference between the two.
+  This means JUnit 5 assertion errors won't contain the whole actual / expected content in the descriptions, those are already in the exception supported by major IDEs.
+  Description will contain the difference only.
+- Added additional convenience method for some ignores
+- **Non-backward compatible change!** Up until now, asserting exceptions ignored the exception type, it is now added to the serialized format and asserted. 
+Stacktrace in exceptions are automatically ignored from now on, as that caused frequent test failures without ignores or required adding ignore in many places.
+- Extended support for floating point numbers.
+- Fixed a bug where files and directories could have wrong permissions in some cases
+- Preliminary Kotlin support.
+
 Version 0.56.3 - 2020/09/13
 -----
 
