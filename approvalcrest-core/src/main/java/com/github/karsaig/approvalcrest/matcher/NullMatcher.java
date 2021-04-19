@@ -37,4 +37,9 @@ public class NullMatcher<T> extends DiagnosingCustomisableMatcher<T> {
 	public void describeTo(Description description) {
 		nullValue().describeTo(description);
 	}
+
+    @Override
+    public String toString() {
+        return "SameBeanAs null matcher";
+    }
 }

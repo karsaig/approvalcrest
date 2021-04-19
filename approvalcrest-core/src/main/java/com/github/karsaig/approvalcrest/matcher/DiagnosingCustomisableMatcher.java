@@ -232,4 +232,9 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         matcherConfiguration.addPathToSort(fieldPaths);
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "SameBeanAs matcher";
+    }
 }

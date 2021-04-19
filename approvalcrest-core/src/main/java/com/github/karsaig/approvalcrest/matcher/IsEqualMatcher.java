@@ -9,11 +9,11 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
-import static org.hamcrest.Matchers.equalTo;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.core.IsEqual;
+
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * {@link DiagnosingCustomisableMatcher} which applies the {@link IsEqual} matcher when the object to compare is a String
@@ -38,5 +38,10 @@ public class IsEqualMatcher<T> extends DiagnosingCustomisableMatcher<T> {
             equalTo.describeMismatch(actual, mismatchDescription);
         }
         return matches;
+    }
+
+    @Override
+    public String toString() {
+        return "SameBeanAs equals matcher";
     }
 }

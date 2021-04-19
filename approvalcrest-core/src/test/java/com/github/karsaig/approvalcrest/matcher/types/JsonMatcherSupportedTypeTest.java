@@ -1,6 +1,12 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
-import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.google.common.collect.Sets;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.file.Paths;
 import java.sql.Date;
@@ -18,15 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
-import com.github.karsaig.approvalcrest.testdata.Bean;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
-
-import com.google.common.collect.Sets;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 

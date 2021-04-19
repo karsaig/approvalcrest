@@ -1,13 +1,12 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.util.function.Function;
-import java.util.regex.Pattern;
-
-import org.hamcrest.Description;
-
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
+import org.hamcrest.Description;
+
+import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * <p>
@@ -94,5 +93,10 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
 
     private void initExpectedFromFile() {
         expectedContent = normalize(getExpectedFromFile(Function.identity()));
+    }
+
+    @Override
+    public String toString() {
+        return "ContentMatcher";
     }
 }

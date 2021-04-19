@@ -61,7 +61,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
-    private JsonElement expected;
+    private Either expected;
 
     private GsonConfiguration configuration;
 
@@ -72,7 +72,11 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        description.appendText(filterJson(gson, expected, true));
+        if (expected.isParsedJson()) {
+            description.appendText(filterJson(gson, expected.getParsedContent(), true));
+        } else {
+            description.appendText(expected.getOriginalContent());
+        }
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
             description.appendText("\nand ").appendText(fieldPath).appendText(" ")
                     .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
@@ -132,7 +136,10 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
         if (areCustomMatchersMatching(actual, mismatchDescription, gson)) {
 
-            String expectedJson = filterJson(gson, expected, fileMatcherConfig.isSortInputFile());
+            String expectedJson = expected.getOriginalContent();
+            if (expected.isParsedJson()) {
+                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile());
+            }
 
             JsonElement actualJsonElement = getAsJsonElement(gson, actual);
 
@@ -180,11 +187,16 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             result = gson.toJsonTree(object);
         }
         return result;
-
     }
 
     private void initExpectedFromFile() {
-        expected = getExpectedFromFile(JsonParser::parseString);
+        expected = getExpectedFromFile(fileContent -> {
+            try {
+                return new Either(JsonParser.parseString(fileContent));
+            } catch (Exception e) {
+                return new Either(fileContent);
+            }
+        });
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile) {
@@ -338,5 +350,37 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public JsonMatcher<T> sortField(String... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "JsonMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath);
+    }
+
+    private static class Either {
+        private JsonElement parsedContent;
+        private String originalContent;
+
+        public Either(JsonElement parsedContent) {
+            this.parsedContent = parsedContent;
+            this.originalContent = null;
+        }
+
+        public Either(String originalContent) {
+            this.originalContent = originalContent;
+            this.parsedContent = null;
+        }
+
+        boolean isParsedJson() {
+            return originalContent == null;
+        }
+
+        public JsonElement getParsedContent() {
+            return parsedContent;
+        }
+
+        public String getOriginalContent() {
+            return originalContent;
+        }
     }
 }
