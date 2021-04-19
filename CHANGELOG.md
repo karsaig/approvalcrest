@@ -1,10 +1,11 @@
 Changelog
 ===========
 
-Version 0.60.1 - 2020/04/19
+Version 0.60.2 - 2020/04/19
 -----
 
 - Fixed bug with exception serialization
+- Fixed handling of empty approved json file
 
 Version 0.60.0 - 2021/04/18
 -----

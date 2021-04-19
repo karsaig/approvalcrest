@@ -154,7 +154,7 @@ To use add the following to your project's pom.xml:
     <dependency>
       <groupId>com.github.karsaig</groupId>
       <artifactId>approvalcrest</artifactId>
-      <version>0.60.0</version>
+      <version>0.60.2</version>
     </dependency>
 
 ### JUnit 5
@@ -162,7 +162,7 @@ To use add the following to your project's pom.xml:
     <dependency>
       <groupId>com.github.karsaig</groupId>
       <artifactId>approvalcrest-junit-jupiter</artifactId>
-      <version>0.60.0</version>
+      <version>0.60.2</version>
     </dependency>
 
 ### Kotlin JUnit 5
@@ -170,5 +170,5 @@ To use add the following to your project's pom.xml:
     <dependency>
       <groupId>com.github.karsaig</groupId>
       <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-      <version>0.60.0</version>
+      <version>0.60.2</version>
     </dependency>
