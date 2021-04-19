@@ -1,5 +1,9 @@
 package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,10 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 
 public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Throwable> {
@@ -33,10 +33,13 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
             } else {
                 Map<String, Object> refToObjectmap = buildSourceObjectMap(source, jsonObject);
                 for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
-                    JsonObject actualObject = actual.getValue().getAsJsonObject();
-                    if (actualObject.has(STACK_TRACE_NAME)) {
-                        addClass(refToObjectmap.get(actual.getKey()), actualObject);
-                        actualObject.remove(STACK_TRACE_NAME);
+                    JsonElement actualElement = actual.getValue();
+                    if (actualElement.isJsonObject()) {
+                        JsonObject actualObject = actualElement.getAsJsonObject();
+                        if (actualObject.has(STACK_TRACE_NAME)) {
+                            addClass(refToObjectmap.get(actual.getKey()), actualObject);
+                            actualObject.remove(STACK_TRACE_NAME);
+                        }
                     }
                 }
             }

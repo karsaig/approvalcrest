@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.60.1 - 2020/04/19
+-----
+
+- Fixed bug with exception serialization
+
 Version 0.60.0 - 2021/04/18
 -----
 

@@ -1,13 +1,13 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
-import java.io.IOError;
-import java.security.InvalidKeyException;
-import java.util.FormatterClosedException;
-
+import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import java.io.IOError;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.util.FormatterClosedException;
 
 public class BeanMatcherThrowableSupportTest extends AbstractBeanMatcherTest {
 
@@ -114,6 +114,9 @@ public class BeanMatcherThrowableSupportTest extends AbstractBeanMatcherTest {
 
                 {new InvalidKeyException(), new InvalidKeyException(), null},
                 {new ArrayIndexOutOfBoundsException(), new ArrayIndexOutOfBoundsException(), null},
+
+
+                {new RuntimeException("Runtime message", new GeneralSecurityException("message")), new RuntimeException("Runtime message", new GeneralSecurityException("message")), null},
         };
     }
 
