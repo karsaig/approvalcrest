@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 0.60.3 - 2020/04/20
+-----
+
+- Fixed handling of empty approved json file
+
 Version 0.60.2 - 2020/04/19
 -----
 
@@ -11,6 +16,7 @@ Version 0.60.0 - 2021/04/18
 -----
 
 - Upgrade JUnit to latest versions and make them provided dependencies, so it is easier to use with different versions
+- JUnit 5 modules require JUnit 5.7.0+ now
 - **Non-backward compatible change!** Added automatic sorting of field names, so the approved files and diff view will display fields in natural order.
 Without this there were changes on pull requests without any reason. Only the serialization order have changed.
 Doesn't affect constructs where order matters (example: Lists). This sorting is enabled by default and will fail assertions when approved file isn't sorted. 
@@ -25,7 +31,7 @@ Doesn't affect constructs where order matters (example: Lists). This sorting is 
   Description will contain the difference only.
 - Added additional convenience method for some ignores
 - **Non-backward compatible change!** Up until now, asserting exceptions ignored the exception type, it is now added to the serialized format and asserted. 
-Stacktrace in exceptions are automatically ignored from now on, as that caused frequent test failures without ignores or required adding ignore in many places.
+Stacktrace in exceptions are automatically ignored from now on, as that caused frequent test failures without ignores, forcing everyone to add ignore in many places.
 - Extended support for floating point numbers.
 - Fixed a bug where files and directories could have wrong permissions in some cases
 - Preliminary Kotlin support.
