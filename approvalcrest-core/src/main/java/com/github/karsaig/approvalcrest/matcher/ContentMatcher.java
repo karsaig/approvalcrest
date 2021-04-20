@@ -97,6 +97,9 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
 
     @Override
     public String toString() {
-        return "ContentMatcher";
+        if (fileNameWithPath == null) {
+            return "ContentMatcher";
+        }
+        return "ContentMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath);
     }
 }

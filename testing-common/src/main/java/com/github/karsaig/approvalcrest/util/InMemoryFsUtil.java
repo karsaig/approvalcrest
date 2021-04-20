@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.util;
 
-import static java.util.Collections.unmodifiableSet;
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -18,8 +19,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import com.google.common.jimfs.Configuration;
-import com.google.common.jimfs.Jimfs;
+import static java.util.Collections.unmodifiableSet;
 
 public class InMemoryFsUtil {
 
@@ -157,7 +157,11 @@ public class InMemoryFsUtil {
     public static void writeFile(Path path, String content) {
         try {
             Files.createDirectories(path.getParent());
-            Files.write(path, content.getBytes());
+            if (content == null) {
+                Files.createFile(path);
+            } else {
+                Files.write(path, content.getBytes());
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

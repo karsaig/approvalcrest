@@ -211,7 +211,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
-        if (jsonElement != null && !matchers.isEmpty()) {
+        if (jsonElement != null && !matchers.isEmpty() && !jsonElement.isJsonNull()) {
             filterFieldsByFieldMatchers(jsonElement, matchers);
         }
     }
@@ -354,6 +354,9 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     @Override
     public String toString() {
+        if (fileNameWithPath == null) {
+            return "JsonMatcher";
+        }
         return "JsonMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath);
     }
 

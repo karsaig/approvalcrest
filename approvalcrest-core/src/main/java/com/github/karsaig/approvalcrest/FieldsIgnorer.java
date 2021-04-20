@@ -44,7 +44,6 @@ public class FieldsIgnorer {
         sortJsonFields(filteredJson, true);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
-            //return sortArray(filteredJson);
             sortJsonArray(filteredJson.getAsJsonArray());
             return filteredJson;
         }
@@ -52,7 +51,7 @@ public class FieldsIgnorer {
     }
 
     public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
-        if (jsonElement == null || pathsToFind.isEmpty()) {
+        if (jsonElement == null || jsonElement.isJsonNull() || pathsToFind.isEmpty()) {
             return jsonElement;
         }
 
@@ -88,17 +87,19 @@ public class FieldsIgnorer {
             if (pathSegments.size() == 1) {
                 ignorePath(jsonElement, pathToFind);
             } else {
-                JsonElement child = jsonElement.getAsJsonObject().get(field);
-                if (child == null) {
-                    child = jsonElement.getAsJsonObject().get(MARKER + field);
+                if (jsonElement.isJsonObject()) {
+                    JsonElement child = jsonElement.getAsJsonObject().get(field);
                     if (child == null) {
-                        return;
+                        child = jsonElement.getAsJsonObject().get(MARKER + field);
+                        if (child == null) {
+                            return;
+                        }
+                        List<String> tail = pathSegments.subList(1, pathSegments.size());
+                        findPath(child, pathToFind, tail);
+                    } else {
+                        List<String> tail = pathSegments.subList(1, pathSegments.size());
+                        findPath(child, pathToFind, tail);
                     }
-                    List<String> tail = pathSegments.subList(1, pathSegments.size());
-                    findPath(child, pathToFind, tail);
-                } else {
-                    List<String> tail = pathSegments.subList(1, pathSegments.size());
-                    findPath(child, pathToFind, tail);
                 }
             }
         }
