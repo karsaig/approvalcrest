@@ -1,6 +1,12 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.google.common.collect.Lists;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,14 +22,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-
-import com.google.common.collect.Lists;
-
 public class JsonMatcherLocaleAndTzIndependenceTest extends AbstractFileMatcherTest {
 
     private static final ZoneId UTC = ZoneId.of("UTC");
@@ -35,8 +33,12 @@ public class JsonMatcherLocaleAndTzIndependenceTest extends AbstractFileMatcherT
     private static final List<ZoneId> ZONES = Lists.newArrayList(UTC, HUN, UK, SAMOA, KIRITIMATI);
     private static final List<Locale> LOCALES = Lists.newArrayList(Locale.UK, Locale.SIMPLIFIED_CHINESE, Locale.GERMANY, Locale.JAPAN);
     private static final Object[][] TYPES = new Object[][]{
+            {Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2020-04-01T20:01:02.000Z\""},
             {Date.from(Instant.ofEpochSecond(13)), "\"1970-01-01T00:00:13.000Z\""},
             {java.sql.Date.from(Instant.ofEpochSecond(15)), "\"1970-01-01T00:00:15.000Z\""},
+            {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2020-04-01T20:01:02.000Z\""},
+            {java.sql.Timestamp.from(Instant.ofEpochSecond(15)), "\"1970-01-01T00:00:15.000Z\""},
+            {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2020-04-01T20:01:02.000Z\""},
             {Instant.ofEpochMilli(42), "\"1970-01-01T00:00:00.042Z\""},
             {LocalDate.of(2019, 4, 1), "\"2019-04-01\""},
             {LocalDateTime.of(2020, 4, 21, 18, 38, 15, 13), "\"2020-04-21T18:38:15.000000013\""},
@@ -46,6 +48,14 @@ public class JsonMatcherLocaleAndTzIndependenceTest extends AbstractFileMatcherT
     };
 
     private static final Object[][] COMPLEX_TYPES = new Object[][]{
+            {Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "{\n" +
+                    "  \"dummyString\": \"dummy1\",\n" +
+                    "  \"genericValue\": {\n" +
+                    "    \"dummyString\": \"dummy2\",\n" +
+                    "    \"genericValue\": \"2020-04-01T20:01:02.000Z\"\n" +
+                    "  }\n" +
+                    "}"},
+
             {Date.from(Instant.ofEpochSecond(13)), "{\n" +
                     "  \"dummyString\": \"dummy1\",\n" +
                     "  \"genericValue\": {\n" +
@@ -54,8 +64,31 @@ public class JsonMatcherLocaleAndTzIndependenceTest extends AbstractFileMatcherT
                     "  }\n" +
                     "}"},
 
+            {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "{\n" +
+                    "  \"dummyString\": \"dummy1\",\n" +
+                    "  \"genericValue\": {\n" +
+                    "    \"dummyString\": \"dummy2\",\n" +
+                    "    \"genericValue\": \"2020-04-01T20:01:02.000Z\"\n" +
+                    "  }\n" +
+                    "}"},
 
             {java.sql.Date.from(Instant.ofEpochSecond(15)), "{\n" +
+                    "  \"dummyString\": \"dummy1\",\n" +
+                    "  \"genericValue\": {\n" +
+                    "    \"dummyString\": \"dummy2\",\n" +
+                    "    \"genericValue\": \"1970-01-01T00:00:15.000Z\"\n" +
+                    "  }\n" +
+                    "}"},
+
+            {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "{\n" +
+                    "  \"dummyString\": \"dummy1\",\n" +
+                    "  \"genericValue\": {\n" +
+                    "    \"dummyString\": \"dummy2\",\n" +
+                    "    \"genericValue\": \"2020-04-01T20:01:02.000Z\"\n" +
+                    "  }\n" +
+                    "}"},
+
+            {java.sql.Timestamp.from(Instant.ofEpochSecond(15)), "{\n" +
                     "  \"dummyString\": \"dummy1\",\n" +
                     "  \"genericValue\": {\n" +
                     "    \"dummyString\": \"dummy2\",\n" +

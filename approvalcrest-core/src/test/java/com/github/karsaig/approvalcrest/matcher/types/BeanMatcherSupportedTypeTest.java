@@ -1,11 +1,18 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
-import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.Bean;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.google.common.collect.Sets;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Paths;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,23 +23,16 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
-import com.github.karsaig.approvalcrest.testdata.Bean;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
-
-import com.google.common.collect.Sets;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 
 class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
+
+    private static final ZoneId HUN = ZoneId.of("Europe/Budapest");
 
     public static Object[][] typeSerializationTestCases() {
         return new Object[][]{
@@ -131,6 +131,10 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                 {Date.from(Instant.ofEpochSecond(13)), Date.from(Instant.ofEpochSecond(14)), ""},
                 {Date.from(Instant.ofEpochMilli(1L)), Date.from(Instant.ofEpochMilli(1L)), null},
                 {Date.from(Instant.ofEpochMilli(1L)), Date.from(Instant.ofEpochMilli(2L)), ""},
+                {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), null},
+                {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), java.sql.Date.from(ZonedDateTime.of(2021, 4, 1, 22, 1, 2, 3, HUN).toInstant()), ""},
+                {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), null},
+                {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), java.sql.Timestamp.from(ZonedDateTime.of(2021, 4, 1, 22, 1, 2, 3, HUN).toInstant()), ""},
                 {Instant.ofEpochMilli(42), Instant.ofEpochMilli(42), null},
                 {Instant.MIN.plusSeconds(31622400L), Instant.MIN.plusSeconds(31622400L), null},
                 {Instant.MAX.minusSeconds(31622400L), Instant.MAX.minusSeconds(31622400L), null},
@@ -177,6 +181,7 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                         " ; map[]: Expected 0 values but got 1 ; string\n" +
                         "Expected: string\n" +
                         "     got: string3\n"},
+
         };
     }
 

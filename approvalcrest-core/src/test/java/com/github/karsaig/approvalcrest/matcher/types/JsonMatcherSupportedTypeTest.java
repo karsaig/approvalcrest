@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.file.Paths;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +19,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -28,6 +28,7 @@ import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
+    private static final ZoneId HUN = ZoneId.of("Europe/Budapest");
 
     public static Object[][] typeSerializationTestCases() {
         return new Object[][]{
@@ -53,6 +54,10 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                 {Date.from(Instant.ofEpochSecond(13)), "\"1970-01-01T00:00:14.000Z\"", "Expected file 4ac405/11b2ef-approved.json\n"},
                 {Date.from(Instant.ofEpochMilli(1L)), "\"1970-01-01T00:00:00.001Z\"", null},
                 {Date.from(Instant.ofEpochMilli(1L)), "\"1970-01-01T00:00:00.002Z\"", "Expected file 4ac405/11b2ef-approved.json\n"},
+                {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2020-04-01T20:01:02.000Z\"", null},
+                {java.sql.Date.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2021-04-01T20:01:02.000Z\"", "Expected file 4ac405/11b2ef-approved.json\n"},
+                {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2020-04-01T20:01:02.000Z\"", null},
+                {java.sql.Timestamp.from(ZonedDateTime.of(2020, 4, 1, 22, 1, 2, 3, HUN).toInstant()), "\"2021-04-01T20:01:02.000Z\"", "Expected file 4ac405/11b2ef-approved.json\n"},
                 {Instant.ofEpochMilli(42), "\"1970-01-01T00:00:00.042Z\"", null},
                 {Instant.ofEpochMilli(42), "\"1970-01-01T00:00:00.043Z\"", "Expected file 4ac405/11b2ef-approved.json\n"},
                 {LocalDate.of(2019, 4, 1), "\"2019-04-01\"", null},
