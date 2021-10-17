@@ -1,6 +1,6 @@
 Approvalcrest
 ===========
-[![Build Status](https://travis-ci.org/karsaig/approvalcrest.svg?branch=master)](https://travis-ci.org/karsaig/approvalcrest)
+[![Build Status](https://api.travis-ci.com/karsaig/approvalcrest.svg?branch=master)](https://app.travis-ci.com/github/karsaig/approvalcrest)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.karsaig/approvalcrest.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.karsaig%22%20AND%20a:%22approvalcrest%22)
 
 
