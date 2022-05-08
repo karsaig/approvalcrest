@@ -77,7 +77,7 @@
             <dependency>
                 <groupId>com.github.karsaig</groupId>
                 <artifactId>approvalcrest-junit-jupiter</artifactId>
-                <version>${version}</version>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
