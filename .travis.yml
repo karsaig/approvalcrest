@@ -1,5 +1,0 @@
-language: java
-sudo: false
-dist: focal
-jdk:
-    - openjdk11
