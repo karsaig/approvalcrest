@@ -53,7 +53,7 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <release>${java.target.version}</release>
+                    <release>${java.version.to.run}</release>
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
