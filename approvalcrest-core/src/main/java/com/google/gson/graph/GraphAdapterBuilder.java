@@ -15,14 +15,6 @@
  */
 package com.google.gson.graph;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
@@ -36,13 +28,21 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
 /**
  * Writes a graph of objects as a list of named nodes.
  */
 @SuppressWarnings("rawtypes")
 public final class GraphAdapterBuilder {
     private final Map<Type, InstanceCreator<?>> instanceCreators = new HashMap<>();
-    private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators);
+    private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators, true);
 
     public GraphAdapterBuilder addType(Type type) {
         ObjectConstructor<?> objectConstructor = constructorConstructor.get(TypeToken.get(type));
@@ -111,7 +111,7 @@ public final class GraphAdapterBuilder {
 
                     @SuppressWarnings("unchecked")
                     // graph.map guarantees consistency between value and T
-                            Element<T> element = (Element<T>) graph.map.get(value);
+                    Element<T> element = (Element<T>) graph.map.get(value);
                     if (element == null) {
                         element = new Element<>(value, graph.nextName(), typeAdapter, null);
                         graph.map.put(value, element);
@@ -179,7 +179,7 @@ public final class GraphAdapterBuilder {
                     try {
                         @SuppressWarnings("unchecked")
                         // graph.map guarantees consistency between value and T
-                                Element<T> element = (Element<T>) graph.map.get(currentName);
+                        Element<T> element = (Element<T>) graph.map.get(currentName);
                         // now that we know the typeAdapter for this name, go from JsonElement to 'T'
                         if (element.value == null) {
                             element.typeAdapter = typeAdapter;
