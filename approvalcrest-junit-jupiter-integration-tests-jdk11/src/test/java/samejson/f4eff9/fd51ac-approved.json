@@ -1,4 +1,0 @@
-/*samejson.SameJsonTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
-{
-  "different" : "content"
-}
