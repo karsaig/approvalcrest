@@ -12,7 +12,6 @@
         <module>approvalcrest-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
-        <module>approvalcrest-junit-jupiter-integration-tests-jdk11</module>
         <module>approvalcrest-junit-jupiter-kotlin</module>
         <module>approvalcrest-junit-jupiter-kotlin-integration-tests</module>
     </modules>
@@ -29,16 +28,16 @@
 
     <properties>
         <java.target.version>8</java.target.version>
-        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.10.1</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.2.0</maven.source.plugin.version>
-        <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
-        <maven.gpg.plugin.version>1.6</maven.gpg.plugin.version>
-        <nexus.staging.maven.plugin.version>1.6.8</nexus.staging.maven.plugin.version>
-        <maven.surefire.plugin.version>3.0.0-M4</maven.surefire.plugin.version>
-        <maven.shade.plugin.version>3.2.4</maven.shade.plugin.version>
-        <maven.deploy.plugin.version>3.0.0-M1</maven.deploy.plugin.version>
-        <maven.versions.plugin.version>2.8.1</maven.versions.plugin.version>
-        <maven.enforcer.plugin.version>3.0.0-M3</maven.enforcer.plugin.version>
+        <maven.javadoc.plugin.version>3.4.0</maven.javadoc.plugin.version>
+        <maven.gpg.plugin.version>3.0.1</maven.gpg.plugin.version>
+        <nexus.staging.maven.plugin.version>1.6.13</nexus.staging.maven.plugin.version>
+        <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
+        <maven.shade.plugin.version>3.3.0</maven.shade.plugin.version>
+        <maven.deploy.plugin.version>3.0.0-M2</maven.deploy.plugin.version>
+        <maven.versions.plugin.version>2.10.0</maven.versions.plugin.version>
+        <maven.enforcer.plugin.version>3.0.0</maven.enforcer.plugin.version>
         <mockito.jupiter.version>3.9.0</mockito.jupiter.version>
     </properties>
 
@@ -140,7 +139,7 @@
                     <dependency>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>extra-enforcer-rules</artifactId>
-                        <version>1.2</version>
+                        <version>1.5.1</version>
                     </dependency>
                 </dependencies>
                 <executions>

@@ -128,7 +128,7 @@ class AssertImplTest {
                         }));
 
         Assertions.assertEquals("\n" +
-                "Expected: a string containing \"Different expectation\"\n" +
+                "Expected:\"Different expectation\"\n" +
                 "     but: was \"Dummy string\"", thrown.getMessage());
 
     }

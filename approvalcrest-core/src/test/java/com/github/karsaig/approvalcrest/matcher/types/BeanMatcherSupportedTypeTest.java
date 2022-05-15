@@ -65,8 +65,8 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
                 {Byte.MIN_VALUE, Byte.MIN_VALUE, null},
                 {Byte.MAX_VALUE, Byte.MAX_VALUE, null},
                 {Byte.MIN_VALUE, Byte.MAX_VALUE, "\n" +
-                        "Expected: <127>\n" +
-                        "     but: was <-128>"},
+                        "Expected: <127b>\n" +
+                        "     but: was <-128b>"},
                 {Short.MIN_VALUE, Short.MIN_VALUE, null},
                 {Short.MAX_VALUE, Short.MAX_VALUE, null},
                 {Short.MIN_VALUE, Short.MAX_VALUE, "\n" +
