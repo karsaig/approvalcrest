@@ -10,7 +10,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build-java11:
+  build-JDK_11:
     name: Java ${{ matrix.java }} build
     runs-on: ubuntu-latest
     strategy:
@@ -30,12 +30,12 @@ jobs:
         set | grep JAVA
     - name: Build with Maven
       run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
-  build-java17:
+  build-JDK_17:
     name: Java ${{ matrix.java }} build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ 17 ]
+        java: [ 8, 11, 17 ]
 
     steps:
       - uses: actions/checkout@v3
