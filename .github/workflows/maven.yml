@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-JDK_11:
-    name: Java ${{ matrix.java }} build
+    name: Java ${{ matrix.java }} build on JDK 11
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -31,7 +31,7 @@ jobs:
     - name: Build with Maven
       run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
   build-JDK_17:
-    name: Java ${{ matrix.java }} build
+    name: Java ${{ matrix.java }} build on JDK 17
     runs-on: ubuntu-latest
     strategy:
       matrix:
