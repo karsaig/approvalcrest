@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
+import com.github.karsaig.approvalcrest.StringUtil;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
@@ -168,7 +169,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanLong\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
@@ -321,7 +322,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanInteger\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/0d08c2-approved.json", approvedFileContent);
@@ -391,7 +392,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanInteger\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/39e1a0-idTest-approved.json", approvedFileContent);
@@ -460,7 +461,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanInteger\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/single-line-approved.json", approvedFileContent);
@@ -529,7 +530,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanInteger\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("src/test/contents/single-line-2-approved.json", approvedFileContent);
@@ -598,7 +599,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     " ; \n" +
                     "Unexpected: beanInteger\n" +
                     " ; \n" +
-                    "Unexpected: beanShort\n", actualError.getMessage());
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("/src/test/contents/single-line-2-approved.json", approvedFileContent);

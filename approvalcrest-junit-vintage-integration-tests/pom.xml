@@ -21,6 +21,12 @@
             <artifactId>approvalcrest</artifactId>
             <version>0.61.0-SNAPSHOT</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.github.karsaig</groupId>

@@ -42,17 +42,7 @@ public class SameBeanTest {
                 " ; \n" +
                 "Unexpected: beanLong\n" +
                 " ; \n" +
-                "Unexpected: beanShort\n" +
-                " expected:<[{}]> but was:<[{\n" +
-                "  \"beanBoolean\": false,\n" +
-                "  \"beanByte\": -128,\n" +
-                "  \"beanChar\": \"\\u0000\",\n" +
-                "  \"beanDouble\": 4.9E-324,\n" +
-                "  \"beanFloat\": 1.4E-45,\n" +
-                "  \"beanInteger\": -2147483648,\n" +
-                "  \"beanLong\": -9223372036854775808,\n" +
-                "  \"beanShort\": -32768\n" +
-                "}]>";
+                "Unexpected: beanShort\n";
         String expectedActualValue = "{\n" +
                 "  \"beanBoolean\": false,\n" +
                 "  \"beanByte\": -128,\n" +

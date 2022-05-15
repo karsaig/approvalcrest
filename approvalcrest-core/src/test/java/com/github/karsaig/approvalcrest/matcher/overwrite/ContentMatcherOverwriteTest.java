@@ -1,24 +1,24 @@
 package com.github.karsaig.approvalcrest.matcher.overwrite;
 
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
-import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
 import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.github.karsaig.approvalcrest.StringUtil.normalizeNewLines;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
 
@@ -112,7 +112,7 @@ public class ContentMatcherOverwriteTest extends AbstractFileMatcherTest {
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
-            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: differentContent\n" +
+            MatcherAssert.assertThat(normalizeNewLines(actualError.getMessage()), Matchers.containsString("Expected: differentContent\n" +
                     "     but: Expected file c716ab/ccb1cc-approved.content\n" +
                     "Content does not match!"));
 

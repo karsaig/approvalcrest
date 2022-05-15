@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github.karsaig.approvalcrest.StringUtil.normalizeNewLines;
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.util.Collections.singletonList;
@@ -221,7 +222,7 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
-            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: \"differentContent\"\n" +
+            MatcherAssert.assertThat(normalizeNewLines(actualError.getMessage()), Matchers.containsString("Expected: \"differentContent\"\n" +
                     "     but: Expected file 11ee79/ccb1cc-approved.json\n" +
                     "\n"));
 

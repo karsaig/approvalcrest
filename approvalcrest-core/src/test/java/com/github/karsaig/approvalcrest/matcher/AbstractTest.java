@@ -1,12 +1,12 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import java.util.function.BiConsumer;
-
+import com.github.karsaig.approvalcrest.ComparisonDescription;
+import com.github.karsaig.approvalcrest.TestAssertImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Matcher;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.ComparisonDescription;
-import com.github.karsaig.approvalcrest.TestAssertImpl;
+import java.util.function.BiConsumer;
 
 public abstract class AbstractTest {
 
@@ -29,4 +29,5 @@ public abstract class AbstractTest {
     public enum EnumTest {
         ENUM1, ENUM2
     }
+
 }

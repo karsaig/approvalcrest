@@ -1,16 +1,8 @@
 package com.github.karsaig.approvalcrest.matcher;
 
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
-import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import com.github.karsaig.approvalcrest.util.InMemoryFiles;
+import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
@@ -20,9 +12,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import com.github.karsaig.approvalcrest.util.InMemoryFiles;
-import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
-import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static com.github.karsaig.approvalcrest.StringUtil.normalizeNewLines;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit test for the {@link ContentMatcher}.
@@ -142,7 +142,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
-            MatcherAssert.assertThat(actualError.getMessage(), Matchers.containsString("Expected: dummyContent\n" +
+            MatcherAssert.assertThat(normalizeNewLines(actualError.getMessage()), Matchers.containsString("Expected: dummyContent\n" +
                     "     but: Expected file c716ab/247f32-approved.content\n" +
                     "Content does not match!"));
 
@@ -245,7 +245,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: Modified content\n" +
                     "     but: Expected file 87668f/0d08c2-approved.content\n" +
-                    "Content does not match!", actualError.getMessage());
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/0d08c2-approved.content", approvedFileContent);
@@ -288,7 +288,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
                     "     but: Expected file 87668f/39e1a0-idTest-approved.content\n" +
-                    "Content does not match!", actualError.getMessage());
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/39e1a0-idTest-approved.content", "Different content");
@@ -330,7 +330,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
                     "     but: Expected file 87668f/single-line-approved.content\n" +
-                    "Content does not match!", actualError.getMessage());
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("87668f/single-line-approved.content", "Different content");
@@ -372,7 +372,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
                     "     but: Expected file /work/test/path/src/test/contents/single-line-2\n" +
-                    "Content does not match!", actualError.getMessage());
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("src/test/contents/single-line-2-approved.content", "Different content");
@@ -414,7 +414,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
                     "     but: Expected file /src/test/contents/single-line-2\n" +
-                    "Content does not match!", actualError.getMessage());
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles("/src/test/contents/single-line-2-approved.content", "Different content");

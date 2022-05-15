@@ -9,6 +9,8 @@ import org.opentest4j.AssertionFailedError;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
 
+import static com.github.karsaig.approvalcrest.StringUtil.normalizeNewLines;
+
 class AssertImplTest {
 
     private AssertImpl underTest = new AssertImpl();
@@ -128,8 +130,8 @@ class AssertImplTest {
                         }));
 
         Assertions.assertEquals("\n" +
-                "Expected:\"Different expectation\"\n" +
-                "     but: was \"Dummy string\"", thrown.getMessage());
+                "Expected: a string containing \"Different expectation\"\n" +
+                "     but: was \"Dummy string\"", normalizeNewLines(thrown.getMessage()));
 
     }
 
@@ -197,7 +199,7 @@ class AssertImplTest {
 
         Assertions.assertEquals("This is a reason\n" +
                 "Expected: is \"Different expectation\"\n" +
-                "     but: was \"Dummy string\"", thrown.getMessage());
+                "     but: was \"Dummy string\"", normalizeNewLines(thrown.getMessage()));
 
     }
 
@@ -214,7 +216,7 @@ class AssertImplTest {
         AssertionError hamcrestThrown = Assertions.assertThrows(AssertionError.class,
                 () -> org.hamcrest.MatcherAssert.assertThat(testInput, matcherFactory.beanMatcher(expected)));
 
-        Assertions.assertEquals(hamcrestThrown.getMessage(), thrown.getMessage());
+        Assertions.assertEquals(normalizeNewLines(hamcrestThrown.getMessage()), normalizeNewLines(thrown.getMessage()));
 
     }
 
@@ -248,7 +250,7 @@ class AssertImplTest {
         AssertionError hamcrestThrown = Assertions.assertThrows(AssertionError.class,
                 () -> org.hamcrest.MatcherAssert.assertThat("This is a reason!", testInput, matcherFactory.beanMatcher(expected)));
 
-        Assertions.assertEquals(hamcrestThrown.getMessage(), thrown.getMessage());
+        Assertions.assertEquals(normalizeNewLines(hamcrestThrown.getMessage()), normalizeNewLines(thrown.getMessage()));
 
     }
 

@@ -1,19 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.circular;
 
 
-import static com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.lang.reflect.Type;
-import java.sql.SQLException;
-import java.util.function.Function;
-
-import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-
+import com.github.karsaig.approvalcrest.StringUtil;
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
@@ -24,7 +12,6 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
-
 import com.google.common.collect.Sets;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -33,6 +20,18 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Type;
+import java.sql.SQLException;
+import java.util.function.Function;
+
+import static com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
@@ -129,6 +128,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         AssertionError actualError = assertThrows(AssertionError.class,
                 () -> MatcherAssert.assertThat(actual, diagnosingMatcher));
 
+
         String expectedExceptionMessage = "\n" +
                 "Expected: {\n" +
                 "  \"element\": \"two\"\n" +
@@ -137,7 +137,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
                 "Expected: two\n" +
                 "     got: one\n";
 
-        Assertions.assertEquals(expectedExceptionMessage, actualError.getMessage());
+        Assertions.assertEquals(expectedExceptionMessage, StringUtil.normalizeNewLines(actualError.getMessage()));
 
     }
 
