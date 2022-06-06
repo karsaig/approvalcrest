@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-java.version.to.run=${java.version.to.run}
 set -exuo pipefail
+jvtr=${java.version.to.run:-11}
 
 version=$1
 
@@ -13,13 +13,13 @@ mvn -f for-release-pom.xml versions:commit
 
 git commit -a -m "Release version ${version}"
 
-mvn clean install -Djava.version.to.run="${java.version.to.run}"
-mvn clean -Djava.version.to.run="${java.version.to.run}"
+mvn clean install -Djava.version.to.run="${jvtr}"
+mvn clean -Djava.version.to.run="${jvtr}"
 
 
-mvn -f for-release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml -DskipRemoteStaging=true -Djava.version.to.run="${java.version.to.run}"
+mvn -f for-release-pom.xml clean deploy -P sign-release,ossrh --settings ../../Installed/settings.xml -DskipRemoteStaging=true -Djava.version.to.run="${jvtr}"
 
-mvn -f for-release-pom.xml nexus-staging:deploy-staged -P ossrh --settings ../../Installed/settings.xml -DstagingDescription="Description of the staged repository" -Djava.version.to.run="${java.version.to.run}"
+mvn -f for-release-pom.xml nexus-staging:deploy-staged -P ossrh --settings ../../Installed/settings.xml -DstagingDescription="Description of the staged repository" -Djava.version.to.run="${jvtr}"
 
 git clean -f
 git push
