@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
+jvtr=${java.version.to.run:-8}
 set -exuo pipefail
-jvtr=${java.version.to.run:-11}
 
 version=$1
 
