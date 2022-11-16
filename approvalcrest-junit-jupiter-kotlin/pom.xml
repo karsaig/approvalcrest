@@ -77,6 +77,59 @@
                     <jvmTarget>1.8</jvmTarget>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${nexus.staging.maven.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${maven.shade.plugin.version}</version>
+                <configuration>
+                    <!-- put your configurations here -->
+                    <minimizeJar>true</minimizeJar>
+                    <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                    <createSourcesJar>true</createSourcesJar>
+                    <artifactSet>
+                        <excludes>
+                            <exclude>org.skyscreamer:jsonassert</exclude>
+                            <exclude>com.vaadin.external.google:android-json</exclude>
+                            <exclude>com.google.guava:guava</exclude>
+                            <exclude>com.google.guava:failureaccess</exclude>
+                            <exclude>com.google.guava:listenablefuture</exclude>
+                            <exclude>com.google.code.findbugs:jsr305</exclude>
+                            <exclude>org.checkerframework:checker-qual</exclude>
+                            <exclude>com.google.errorprone:error_prone_annotations</exclude>
+                            <exclude>com.google.j2objc:j2objc-annotations</exclude>
+                            <exclude>org.codehaus.mojo:animal-sniffer-annotations</exclude>
+                            <exclude>com.google.code.gson:gson</exclude>
+                            <exclude>org.apache.commons:commons-lang3</exclude>
+                            <exclude>org.junit.jupiter:junit-jupiter-engine</exclude>
+                            <exclude>org.apiguardian:apiguardian-api</exclude>
+                            <exclude>org.junit.platform:junit-platform-engine</exclude>
+                            <exclude>org.opentest4j:opentest4j</exclude>
+                            <exclude>org.junit.platform:junit-platform-commons</exclude>
+                            <exclude>org.junit.jupiter:junit-jupiter-api</exclude>
+                            <exclude>com.gilecode.yagson:j9-reflection-utils</exclude>
+                        </excludes>
+                    </artifactSet>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
