@@ -5,7 +5,7 @@
     <parent>
         <artifactId>approvalcrest-parent</artifactId>
         <groupId>com.github.karsaig</groupId>
-        <version>0.61.2-SNAPSHOT</version>
+        <version>0.61.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest</artifactId>
-            <version>0.61.2-SNAPSHOT</version>
+            <version>0.61.2</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest-junit-jupiter</artifactId>
-            <version>0.61.2-SNAPSHOT</version>
+            <version>0.61.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>testing-common</artifactId>
-            <version>0.61.2-SNAPSHOT</version>
+            <version>0.61.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
