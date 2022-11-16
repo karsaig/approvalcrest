@@ -36,13 +36,15 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import static java.util.Collections.emptyList;
+
 /**
  * Writes a graph of objects as a list of named nodes.
  */
 @SuppressWarnings("rawtypes")
 public final class GraphAdapterBuilder {
     private final Map<Type, InstanceCreator<?>> instanceCreators = new HashMap<>();
-    private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators, true);
+    private final ConstructorConstructor constructorConstructor = new ConstructorConstructor(instanceCreators, true, emptyList());
 
     public GraphAdapterBuilder addType(Type type) {
         ObjectConstructor<?> objectConstructor = constructorConstructor.get(TypeToken.get(type));
