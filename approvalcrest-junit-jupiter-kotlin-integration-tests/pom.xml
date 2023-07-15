@@ -5,7 +5,7 @@
     <parent>
         <artifactId>approvalcrest-parent</artifactId>
         <groupId>com.github.karsaig</groupId>
-        <version>0.61.5</version>
+        <version>0.61.6-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-            <version>0.61.5</version>
+            <version>0.61.6-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

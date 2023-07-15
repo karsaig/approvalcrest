@@ -5,7 +5,7 @@
     <parent>
         <artifactId>approvalcrest-parent</artifactId>
         <groupId>com.github.karsaig</groupId>
-        <version>0.61.5</version>
+        <version>0.61.6-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
-            <version>1.5.0</version>
+            <version>1.5.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -29,7 +29,7 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.10</version>
+            <version>2.10.1</version>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>testing-common</artifactId>
-            <version>0.61.5</version>
+            <version>0.61.6-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
