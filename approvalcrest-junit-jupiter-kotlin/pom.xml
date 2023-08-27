@@ -137,7 +137,7 @@
                 <version>${dokka.version}</version>
                 <executions>
                     <execution>
-                        <phase>pre-site</phase>
+                        <id>attach-javadocs</id>
                         <goals>
                             <goal>javadocJar</goal>
                         </goals>

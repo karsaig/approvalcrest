@@ -12,8 +12,9 @@
         <module>approvalcrest-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
-        <module>approvalcrest-junit-jupiter-kotlin</module>
+        <!-- <module>approvalcrest-junit-jupiter-kotlin</module>
         <module>approvalcrest-junit-jupiter-kotlin-integration-tests</module>
+        -->
     </modules>
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>
