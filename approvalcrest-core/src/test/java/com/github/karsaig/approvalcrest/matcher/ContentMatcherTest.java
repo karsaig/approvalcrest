@@ -12,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -608,4 +610,47 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
+
+    @Test
+    public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameConfig() {
+        String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("notHash/single-line-2-approved.content", "Lorem ipsum dolor sit amet, consectetur adipiscing elit.");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameConfigAndContentDiffers() {
+        String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.content"), "Different content");
+
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            Assertions.assertEquals("\n" +
+                    "Expected: Different content\n" +
+                    "     but: Expected file /work/test/path/notHash/single-line-2\n" +
+                    "Content does not match!", normalizeNewLines(actualError.getMessage()));
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("notHash/single-line-2-approved.content", "Different content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
 }

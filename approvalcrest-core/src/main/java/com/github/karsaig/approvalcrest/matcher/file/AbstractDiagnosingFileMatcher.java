@@ -31,6 +31,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     protected String customFileName;
     protected String uniqueId;
     protected Path pathName;
+    protected String relativePathName;
     protected String testClassNameHash;
 
     protected Path fileNameWithPath;
@@ -54,8 +55,12 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
             fileName += SEPARATOR + uniqueId;
         }
         if (pathName == null) {
-            testClassNameHash = hashFileName(testClassName);
-            pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
+            if(relativePathName == null) {
+                testClassNameHash = hashFileName(testClassName);
+                pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
+            } else {
+                pathName = testMetaInformation.getTestClassPath().resolve(relativePathName);
+            }
         }
 
         fileNameWithPath = pathName.resolve(fileName);
@@ -79,6 +84,13 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     @Override
     public U withPathName(String pathName) {
         this.pathName = Paths.get(pathName);
+        return (U) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public U withRelativePathName(String relativePathName) {
+        this.relativePathName = relativePathName;
         return (U) this;
     }
 

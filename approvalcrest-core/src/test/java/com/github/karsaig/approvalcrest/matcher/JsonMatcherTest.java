@@ -3046,4 +3046,75 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "no explicit sorting applied");
         }, AssertionFailedError.class);
     }
+
+
+    @Test
+    public void shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameConfig() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("notHash/single-line-2-approved.json", getBeanWithPrimitivesAsJsonString());
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
+    public void shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameConfigAndContentDiffers() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        String approvedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+
+            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.json"), approvedFileContent);
+
+            AssertionError actualError = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            Assertions.assertEquals("\n" +
+                    "Expected: {\n" +
+                    "  \"beanInt\": 10,\n" +
+                    "  \"beanLong\": 5,\n" +
+                    "  \"beanString\": \"Different content\"\n" +
+                    "}\n" +
+                    "     but: Expected file /work/test/path/notHash/single-line-2\n" +
+                    "\n" +
+                    "Expected: beanInt\n" +
+                    "     but none found\n" +
+                    " ; beanLong\n" +
+                    "Expected: 5\n" +
+                    "     got: 6\n" +
+                    " ; \n" +
+                    "Expected: beanString\n" +
+                    "     but none found\n" +
+                    " ; \n" +
+                    "Unexpected: beanBoolean\n" +
+                    " ; \n" +
+                    "Unexpected: beanByte\n" +
+                    " ; \n" +
+                    "Unexpected: beanChar\n" +
+                    " ; \n" +
+                    "Unexpected: beanDouble\n" +
+                    " ; \n" +
+                    "Unexpected: beanFloat\n" +
+                    " ; \n" +
+                    "Unexpected: beanInteger\n" +
+                    " ; \n" +
+                    "Unexpected: beanShort\n", StringUtil.normalizeNewLines(actualError.getMessage()));
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("notHash/single-line-2-approved.json", approvedFileContent);
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
 }
