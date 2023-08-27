@@ -13,7 +13,7 @@
     <artifactId>approvalcrest-junit-jupiter-kotlin-integration-tests</artifactId>
 
     <properties>
-        <kotlin.version>1.7.21</kotlin.version>
+        <kotlin.version>1.9.10</kotlin.version>
     </properties>
 
     <dependencies>
