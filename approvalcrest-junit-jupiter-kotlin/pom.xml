@@ -118,7 +118,6 @@
                             <exclude>org.opentest4j:opentest4j</exclude>
                             <exclude>org.junit.platform:junit-platform-commons</exclude>
                             <exclude>org.junit.jupiter:junit-jupiter-api</exclude>
-                            <exclude>com.gilecode.yagson:j9-reflection-utils</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>

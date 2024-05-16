@@ -112,7 +112,6 @@
                             <exclude>com.google.code.gson:gson</exclude>
                             <exclude>org.apache.commons:commons-lang3</exclude>
                             <exclude>junit:junit</exclude>
-                            <exclude>com.gilecode.yagson:j9-reflection-utils</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
