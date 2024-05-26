@@ -29,6 +29,7 @@
 
     <properties>
         <java.target.version>8</java.target.version>
+        <java.version.to.run>11</java.version.to.run>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>3.6.3</maven.javadoc.plugin.version>

@@ -1,10 +1,10 @@
 /*samecontent.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
 {
   "0x1": {
-    "fExpected": "Different content",
-    "fActual": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
+    "class": "org.junit.ComparisonFailure",
     "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!",
-    "suppressedExceptions": [],
-    "class": "org.junit.ComparisonFailure"
+    "fActual": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
+    "fExpected": "Different content",
+    "suppressedExceptions": []
   }
 }

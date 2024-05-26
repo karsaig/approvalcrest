@@ -1,16 +1,18 @@
 /*jupiter.SameJsonTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
 {
-  "actual": {
-    "stringRepresentation": "{\n  \"beanBoolean\": false,\n  \"beanByte\": 127,\n  \"beanChar\": \"￿\",\n  \"beanDouble\": 1.7976931348623157E308,\n  \"beanFloat\": 3.4028235E38,\n  \"beanInteger\": 2147483647,\n  \"beanLong\": 9223372036854775807,\n  \"beanShort\": 32767\n}",
-    "type": "java.lang.String",
-    "value": "{\n  \"beanBoolean\": false,\n  \"beanByte\": 127,\n  \"beanChar\": \"￿\",\n  \"beanDouble\": 1.7976931348623157E308,\n  \"beanFloat\": 3.4028235E38,\n  \"beanInteger\": 2147483647,\n  \"beanLong\": 9223372036854775807,\n  \"beanShort\": 32767\n}"
-  },
-  "class": "org.opentest4j.AssertionFailedError",
-  "detailMessage": "Expected file 6c1826/fd51ac-approved.json\n\nExpected: different\n     but none found\n ; \nUnexpected: beanBoolean\n ; \nUnexpected: beanByte\n ; \nUnexpected: beanChar\n ; \nUnexpected: beanDouble\n ; \nUnexpected: beanFloat\n ; \nUnexpected: beanInteger\n ; \nUnexpected: beanLong\n ; \nUnexpected: beanShort\n",
-  "expected": {
-    "stringRepresentation": "{\n  \"different\": \"content\"\n}",
-    "type": "java.lang.String",
-    "value": "{\n  \"different\": \"content\"\n}"
-  },
-  "suppressedExceptions": []
+  "0x1": {
+    "actual": {
+      "stringRepresentation": "{\n  \"beanBoolean\": false,\n  \"beanByte\": 127,\n  \"beanChar\": \"￿\",\n  \"beanDouble\": 1.7976931348623157E308,\n  \"beanFloat\": 3.4028235E38,\n  \"beanInteger\": 2147483647,\n  \"beanLong\": 9223372036854775807,\n  \"beanShort\": 32767\n}",
+      "type": "java.lang.String",
+      "value": "{\n  \"beanBoolean\": false,\n  \"beanByte\": 127,\n  \"beanChar\": \"￿\",\n  \"beanDouble\": 1.7976931348623157E308,\n  \"beanFloat\": 3.4028235E38,\n  \"beanInteger\": 2147483647,\n  \"beanLong\": 9223372036854775807,\n  \"beanShort\": 32767\n}"
+    },
+    "class": "org.opentest4j.AssertionFailedError",
+    "detailMessage": "Expected file 6c1826/fd51ac-approved.json\n\nExpected: different\n     but none found\n ; \nUnexpected: beanBoolean\n ; \nUnexpected: beanByte\n ; \nUnexpected: beanChar\n ; \nUnexpected: beanDouble\n ; \nUnexpected: beanFloat\n ; \nUnexpected: beanInteger\n ; \nUnexpected: beanLong\n ; \nUnexpected: beanShort\n",
+    "expected": {
+      "stringRepresentation": "{\n  \"different\": \"content\"\n}",
+      "type": "java.lang.String",
+      "value": "{\n  \"different\": \"content\"\n}"
+    },
+    "suppressedExceptions": []
+  }
 }
