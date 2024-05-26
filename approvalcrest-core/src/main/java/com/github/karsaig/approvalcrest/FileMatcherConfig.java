@@ -36,7 +36,7 @@ public class FileMatcherConfig {
         return "true".equals(getProperty(key));
     }
 
-    String getProperty(String key) {
+    private String getProperty(String key) {
         return System.getProperty(key);
     }
 

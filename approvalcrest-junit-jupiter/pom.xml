@@ -71,6 +71,7 @@
                     <showWarnings>true</showWarnings>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-options</arg> <!-- Not needed once JDK 8 support is dropped -->
                         <arg>-Werror</arg>
                     </compilerArgs>
                 </configuration>

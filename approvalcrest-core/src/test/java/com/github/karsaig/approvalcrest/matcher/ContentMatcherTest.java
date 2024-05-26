@@ -348,7 +348,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.content"), actual);
+            writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.content"), actual);
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -366,14 +366,15 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.content"), "Different content");
+            writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.content"), "Different content");
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
+            String basePath = imfsi.getTestPath().toString();
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
-                    "     but: Expected file /work/test/path/src/test/contents/single-line-2\n" +
+                    "     but: Expected file "+basePath+"/src/test/contents/single-line-2\n" +
                     "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
@@ -390,7 +391,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.content"), actual);
+            writeFile(imfsi.getTestPath().resolve("/src/test/contents").resolve("single-line-2-approved.content"), actual);
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -408,7 +409,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.content"), "Different content");
+            writeFile(imfsi.getTestPath().resolve("/src/test/contents").resolve("single-line-2-approved.content"), "Different content");
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -618,7 +619,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.content"), actual);
+            writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.content"), actual);
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -636,14 +637,15 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.content"), "Different content");
+            writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.content"), "Different content");
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
+            String basePath = imfsi.getTestPath().toString();
             Assertions.assertEquals("\n" +
                     "Expected: Different content\n" +
-                    "     but: Expected file /work/test/path/notHash/single-line-2\n" +
+                    "     but: Expected file "+basePath+"/notHash/single-line-2\n" +
                     "Content does not match!", normalizeNewLines(actualError.getMessage()));
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);

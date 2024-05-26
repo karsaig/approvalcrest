@@ -477,7 +477,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -496,18 +496,19 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/src/test/contents").resolve("single-line-2-approved.json"), approvedFileContent);
+            writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
+            String basePath = imfsi.getTestPath().toString();
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
                     "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
                     "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
-                    "     but: Expected file /work/test/path/src/test/contents/single-line-2\n" +
+                    "     but: Expected file "+basePath+"/src/test/contents/single-line-2\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
@@ -546,7 +547,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathName");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("/src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -565,7 +566,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndAbsolutePathNameAndContentDiffers");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("/src/test/contents")).withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/src/test/contents").resolve("single-line-2-approved.json"), approvedFileContent);
+            writeFile(imfsi.getTestPath().resolve("/src/test/contents").resolve("single-line-2-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
@@ -3055,7 +3056,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
+            writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
             MatcherAssert.assertThat(actual, underTest);
 
@@ -3074,18 +3075,19 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
             JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
 
-            writeFile(imfsi.getTestPath().getRoot().resolve("/work/test/path/notHash").resolve("single-line-2-approved.json"), approvedFileContent);
+            writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.json"), approvedFileContent);
 
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> MatcherAssert.assertThat(actual, underTest));
 
+            String basePath = imfsi.getTestPath().toString();
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
                     "  \"beanInt\": 10,\n" +
                     "  \"beanLong\": 5,\n" +
                     "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
-                    "     but: Expected file /work/test/path/notHash/single-line-2\n" +
+                    "     but: Expected file "+basePath+"/notHash/single-line-2\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
