@@ -1,6 +1,30 @@
 Changelog
 ===========
 
+Version 0.62.3 - 2024/05/27
+-----
+
+- Fix to work with JDK 17 & 21
+- Updated dependencies to Guava 33.2.0-jre, Gson 2.11.0, Commons-lang3 3.14.0
+- Testing with newer JUnit5 5.10.2
+
+Version 0.61.6 - 2023/08/28
+-----
+
+- Added support for directory name override
+- Updated dependencies to Guava 32.1.1
+- Testing with newer JUnit5 5.4.0
+
+Version 0.61.2 - 2022/11/17
+-----
+
+- Updated dependencies to Guava 31.1, Gson 2.10, Commons-lang3 3.12.0
+
+Version 0.61.1 - 2022/07/07
+-----
+
+- Update Gson to 2.9.0
+
 Version 0.60.3 - 2021/04/20
 -----
 
