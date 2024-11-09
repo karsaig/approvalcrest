@@ -91,8 +91,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("firstName\n" +
                     "Expected: Different first name\n" +
                     "     got: FirstName1\n"), thrown.getMessage());
@@ -354,8 +354,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("\n" +
                 "Expected: firstName\n" +
                 "     but none found\n"));
     }
@@ -613,9 +613,9 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("lead.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("lead.currentAddress.since"), null);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress.since\n" +
                 "Expected: 2020-04-21\n" +
                 "     got: 2020-12-25\n"));
     }
@@ -873,8 +873,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
                 "Expected: 2019-12-25\n" +
                 "     got: 2020-12-25\n"));
 
@@ -1132,8 +1132,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
                 "Expected: since\n" +
                 "     but none found\n"));
     }
@@ -1387,8 +1387,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
                 "Unexpected: since\n"));
     }
 
@@ -1456,15 +1456,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName").ignoring("lastName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName").ignoring("lastName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; lastName\n" +
                 "Expected: LastName1\n" +
                 "     got: Different last name\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("lastName\n" +
                     "Expected: LastName1\n" +
                     "     got: Different last name\n"), thrown.getMessage());
@@ -1588,8 +1588,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName", "lastName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "lastName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; lastName\n" +
@@ -1661,15 +1661,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("currentAddress.since").ignoring("currentAddress.country"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since").ignoring("currentAddress.country"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                 "Expected: BELGIUM\n" +
                 "     got: HUNGARY\n" +
                 " ; currentAddress.since\n" +
                 "Expected: 2017-04-02\n" +
                 "     got: 2020-12-25\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("currentAddress.since"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                     "Expected: BELGIUM\n" +
                     "     got: HUNGARY\n"), thrown.getMessage());
@@ -1793,8 +1793,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("currentAddress.since", "currentAddress.country"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since", "currentAddress.country"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                 "Expected: BELGIUM\n" +
                 "     got: HUNGARY\n" +
                 " ; currentAddress.since\n" +
@@ -2057,15 +2057,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
                 "Expected: 2019-12-25\n" +
                 "     got: 2020-12-25\n" +
                 " ; members[1].birthCountry\n" +
                 "Expected: FRANCE\n" +
                 "     got: HUNGARY\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("members[1].birthCountry\n" +
                     "Expected: FRANCE\n" +
                     "     got: HUNGARY\n"), thrown.getMessage());
@@ -2314,6 +2314,385 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
 
     }
 
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("multipleMultiLevelPathInCollectionWithDiffCases")
+    public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathInCollectionSingleIgnoreWithDifferenceIsIgnoredInStrictMode(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"lead\": {\n" +
+                "    \"birthCountry\": \"HUNGARY\",\n" +
+                "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                "    \"currentAddress\": {\n" +
+                "      \"city\": \"CityName13\",\n" +
+                "      \"country\": \"HUNGARY\",\n" +
+                "      \"postCode\": \"PostCode76\",\n" +
+                "      \"since\": \"2017-04-14\",\n" +
+                "      \"streetName\": \"StreetName72\",\n" +
+                "      \"streetNumber\": 55\n" +
+                "    },\n" +
+                "    \"email\": \"e13@e.mail\",\n" +
+                "    \"firstName\": \"FirstName13\",\n" +
+                "    \"lastName\": \"LastName13\",\n" +
+                "    \"previousAddresses\": [\n" +
+                "      {\n" +
+                "        \"city\": \"CityName23\",\n" +
+                "        \"country\": \"CANADA\",\n" +
+                "        \"postCode\": \"PostCode86\",\n" +
+                "        \"since\": \"2017-04-24\",\n" +
+                "        \"streetName\": \"StreetName82\",\n" +
+                "        \"streetNumber\": 65\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"city\": \"CityName24\",\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"postCode\": \"PostCode87\",\n" +
+                "        \"since\": \"2017-04-25\",\n" +
+                "        \"streetName\": \"StreetName83\",\n" +
+                "        \"streetNumber\": 66\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"city\": \"CityName25\",\n" +
+                "        \"country\": \"EGYPT\",\n" +
+                "        \"postCode\": \"PostCode88\",\n" +
+                "        \"since\": \"2017-04-26\",\n" +
+                "        \"streetName\": \"StreetName84\",\n" +
+                "        \"streetNumber\": 67\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  },\n" +
+                "  \"members\": [\n" +
+                "    {\n" +
+                "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName102\",\n" +
+                "        \"country\": \"EGYPT\",\n" +
+                "        \"postCode\": \"PostCode165\",\n" +
+                "        \"streetName\": \"StreetName161\",\n" +
+                "        \"streetNumber\": 144\n" +
+                "      },\n" +
+                "      \"email\": \"e102@e.mail\",\n" +
+                "      \"firstName\": \"FirstName102\",\n" +
+                "      \"lastName\": \"LastName102\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName112\",\n" +
+                "          \"country\": \"AUSTRIA\",\n" +
+                "          \"postCode\": \"PostCode175\",\n" +
+                "          \"since\": \"2017-07-22\",\n" +
+                "          \"streetName\": \"StreetName171\",\n" +
+                "          \"streetNumber\": 154\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName113\",\n" +
+                "          \"country\": \"BELGIUM\",\n" +
+                "          \"postCode\": \"PostCode176\",\n" +
+                "          \"since\": \"2017-07-23\",\n" +
+                "          \"streetName\": \"StreetName172\",\n" +
+                "          \"streetNumber\": 155\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName103\",\n" +
+                "        \"country\": \"FRANCE\",\n" +
+                "        \"postCode\": \"PostCode166\",\n" +
+                "        \"streetName\": \"StreetName162\",\n" +
+                "        \"streetNumber\": 145\n" +
+                "      },\n" +
+                "      \"email\": \"e103@e.mail\",\n" +
+                "      \"firstName\": \"FirstName103\",\n" +
+                "      \"lastName\": \"LastName103\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName113\",\n" +
+                "          \"country\": \"BELGIUM\",\n" +
+                "          \"postCode\": \"PostCode176\",\n" +
+                "          \"since\": \"2017-07-23\",\n" +
+                "          \"streetName\": \"StreetName172\",\n" +
+                "          \"streetNumber\": 155\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName114\",\n" +
+                "          \"country\": \"CANADA\",\n" +
+                "          \"postCode\": \"PostCode177\",\n" +
+                "          \"since\": \"2017-07-24\",\n" +
+                "          \"streetName\": \"StreetName173\",\n" +
+                "          \"streetNumber\": 156\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName115\",\n" +
+                "          \"country\": \"DENMARK\",\n" +
+                "          \"postCode\": \"PostCode178\",\n" +
+                "          \"since\": \"2017-07-25\",\n" +
+                "          \"streetName\": \"StreetName174\",\n" +
+                "          \"streetNumber\": 157\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"name\": \"TeamName2\"\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+                "Unexpected: since\n" +
+                " ; members[0]\n" +
+                "Unexpected: birthCountry\n" +
+                " ; members[1].currentAddress\n" +
+                "Unexpected: since\n" +
+                " ; members[1]\n" +
+                "Unexpected: birthCountry\n"));
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo(
+                    "members[0]\n" +
+                    "Unexpected: birthCountry\n" +
+                    " ; members[1]\n" +
+                    "Unexpected: birthCountry\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"lead\": {\n" +
+                    "    \"birthCountry\": \"HUNGARY\",\n" +
+                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"city\": \"CityName13\",\n" +
+                    "      \"country\": \"HUNGARY\",\n" +
+                    "      \"postCode\": \"PostCode76\",\n" +
+                    "      \"since\": \"2017-04-14\",\n" +
+                    "      \"streetName\": \"StreetName72\",\n" +
+                    "      \"streetNumber\": 55\n" +
+                    "    },\n" +
+                    "    \"email\": \"e13@e.mail\",\n" +
+                    "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"lastName\": \"LastName13\",\n" +
+                    "    \"previousAddresses\": [\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName23\",\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"postCode\": \"PostCode86\",\n" +
+                    "        \"since\": \"2017-04-24\",\n" +
+                    "        \"streetName\": \"StreetName82\",\n" +
+                    "        \"streetNumber\": 65\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName24\",\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"postCode\": \"PostCode87\",\n" +
+                    "        \"since\": \"2017-04-25\",\n" +
+                    "        \"streetName\": \"StreetName83\",\n" +
+                    "        \"streetNumber\": 66\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName25\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode88\",\n" +
+                    "        \"since\": \"2017-04-26\",\n" +
+                    "        \"streetName\": \"StreetName84\",\n" +
+                    "        \"streetNumber\": 67\n" +
+                    "      }\n" +
+                    "    ]\n" +
+                    "  },\n" +
+                    "  \"members\": [\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"EGYPT\",\n" +
+                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName102\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode165\",\n" +
+                    "        \"streetName\": \"StreetName161\",\n" +
+                    "        \"streetNumber\": 144\n" +
+                    "      },\n" +
+                    "      \"email\": \"e102@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"lastName\": \"LastName102\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName112\",\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"postCode\": \"PostCode175\",\n" +
+                    "          \"since\": \"2017-07-22\",\n" +
+                    "          \"streetName\": \"StreetName171\",\n" +
+                    "          \"streetNumber\": 154\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
+                    "          \"since\": \"2017-07-23\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"HUNGARY\",\n" +
+                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName103\",\n" +
+                    "        \"country\": \"FRANCE\",\n" +
+                    "        \"postCode\": \"PostCode166\",\n" +
+                    "        \"streetName\": \"StreetName162\",\n" +
+                    "        \"streetNumber\": 145\n" +
+                    "      },\n" +
+                    "      \"email\": \"e103@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"lastName\": \"LastName103\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
+                    "          \"since\": \"2017-07-23\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName114\",\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"postCode\": \"PostCode177\",\n" +
+                    "          \"since\": \"2017-07-24\",\n" +
+                    "          \"streetName\": \"StreetName173\",\n" +
+                    "          \"streetNumber\": 156\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName115\",\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"postCode\": \"PostCode178\",\n" +
+                    "          \"since\": \"2017-07-25\",\n" +
+                    "          \"streetName\": \"StreetName174\",\n" +
+                    "          \"streetNumber\": 157\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"name\": \"TeamName2\"\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"lead\": {\n" +
+                    "    \"birthCountry\": \"HUNGARY\",\n" +
+                    "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                    "    \"currentAddress\": {\n" +
+                    "      \"city\": \"CityName13\",\n" +
+                    "      \"country\": \"HUNGARY\",\n" +
+                    "      \"postCode\": \"PostCode76\",\n" +
+                    "      \"since\": \"2017-04-14\",\n" +
+                    "      \"streetName\": \"StreetName72\",\n" +
+                    "      \"streetNumber\": 55\n" +
+                    "    },\n" +
+                    "    \"email\": \"e13@e.mail\",\n" +
+                    "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"lastName\": \"LastName13\",\n" +
+                    "    \"previousAddresses\": [\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName23\",\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"postCode\": \"PostCode86\",\n" +
+                    "        \"since\": \"2017-04-24\",\n" +
+                    "        \"streetName\": \"StreetName82\",\n" +
+                    "        \"streetNumber\": 65\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName24\",\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"postCode\": \"PostCode87\",\n" +
+                    "        \"since\": \"2017-04-25\",\n" +
+                    "        \"streetName\": \"StreetName83\",\n" +
+                    "        \"streetNumber\": 66\n" +
+                    "      },\n" +
+                    "      {\n" +
+                    "        \"city\": \"CityName25\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode88\",\n" +
+                    "        \"since\": \"2017-04-26\",\n" +
+                    "        \"streetName\": \"StreetName84\",\n" +
+                    "        \"streetNumber\": 67\n" +
+                    "      }\n" +
+                    "    ]\n" +
+                    "  },\n" +
+                    "  \"members\": [\n" +
+                    "    {\n" +
+                    "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName102\",\n" +
+                    "        \"country\": \"EGYPT\",\n" +
+                    "        \"postCode\": \"PostCode165\",\n" +
+                    "        \"streetName\": \"StreetName161\",\n" +
+                    "        \"streetNumber\": 144\n" +
+                    "      },\n" +
+                    "      \"email\": \"e102@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"lastName\": \"LastName102\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName112\",\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"postCode\": \"PostCode175\",\n" +
+                    "          \"since\": \"2017-07-22\",\n" +
+                    "          \"streetName\": \"StreetName171\",\n" +
+                    "          \"streetNumber\": 154\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
+                    "          \"since\": \"2017-07-23\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName103\",\n" +
+                    "        \"country\": \"FRANCE\",\n" +
+                    "        \"postCode\": \"PostCode166\",\n" +
+                    "        \"streetName\": \"StreetName162\",\n" +
+                    "        \"streetNumber\": 145\n" +
+                    "      },\n" +
+                    "      \"email\": \"e103@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"lastName\": \"LastName103\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName113\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode176\",\n" +
+                    "          \"since\": \"2017-07-23\",\n" +
+                    "          \"streetName\": \"StreetName172\",\n" +
+                    "          \"streetNumber\": 155\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName114\",\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"postCode\": \"PostCode177\",\n" +
+                    "          \"since\": \"2017-07-24\",\n" +
+                    "          \"streetName\": \"StreetName173\",\n" +
+                    "          \"streetNumber\": 156\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName115\",\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"postCode\": \"PostCode178\",\n" +
+                    "          \"since\": \"2017-07-25\",\n" +
+                    "          \"streetName\": \"StreetName174\",\n" +
+                    "          \"streetNumber\": 157\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"name\": \"TeamName2\"\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "birthCountry shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "birthCountry shouldn't be present");
+        }, AssertionFailedError.class);
+
+    }
+
     public static Object[][] simpleDiffInList() {
         return new Object[][]{
                 {"Object input", Lists.newArrayList(modifyObject(generatePerson(1L), p -> {
@@ -2510,8 +2889,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].currentAddress.country\n" +
@@ -2519,7 +2898,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -2669,9 +3048,9 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  \"childBeanMap\": []\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBeanList.childString"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("childBeanList.childString"), null);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("childBeanList[0].childString\n" +
                     "Expected: kiwi\n" +
                     "     got: banana\n" +
@@ -2910,8 +3289,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].currentAddress.country\n" +
@@ -2919,7 +3298,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -3205,8 +3584,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName", "genericValue.currentAddress.country").ignoring("genericValue.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName", "genericValue.currentAddress.country").ignoring("genericValue.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; genericValue[1].currentAddress.country\n" +
@@ -3219,7 +3598,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "Expected: 2019-04-13\n" +
                 "     got: 2017-04-13\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName").ignoring("genericValue.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName").ignoring("genericValue.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[1].currentAddress.country\n" +
                     "Expected: HUNGARY\n" +
                     "     got: AUSTRIA\n"), thrown.getMessage());
@@ -3503,8 +3882,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("set.firstName", "set.currentAddress.country").ignoring("set.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("set[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName", "set.currentAddress.country").ignoring("set.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("set[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; set[1].currentAddress.country\n" +
@@ -3517,7 +3896,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "Expected: 2019-04-13\n" +
                 "     got: 2017-04-13\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("set.firstName").ignoring("set.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName").ignoring("set.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("set[1].currentAddress.country\n" +
                     "Expected: HUNGARY\n" +
                     "     got: AUSTRIA\n"), thrown.getMessage());
@@ -3831,8 +4210,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("p1.firstName", "p2.currentAddress.country").ignoring("p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p1.firstName", "p2.currentAddress.country").ignoring("p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].p2.currentAddress.country\n" +
@@ -3840,7 +4219,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -4232,8 +4611,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("genericValue.p1.firstName", "genericValue.p2.currentAddress.country").ignoring("genericValue.p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p1.firstName", "genericValue.p2.currentAddress.country").ignoring("genericValue.p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; genericValue[1].p2.currentAddress.country\n" +
@@ -4241,7 +4620,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; genericValue[2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("genericValue.p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -4638,8 +5017,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("map.p1.firstName", "map.p2.currentAddress.country").ignoring("map.p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p1.firstName", "map.p2.currentAddress.country").ignoring("map.p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; map[1].p2.currentAddress.country\n" +
@@ -4647,7 +5026,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; map[2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("map.p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -4882,8 +5261,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("TWO.string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("TWO.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[2].TWO.string\n" +
                     "Expected: value\n" +
                     "     got: unexpected value\n"), thrown.getMessage());
@@ -4987,8 +5366,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("2.string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("2.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[1].2.string\n" +
                     "Expected: value 2\n" +
                     "     got: unexpected value\n"), thrown.getMessage());
@@ -5151,8 +5530,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0][0]\n" +
                     "Expected: string\n" +
                     "     but none found\n"), thrown.getMessage());
@@ -5545,8 +5924,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  \"beanBoolean\": true\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("beanInt").ignoring("beanByte").ignoring("beanChar").ignoring("beanShort").ignoring("beanLong").ignoring("beanFloat").ignoring("beanDouble").ignoring("beanBoolean"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt").ignoring("beanByte").ignoring("beanChar").ignoring("beanShort").ignoring("beanLong").ignoring("beanFloat").ignoring("beanDouble").ignoring("beanBoolean"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
                     "Expected: true\n" +
                     "     got: false\n" +
@@ -5581,7 +5960,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
             Assertions.assertEquals(approvedFileContent, thrown.getExpected().getStringRepresentation());
         }, AssertionFailedError.class);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("beanInt"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
                     "Expected: true\n" +
                     "     got: false\n" +
@@ -5743,8 +6122,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("array.integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("array.integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "array[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");
@@ -5770,8 +6149,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");
@@ -5811,8 +6190,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");

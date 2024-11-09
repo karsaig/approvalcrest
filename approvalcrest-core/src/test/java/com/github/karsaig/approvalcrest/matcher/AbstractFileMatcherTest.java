@@ -4,11 +4,7 @@ package com.github.karsaig.approvalcrest.matcher;
 import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
-import com.github.karsaig.approvalcrest.util.InMemoryFiles;
-import com.github.karsaig.approvalcrest.util.InMemoryFsInfo;
-import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
-import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
-import com.github.karsaig.approvalcrest.util.PreBuilt;
+import com.github.karsaig.approvalcrest.util.*;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Assertions;
 
@@ -93,11 +89,19 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, String expectedExceptionMessage) {
-        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, Function.identity(), expectedExceptionMessage);
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, getDefaultFileMatcherConfig(), expectedExceptionMessage);
+    }
+
+    protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, FileMatcherConfig initialConfig, String expectedExceptionMessage) {
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, initialConfig, Function.identity(), expectedExceptionMessage);
     }
 
     protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, String expectedExceptionMessage) {
-        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, error.getMessage()), AssertionError.class);
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, getDefaultFileMatcherConfig(), configurator, expectedExceptionMessage);
+    }
+
+    protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, FileMatcherConfig initialConfig, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, String expectedExceptionMessage) {
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, initialConfig, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, error.getMessage()), AssertionError.class);
     }
 
     protected <T extends Throwable> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
@@ -264,23 +268,35 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfig() {
-        return new FileMatcherConfig(false, false, false, false, false);
+        return new FileMatcherConfig(false, false, false, false, false, true);
+    }
+
+    public static FileMatcherConfig getDefaultFileMatcherConfigWithLenientMatching() {
+        return new FileMatcherConfig(false, false, false, false, false, false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwrite() {
-        return new FileMatcherConfig(true, false, false, false, false);
+        return new FileMatcherConfig(true, false, false, false, false, true);
+    }
+
+    public static FileMatcherConfig enableInPlaceOverwriteNonStrict() {
+        return new FileMatcherConfig(true, false, false, false, false, false);
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-        return new FileMatcherConfig(false, true, false, false, false);
+        return new FileMatcherConfig(false, true, false, false, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false, false);
+        return new FileMatcherConfig(true, true, false, false, false, true);
+    }
+
+    public static FileMatcherConfig enableInPlaceOverwriteNonStrictAndPassOnCreate() {
+        return new FileMatcherConfig(true, true, false, false, false, false);
     }
 
     public static FileMatcherConfig enableExpectedFileSorting() {
-        return new FileMatcherConfig(false, false, false, false, true);
+        return new FileMatcherConfig(false, false, false, false, true, true);
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {
