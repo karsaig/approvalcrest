@@ -6,6 +6,7 @@ import com.google.gson.*;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
@@ -23,7 +24,12 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApprov
 //5f9b80
 public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
-    private BeanWithPrimitives actual = getBeanWithPrimitives();
+    private BeanWithPrimitives actual;
+
+    @Before
+    public void setUp() {
+        actual = getBeanWithPrimitives();
+    }
 
     //78b1d8
     @Test
