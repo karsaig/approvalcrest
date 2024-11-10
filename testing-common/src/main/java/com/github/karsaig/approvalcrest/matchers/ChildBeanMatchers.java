@@ -9,12 +9,10 @@
 */
 package com.github.karsaig.approvalcrest.matchers;
 
-import static org.hamcrest.core.IsEqual.equalTo;
-
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
-
-import com.github.karsaig.approvalcrest.testdata.ChildBean;
+import org.hamcrest.core.IsEqual;
 
 /**
  * Collection of Hamcrest matchers for {@link ChildBean}
@@ -22,7 +20,7 @@ import com.github.karsaig.approvalcrest.testdata.ChildBean;
 public class ChildBeanMatchers {
 
 	public static Matcher<ChildBean> childStringEqualTo(String string) {
-		return new FeatureMatcher<ChildBean, String>(equalTo(string), "having string field", "string field") {
+		return new FeatureMatcher<ChildBean, String>(IsEqual.equalTo(string), "having string field", "string field") {
 			@Override
 			protected String featureValueOf(ChildBean actual) {
 				return actual.getChildString();

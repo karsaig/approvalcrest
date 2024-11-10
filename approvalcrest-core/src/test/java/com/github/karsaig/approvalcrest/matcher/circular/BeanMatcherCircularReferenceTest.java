@@ -41,7 +41,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
         CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
 
-        assertDiagnosingMatcher(actual, expected, null);
+        assertDiagnosingMatcher(actual, expected);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         child2.setGenericObject(subRoot);
 
 
-        assertDiagnosingMatcher(actual, actual, null);
+        assertDiagnosingMatcher(actual, actual);
     }
 
     @Test
@@ -110,13 +110,13 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
     public void doesNotThrowStackOverflowErrorWhenCircularReferenceIsInTheSecondLevelUpperClass() {
         RuntimeException actual = new RuntimeException();
         RuntimeException expected = new RuntimeException();
-        assertDiagnosingMatcher(actual, expected, null);
+        assertDiagnosingMatcher(actual, expected);
     }
 
     @Test
     public void doesNotThrowStackOverflowExceptionWithAMoreNestedObject() {
         Throwable actual = new Throwable(new Exception(new RuntimeException(new ClassCastException())));
-        assertDiagnosingMatcher(actual, actual, null);
+        assertDiagnosingMatcher(actual, actual);
     }
 
     @Test
@@ -152,7 +152,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         expected.setOutput(new ByteArrayOutputStream());
 
 
-        assertDiagnosingMatcher(actual, expected, null);
+        assertDiagnosingMatcher(actual, expected);
     }
 
     @Test
@@ -178,7 +178,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         expected.setOnes(sqlException2);
 
 
-        assertDiagnosingMatcher(actual, expected, null);
+        assertDiagnosingMatcher(actual, expected);
     }
 
     @Test
@@ -200,7 +200,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
 
         child2.setGenericObject(subRoot);
 
-        assertDiagnosingMatcher(actual, actual, jsonMatcher -> jsonMatcher.skipCircularReferenceCheck(skipper1).withGsonConfiguration(config), null);
+        assertDiagnosingMatcherError(actual, actual, beanMatcher -> beanMatcher.skipCircularReferenceCheck(skipper1).withGsonConfiguration(config), null);
     }
 
     private class DummyOneJsonSerializer implements JsonDeserializer<One>, JsonSerializer<One> {
