@@ -3,6 +3,8 @@ package com.github.karsaig.approvalcrest.matcher.custom;
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
@@ -146,4 +148,12 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
                 "     but: string was null");
     }
 
+    @Disabled
+    @Test
+    public void matchesPropertyOfItemInCollectionWithCustomMatcher() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi").childInteger(5)).addToChildBeanList(child().childString("pear").childInteger(8)).build();
+        ParentBean actual = parent().addToChildBeanList(child().childString("apple").childInteger(6)).addToChildBeanList(child().childString("banana").childInteger(7)).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList.childString", Matchers.oneOf("apple","banana")));
+    }
 }

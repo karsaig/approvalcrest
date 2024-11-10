@@ -2,8 +2,14 @@ package com.github.karsaig.approvalcrest.util;
 
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
 
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.testdata.Person;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PreBuilt {
 
@@ -78,5 +84,174 @@ public class PreBuilt {
                 "    }\n" +
                 "  ]\n" +
                 "}";
+    }
+
+    public static List<Map<String, BeanWithGeneric<List<Map<String, String>>>>> getComplexListAndMap() {
+
+
+        Map<String, String> innerMap1 = new HashMap<>();
+        innerMap1.put("innerKey4", "innerValue4");
+        innerMap1.put("innerKey3", "innerValue3");
+        innerMap1.put("innerKey2", "innerValue2");
+        innerMap1.put("innerKey1", "innerValue1");
+
+        Map<String, String> innerMap2 = new HashMap<>();
+        innerMap2.put("innerKey24", "innerValue24");
+        innerMap2.put("innerKey23", "innerValue23");
+        innerMap2.put("innerKey22", "innerValue22");
+        innerMap2.put("innerKey21", "innerValue21");
+
+        List<Map<String, String>> innerList1 = new ArrayList<>();
+        innerList1.add(innerMap2);
+        innerList1.add(innerMap1);
+
+
+        BeanWithGeneric<List<Map<String, String>>> bean1 = new BeanWithGeneric<>("beanString1", innerList1);
+
+        Map<String, String> innerMap3 = new HashMap<>();
+        innerMap3.put("innerKey31", "innerValue31");
+        innerMap3.put("innerKey32", "innerValue32");
+        innerMap3.put("innerKey33", "innerValue33");
+        innerMap3.put("innerKey34", "innerValue34");
+
+        Map<String, String> innerMap4 = new HashMap<>();
+        innerMap4.put("innerKey41", "innerValue41");
+        innerMap4.put("innerKey42", "innerValue42");
+        innerMap4.put("innerKey43", "innerValue43");
+        innerMap4.put("innerKey44", "innerValue44");
+
+        List<Map<String, String>> innerList2 = new ArrayList<>();
+        innerList2.add(innerMap4);
+        innerList2.add(innerMap3);
+
+        BeanWithGeneric<List<Map<String, String>>> bean2 = new BeanWithGeneric<>("beanString2", innerList2);
+
+        Map<String, BeanWithGeneric<List<Map<String, String>>>> outerMap1 = new HashMap<>();
+        outerMap1.put("outerKey2", bean2);
+        outerMap1.put("outerKey1", bean1);
+
+
+
+
+
+        Map<String, String> innerMap5 = new HashMap<>();
+        innerMap5.put("innerKey1", "innerValue51");
+        innerMap5.put("innerKey2", "innerValue52");
+        innerMap5.put("innerKey3", "innerValue53");
+        innerMap5.put("innerKey4", "innerValue54");
+
+        List<Map<String, String>> innerList3 = new ArrayList<>();
+        innerList3.add(innerMap5);
+
+        BeanWithGeneric<List<Map<String, String>>> bean3 = new BeanWithGeneric<>("beanString3", innerList3);
+
+        Map<String, BeanWithGeneric<List<Map<String, String>>>> outerMap2 = new HashMap<>();
+        outerMap2.put("outerKey1", bean3);
+
+        List<Map<String, BeanWithGeneric<List<Map<String, String>>>>> result = new ArrayList<>();
+        result.add(outerMap2);
+        result.add(outerMap1);
+
+        return result;
+    }
+
+    public static String getComplexListAndMapAsJsonString() {
+        return "[\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"outerKey1\": {\n" +
+                "        \"dummyString\": \"beanString3\",\n" +
+                "        \"genericValue\": [\n" +
+                "          [\n" +
+                "            {\n" +
+                "              \"innerKey1\": \"innerValue51\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey2\": \"innerValue52\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey3\": \"innerValue53\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey4\": \"innerValue54\"\n" +
+                "            }\n" +
+                "          ]\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"outerKey1\": {\n" +
+                "        \"dummyString\": \"beanString1\",\n" +
+                "        \"genericValue\": [\n" +
+                "          [\n" +
+                "            {\n" +
+                "              \"innerKey21\": \"innerValue21\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey22\": \"innerValue22\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey23\": \"innerValue23\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey24\": \"innerValue24\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          [\n" +
+                "            {\n" +
+                "              \"innerKey1\": \"innerValue1\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey2\": \"innerValue2\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey3\": \"innerValue3\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey4\": \"innerValue4\"\n" +
+                "            }\n" +
+                "          ]\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"outerKey2\": {\n" +
+                "        \"dummyString\": \"beanString2\",\n" +
+                "        \"genericValue\": [\n" +
+                "          [\n" +
+                "            {\n" +
+                "              \"innerKey41\": \"innerValue41\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey42\": \"innerValue42\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey43\": \"innerValue43\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey44\": \"innerValue44\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          [\n" +
+                "            {\n" +
+                "              \"innerKey31\": \"innerValue31\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey32\": \"innerValue32\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey33\": \"innerValue33\"\n" +
+                "            },\n" +
+                "            {\n" +
+                "              \"innerKey34\": \"innerValue34\"\n" +
+                "            }\n" +
+                "          ]\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ]\n" +
+                "]";
     }
 }

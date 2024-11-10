@@ -10,6 +10,7 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
@@ -150,12 +151,7 @@ class GsonProvider {
         gsonBuilder.setExclusionStrategies(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes f) {
-                for (Matcher<String> p : matcherConfiguration.getPatternsToIgnore()) {
-                    if (p.matches(f.getName())) {
-                        return true;
-                    }
-                }
-                return false;
+                return anyMatchesFieldName(f.getName(), matcherConfiguration.getPatternsToIgnore());
             }
 
             @Override
