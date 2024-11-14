@@ -10,19 +10,37 @@
 package com.github.karsaig.approvalcrest;
 
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
-import org.junit.jupiter.api.Test;
+import org.junit.Assert;
+import org.junit.Test;
 
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.assertThat;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.sameBeanAs;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Tests which verify the possibility to match beans applying hamcrest matchers on specific fields.
+ * Tests which verify the diagnostic displayed when a custom matcher fails.
  */
-public class MatcherAssertCustomMatchingTest {
+public class BeanMatcherCustomMatchingTest {
+
+    @Test
+    public void includesDescriptionAndMismatchDescriptionForFailingMatcherOnPrimiteField() {
+        ParentBean.Builder expected = parent().childBean(child().childString("apple"));
+        ParentBean.Builder actual = parent().childBean(child().childString("banana"));
+
+        AssertionError ae = Assert.assertThrows(AssertionError.class, () -> assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi"))));
+        Assert.assertEquals("\n" +
+                "Expected: {\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}\n" +
+                "and childBean.childString \"kiwi\"\n" +
+                "     but: childBean.childString was \"banana\"", ae.getMessage());
+    }
 
     @Test
     public void matchesPrimitiveWithCustomMatcher() {
@@ -31,15 +49,4 @@ public class MatcherAssertCustomMatchingTest {
 
         assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("banana")));
     }
-
-    @Test
-    public void failsWhenCustomMatcherDoesNotMatchOnPrimitive() {
-        ParentBean.Builder expected = parent().childBean(child().childString("apple"));
-        ParentBean.Builder actual = parent().childBean(child().childString("banana"));
-
-        assertThrows(AssertionError.class, () -> {
-            assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("kiwi")));
-        });
-    }
-
 }

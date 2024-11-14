@@ -29,7 +29,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         ParentBean expected = parent().childBean(child().childString("apple")).build();
         ParentBean actual = parent().childBean(child().childString("banana")).build();
 
-        assertDiagnosingMatcherError(actual, expected, beanMatcher -> beanMatcher.with("childBean.childString", equalTo("kiwi")), "\n" +
+        assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean.childString", equalTo("kiwi")), "\n" +
                 "Expected: {\n" +
                 "  \"childBean\": {\n" +
                 "    \"childInteger\": 0\n" +
@@ -62,7 +62,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         ParentBean expected = parent().childBean(child().childString("apple")).build();
         ParentBean actual = parent().childBean(child().childString("banana")).build();
 
-        assertDiagnosingMatcherError(actual, expected, beanMatcher -> beanMatcher.with("childBean", childStringEqualTo("kiwi")), "\n" +
+        assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean", childStringEqualTo("kiwi")), "\n" +
                 "Expected: {\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": []\n" +
@@ -88,7 +88,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
         ParentBean actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana")).build();
 
-        assertDiagnosingMatcherError(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", hasItem(childStringEqualTo("kiwi"))), "\n" +
+        assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", hasItem(childStringEqualTo("kiwi"))), "\n" +
                 "Expected: {\n" +
                 "  \"childBeanMap\": []\n" +
                 "}\n" +
@@ -119,7 +119,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         ParentBean expected = parent().putToChildBeanMap("key", child().childString("apple")).build();
         ParentBean actual = parent().putToChildBeanMap("key", child().childString("banana")).build();
 
-        assertDiagnosingMatcherError(actual, expected, beanMatcher -> beanMatcher.with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))), "\n" +
+        assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))), "\n" +
                 "Expected: {\n" +
                 "  \"childBeanList\": []\n" +
                 "}\n" +
@@ -140,7 +140,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         Bean expected = bean().build();
         Bean actual = null;
 
-        assertDiagnosingMatcherError(actual, expected, beanMatcher -> beanMatcher.with("string", startsWith("field")), "\n" +
+        assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("string", startsWith("field")), "\n" +
                 "Expected: {\n" +
                 "  \"integer\": 0\n" +
                 "}\n" +

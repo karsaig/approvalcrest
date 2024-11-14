@@ -117,8 +117,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));
         init();
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        if (createNotApprovedFileIfNotExists(actual, gson)
-                && fileMatcherConfig.isPassOnCreateEnabled()) {
+        if (createNotApprovedFileIfNotExists(actual, gson) && fileMatcherConfig.isPassOnCreateEnabled()) {
             return true;
         }
         initExpectedFromFile();
