@@ -73,6 +73,18 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     <V> U with(String fieldPath, Matcher<V> matcher);
 
     /**
+     * Specify the pattern of field names to be matched with a specific matcher.
+     * Example:
+     * <pre>sameBeanAs(expected).with(is("subBeanField"), contains("element"))</pre>
+     *
+     * @param fieldNamePattern the Hamcrest matcher used to match field names.
+     * @param matcher          the Hamcrest matcher used to match the specified field.
+     * @param <V>              type of actual object to match
+     * @return the instance of the matcher
+     */
+    <V> U with(Matcher<String> fieldNamePattern, Matcher<V> matcher);
+
+    /**
      * Specify a custom configuration for the Gson, for example, providing additional TypeAdapters.
      *
      * @param configuration {@link GsonConfiguration} object, containing TypeAdapterFactories, TypeAdapters and
@@ -164,4 +176,21 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      */
     U sortField(String... fieldPaths);
+
+    /**
+     * Specify the path of the field to be processed with the given processor.
+     * Can be used to replace values, replace some parts of it etc.
+     *
+     *
+     * Example:
+     * <pre>sameBeanAs(expected).with("beanField.subBeanField", value -> )</pre>
+     *
+     * @param fieldPath the path of the field to be matched with the provided matcher.
+     * @param matcher   the Hamcrest matcher used to match the specified field.
+     * @param <V>       type of actual object to match
+     * @return the instance of the matcher
+     */
+    U process(String fieldPath, Function<Object, String> processor);
+
+    U process(Matcher<String> fieldNamePattern, Function<Object, String> processor);
 }

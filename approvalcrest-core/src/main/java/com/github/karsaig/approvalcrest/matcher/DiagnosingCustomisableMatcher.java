@@ -10,7 +10,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
-import com.github.karsaig.approvalcrest.PathNullPointerException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.hamcrest.Description;
@@ -19,15 +18,11 @@ import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;

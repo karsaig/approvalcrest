@@ -62,7 +62,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
         if (expected.isParsedJson()) {
-            description.appendText(filterJson(gson, expected.getParsedContent(), true, false, false));
+            description.appendText(filterJson(gson, expected.getParsedContent(), true, false, false, false));
         } else {
             description.appendText(expected.getOriginalContent());
         }
@@ -122,11 +122,12 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         }
         initExpectedFromFile();
 
+
         if (areCustomMatchersMatching(actual, mismatchDescription, gson, matcherConfiguration)) {
 
             String expectedJson = expected.getOriginalContent();
             if (expected.isParsedJson()) {
-                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictMatching(), fileMatcherConfig.isStrictMatching());
+                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictMatching(), fileMatcherConfig.isStrictMatching(), false);
             }
 
             JsonElement actualJsonElement = getAsJsonElement(gson, actual);
@@ -134,7 +135,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             if (actual == null) {
                 matches = appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
             } else {
-                String actualJson = filterJson(gson, actualJsonElement, true, false, false);
+                String actualJson = filterJson(gson, actualJsonElement, true, false, false, true);
 
                 matches = assertEquals(expectedJson, actualJson, mismatchDescription);
                 if (!matches) {
@@ -187,15 +188,25 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         });
     }
 
-    private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings) {
-        Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
+    private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings, boolean applyCustomMatchers) {
+        Set<String> set = skipIgnores ? new HashSet<>() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
         filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
         sortJsonFields(filteredJson, sortFile);
         applySorting(filteredJson, skipCustomSortings ? emptySet() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
-        return removeSetMarker(gson.toJson(filteredJson));
+        String filteredJsonAsString = removeSetMarker(gson.toJson(filteredJson));
+        if (!applyCustomMatchers || matcherConfiguration.getCustomMatchers().isEmpty()) {
+            return filteredJsonAsString;
+        }
+        JsonElement jsonElementForCustomMatching = JsonParser.parseString(filteredJsonAsString);
+        matchCustomMatchersAndGetMatchingPaths(jsonElementForCustomMatching, matcherConfiguration.getCustomMatchers());
+        return gson.toJson(jsonElementForCustomMatching);
+    }
+
+    private void matchCustomMatchersAndGetMatchingPaths(JsonElement jsonElement, Map<String, Matcher<?>> customMatchers) {
+
     }
 
     private void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
@@ -269,7 +280,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
-        return filterJson(gson, actualJsonElement, true, false, false);
+        return filterJson(gson, actualJsonElement, true, false, false, true);
     }
 
     @Override

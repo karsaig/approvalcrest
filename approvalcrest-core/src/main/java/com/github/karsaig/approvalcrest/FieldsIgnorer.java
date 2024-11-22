@@ -340,4 +340,33 @@ public class FieldsIgnorer {
     private static String headOf(Collection<String> paths) {
         return paths.iterator().next();
     }
+
+    static class PathPair<X> {
+
+        static <X> PathPair<X> of(X matcher, String fullPath, String currentPath) {
+            return new PathPair<>(matcher, fullPath, currentPath);
+        }
+
+        private final X matcher;
+        private final String fullPath;
+        private final String currentPath;
+
+        public PathPair(X matcher, String fullPath, String currentPath) {
+            this.matcher = matcher;
+            this.fullPath = fullPath;
+            this.currentPath = currentPath;
+        }
+
+        public X getMatcher() {
+            return matcher;
+        }
+
+        public String getFullPath() {
+            return fullPath;
+        }
+
+        public String getCurrentPath() {
+            return currentPath;
+        }
+    }
 }

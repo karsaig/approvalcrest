@@ -40,25 +40,27 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
     }
 
     protected boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson, MatcherConfiguration matcherConfiguration) {
-        Map<Object, Matcher<?>> customMatching = new HashMap<>();
-        for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            try {
-                Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
-                customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
-            } catch (PathNullPointerException e) {
-                mismatchDescription.appendText(String.format("parent bean of %s is null", e.getPath()));
-                return false;
+        if (!String.class.isInstance(actual)) {
+            Map<Object, Matcher<?>> customMatching = new HashMap<>();
+            for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
+                try {
+                    Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
+                    customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
+                } catch (PathNullPointerException e) {
+                    mismatchDescription.appendText(String.format("parent bean of %s is null", e.getPath()));
+                    return false;
+                }
             }
-        }
 
-        for (Map.Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
-            Matcher<?> matcher = entry.getValue();
-            Object object = entry.getKey();
-            if (!matcher.matches(object)) {
-                appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
-                matcher.describeMismatch(object, mismatchDescription);
-                appendFieldJsonSnippet(object, mismatchDescription, gson);
-                return false;
+            for (Map.Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
+                Matcher<?> matcher = entry.getValue();
+                Object object = entry.getKey();
+                if (!matcher.matches(object)) {
+                    appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
+                    matcher.describeMismatch(object, mismatchDescription);
+                    appendFieldJsonSnippet(object, mismatchDescription, gson);
+                    return false;
+                }
             }
         }
         return true;
