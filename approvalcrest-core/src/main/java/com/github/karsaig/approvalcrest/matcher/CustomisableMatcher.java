@@ -11,6 +11,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import org.hamcrest.Matcher;
 
+import java.util.Map;
 import java.util.function.Function;
 
 
@@ -77,12 +78,12 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * Example:
      * <pre>sameBeanAs(expected).with(is("subBeanField"), contains("element"))</pre>
      *
-     * @param fieldNamePattern the Hamcrest matcher used to match field names.
+     * @param fieldNameMatcher the Hamcrest matcher used to match field names.
      * @param matcher          the Hamcrest matcher used to match the specified field.
      * @param <V>              type of actual object to match
      * @return the instance of the matcher
      */
-    <V> U with(Matcher<String> fieldNamePattern, Matcher<V> matcher);
+    <V> U with(Matcher<String> fieldNameMatcher, Matcher<V> matcher);
 
     /**
      * Specify a custom configuration for the Gson, for example, providing additional TypeAdapters.
@@ -186,11 +187,28 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * <pre>sameBeanAs(expected).with("beanField.subBeanField", value -> )</pre>
      *
      * @param fieldPath the path of the field to be matched with the provided matcher.
-     * @param matcher   the Hamcrest matcher used to match the specified field.
-     * @param <V>       type of actual object to match
+     * @param processor Processor to apply on the value of field matched by fieldPath
      * @return the instance of the matcher
      */
-    U process(String fieldPath, Function<Object, String> processor);
+    U process(String fieldPath, Function<Object, Object> processor);
 
-    U process(Matcher<String> fieldNamePattern, Function<Object, String> processor);
+    U process(Map<String, Function<Object, Object>> processors);
+
+    /**
+     * Specify the path of the field to be processed with the given processor.
+     * Can be used to replace values, replace some parts of it etc.
+     *
+     *
+     * Example:
+     * <pre>sameBeanAs(expected).with("beanField.subBeanField", value -> )</pre>
+     *
+     * @param fieldNameMatcher the Hamcrest matcher used to match field names.
+     * @param processor Processor to apply on the value of field matched by fieldPath
+     * @return the instance of the matcher
+     */
+    U process(Matcher<String> fieldNameMatcher, Function<Object, Object> processor);
+
+    U process(Function<Object, Object> processor);
+
+
 }
