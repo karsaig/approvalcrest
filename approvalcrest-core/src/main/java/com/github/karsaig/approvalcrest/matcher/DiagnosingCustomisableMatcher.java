@@ -65,7 +65,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected, matcherConfiguration));
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
 
-        if (!areCustomMatchersMatching(actual, mismatchDescription, gson)) {
+        if (!areCustomMatchersMatching(actual, mismatchDescription, gson, matcherConfiguration)) {
             return false;
         }
 
@@ -80,30 +80,6 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         return assertEquals(expectedJson, actualJson, mismatchDescription);
     }
 
-    private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription, Gson gson) {
-        Map<Object, Matcher<?>> customMatching = new HashMap<>();
-        for (Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            try {
-                Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
-                customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
-            } catch (PathNullPointerException e) {
-                mismatchDescription.appendText(String.format("parent bean of %s is null", e.getPath()));
-                return false;
-            }
-        }
-
-        for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
-            Matcher<?> matcher = entry.getValue();
-            Object object = entry.getKey();
-            if (!matcher.matches(object)) {
-                appendFieldPath(matcher, mismatchDescription);
-                matcher.describeMismatch(object, mismatchDescription);
-                appendFieldJsonSnippet(object, mismatchDescription, gson);
-                return false;
-            }
-        }
-        return true;
-    }
 
     @Override
     public DiagnosingCustomisableMatcher<T> ignoring(String fieldPath) {
@@ -152,21 +128,6 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         }
 
         return true;
-    }
-
-    private void appendFieldJsonSnippet(Object actual, Description mismatchDescription, Gson gson) {
-        JsonElement jsonTree = gson.toJsonTree(actual);
-        if (!jsonTree.isJsonPrimitive() && !jsonTree.isJsonNull()) {
-            mismatchDescription.appendText("\n" + gson.toJson(actual));
-        }
-    }
-
-    private void appendFieldPath(Matcher<?> matcher, Description mismatchDescription) {
-        for (Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            if (entry.getValue().equals(matcher)) {
-                mismatchDescription.appendText(entry.getKey()).appendText(" ");
-            }
-        }
     }
 
     private String filterJson(Gson gson, Object object) {

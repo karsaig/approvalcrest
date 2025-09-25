@@ -11,12 +11,10 @@ import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.*;
 
@@ -122,7 +120,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         }
         initExpectedFromFile();
 
-        if (areCustomMatchersMatching(actual, mismatchDescription, gson)) {
+        if (areCustomMatchersMatching(actual, mismatchDescription, gson, matcherConfiguration)) {
 
             String expectedJson = expected.getOriginalContent();
             if (expected.isParsedJson()) {
@@ -135,7 +133,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             if (actual == null) {
                 matches = appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
             } else {
-                String actualJson = filterJson(gson, actualJsonElement, true,false);
+                String actualJson = filterJson(gson, actualJsonElement, true, false);
 
                 matches = assertEquals(expectedJson, actualJson, mismatchDescription);
                 if (!matches) {
@@ -261,44 +259,6 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
         return filterJson(gson, actualJsonElement, true, false);
-    }
-
-
-    private boolean areCustomMatchersMatching(Object actual, Description mismatchDescription,
-                                              Gson gson) {
-        boolean result = true;
-        Map<Object, Matcher<?>> customMatching = new HashMap<>();
-        for (Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            Object object = actual == null ? null : findBeanAt(entry.getKey(), actual);
-            customMatching.put(object, matcherConfiguration.getCustomMatchers().get(entry.getKey()));
-        }
-
-        for (Entry<Object, Matcher<?>> entry : customMatching.entrySet()) {
-            Matcher<?> matcher = entry.getValue();
-            Object object = entry.getKey();
-            if (!matcher.matches(object)) {
-                appendFieldPath(matcher, mismatchDescription);
-                matcher.describeMismatch(object, mismatchDescription);
-                appendFieldJsonSnippet(object, mismatchDescription, gson);
-                result = false;
-            }
-        }
-        return result;
-    }
-
-    private void appendFieldJsonSnippet(Object actual, Description mismatchDescription, Gson gson) {
-        JsonElement jsonTree = gson.toJsonTree(actual);
-        if (!jsonTree.isJsonPrimitive() && !jsonTree.isJsonNull()) {
-            mismatchDescription.appendText("\n" + gson.toJson(actual));
-        }
-    }
-
-    private void appendFieldPath(Matcher<?> matcher, Description mismatchDescription) {
-        for (Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            if (entry.getValue().equals(matcher)) {
-                mismatchDescription.appendText(entry.getKey()).appendText(" ");
-            }
-        }
     }
 
     @Override
