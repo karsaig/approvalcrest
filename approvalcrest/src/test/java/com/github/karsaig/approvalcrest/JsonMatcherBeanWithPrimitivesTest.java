@@ -1,26 +1,18 @@
 package com.github.karsaig.approvalcrest;
 
-import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
-import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;
-
-import java.lang.reflect.Type;
-
+import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
+import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.google.gson.*;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
-import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
-import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import java.lang.reflect.Type;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
+import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApproved;
 
 /**
  * Unit tests which verify the basic usage of the
@@ -28,30 +20,38 @@ import com.google.gson.JsonSerializer;
  *
  * @author Andras_Gyuro
  */
+//5f9b80
 public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
-    private BeanWithPrimitives actual;
+    private BeanWithPrimitives actual = getBeanWithPrimitives();
 
-    @Before
-    public void setUp() {
-        actual = getBeanWithPrimitives();
-    }
-
+    //78b1d8
     @Test
     public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJson() {
         assertThat(actual, sameJsonAsApproved());
     }
 
-    @Test(expected = ComparisonFailure.class)
+    //964370
+    @Test
     public void shouldThrowAssertionErrorWhenModelDiffersFromApprovedJson() {
-        assertThat(actual, sameJsonAsApproved());
+        ComparisonFailure ex = Assert.assertThrows(ComparisonFailure.class, () -> assertThat(actual, sameJsonAsApproved()));
+        assertThat(ex.getMessage(), Matchers.stringContainsInOrder("Expected file 5f9b80/964370-approved.json", "Expected: 3.1", "got: 3.0"));
     }
 
+    //10b21f
     @Test
     public void shouldNotThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnored() {
         assertThat(actual, sameJsonAsApproved().ignoring("beanLong").ignoring("beanBoolean"));
     }
 
+    //e32435
+    @Test
+    public void shouldThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnoredAndIgnoredFieldsPresentInApprovedFile() {
+        ComparisonFailure ex = Assert.assertThrows(ComparisonFailure.class, () -> assertThat(actual, sameJsonAsApproved().ignoring("beanLong").ignoring("beanBoolean")));
+        assertThat(ex.getMessage(), Matchers.stringContainsInOrder("Expected file 5f9b80/e32435-approved.json", "Expected: beanBoolean", "but none found"));
+    }
+
+    //6057b5
     @Test
     public void shouldNotThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnoredWithMatcher() {
         Matcher<String> endsWithLongMatcher = Matchers.endsWith("Long");

@@ -31,6 +31,7 @@ import com.google.gson.JsonSerializer;
  *
  * @author Andras_Gyuro
  */
+//5f9b80
 public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
     private BeanWithPrimitives actual;
@@ -40,21 +41,30 @@ public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
         actual = getBeanWithPrimitives();
     }
 
+    //78b1d8
     @Test
     public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJson() {
         assertThat(actual, sameJsonAsApproved());
     }
 
+    //964370
     @Test
     public void shouldThrowAssertionErrorWhenModelDiffersFromApprovedJson() {
-        assertThrows(AssertionFailedError.class, () -> {
-            assertThat(actual, sameJsonAsApproved());
-        });
+        AssertionFailedError ae = assertThrows(AssertionFailedError.class, () -> assertThat(actual, sameJsonAsApproved()));
+        assertThat(ae.getMessage(), Matchers.stringContainsInOrder("Expected file 5f9b80/964370-approved.json", "Expected: 3.1", "got: 3.0"));
     }
 
+    //10b21f
     @Test
     public void shouldNotThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnored() {
         assertThat(actual, sameJsonAsApproved().ignoring("beanLong").ignoring("beanBoolean"));
+    }
+
+    //e32435
+    @Test
+    public void shouldThrowAssertionErrorWhenModelDiffersFromApprovedJsonButFieldIsIgnoredAndIgnoredFieldsPresentInApprovedFile() {
+        AssertionFailedError ae = assertThrows(AssertionFailedError.class, () -> assertThat(actual, sameJsonAsApproved().ignoring("beanLong").ignoring("beanBoolean")));
+        assertThat(ae.getMessage(), Matchers.stringContainsInOrder("Expected file 5f9b80/e32435-approved.json", "Expected: beanBoolean", "but none found"));
     }
 
     @Test
