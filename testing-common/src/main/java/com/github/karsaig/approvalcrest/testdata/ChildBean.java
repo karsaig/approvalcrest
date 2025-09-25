@@ -48,4 +48,12 @@ public class ChildBean {
 			return new ChildBean(this);
 		}
 	}
+
+	@Override
+	public String toString() {
+		return "ChildBean{" +
+				"childString='" + childString + '\'' +
+				", childInteger=" + childInteger +
+				'}';
+	}
 }

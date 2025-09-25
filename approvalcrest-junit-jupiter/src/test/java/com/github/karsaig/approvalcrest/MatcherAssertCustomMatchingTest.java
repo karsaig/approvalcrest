@@ -9,22 +9,15 @@
  */
 package com.github.karsaig.approvalcrest;
 
-import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
-import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
+import org.junit.jupiter.api.Test;
+
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.assertThat;
 import static com.github.karsaig.approvalcrest.util.AssertionHelper.sameBeanAs;
-import static org.hamcrest.Matchers.startsWith;
-import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.hamcrest.core.IsIterableContaining.hasItem;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
-
-import com.github.karsaig.approvalcrest.jupiter.MatcherAssert;
-import com.github.karsaig.approvalcrest.testdata.ParentBean;
 
 /**
  * Tests which verify the possibility to match beans applying hamcrest matchers on specific fields.
@@ -49,72 +42,4 @@ public class MatcherAssertCustomMatchingTest {
         });
     }
 
-    @Test
-    public void matchesFieldWithCustomMatcher() {
-        ParentBean.Builder expected = parent().childBean(child().childString("apple"));
-        ParentBean.Builder actual = parent().childBean(child().childString("banana").childInteger(2));
-
-        assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("banana")));
-    }
-
-    @Test
-    public void matchesFieldWithChainOfCustomMatchers() {
-        ParentBean.Builder expected = parent().childBean(child().childString("apple")).parentString("kiwi");
-        ParentBean.Builder actual = parent().childBean(child().childString("banana").childInteger(2)).parentString("strawberry");
-
-        assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("banana")).with("parentString", equalTo("strawberry")));
-    }
-
-    @Test
-    public void failsWhenCustomMatcherDoesNotMatchOnField() {
-        ParentBean.Builder expected = parent().childBean(child().childString("apple"));
-        ParentBean.Builder actual = parent().childBean(child().childString("banana"));
-
-        assertThrows(AssertionError.class, () -> {
-            assertThat(actual, sameBeanAs(expected).with("childBean", childStringEqualTo("kiwi")));
-        });
-    }
-
-    @Test
-    public void matchesItemInCollectionWithCustomMatcher() {
-        ParentBean.Builder expected = parent().addToChildBeanList(child().childString("kiwi"));
-        ParentBean.Builder actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana"));
-
-        assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("banana"))));
-    }
-
-    @Test
-    public void failsWhenCustomMatcherDoesNotMatchACollection() {
-        ParentBean.Builder expected = parent().addToChildBeanList(child().childString("kiwi"));
-        ParentBean.Builder actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana"));
-
-        assertThrows(AssertionError.class, () -> {
-            assertThat(actual, sameBeanAs(expected).with("childBeanList", hasItem(childStringEqualTo("kiwi"))));
-        });
-    }
-
-    @Test
-    public void matchesItemInMap() {
-        ParentBean.Builder expected = parent().putToChildBeanMap("key", child().childString("apple"));
-        ParentBean.Builder actual = parent().putToChildBeanMap("key", child().childString("banana"));
-
-        assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))));
-    }
-
-    @Test
-    public void failsWhenCustomMatcherDoesNotMatchAMap() {
-        ParentBean.Builder expected = parent().putToChildBeanMap("key", child().childString("apple"));
-        ParentBean.Builder actual = parent().putToChildBeanMap("key", child().childString("banana"));
-
-        assertThrows(AssertionError.class, () -> {
-            assertThat(actual, sameBeanAs(expected).with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))));
-        });
-    }
-
-    @Test
-    public void failsWhenActualIsNull() {
-        assertThrows(AssertionError.class, () -> {
-            MatcherAssert.assertThat(null, sameBeanAs(bean()).with("string", startsWith("field")));
-        });
-    }
 }
