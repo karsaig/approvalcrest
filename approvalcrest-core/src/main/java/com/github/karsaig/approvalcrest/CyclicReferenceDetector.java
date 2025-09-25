@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest;
 
+import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.newSetFromMap;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
@@ -82,7 +83,7 @@ public class CyclicReferenceDetector {
             
             if (!isStatic(field.getModifiers())) {
                 try {
-                    if (!isFieldnameIgnored(field, matcherConfiguration.getPatternsToIgnore())) {
+                    if (!anyMatchesFieldName(field, matcherConfiguration.getPatternsToIgnore())) {
                         Object fieldValue = field.get(object);
                         if (fieldValue != null) {
                             detectCircularReferenceOnObject(fieldValue, matcherConfiguration);
@@ -96,14 +97,7 @@ public class CyclicReferenceDetector {
         detectCircularReferencesFromTheSuperClass(object, clazz, matcherConfiguration);
     }
 
-    private boolean isFieldnameIgnored(Field field, List<Matcher<String>> patternsToIgnore) {
-        for (Matcher<String> matcher : patternsToIgnore) {
-            if (matcher.matches(field.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
+
 
     /**
      * Detects circular reference on a given field.

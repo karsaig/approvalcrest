@@ -9,22 +9,10 @@
  */
 package com.github.karsaig.approvalcrest;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.hamcrest.Matcher;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.max;
@@ -71,36 +59,51 @@ public class FieldsIgnorer {
         return set;
     }
 
-    private static void findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments) {
-        String field = headOf(pathSegments);
-
+    private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments) {
         if (jsonElement.isJsonArray()) {
             Iterator<JsonElement> iterator = jsonElement.getAsJsonArray().iterator();
+            boolean result = false;
             while (iterator.hasNext()) {
                 JsonElement arrayElement = iterator.next();
                 if (arrayElement.isJsonNull()) {
                     continue;
                 }
-                findPath(arrayElement, pathToFind, pathSegments);
+                boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments);
+                if (ignoredElement && JsonElementUtil.isEmpty(arrayElement)) {
+                    iterator.remove();
+                    result |= true;
+                }
             }
+            return result;
         } else {
+            String field = headOf(pathSegments);
             if (pathSegments.size() == 1) {
-                ignorePath(jsonElement, pathToFind);
+                return ignorePath(jsonElement, pathToFind);
             } else {
                 if (jsonElement.isJsonObject()) {
-                    JsonElement child = jsonElement.getAsJsonObject().get(field);
+                    JsonObject jo = jsonElement.getAsJsonObject();
+                    JsonElement child = jo.get(field);
                     if (child == null) {
-                        child = jsonElement.getAsJsonObject().get(MARKER + field);
+                        child = jo.get(MARKER + field);
                         if (child == null) {
-                            return;
+                            return false;
                         }
                         List<String> tail = pathSegments.subList(1, pathSegments.size());
-                        findPath(child, pathToFind, tail);
+                        boolean changed = findPath(child, pathToFind, tail);
+                        if (changed && JsonElementUtil.isEmpty(child)) {
+                            jo.remove(field);
+                            return true;
+                        }
                     } else {
                         List<String> tail = pathSegments.subList(1, pathSegments.size());
-                        findPath(child, pathToFind, tail);
+                        boolean changed = findPath(child, pathToFind, tail);
+                        if (changed && JsonElementUtil.isEmpty(child)) {
+                            jo.remove(field);
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
         }
     }
@@ -313,14 +316,16 @@ public class FieldsIgnorer {
         return result;
     }
 
-    private static void ignorePath(JsonElement jsonElement, String pathToIgnore) {
+    private static boolean ignorePath(JsonElement jsonElement, String pathToIgnore) {
         if (!jsonElement.isJsonNull()) {
             if (!jsonElement.isJsonObject()) {
                 throw new IllegalArgumentException();
             }
-            jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore));
-            jsonElement.getAsJsonObject().remove(MARKER + getLastSegmentOf(pathToIgnore));
+            boolean removedElement = jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore)) != null;
+            removedElement |= jsonElement.getAsJsonObject().remove(MARKER + getLastSegmentOf(pathToIgnore)) != null;
+            return removedElement;
         }
+        return false;
     }
 
     private static String getLastSegmentOf(String fieldPath) {

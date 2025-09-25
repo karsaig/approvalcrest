@@ -88,6 +88,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         });
     }
 
+
     protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, String expectedExceptionMessage) {
         assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, getDefaultFileMatcherConfig(), expectedExceptionMessage);
     }
@@ -297,6 +298,10 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
 
     public static FileMatcherConfig enableExpectedFileSorting() {
         return new FileMatcherConfig(false, false, false, false, true, true);
+    }
+
+    public static FileMatcherConfig enableExpectedFileSortingWithLenientMatching() {
+        return new FileMatcherConfig(false, false, false, false, true, false);
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {

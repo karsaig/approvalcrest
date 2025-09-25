@@ -19,10 +19,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
-import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.*;
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.is;
@@ -508,7 +507,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     "  \"beanLong\": 5,\n" +
                     "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
-                    "     but: Expected file "+basePath+"/src/test/contents/single-line-2\n" +
+                    "     but: Expected file " + basePath + "/src/test/contents/single-line-2\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
@@ -3087,7 +3086,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                     "  \"beanLong\": 5,\n" +
                     "  \"beanString\": \"Different content\"\n" +
                     "}\n" +
-                    "     but: Expected file "+basePath+"/notHash/single-line-2\n" +
+                    "     but: Expected file " + basePath + "/notHash/single-line-2\n" +
                     "\n" +
                     "Expected: beanInt\n" +
                     "     but none found\n" +
@@ -3119,4 +3118,947 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         });
     }
 
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("expectedFileSortingTestcases")
+    public void testingExplicitSortingByPathOfExpectedFileShouldThrowWhenExpectedFileDiffersAndInStrictMode(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"array\": [\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"HUNGARY\",\n" +
+                "      \"birthDate\": \"2011-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName6\",\n" +
+                "        \"country\": \"HUNGARY\",\n" +
+                "        \"postCode\": \"PostCode69\",\n" +
+                "        \"since\": \"2017-04-07\",\n" +
+                "        \"streetName\": \"StreetName65\",\n" +
+                "        \"streetNumber\": 48\n" +
+                "      },\n" +
+                "      \"email\": \"e6@e.mail\",\n" +
+                "      \"firstName\": \"FirstName6\",\n" +
+                "      \"lastName\": \"LastName6\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName16\",\n" +
+                "          \"country\": \"CANADA\",\n" +
+                "          \"postCode\": \"PostCode79\",\n" +
+                "          \"since\": \"2017-04-17\",\n" +
+                "          \"streetName\": \"StreetName75\",\n" +
+                "          \"streetNumber\": 58\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"AUSTRIA\",\n" +
+                "      \"birthDate\": \"2010-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName7\",\n" +
+                "        \"country\": \"AUSTRIA\",\n" +
+                "        \"postCode\": \"PostCode70\",\n" +
+                "        \"since\": \"2017-04-08\",\n" +
+                "        \"streetName\": \"StreetName66\",\n" +
+                "        \"streetNumber\": 49\n" +
+                "      },\n" +
+                "      \"email\": \"e7@e.mail\",\n" +
+                "      \"firstName\": \"FirstName7\",\n" +
+                "      \"lastName\": \"LastName7\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName17\",\n" +
+                "          \"country\": \"DENMARK\",\n" +
+                "          \"postCode\": \"PostCode80\",\n" +
+                "          \"since\": \"2017-04-18\",\n" +
+                "          \"streetName\": \"StreetName76\",\n" +
+                "          \"streetNumber\": 59\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName18\",\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"postCode\": \"PostCode81\",\n" +
+                "          \"since\": \"2017-04-19\",\n" +
+                "          \"streetName\": \"StreetName77\",\n" +
+                "          \"streetNumber\": 60\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName8\",\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"postCode\": \"PostCode71\",\n" +
+                "        \"since\": \"2017-04-09\",\n" +
+                "        \"streetName\": \"StreetName67\",\n" +
+                "        \"streetNumber\": 50\n" +
+                "      },\n" +
+                "      \"email\": \"e8@e.mail\",\n" +
+                "      \"firstName\": \"FirstName8\",\n" +
+                "      \"lastName\": \"LastName8\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName18\",\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"postCode\": \"PostCode81\",\n" +
+                "          \"since\": \"2017-04-19\",\n" +
+                "          \"streetName\": \"StreetName77\",\n" +
+                "          \"streetNumber\": 60\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName19\",\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"postCode\": \"PostCode82\",\n" +
+                "          \"since\": \"2017-04-20\",\n" +
+                "          \"streetName\": \"StreetName78\",\n" +
+                "          \"streetNumber\": 61\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName20\",\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"postCode\": \"PostCode83\",\n" +
+                "          \"since\": \"2017-04-21\",\n" +
+                "          \"streetName\": \"StreetName79\",\n" +
+                "          \"streetNumber\": 62\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"dummyString\": \"String1\",\n" +
+                "  \"hashMap\": [\n" +
+                "    {\n" +
+                "      \"p1\": {\n" +
+                "        \"birthCountry\": \"EGYPT\",\n" +
+                "        \"birthDate\": \"2013-04-01T13:42:11\",\n" +
+                "        \"currentAddress\": {\n" +
+                "          \"city\": \"CityName4\",\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"postCode\": \"PostCode67\",\n" +
+                "          \"since\": \"2017-04-05\",\n" +
+                "          \"streetName\": \"StreetName63\",\n" +
+                "          \"streetNumber\": 46\n" +
+                "        },\n" +
+                "        \"email\": \"e4@e.mail\",\n" +
+                "        \"firstName\": \"FirstName4\",\n" +
+                "        \"lastName\": \"LastName4\",\n" +
+                "        \"previousAddresses\": [\n" +
+                "          {\n" +
+                "            \"city\": \"CityName14\",\n" +
+                "            \"country\": \"AUSTRIA\",\n" +
+                "            \"postCode\": \"PostCode77\",\n" +
+                "            \"since\": \"2017-04-15\",\n" +
+                "            \"streetName\": \"StreetName73\",\n" +
+                "            \"streetNumber\": 56\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"city\": \"CityName15\",\n" +
+                "            \"country\": \"BELGIUM\",\n" +
+                "            \"postCode\": \"PostCode78\",\n" +
+                "            \"since\": \"2017-04-16\",\n" +
+                "            \"streetName\": \"StreetName74\",\n" +
+                "            \"streetNumber\": 57\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"city\": \"CityName16\",\n" +
+                "            \"country\": \"CANADA\",\n" +
+                "            \"postCode\": \"PostCode79\",\n" +
+                "            \"since\": \"2017-04-17\",\n" +
+                "            \"streetName\": \"StreetName75\",\n" +
+                "            \"streetNumber\": 58\n" +
+                "          },\n" +
+                "          {\n" +
+                "            \"city\": \"CityName17\",\n" +
+                "            \"country\": \"DENMARK\",\n" +
+                "            \"postCode\": \"PostCode80\",\n" +
+                "            \"since\": \"2017-04-18\",\n" +
+                "            \"streetName\": \"StreetName76\",\n" +
+                "            \"streetNumber\": 59\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      }\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"p2\": {\n" +
+                "        \"birthCountry\": \"FRANCE\",\n" +
+                "        \"birthDate\": \"2012-04-01T13:42:11\",\n" +
+                "        \"currentAddress\": {\n" +
+                "          \"city\": \"CityName5\",\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"postCode\": \"PostCode68\",\n" +
+                "          \"since\": \"2017-04-06\",\n" +
+                "          \"streetName\": \"StreetName64\",\n" +
+                "          \"streetNumber\": 47\n" +
+                "        },\n" +
+                "        \"email\": \"e5@e.mail\",\n" +
+                "        \"firstName\": \"FirstName5\",\n" +
+                "        \"lastName\": \"LastName5\",\n" +
+                "        \"previousAddresses\": []\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"set\": [\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"BELGIUM\",\n" +
+                "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName1\",\n" +
+                "        \"country\": \"BELGIUM\",\n" +
+                "        \"postCode\": \"PostCode64\",\n" +
+                "        \"since\": \"2017-04-02\",\n" +
+                "        \"streetName\": \"StreetName60\",\n" +
+                "        \"streetNumber\": 43\n" +
+                "      },\n" +
+                "      \"email\": \"e1@e.mail\",\n" +
+                "      \"firstName\": \"FirstName1\",\n" +
+                "      \"lastName\": \"LastName1\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName11\",\n" +
+                "          \"country\": \"EGYPT\",\n" +
+                "          \"postCode\": \"PostCode74\",\n" +
+                "          \"since\": \"2017-04-12\",\n" +
+                "          \"streetName\": \"StreetName70\",\n" +
+                "          \"streetNumber\": 53\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"CANADA\",\n" +
+                "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName2\",\n" +
+                "        \"country\": \"CANADA\",\n" +
+                "        \"postCode\": \"PostCode65\",\n" +
+                "        \"since\": \"2017-04-03\",\n" +
+                "        \"streetName\": \"StreetName61\",\n" +
+                "        \"streetNumber\": 44\n" +
+                "      },\n" +
+                "      \"email\": \"e2@e.mail\",\n" +
+                "      \"firstName\": \"FirstName2\",\n" +
+                "      \"lastName\": \"LastName2\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName12\",\n" +
+                "          \"country\": \"FRANCE\",\n" +
+                "          \"postCode\": \"PostCode75\",\n" +
+                "          \"since\": \"2017-04-13\",\n" +
+                "          \"streetName\": \"StreetName71\",\n" +
+                "          \"streetNumber\": 54\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"birthCountry\": \"DENMARK\",\n" +
+                "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                "      \"currentAddress\": {\n" +
+                "        \"city\": \"CityName3\",\n" +
+                "        \"country\": \"DENMARK\",\n" +
+                "        \"postCode\": \"PostCode66\",\n" +
+                "        \"since\": \"2017-04-04\",\n" +
+                "        \"streetName\": \"StreetName62\",\n" +
+                "        \"streetNumber\": 45\n" +
+                "      },\n" +
+                "      \"email\": \"e3@e.mail\",\n" +
+                "      \"firstName\": \"FirstName3\",\n" +
+                "      \"lastName\": \"LastName3\",\n" +
+                "      \"previousAddresses\": [\n" +
+                "        {\n" +
+                "          \"city\": \"CityName13\",\n" +
+                "          \"country\": \"HUNGARY\",\n" +
+                "          \"postCode\": \"PostCode76\",\n" +
+                "          \"since\": \"2017-04-14\",\n" +
+                "          \"streetName\": \"StreetName72\",\n" +
+                "          \"streetNumber\": 55\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName14\",\n" +
+                "          \"country\": \"AUSTRIA\",\n" +
+                "          \"postCode\": \"PostCode77\",\n" +
+                "          \"since\": \"2017-04-15\",\n" +
+                "          \"streetName\": \"StreetName73\",\n" +
+                "          \"streetNumber\": 56\n" +
+                "        },\n" +
+                "        {\n" +
+                "          \"city\": \"CityName15\",\n" +
+                "          \"country\": \"BELGIUM\",\n" +
+                "          \"postCode\": \"PostCode78\",\n" +
+                "          \"since\": \"2017-04-16\",\n" +
+                "          \"streetName\": \"StreetName74\",\n" +
+                "          \"streetNumber\": 57\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator = jsonMatcher -> jsonMatcher.sortField("array", "array.previousAddresses", "set.previousAddresses", "hashMap.p1.previousAddresses", "hashMap", "set");
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(), configurator, null, null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSorting(), configurator, thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("array[0].birthCountry\n" +
+                    "Expected: HUNGARY\n" +
+                    "     got: AUSTRIA\n" +
+                    " ; array[0].birthDate\n" +
+                    "Expected: 2011-04-01T13:42:11\n" +
+                    "     got: 2010-04-01T13:42:11\n" +
+                    " ; array[0].currentAddress.city\n" +
+                    "Expected: CityName6\n" +
+                    "     got: CityName7\n" +
+                    " ; array[0].currentAddress.country\n" +
+                    "Expected: HUNGARY\n" +
+                    "     got: AUSTRIA\n" +
+                    " ; array[0].currentAddress.postCode\n" +
+                    "Expected: PostCode69\n" +
+                    "     got: PostCode70\n" +
+                    " ; array[0].currentAddress.since\n" +
+                    "Expected: 2017-04-07\n" +
+                    "     got: 2017-04-08\n" +
+                    " ; array[0].currentAddress.streetName\n" +
+                    "Expected: StreetName65\n" +
+                    "     got: StreetName66\n" +
+                    " ; array[0].currentAddress.streetNumber\n" +
+                    "Expected: 48\n" +
+                    "     got: 49\n" +
+                    " ; array[0].email\n" +
+                    "Expected: e6@e.mail\n" +
+                    "     got: e7@e.mail\n" +
+                    " ; array[0].firstName\n" +
+                    "Expected: FirstName6\n" +
+                    "     got: FirstName7\n" +
+                    " ; array[0].lastName\n" +
+                    "Expected: LastName6\n" +
+                    "     got: LastName7\n" +
+                    " ; array[0].previousAddresses[]: Expected 1 values but got 2 ; array[1].birthCountry\n" +
+                    "Expected: AUSTRIA\n" +
+                    "     got: BELGIUM\n" +
+                    " ; array[1].birthDate\n" +
+                    "Expected: 2010-04-01T13:42:11\n" +
+                    "     got: 2009-04-01T13:42:11\n" +
+                    " ; array[1].currentAddress.city\n" +
+                    "Expected: CityName7\n" +
+                    "     got: CityName8\n" +
+                    " ; array[1].currentAddress.country\n" +
+                    "Expected: AUSTRIA\n" +
+                    "     got: BELGIUM\n" +
+                    " ; array[1].currentAddress.postCode\n" +
+                    "Expected: PostCode70\n" +
+                    "     got: PostCode71\n" +
+                    " ; array[1].currentAddress.since\n" +
+                    "Expected: 2017-04-08\n" +
+                    "     got: 2017-04-09\n" +
+                    " ; array[1].currentAddress.streetName\n" +
+                    "Expected: StreetName66\n" +
+                    "     got: StreetName67\n" +
+                    " ; array[1].currentAddress.streetNumber\n" +
+                    "Expected: 49\n" +
+                    "     got: 50\n" +
+                    " ; array[1].email\n" +
+                    "Expected: e7@e.mail\n" +
+                    "     got: e8@e.mail\n" +
+                    " ; array[1].firstName\n" +
+                    "Expected: FirstName7\n" +
+                    "     got: FirstName8\n" +
+                    " ; array[1].lastName\n" +
+                    "Expected: LastName7\n" +
+                    "     got: LastName8\n" +
+                    " ; array[1].previousAddresses[]: Expected 2 values but got 3 ; array[2].birthCountry\n" +
+                    "Expected: BELGIUM\n" +
+                    "     got: HUNGARY\n" +
+                    " ; array[2].birthDate\n" +
+                    "Expected: 2009-04-01T13:42:11\n" +
+                    "     got: 2011-04-01T13:42:11\n" +
+                    " ; array[2].currentAddress.city\n" +
+                    "Expected: CityName8\n" +
+                    "     got: CityName6\n" +
+                    " ; array[2].currentAddress.country\n" +
+                    "Expected: BELGIUM\n" +
+                    "     got: HUNGARY\n" +
+                    " ; array[2].currentAddress.postCode\n" +
+                    "Expected: PostCode71\n" +
+                    "     got: PostCode69\n" +
+                    " ; array[2].currentAddress.since\n" +
+                    "Expected: 2017-04-09\n" +
+                    "     got: 2017-04-07\n" +
+                    " ; array[2].currentAddress.streetName\n" +
+                    "Expected: StreetName67\n" +
+                    "     got: StreetName65\n" +
+                    " ; array[2].currentAddress.streetNumber\n" +
+                    "Expected: 50\n" +
+                    "     got: 48\n" +
+                    " ; array[2].email\n" +
+                    "Expected: e8@e.mail\n" +
+                    "     got: e6@e.mail\n" +
+                    " ; array[2].firstName\n" +
+                    "Expected: FirstName8\n" +
+                    "     got: FirstName6\n" +
+                    " ; array[2].lastName\n" +
+                    "Expected: LastName8\n" +
+                    "     got: LastName6\n" +
+                    " ; array[2].previousAddresses[]: Expected 3 values but got 1"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"array\": [\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"AUSTRIA\",\n" +
+                    "      \"birthDate\": \"2010-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName7\",\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"postCode\": \"PostCode70\",\n" +
+                    "        \"since\": \"2017-04-08\",\n" +
+                    "        \"streetName\": \"StreetName66\",\n" +
+                    "        \"streetNumber\": 49\n" +
+                    "      },\n" +
+                    "      \"email\": \"e7@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"lastName\": \"LastName7\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName17\",\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"postCode\": \"PostCode80\",\n" +
+                    "          \"since\": \"2017-04-18\",\n" +
+                    "          \"streetName\": \"StreetName76\",\n" +
+                    "          \"streetNumber\": 59\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName18\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode81\",\n" +
+                    "          \"since\": \"2017-04-19\",\n" +
+                    "          \"streetName\": \"StreetName77\",\n" +
+                    "          \"streetNumber\": 60\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName8\",\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"postCode\": \"PostCode71\",\n" +
+                    "        \"since\": \"2017-04-09\",\n" +
+                    "        \"streetName\": \"StreetName67\",\n" +
+                    "        \"streetNumber\": 50\n" +
+                    "      },\n" +
+                    "      \"email\": \"e8@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"lastName\": \"LastName8\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName18\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode81\",\n" +
+                    "          \"since\": \"2017-04-19\",\n" +
+                    "          \"streetName\": \"StreetName77\",\n" +
+                    "          \"streetNumber\": 60\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName19\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode82\",\n" +
+                    "          \"since\": \"2017-04-20\",\n" +
+                    "          \"streetName\": \"StreetName78\",\n" +
+                    "          \"streetNumber\": 61\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName20\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode83\",\n" +
+                    "          \"since\": \"2017-04-21\",\n" +
+                    "          \"streetName\": \"StreetName79\",\n" +
+                    "          \"streetNumber\": 62\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"HUNGARY\",\n" +
+                    "      \"birthDate\": \"2011-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName6\",\n" +
+                    "        \"country\": \"HUNGARY\",\n" +
+                    "        \"postCode\": \"PostCode69\",\n" +
+                    "        \"since\": \"2017-04-07\",\n" +
+                    "        \"streetName\": \"StreetName65\",\n" +
+                    "        \"streetNumber\": 48\n" +
+                    "      },\n" +
+                    "      \"email\": \"e6@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"lastName\": \"LastName6\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName16\",\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"postCode\": \"PostCode79\",\n" +
+                    "          \"since\": \"2017-04-17\",\n" +
+                    "          \"streetName\": \"StreetName75\",\n" +
+                    "          \"streetNumber\": 58\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"birthCountry\": \"EGYPT\",\n" +
+                    "        \"birthDate\": \"2013-04-01T13:42:11\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"city\": \"CityName4\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode67\",\n" +
+                    "          \"since\": \"2017-04-05\",\n" +
+                    "          \"streetName\": \"StreetName63\",\n" +
+                    "          \"streetNumber\": 46\n" +
+                    "        },\n" +
+                    "        \"email\": \"e4@e.mail\",\n" +
+                    "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"lastName\": \"LastName4\",\n" +
+                    "        \"previousAddresses\": [\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName14\",\n" +
+                    "            \"country\": \"AUSTRIA\",\n" +
+                    "            \"postCode\": \"PostCode77\",\n" +
+                    "            \"since\": \"2017-04-15\",\n" +
+                    "            \"streetName\": \"StreetName73\",\n" +
+                    "            \"streetNumber\": 56\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName15\",\n" +
+                    "            \"country\": \"BELGIUM\",\n" +
+                    "            \"postCode\": \"PostCode78\",\n" +
+                    "            \"since\": \"2017-04-16\",\n" +
+                    "            \"streetName\": \"StreetName74\",\n" +
+                    "            \"streetNumber\": 57\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName16\",\n" +
+                    "            \"country\": \"CANADA\",\n" +
+                    "            \"postCode\": \"PostCode79\",\n" +
+                    "            \"since\": \"2017-04-17\",\n" +
+                    "            \"streetName\": \"StreetName75\",\n" +
+                    "            \"streetNumber\": 58\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName17\",\n" +
+                    "            \"country\": \"DENMARK\",\n" +
+                    "            \"postCode\": \"PostCode80\",\n" +
+                    "            \"since\": \"2017-04-18\",\n" +
+                    "            \"streetName\": \"StreetName76\",\n" +
+                    "            \"streetNumber\": 59\n" +
+                    "          }\n" +
+                    "        ]\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"birthCountry\": \"FRANCE\",\n" +
+                    "        \"birthDate\": \"2012-04-01T13:42:11\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"city\": \"CityName5\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode68\",\n" +
+                    "          \"since\": \"2017-04-06\",\n" +
+                    "          \"streetName\": \"StreetName64\",\n" +
+                    "          \"streetNumber\": 47\n" +
+                    "        },\n" +
+                    "        \"email\": \"e5@e.mail\",\n" +
+                    "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"lastName\": \"LastName5\",\n" +
+                    "        \"previousAddresses\": []\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"set\": [\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43\n" +
+                    "      },\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName11\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode74\",\n" +
+                    "          \"since\": \"2017-04-12\",\n" +
+                    "          \"streetName\": \"StreetName70\",\n" +
+                    "          \"streetNumber\": 53\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44\n" +
+                    "      },\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName12\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode75\",\n" +
+                    "          \"since\": \"2017-04-13\",\n" +
+                    "          \"streetName\": \"StreetName71\",\n" +
+                    "          \"streetNumber\": 54\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName13\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode76\",\n" +
+                    "          \"since\": \"2017-04-14\",\n" +
+                    "          \"streetName\": \"StreetName72\",\n" +
+                    "          \"streetNumber\": 55\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45\n" +
+                    "      },\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName13\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode76\",\n" +
+                    "          \"since\": \"2017-04-14\",\n" +
+                    "          \"streetName\": \"StreetName72\",\n" +
+                    "          \"streetNumber\": 55\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName14\",\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"postCode\": \"PostCode77\",\n" +
+                    "          \"since\": \"2017-04-15\",\n" +
+                    "          \"streetName\": \"StreetName73\",\n" +
+                    "          \"streetNumber\": 56\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName15\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode78\",\n" +
+                    "          \"since\": \"2017-04-16\",\n" +
+                    "          \"streetName\": \"StreetName74\",\n" +
+                    "          \"streetNumber\": 57\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"array\": [\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"HUNGARY\",\n" +
+                    "      \"birthDate\": \"2011-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName6\",\n" +
+                    "        \"country\": \"HUNGARY\",\n" +
+                    "        \"postCode\": \"PostCode69\",\n" +
+                    "        \"since\": \"2017-04-07\",\n" +
+                    "        \"streetName\": \"StreetName65\",\n" +
+                    "        \"streetNumber\": 48\n" +
+                    "      },\n" +
+                    "      \"email\": \"e6@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"lastName\": \"LastName6\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName16\",\n" +
+                    "          \"country\": \"CANADA\",\n" +
+                    "          \"postCode\": \"PostCode79\",\n" +
+                    "          \"since\": \"2017-04-17\",\n" +
+                    "          \"streetName\": \"StreetName75\",\n" +
+                    "          \"streetNumber\": 58\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"AUSTRIA\",\n" +
+                    "      \"birthDate\": \"2010-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName7\",\n" +
+                    "        \"country\": \"AUSTRIA\",\n" +
+                    "        \"postCode\": \"PostCode70\",\n" +
+                    "        \"since\": \"2017-04-08\",\n" +
+                    "        \"streetName\": \"StreetName66\",\n" +
+                    "        \"streetNumber\": 49\n" +
+                    "      },\n" +
+                    "      \"email\": \"e7@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"lastName\": \"LastName7\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName17\",\n" +
+                    "          \"country\": \"DENMARK\",\n" +
+                    "          \"postCode\": \"PostCode80\",\n" +
+                    "          \"since\": \"2017-04-18\",\n" +
+                    "          \"streetName\": \"StreetName76\",\n" +
+                    "          \"streetNumber\": 59\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName18\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode81\",\n" +
+                    "          \"since\": \"2017-04-19\",\n" +
+                    "          \"streetName\": \"StreetName77\",\n" +
+                    "          \"streetNumber\": 60\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName8\",\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"postCode\": \"PostCode71\",\n" +
+                    "        \"since\": \"2017-04-09\",\n" +
+                    "        \"streetName\": \"StreetName67\",\n" +
+                    "        \"streetNumber\": 50\n" +
+                    "      },\n" +
+                    "      \"email\": \"e8@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"lastName\": \"LastName8\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName18\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode81\",\n" +
+                    "          \"since\": \"2017-04-19\",\n" +
+                    "          \"streetName\": \"StreetName77\",\n" +
+                    "          \"streetNumber\": 60\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName19\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode82\",\n" +
+                    "          \"since\": \"2017-04-20\",\n" +
+                    "          \"streetName\": \"StreetName78\",\n" +
+                    "          \"streetNumber\": 61\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName20\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode83\",\n" +
+                    "          \"since\": \"2017-04-21\",\n" +
+                    "          \"streetName\": \"StreetName79\",\n" +
+                    "          \"streetNumber\": 62\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": [\n" +
+                    "    {\n" +
+                    "      \"p1\": {\n" +
+                    "        \"birthCountry\": \"EGYPT\",\n" +
+                    "        \"birthDate\": \"2013-04-01T13:42:11\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"city\": \"CityName4\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode67\",\n" +
+                    "          \"since\": \"2017-04-05\",\n" +
+                    "          \"streetName\": \"StreetName63\",\n" +
+                    "          \"streetNumber\": 46\n" +
+                    "        },\n" +
+                    "        \"email\": \"e4@e.mail\",\n" +
+                    "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"lastName\": \"LastName4\",\n" +
+                    "        \"previousAddresses\": [\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName14\",\n" +
+                    "            \"country\": \"AUSTRIA\",\n" +
+                    "            \"postCode\": \"PostCode77\",\n" +
+                    "            \"since\": \"2017-04-15\",\n" +
+                    "            \"streetName\": \"StreetName73\",\n" +
+                    "            \"streetNumber\": 56\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName15\",\n" +
+                    "            \"country\": \"BELGIUM\",\n" +
+                    "            \"postCode\": \"PostCode78\",\n" +
+                    "            \"since\": \"2017-04-16\",\n" +
+                    "            \"streetName\": \"StreetName74\",\n" +
+                    "            \"streetNumber\": 57\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName16\",\n" +
+                    "            \"country\": \"CANADA\",\n" +
+                    "            \"postCode\": \"PostCode79\",\n" +
+                    "            \"since\": \"2017-04-17\",\n" +
+                    "            \"streetName\": \"StreetName75\",\n" +
+                    "            \"streetNumber\": 58\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"city\": \"CityName17\",\n" +
+                    "            \"country\": \"DENMARK\",\n" +
+                    "            \"postCode\": \"PostCode80\",\n" +
+                    "            \"since\": \"2017-04-18\",\n" +
+                    "            \"streetName\": \"StreetName76\",\n" +
+                    "            \"streetNumber\": 59\n" +
+                    "          }\n" +
+                    "        ]\n" +
+                    "      }\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"p2\": {\n" +
+                    "        \"birthCountry\": \"FRANCE\",\n" +
+                    "        \"birthDate\": \"2012-04-01T13:42:11\",\n" +
+                    "        \"currentAddress\": {\n" +
+                    "          \"city\": \"CityName5\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode68\",\n" +
+                    "          \"since\": \"2017-04-06\",\n" +
+                    "          \"streetName\": \"StreetName64\",\n" +
+                    "          \"streetNumber\": 47\n" +
+                    "        },\n" +
+                    "        \"email\": \"e5@e.mail\",\n" +
+                    "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"lastName\": \"LastName5\",\n" +
+                    "        \"previousAddresses\": []\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  \"set\": [\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"BELGIUM\",\n" +
+                    "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName1\",\n" +
+                    "        \"country\": \"BELGIUM\",\n" +
+                    "        \"postCode\": \"PostCode64\",\n" +
+                    "        \"since\": \"2017-04-02\",\n" +
+                    "        \"streetName\": \"StreetName60\",\n" +
+                    "        \"streetNumber\": 43\n" +
+                    "      },\n" +
+                    "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"lastName\": \"LastName1\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName11\",\n" +
+                    "          \"country\": \"EGYPT\",\n" +
+                    "          \"postCode\": \"PostCode74\",\n" +
+                    "          \"since\": \"2017-04-12\",\n" +
+                    "          \"streetName\": \"StreetName70\",\n" +
+                    "          \"streetNumber\": 53\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"CANADA\",\n" +
+                    "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName2\",\n" +
+                    "        \"country\": \"CANADA\",\n" +
+                    "        \"postCode\": \"PostCode65\",\n" +
+                    "        \"since\": \"2017-04-03\",\n" +
+                    "        \"streetName\": \"StreetName61\",\n" +
+                    "        \"streetNumber\": 44\n" +
+                    "      },\n" +
+                    "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"lastName\": \"LastName2\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName12\",\n" +
+                    "          \"country\": \"FRANCE\",\n" +
+                    "          \"postCode\": \"PostCode75\",\n" +
+                    "          \"since\": \"2017-04-13\",\n" +
+                    "          \"streetName\": \"StreetName71\",\n" +
+                    "          \"streetNumber\": 54\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName13\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode76\",\n" +
+                    "          \"since\": \"2017-04-14\",\n" +
+                    "          \"streetName\": \"StreetName72\",\n" +
+                    "          \"streetNumber\": 55\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"birthCountry\": \"DENMARK\",\n" +
+                    "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"currentAddress\": {\n" +
+                    "        \"city\": \"CityName3\",\n" +
+                    "        \"country\": \"DENMARK\",\n" +
+                    "        \"postCode\": \"PostCode66\",\n" +
+                    "        \"since\": \"2017-04-04\",\n" +
+                    "        \"streetName\": \"StreetName62\",\n" +
+                    "        \"streetNumber\": 45\n" +
+                    "      },\n" +
+                    "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"lastName\": \"LastName3\",\n" +
+                    "      \"previousAddresses\": [\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName13\",\n" +
+                    "          \"country\": \"HUNGARY\",\n" +
+                    "          \"postCode\": \"PostCode76\",\n" +
+                    "          \"since\": \"2017-04-14\",\n" +
+                    "          \"streetName\": \"StreetName72\",\n" +
+                    "          \"streetNumber\": 55\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName14\",\n" +
+                    "          \"country\": \"AUSTRIA\",\n" +
+                    "          \"postCode\": \"PostCode77\",\n" +
+                    "          \"since\": \"2017-04-15\",\n" +
+                    "          \"streetName\": \"StreetName73\",\n" +
+                    "          \"streetNumber\": 56\n" +
+                    "        },\n" +
+                    "        {\n" +
+                    "          \"city\": \"CityName15\",\n" +
+                    "          \"country\": \"BELGIUM\",\n" +
+                    "          \"postCode\": \"PostCode78\",\n" +
+                    "          \"since\": \"2017-04-16\",\n" +
+                    "          \"streetName\": \"StreetName74\",\n" +
+                    "          \"streetNumber\": 57\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "no explicit sorting applied");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "no explicit sorting applied");
+        }, AssertionFailedError.class);
+    }
 }

@@ -1,28 +1,27 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
-import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
-import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
-import static java.util.function.Function.identity;
-import static org.hamcrest.Matchers.is;
-
-import java.time.LocalDate;
-import java.util.Collections;
-
+import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.github.karsaig.approvalcrest.testdata.Country;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
 
-import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
-import com.github.karsaig.approvalcrest.testdata.Country;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.function.Function;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
+import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generateTeam;
+import static java.util.function.Function.identity;
+import static org.hamcrest.Matchers.is;
 
-public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
+public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest {
 
 
     public static Object[][] simpleDiffCases() {
@@ -2398,8 +2397,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "  \"name\": \"TeamName2\"\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring(is("since"), is("birthCountry")), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring(is("since"), is("birthCountry")), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress\n" +
                 "Unexpected: since\n" +
                 " ; lead.previousAddresses[0]\n" +
                 "Unexpected: since\n" +
@@ -2428,7 +2427,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 " ; members[1]\n" +
                 "Unexpected: birthCountry\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring(is("since")), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring(is("since")), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo(
                     "lead\n" +
                             "Unexpected: birthCountry\n" +
@@ -5151,5 +5150,75 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractFileMatcherTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfoForNotApprovedFile(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(is("since"), is("birthCountry"), is("name")).ignoring(is("lastName")).ignoring(is("email")));
+    }
+
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreStringKeyWithMatcherInMapShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreStringKeyInMapShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring(is("key3")));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreEveryStringKeyWithMatcherInMapShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreEveryStringKeyInMapShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring(is("key3"), is("key1"), is("key4"), is("key2")));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreStringKeyWithMatcherInMapShouldNotLeaveEmptyApprovedContainingDifferentValue(String testName, Object input) {
+        ignoreStringKeyInMapShouldNotLeaveEmptyApprovedContainingDifferentValue(testName, input, jsonMatcher -> jsonMatcher.ignoring("key3"));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapInCollectionCases")
+    void ignoreStringKeyWithMatcherInMapInCollectionShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreStringKeyInMapInCollectionShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring(is("innerKey1"), is("innerKey2"), is("innerKey3"), is("innerKey4")));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathWithPrimitives")
+    void ignoreEveryFieldInBeanShouldNotLeaveEmpty(String testName, Object input) {
+        if (testName.contains("Object input")) {
+            ignoreEveryFieldInBeanShouldNotLeaveEmptyObjectCase(testName, input, jsonMatcher -> jsonMatcher.ignoring(is("childInteger"), is("childString")));
+        } else {
+            ignoreEveryFieldInBeanShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring(is("childInteger"), is("childString")));
+        }
+    }
+
+    protected void ignoreEveryFieldInBeanShouldNotLeaveEmptyObjectCase(String testName, Object input, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {},\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), configurator, null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), configurator, null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), identity(), thrown -> {
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("childBean\n" +
+                    "Unexpected: childInteger\n" +
+                    " ; childBean\n" +
+                    "Unexpected: childString\n"), thrown.getMessage());
+
+            String actual = "{\n" +
+                    "  \"childBean\": {\n" +
+                    "    \"childInteger\": 0,\n" +
+                    "    \"childString\": \"banana\"\n" +
+                    "  },\n" +
+                    "  \"childBeanList\": [],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}";
+
+            String expected = "{\n" +
+                    "  \"childBean\": {},\n" +
+                    "  \"childBeanList\": [],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}";
+
+            Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "beanInt shouldn't be present");
+            Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "beanInt shouldn't be present");
+        }, AssertionFailedError.class);
     }
 }

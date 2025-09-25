@@ -1,12 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
-import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
-import com.github.karsaig.approvalcrest.testdata.Bean;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
-import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
-import com.github.karsaig.approvalcrest.testdata.ChildBean;
-import com.github.karsaig.approvalcrest.testdata.Country;
-import com.github.karsaig.approvalcrest.testdata.TestEnum;
+import com.github.karsaig.approvalcrest.testdata.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -29,7 +23,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.util.function.Function.identity;
 
 
-public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
+public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
 
     public static Object[][] simpleDiffCases() {
         return new Object[][]{
@@ -91,8 +85,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("firstName\n" +
                     "Expected: Different first name\n" +
                     "     got: FirstName1\n"), thrown.getMessage());
@@ -354,8 +348,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("\n" +
                 "Expected: firstName\n" +
                 "     but none found\n"));
     }
@@ -613,9 +607,9 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("lead.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("lead.currentAddress.since"), null);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("lead.currentAddress.since\n" +
                 "Expected: 2020-04-21\n" +
                 "     got: 2020-12-25\n"));
     }
@@ -873,8 +867,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "    }\n" +
                 "  ]\n" +
                 "}";
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
                 "Expected: 2019-12-25\n" +
                 "     got: 2020-12-25\n"));
 
@@ -1132,8 +1126,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
                 "Expected: since\n" +
                 "     but none found\n"));
     }
@@ -1387,8 +1381,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
                 "Unexpected: since\n"));
     }
 
@@ -1456,15 +1450,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName").ignoring("lastName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName").ignoring("lastName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; lastName\n" +
                 "Expected: LastName1\n" +
                 "     got: Different last name\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("lastName\n" +
                     "Expected: LastName1\n" +
                     "     got: Different last name\n"), thrown.getMessage());
@@ -1588,8 +1582,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "lastName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "lastName"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; lastName\n" +
@@ -1661,15 +1655,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since").ignoring("currentAddress.country"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since").ignoring("currentAddress.country"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                 "Expected: BELGIUM\n" +
                 "     got: HUNGARY\n" +
                 " ; currentAddress.since\n" +
                 "Expected: 2017-04-02\n" +
                 "     got: 2020-12-25\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                     "Expected: BELGIUM\n" +
                     "     got: HUNGARY\n"), thrown.getMessage());
@@ -1793,8 +1787,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since", "currentAddress.country"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("currentAddress.since", "currentAddress.country"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("currentAddress.country\n" +
                 "Expected: BELGIUM\n" +
                 "     got: HUNGARY\n" +
                 " ; currentAddress.since\n" +
@@ -2057,15 +2051,15 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
                 "Expected: 2019-12-25\n" +
                 "     got: 2020-12-25\n" +
                 " ; members[1].birthCountry\n" +
                 "Expected: FRANCE\n" +
                 "     got: HUNGARY\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("members[1].birthCountry\n" +
                     "Expected: FRANCE\n" +
                     "     got: HUNGARY\n"), thrown.getMessage());
@@ -2434,8 +2428,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  \"name\": \"TeamName2\"\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since", "members.birthCountry"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
                 "Unexpected: since\n" +
                 " ; members[0]\n" +
                 "Unexpected: birthCountry\n" +
@@ -2444,12 +2438,12 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 " ; members[1]\n" +
                 "Unexpected: birthCountry\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo(
                     "members[0]\n" +
-                    "Unexpected: birthCountry\n" +
-                    " ; members[1]\n" +
-                    "Unexpected: birthCountry\n"), thrown.getMessage());
+                            "Unexpected: birthCountry\n" +
+                            " ; members[1]\n" +
+                            "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
                     "  \"lead\": {\n" +
@@ -2889,8 +2883,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].currentAddress.country\n" +
@@ -2898,7 +2892,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -3048,9 +3042,9 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  \"childBeanMap\": []\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("childBeanList.childString"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("childBeanList.childString"), null);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("childBeanList[0].childString\n" +
                     "Expected: kiwi\n" +
                     "     got: banana\n" +
@@ -3289,8 +3283,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName", "currentAddress.country").ignoring("previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].currentAddress.country\n" +
@@ -3298,7 +3292,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -3584,8 +3578,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName", "genericValue.currentAddress.country").ignoring("genericValue.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName", "genericValue.currentAddress.country").ignoring("genericValue.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; genericValue[1].currentAddress.country\n" +
@@ -3598,7 +3592,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "Expected: 2019-04-13\n" +
                 "     got: 2017-04-13\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName").ignoring("genericValue.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.firstName").ignoring("genericValue.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[1].currentAddress.country\n" +
                     "Expected: HUNGARY\n" +
                     "     got: AUSTRIA\n"), thrown.getMessage());
@@ -3882,8 +3876,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName", "set.currentAddress.country").ignoring("set.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("set[0].firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName", "set.currentAddress.country").ignoring("set.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("set[0].firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; set[1].currentAddress.country\n" +
@@ -3896,7 +3890,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "Expected: 2019-04-13\n" +
                 "     got: 2017-04-13\n"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName").ignoring("set.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName").ignoring("set.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("set[1].currentAddress.country\n" +
                     "Expected: HUNGARY\n" +
                     "     got: AUSTRIA\n"), thrown.getMessage());
@@ -4210,8 +4204,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p1.firstName", "p2.currentAddress.country").ignoring("p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p1.firstName", "p2.currentAddress.country").ignoring("p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; [1].p2.currentAddress.country\n" +
@@ -4219,7 +4213,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; [2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -4611,8 +4605,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p1.firstName", "genericValue.p2.currentAddress.country").ignoring("genericValue.p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p1.firstName", "genericValue.p2.currentAddress.country").ignoring("genericValue.p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; genericValue[1].p2.currentAddress.country\n" +
@@ -4620,7 +4614,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; genericValue[2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("genericValue.p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("genericValue[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -5017,8 +5011,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p1.firstName", "map.p2.currentAddress.country").ignoring("map.p3.previousAddresses"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p1.firstName", "map.p2.currentAddress.country").ignoring("map.p3.previousAddresses"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
                 "Expected: FirstName1\n" +
                 "     got: Different first name\n" +
                 " ; map[1].p2.currentAddress.country\n" +
@@ -5026,7 +5020,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "     got: AUSTRIA\n" +
                 " ; map[2].p3.previousAddresses[]: Expected 3 values but got 0"));
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p3.previousAddresses"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p3.previousAddresses"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("map[0].p1.firstName\n" +
                     "Expected: FirstName1\n" +
                     "     got: Different first name\n" +
@@ -5261,8 +5255,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("TWO.string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("TWO.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[2].TWO.string\n" +
                     "Expected: value\n" +
                     "     got: unexpected value\n"), thrown.getMessage());
@@ -5366,8 +5360,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("2.string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("2.string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[1].2.string\n" +
                     "Expected: value 2\n" +
                     "     got: unexpected value\n"), thrown.getMessage());
@@ -5530,8 +5524,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("string"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("string"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0][0]\n" +
                     "Expected: string\n" +
                     "     but none found\n"), thrown.getMessage());
@@ -5924,8 +5918,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  \"beanBoolean\": true\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt").ignoring("beanByte").ignoring("beanChar").ignoring("beanShort").ignoring("beanLong").ignoring("beanFloat").ignoring("beanDouble").ignoring("beanBoolean"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt").ignoring("beanByte").ignoring("beanChar").ignoring("beanShort").ignoring("beanLong").ignoring("beanFloat").ignoring("beanDouble").ignoring("beanBoolean"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
                     "Expected: true\n" +
                     "     got: false\n" +
@@ -5960,7 +5954,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
             Assertions.assertEquals(approvedFileContent, thrown.getExpected().getStringRepresentation());
         }, AssertionFailedError.class);
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt"), thrown -> {
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("beanInt"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("beanBoolean\n" +
                     "Expected: true\n" +
                     "     got: false\n" +
@@ -6043,19 +6037,7 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), null);
     }
 
-    public static Object[][] subpathWithPrimitives() {
-        return new Object[][]{
-                {"Object input", parent().childBean(child().childString("banana"))},
-                {"Json string input", "{\n" +
-                        "  \"childBean\": {\n" +
-                        "    \"childString\": \"banana\",\n" +
-                        "    \"childInteger\": 0\n" +
-                        "  },\n" +
-                        "  \"childBeanList\": [],\n" +
-                        "  \"childBeanMap\": []\n" +
-                        "}"}
-        };
-    }
+
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("subpathWithPrimitives")
@@ -6122,8 +6104,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("array.integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("array.integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "array[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");
@@ -6149,8 +6131,8 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");
@@ -6190,10 +6172,42 @@ public class JsonMatcherIgnorePathTest extends AbstractFileMatcherTest {
                 "  }\n" +
                 "]";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("integer"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), "Expected file 4ac405/11b2ef-approved.json\n" +
                 "[0].integer\n" +
                 "Expected: 1\n" +
                 "     got: 0\n");
     }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreStringKeyInMapShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreStringKeyInMapShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring("key3"));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreEveryStringKeyInMapShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreEveryStringKeyInMapShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring("key3", "key1", "key4", "key2"));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapCases")
+    void ignoreStringKeyInMapShouldNotLeaveEmptyApprovedContainingDifferentValue(String testName, Object input) {
+        ignoreStringKeyInMapShouldNotLeaveEmptyApprovedContainingDifferentValue(testName, input, jsonMatcher -> jsonMatcher.ignoring("key3"));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapInCollectionCases")
+    void ignoreStringKeyInMapInCollectionShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreStringKeyInMapInCollectionShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring("outerKey1.genericValue.innerKey1", "outerKey1.genericValue.innerKey2", "outerKey1.genericValue.innerKey3", "outerKey1.genericValue.innerKey4"));
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathWithPrimitives")
+    void ignoreEveryFieldInBeanShouldNotLeaveEmpty(String testName, Object input) {
+        ignoreEveryFieldInBeanShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring("childBean.childInteger","childBean.childString"));
+    }
+
+
 }
