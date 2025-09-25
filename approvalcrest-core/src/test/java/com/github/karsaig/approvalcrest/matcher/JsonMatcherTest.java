@@ -1285,7 +1285,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSorting(), jsonMatcher -> jsonMatcher.sortField("array", "array.previousAddresses", "set.previousAddresses", "hashMap.p1.previousAddresses", "hashMap", "set"), null, null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(), jsonMatcher -> jsonMatcher.sortField("array", "array.previousAddresses", "set.previousAddresses", "hashMap.p1.previousAddresses", "hashMap", "set"), null, null);
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.sortField("array", "array.previousAddresses", "set.previousAddresses", "hashMap.p1.previousAddresses", "hashMap", "set"), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("array[1].birthCountry\n" +
@@ -2306,7 +2306,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                 "  ]\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSorting(), jsonMatcher -> jsonMatcher.sortField(is("array"), is("previousAddresses"), is("hashMap"), is("set")), null, null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(), jsonMatcher -> jsonMatcher.sortField(is("array"), is("previousAddresses"), is("hashMap"), is("set")), null, null);
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.sortField(is("array"), is("previousAddresses"), is("hashMap"), is("set")), thrown -> {
             Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("array[1].birthCountry\n" +

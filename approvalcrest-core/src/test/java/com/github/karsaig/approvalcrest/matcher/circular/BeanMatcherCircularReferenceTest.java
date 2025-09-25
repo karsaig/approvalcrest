@@ -200,7 +200,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
 
         child2.setGenericObject(subRoot);
 
-        assertDiagnosingMatcherError(actual, actual, beanMatcher -> beanMatcher.skipCircularReferenceCheck(skipper1).withGsonConfiguration(config), null);
+        assertDiagnosingErrorMatcher(actual, actual, beanMatcher -> beanMatcher.skipCircularReferenceCheck(skipper1).withGsonConfiguration(config), null);
     }
 
     private class DummyOneJsonSerializer implements JsonDeserializer<One>, JsonSerializer<One> {
