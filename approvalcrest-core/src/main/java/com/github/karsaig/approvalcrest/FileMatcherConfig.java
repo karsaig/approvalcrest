@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest;
 
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
+
 public class FileMatcherConfig {
 
     private static final String UPDATE_IN_PLACE_OLD_NAME = "jsonMatcherUpdateInPlace";
@@ -36,18 +38,7 @@ public class FileMatcherConfig {
         this.strictMatching = strictMatching;
     }
 
-    private boolean getBooleanProperty(String key) {
-        return getBooleanProperty(key, null);
-    }
 
-    private boolean getBooleanProperty(String key, String defaultValue) {
-        String value = getProperty(key, defaultValue);
-        return "true".equalsIgnoreCase(value) || "t".equalsIgnoreCase(value) || "1".equals(value) || "yes".equalsIgnoreCase(value) || "y".equalsIgnoreCase(value);
-    }
-
-    private String getProperty(String key, String defaultValue) {
-        return System.getProperty(key, defaultValue);
-    }
 
     public boolean isOverwriteInPlaceEnabled() {
         return overwriteInPlaceEnabled;

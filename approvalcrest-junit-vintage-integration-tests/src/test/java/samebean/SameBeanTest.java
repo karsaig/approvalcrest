@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.Optional;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
@@ -39,7 +40,11 @@ public class SameBeanTest {
                 "  \"beanShort\": -32768\n" +
                 "}";
         ComparisonFailure expectedException = new ComparisonFailure(expectedMessage, "{}", expectedActualValue);
-        assertThrows(sameBeanAs(expectedException).ignoring(is("identityHashCode")), () -> assertThat(actual, sameBeanAs(expected)));
+        assertThrows(sameBeanAs(expectedException).ignoring(is("identityHashCode")).skipClassComparison(), () -> {
+            DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(expected);
+            matcher.skipClassComparison();
+            assertThat(actual, matcher);
+        });
     }
 
     protected BeanWithPrimitives getBeanWithPrimitivesMinValues() {

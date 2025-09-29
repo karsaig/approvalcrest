@@ -13,9 +13,8 @@ import org.junit.jupiter.api.TestTemplate;
 
 public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
-
     public JunitJupiterTestMeta() {
-        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for JunitJupiterTestMeta, custom implementation of TestMetaInformation required!"));
+        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for JunitJupiterTestMeta, do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed."));
     }
 
     private JunitJupiterTestMeta(StackTraceElement testStackTraceElement) {

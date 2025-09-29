@@ -5,21 +5,15 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
 
 import java.nio.file.Paths;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 public class MetaInfoTest {
 
     @Rule
-    public DesciptionWatcher testWatcher = new DesciptionWatcher() {
-
-        @Override
-        protected void starting(final Description description) {
-            this.description = description;
-        }
-    };
+    public Junit4DesciptionWatcher testWatcher = new Junit4DesciptionWatcher();
 
     @Test
     public void testJunit4MetaWithSameBeanAsMatcher() {
@@ -42,14 +36,9 @@ public class MetaInfoTest {
         Junit4TestMeta input1 = new Junit4TestMeta();
         Junit4DescriptionBasedTestMeta input2 = new Junit4DescriptionBasedTestMeta(testWatcher.getDescription());
 
-        assertThat(input1, sameBeanAs(input2));
+        DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(input2);
+        matcher.skipClassComparison();
+        assertThat(input1, matcher);
     }
 
-    private static class DesciptionWatcher extends TestWatcher {
-        protected Description description;
-
-        public Description getDescription() {
-            return description;
-        }
-    }
 }

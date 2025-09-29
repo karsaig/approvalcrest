@@ -131,7 +131,7 @@ public class MatcherAssertCircularReferenceTest {
 		actualChild.setGenericObject(actual);
 
 		assertThrows(AssertionFailedError.class, () -> {
-			assertThat(actual, sameBeanAs(expected));
+			assertThat(actual, sameBeanAs(expected).skipClassComparison());
 		});
 	}
 

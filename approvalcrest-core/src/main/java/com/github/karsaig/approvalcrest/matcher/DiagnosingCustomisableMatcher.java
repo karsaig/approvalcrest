@@ -10,7 +10,6 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
-import com.github.karsaig.approvalcrest.PathNullPointerException;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.hamcrest.Description;
@@ -19,16 +18,14 @@ import org.hamcrest.Matcher;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.HashMap;
+
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
@@ -43,6 +40,8 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     protected final T expected;
     private GsonConfiguration configuration;
     protected MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
+    private boolean skipClassComparison = getBooleanProperty("beanMatcherSkipClassComparison","false");
+    private boolean jsonDescription = true;
 
     public DiagnosingCustomisableMatcher(T expected) {
         this.expected = expected;
@@ -50,6 +49,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
 
     @Override
     public void describeTo(Description description) {
+        if(jsonDescription){
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
         description.appendText(filterJson(gson, expected));
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
@@ -57,10 +57,18 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
                     .appendText(fieldPath).appendText(" ")
                     .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
         }
+        }
     }
 
     @Override
     protected boolean matches(Object actual, Description mismatchDescription) {
+        if (actual != null  && expected != null) {
+            if(!skipClassComparison && !expected.getClass().isInstance(actual)){
+                mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
+                jsonDescription = false;
+                return false;
+            }
+        }
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected, matcherConfiguration));
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
@@ -165,6 +173,11 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     @Override
     public final DiagnosingCustomisableMatcher<T> skipCircularReferenceCheck(Function<Object, Boolean> matcher, Function<Object, Boolean>... matchers) {
         matcherConfiguration.addSkipCircularReferenceChecker(matcher).addSkipCircularReferenceChecker(matchers);
+        return this;
+    }
+
+    public DiagnosingCustomisableMatcher<T> skipClassComparison() {
+        this.skipClassComparison = true;
         return this;
     }
 

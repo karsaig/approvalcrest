@@ -1,0 +1,5 @@
+/*samejson.SameJsonParameterizedTest.testPublicParameterizedWorksWithTestInfo*/
+{
+  "dummyString": "dummy1",
+  "genericValue": "val1"
+}

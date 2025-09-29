@@ -5,6 +5,7 @@ import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBean
 
 import java.nio.file.Paths;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -31,6 +32,8 @@ public class MetaInfoTest {
         JunitJupiterTestMeta input1 = new JunitJupiterTestMeta();
         Junit5InfoBasedTestMeta input2 = new Junit5InfoBasedTestMeta(testInfo);
 
-        assertThat(input1, sameBeanAs(input2));
+        DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(input2);
+        matcher.skipClassComparison();
+        assertThat(input1, matcher);
     }
 }

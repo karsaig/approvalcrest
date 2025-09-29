@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.Optional;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
@@ -54,7 +55,11 @@ public class SameBeanTest {
                 "  \"beanShort\": -32768\n" +
                 "}";
         AssertionFailedError expectedException = new AssertionFailedError(expectedMessage, "{}", expectedActualValue);
-        assertThrows(sameBeanAs(expectedException).ignoring(is("identityHashCode")), () -> assertThat(actual, sameBeanAs(expected)));
+        assertThrows(sameBeanAs(expectedException).ignoring(is("identityHashCode")), () -> {
+            DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(expected);
+            matcher.skipClassComparison();
+            assertThat(actual, matcher);
+        });
     }
 
     protected BeanWithPrimitives getBeanWithPrimitivesMinValues() {

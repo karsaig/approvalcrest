@@ -1,12 +1,16 @@
 package com.github.karsaig.approvalcrest.matcher.types;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne;
+import com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo;
 import com.google.common.collect.Sets;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -188,20 +192,53 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
     void supportedTypeTest(Object input, Object expected, String expectedExceptionMessage) {
-        assertDiagnosingMatcher(input, expected, expectedExceptionMessage);
+        assertDiagnosingErrorMatcher(input, expected, DiagnosingCustomisableMatcher::skipClassComparison,  expectedExceptionMessage);
     }
 
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
     void supportedTypeAsGenericPropertyTest(Object input, Object expected, String expectedExceptionMessage) {
-        MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGeneric.of("dummy", expected))
+        MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGeneric.of("dummy", expected)).skipClassComparison()
                 .matches(BeanWithGeneric.of("dummy", input)), Matchers.is(expectedExceptionMessage == null));
     }
 
     @ParameterizedTest
     @MethodSource("typeSerializationTestCases")
     void supportedTypeAsIterablePropertyTest(Object input, Object expected, String expectedExceptionMessage) {
-        MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(expected)).build())
+        MatcherAssert.assertThat(MATCHER_FACTORY.beanMatcher(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(expected)).build()).skipClassComparison()
                 .matches(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(input)).build()), Matchers.is(expectedExceptionMessage == null));
+    }
+
+    @Test
+    void skipClassComparisonWithSameValuesTest() {
+        BeanOne beanOne = new BeanOne("dummy","value");
+        BeanTwo beanTwo = new BeanTwo("dummy","value");
+
+        assertDiagnosingMatcher(beanOne, beanTwo, "\n" +
+                "Expected: \n" +
+                "     but: Actual type [class com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne] is not an instance of expected type [class com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo]!\n" +
+                "This can be ignored with skipClassComparison or\n" +
+                "setting beanMatcherSkipClassComparison env variable to true");
+
+        assertDiagnosingMatcher(beanOne, beanTwo, DiagnosingCustomisableMatcher::skipClassComparison);
+    }
+
+    @Test
+    void skipClassComparisonWithDifferentValuesTest() {
+        BeanOne beanOne = new BeanOne("dummy1","value1");
+        BeanTwo beanTwo = new BeanTwo("dummy2","value2");
+
+        assertDiagnosingMatcher(beanOne, beanTwo, "\n" +
+                "Expected: \n" +
+                "     but: Actual type [class com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne] is not an instance of expected type [class com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo]!\n" +
+                "This can be ignored with skipClassComparison or\n" +
+                "setting beanMatcherSkipClassComparison env variable to true");
+
+        assertDiagnosingErrorMatcher(beanOne, beanTwo, DiagnosingCustomisableMatcher::skipClassComparison, "dummyString\n" +
+                "Expected: dummy2\n" +
+                "     got: dummy1\n" +
+                " ; genericValue\n" +
+                "Expected: value2\n" +
+                "     got: value1\n");
     }
 }

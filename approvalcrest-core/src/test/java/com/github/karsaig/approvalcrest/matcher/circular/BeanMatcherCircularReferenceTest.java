@@ -84,7 +84,7 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
         ((Two) expected).setGenericObject(expectedChild);
         expectedChild.setGenericObject(expected);
 
-        assertDiagnosingMatcher(actual, expected, "0x1\n" +
+        assertDiagnosingErrorMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison, "0x1\n" +
                 "Expected: twoObject\n" +
                 "     but none found\n" +
                 " ; 0x1\n" +

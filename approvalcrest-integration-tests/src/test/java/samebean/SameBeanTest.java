@@ -6,6 +6,8 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
 
 import java.util.Optional;
 
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
+import org.hamcrest.DiagnosingMatcher;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 
@@ -53,7 +55,11 @@ public class SameBeanTest {
                 "  \"beanShort\": -32768\n" +
                 "}";
         ComparisonFailure expectedException = new ComparisonFailure(expectedMessage, "{}", expectedActualValue);
-        assertThrows(sameBeanAs(expectedException), () -> assertThat(actual, sameBeanAs(expected)));
+        assertThrows(sameBeanAs(expectedException).skipClassComparison(), () -> {
+            DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(expected);
+            matcher.skipClassComparison();
+            assertThat(actual, matcher);
+        });
     }
 
     protected BeanWithPrimitives getBeanWithPrimitivesMinValues() {

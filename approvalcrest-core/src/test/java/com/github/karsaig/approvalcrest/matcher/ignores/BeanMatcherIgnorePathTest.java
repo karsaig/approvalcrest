@@ -1,8 +1,10 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
+import org.hamcrest.DiagnosingMatcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
@@ -31,8 +33,8 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
             put("key4", "value4");
         }};
 
-        assertDiagnosingMatcher(inputMap, expectedMap, beanMatcher -> beanMatcher.ignoring("key3"));
-        assertDiagnosingMatcher(inputMap, expectedMap, identity(), AssertionFailedError.class, thrown -> {
+        assertDiagnosingMatcher(inputMap, expectedMap, beanMatcher -> beanMatcher.ignoring("key3").skipClassComparison());
+        assertDiagnosingMatcher(inputMap, expectedMap, DiagnosingCustomisableMatcher::skipClassComparison, AssertionFailedError.class, thrown -> {
             Assertions.assertEquals("[]: Expected 3 values but got 4", thrown.getMessage());
 
             String actual = "[\n" +
@@ -126,9 +128,9 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
             put("key4", "value4");
         }};
 
-        assertDiagnosingMatcher(inputMap, expectedMap, beanMatcher -> beanMatcher.ignoring("key3"));
-        assertDiagnosingMatcher(inputMap, expectedMapWithoutIgnoredValue, beanMatcher -> beanMatcher.ignoring("key3"));
-        assertDiagnosingMatcher(inputMap, expectedMap, identity(), AssertionFailedError.class, thrown -> {
+        assertDiagnosingMatcher(inputMap, expectedMap, beanMatcher -> beanMatcher.ignoring("key3").skipClassComparison());
+        assertDiagnosingMatcher(inputMap, expectedMapWithoutIgnoredValue, beanMatcher -> beanMatcher.ignoring("key3").skipClassComparison());
+        assertDiagnosingMatcher(inputMap, expectedMap, DiagnosingCustomisableMatcher::skipClassComparison, AssertionFailedError.class, thrown -> {
             Assertions.assertEquals("[2].key3\n" +
                     "Expected: value5\n" +
                     "     got: value3\n", thrown.getMessage());

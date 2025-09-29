@@ -9,7 +9,7 @@ import org.junit.Test;
 public class Junit4TestMeta extends Junit4TestMetaBase {
 
     public Junit4TestMeta() {
-        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for Junit4TestMeta, custom implementation of TestMetaInformation required!"));
+        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for Junit4TestMeta do either of the following to solve it:\n1. Use Junit4DesciptionWatcher as a @Rule and the matcher constructor with Description parameter!\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed."));
     }
 
     private Junit4TestMeta(StackTraceElement testStackTraceElement) {
