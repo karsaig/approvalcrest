@@ -30,7 +30,7 @@ import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
  */
 public class FileStoreMatcherUtils {
 
-    public static final Object SEPARATOR = "-";
+    public static final char SEPARATOR = '-';
     private static final String APPROVED_NAME_PART = "approved";
     private static final String NOT_APPROVED_NAME_PART = "not-approved";
     private static final Set<PosixFilePermission> APPROVED_FILE_PERMISSIONS = Collections.unmodifiableSet(EnumSet.of(OTHERS_READ, OTHERS_WRITE, GROUP_READ, GROUP_WRITE, OWNER_READ, OWNER_WRITE));
@@ -114,7 +114,9 @@ public class FileStoreMatcherUtils {
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(fileName.getFileName().toString());
-        stringBuilder.append(SEPARATOR);
+        if(stringBuilder.charAt(stringBuilder.length()-1) != SEPARATOR) {
+            stringBuilder.append(SEPARATOR);
+        }
         if (approved) {
             stringBuilder.append(APPROVED_NAME_PART);
         } else {

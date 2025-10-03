@@ -2,6 +2,8 @@ package com.github.karsaig.approvalcrest.matcher.file;
 
 import static com.github.karsaig.approvalcrest.AssertUtil.fail;
 import static com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils.SEPARATOR;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
 import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
 import com.google.common.hash.Hashing;
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnosingFileMatcher<T, U>> extends AbstractDiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
 
@@ -46,16 +49,21 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         testMethodName = testMetaInformation.testMethodName();
         testClassName = testMetaInformation.testClassName();
 
-        if (customFileName == null || customFileName.trim().isEmpty()) {
+        if (isBlank(customFileName)) {
             fileName = hashFileName(testMethodName);
         } else {
             fileName = customFileName;
         }
-        if (uniqueId != null) {
-            fileName += SEPARATOR + uniqueId;
+        if (isNotBlank(uniqueId)) {
+            String separator = String.valueOf(SEPARATOR);
+            if(uniqueId.startsWith(separator) || fileName.endsWith(separator)){
+                fileName += uniqueId;
+            } else {
+                fileName += separator + uniqueId;
+            }
         }
         if (pathName == null) {
-            if(relativePathName == null) {
+            if(isBlank(relativePathName)) {
                 testClassNameHash = hashFileName(testClassName);
                 pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
             } else {
@@ -83,7 +91,9 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     @SuppressWarnings("unchecked")
     @Override
     public U withPathName(String pathName) {
-        this.pathName = Paths.get(pathName);
+        if(isNotBlank(pathName)) {
+            this.pathName = Paths.get(pathName);
+        }
         return (U) this;
     }
 
