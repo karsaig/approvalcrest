@@ -64,17 +64,37 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                 fileName += separator + uniqueId;
             }
         }
-        if (pathName == null) {
+        if (pathName == null && relativePathName == null) {
                 testClassNameHash = hashFileName(testClassName);
                 fileNameWithPath =  testMetaInformation.getTestClassPath().resolve(testClassNameHash).resolve(fileName);
                 filenameWithRelativePath =  Paths.get(testClassNameHash).resolve(fileName).toString();
         } else {
-            if (pathName.isAbsolute()) {
+            if(relativePathName == null){
                 fileNameWithPath = testMetaInformation.getTestClassPath().resolve(pathName.toString()).resolve(fileName);
-                filenameWithRelativePath =  fileNameWithPath.toString();
+                if (pathName.isAbsolute()) {
+                    filenameWithRelativePath =  fileNameWithPath.toString();
+                } else {
+                    filenameWithRelativePath =  pathName.resolve(fileName).toString();
+                }
             } else {
-                fileNameWithPath = testMetaInformation.getTestClassPath().resolve(pathName.toString()).resolve(fileName);
-                filenameWithRelativePath =  pathName.resolve(fileName).toString();
+                if(pathName == null){
+                    testClassNameHash = hashFileName(testClassName);
+                    fileNameWithPath = testMetaInformation.workingDirectory().resolve(relativePathName).resolve(testClassNameHash).resolve(fileName);
+                    Path relPath = Paths.get(relativePathName);
+                    if(relPath.isAbsolute()) {
+                        filenameWithRelativePath = fileNameWithPath.toString();
+                    } else {
+                        filenameWithRelativePath = relPath.resolve(testClassNameHash).resolve(fileName).toString();
+                    }
+                } else {
+                    fileNameWithPath = testMetaInformation.workingDirectory().resolve(relativePathName).resolve(pathName.toString()).resolve(fileName);
+                    Path relPath = Paths.get(relativePathName).resolve(pathName.toString());
+                    if (relPath.isAbsolute()) {
+                        filenameWithRelativePath =  fileNameWithPath.toString();
+                    } else {
+                        filenameWithRelativePath =  relPath.resolve(fileName).toString();
+                    }
+                }
             }
         }
     }
@@ -102,10 +122,12 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         return (U) this;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     @Override
     public U withRelativePathName(String relativePathName) {
-        this.relativePathName = relativePathName;
+        if(isNotBlank(relativePathName)) {
+            this.relativePathName = relativePathName;
+        }
         return (U) this;
     }
 
@@ -152,7 +174,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
                 if (!fileMatcherConfig.isPassOnCreateEnabled()) {
                     String message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
-                                + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.fileNameWithRelativePath + "'.";
+                                + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
                     fail(message);
                 }
                 return true;

@@ -35,6 +35,7 @@ public interface ApprovedFileMatcher<T extends ApprovedFileMatcher<T>> {
     T withPathName(String pathName);
 
     /**
+     *
      * Sets the file path to the given parameter.
      * Directory represented by the given path will be used instead of the default directory name (hash code)
      * at the same place the hashcode would have been used (Next to the test).

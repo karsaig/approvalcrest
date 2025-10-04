@@ -83,7 +83,7 @@ public class JsonMatcherBeanWithPrimitivesTest extends AbstractJsonMatcherTest {
 
     @Test
     public void shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithFileNameAndPathName() {
-        assertThat(actual, sameJsonAsApproved().withPathName("src/test/jsons").withFileName("bean-with-primitive-values-2"));
+        assertThat(actual, sameJsonAsApproved().withRelativePathName("src/test").withPathName("jsons").withFileName("bean-with-primitive-values-2"));
     }
 
     @Test

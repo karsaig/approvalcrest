@@ -59,7 +59,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            JsonMatcher<Object> jsonMatcher = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            JsonMatcher<Object> jsonMatcher = MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
             if (jsonMatcher.matches(input) != result) {
                 handleAssertFailure(input, jsonMatcher);
             }
@@ -83,7 +83,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            TestMetaInformation dummyTestInfo = new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath());
+            TestMetaInformation dummyTestInfo = dummyInformation(imfsi);
             actualTest.accept(dummyTestInfo);
         });
     }
@@ -119,7 +119,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
                 throw new RuntimeException(e);
             }
             List<InMemoryPermissions> beforeFileState = InMemoryFsUtil.getPermissons(imfsi);
-            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), initialConfig);
+            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), initialConfig);
             JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
             if (exceptionHandler == null) {
                 assertThat(input, jsonMatcher);
@@ -144,7 +144,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
 
     protected void assertJsonMatcherWithDummyTestInfoForNotApprovedFile(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
         inMemoryUnixFs(imfsi -> {
-            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath()), getDefaultFileMatcherConfig());
+            JsonMatcher<Object> matcherWithDefaultConfig = MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
             JsonMatcher<Object> jsonMatcher = configurator.apply(matcherWithDefaultConfig);
             AssertionError actualError = assertThrows(AssertionError.class,
                     () -> assertThat(input, jsonMatcher));
@@ -186,17 +186,24 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         private final String testClassName;
         private final String testMethodName;
         private final Path approvedDirectory;
+        private final Path workingDirectory;
 
-        public DummyInformation(Path path, Path approvedDirectory) {
-            this(path, "dummyTestClassName", "dummyTestMethodName", approvedDirectory);
+        public DummyInformation(InMemoryFsInfo imfsi) {
+            this(imfsi.getTestPath(), imfsi.getResourcePath(),imfsi.getWorkingDirectory());
         }
 
-        public DummyInformation(Path path, String testClassName, String testMethodName, Path approvedDirectory) {
+        public DummyInformation(Path path, Path approvedDirectory, Path workingDirectory) {
+            this(path, "dummyTestClassName", "dummyTestMethodName", approvedDirectory,workingDirectory);
+        }
+
+        public DummyInformation(Path path, String testClassName, String testMethodName, Path approvedDirectory,Path workingDirectory) {
             this.path = path;
             this.testClassName = testClassName;
             this.testMethodName = testMethodName;
             this.approvedDirectory = approvedDirectory;
+            this.workingDirectory = workingDirectory;
         }
+
 
         @Override
         public Path getTestClassPath() {
@@ -217,15 +224,22 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         public Path getApprovedDirectory() {
             return approvedDirectory;
         }
+
+        @Override
+        public Path workingDirectory() {
+            return workingDirectory;
+        }
+
+
     }
 
 
     protected DummyInformation dummyInformation(InMemoryFsInfo imfsi) {
-        return new DummyInformation(imfsi.getTestPath(), imfsi.getResourcePath());
+        return new DummyInformation(imfsi);
     }
 
     protected DummyInformation dummyInformation(InMemoryFsInfo imfsi, String testClassName, String testMethodName) {
-        return new DummyInformation(imfsi.getTestPath(), testClassName, testMethodName, imfsi.getResourcePath());
+        return new DummyInformation(imfsi.getTestPath(), testClassName, testMethodName, imfsi.getResourcePath(),imfsi.getWorkingDirectory());
     }
 
     protected List<InMemoryFiles> getFiles(InMemoryFsInfo imfsi) {

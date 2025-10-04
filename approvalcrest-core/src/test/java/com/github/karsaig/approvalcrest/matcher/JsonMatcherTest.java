@@ -3053,7 +3053,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
-            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPathName("notHash").withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
@@ -3072,7 +3072,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPathName("notHash").withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.json"), approvedFileContent);
 

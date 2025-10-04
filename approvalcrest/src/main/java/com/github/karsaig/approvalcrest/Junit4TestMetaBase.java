@@ -18,29 +18,35 @@ abstract class Junit4TestMetaBase implements TestMetaInformation {
     private final String testClassName;
     private final String testMethodName;
     private final Path approvedDirectory;
+    private final Path workingDirectory;
 
     protected Junit4TestMetaBase(String testClassName, String testMethodName) {
-        this.testClassName = testClassName;
-        this.testMethodName = testMethodName;
-        this.testClassPath = buildClassPath();
-        this.approvedDirectory = APPROVED_DIRECTORY;
+        this(buildClassPath(testClassName),testClassName,testMethodName,APPROVED_DIRECTORY);
     }
 
-    protected Path buildClassPath() {
+    protected static Path buildClassPath(String testClassName) {
         return Paths.get(getSourceRoutePathString() + DOT_LITERAL_PATTERN.matcher(testClassName).replaceAll(Matcher.quoteReplacement(File.separator))).getParent();
     }
 
-    protected String getSourceRoutePathString() {
+    protected static Path detectWorkingDirectory() {
+        return Paths.get("").toAbsolutePath();
+    }
+
+    protected static String getSourceRoutePathString() {
         return SRC_TEST_JAVA_PATH;
     }
 
     public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
+        this(testClassPath,testClassName,testMethodName,approvedDirectory,detectWorkingDirectory());
+    }
+
+    public Junit4TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory,Path workingDirectory) {
         this.testClassName = testClassName;
         this.testMethodName = testMethodName;
         this.testClassPath = testClassPath;
         this.approvedDirectory = approvedDirectory;
+        this.workingDirectory = workingDirectory;
     }
-
 
     @Override
     public Path getTestClassPath() {
@@ -61,4 +67,10 @@ abstract class Junit4TestMetaBase implements TestMetaInformation {
     public Path getApprovedDirectory() {
         return approvedDirectory;
     }
+
+    @Override
+    public Path workingDirectory(){
+        return workingDirectory;
+    }
+
 }

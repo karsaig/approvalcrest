@@ -60,6 +60,7 @@ public class InMemoryFsUtil {
         Configuration config = Configuration.unix()
                 .toBuilder()
                 .setAttributeViews("basic", "owner", "posix", "unix")
+                //.setWorkingDirectory("/work")
                 .build();
         inMemoryFs(config, test);
     }
@@ -77,7 +78,8 @@ public class InMemoryFsUtil {
             Path resourcePath = fs.getPath("resources");
             Path pathWithDirs = Files.createDirectories(testPath);
             resourcePath = Files.createDirectories(resourcePath);
-            test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath));
+            Path workdir = fs.getPath("work");
+            test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath,workdir));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -1,0 +1,11 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherBeanWithPrimitivesTest.shouldNotThrowAssertionErrorWhenModelIsSameAsApprovedJsonWithFileNameAndPathName*/
+{
+  "beanBoolean": true,
+  "beanByte": 2,
+  "beanChar": "c",
+  "beanDouble": 5.0,
+  "beanFloat": 3.0,
+  "beanInteger": 4,
+  "beanLong": 6,
+  "beanShort": 1
+}

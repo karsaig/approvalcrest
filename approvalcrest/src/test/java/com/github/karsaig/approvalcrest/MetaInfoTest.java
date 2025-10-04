@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import static com.github.karsaig.approvalcrest.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.matcher.Matchers.sameBeanAs;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
@@ -27,7 +28,7 @@ public class MetaInfoTest {
     public void testJunit4DescriptionMetaWithSameBeanAsMatcher() {
         Junit4DescriptionBasedTestMeta underTest = new Junit4DescriptionBasedTestMeta(testWatcher.getDescription());
 
-        Junit4DescriptionBasedTestMeta expected = new Junit4DescriptionBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4DescriptionMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"));
+        Junit4DescriptionBasedTestMeta expected = new Junit4DescriptionBasedTestMeta(Paths.get("src/test/java/com/github/karsaig/approvalcrest"), "com.github.karsaig.approvalcrest.MetaInfoTest", "testJunit4DescriptionMetaWithSameBeanAsMatcher", Paths.get("src/test/resources/approvalcrest"), underTest.workingDirectory());
         assertThat(underTest, sameBeanAs(expected));
     }
 

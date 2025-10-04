@@ -8,11 +8,13 @@ public class InMemoryFsInfo {
     private final FileSystem inMemoryFileSystem;
     private final Path testPath;
     private final Path resourcePath;
+    private final Path workingDirectory;
 
-    public InMemoryFsInfo(FileSystem inMemoryFileSystem, Path testPath, Path resourcePath) {
+    public InMemoryFsInfo(FileSystem inMemoryFileSystem, Path testPath, Path resourcePath,Path workingDirectory) {
         this.inMemoryFileSystem = inMemoryFileSystem;
         this.testPath = testPath;
         this.resourcePath = resourcePath;
+        this.workingDirectory = workingDirectory;
     }
 
     public FileSystem getInMemoryFileSystem() {
@@ -25,5 +27,9 @@ public class InMemoryFsInfo {
 
     public Path getTestPath() {
         return testPath;
+    }
+
+    public Path getWorkingDirectory() {
+        return workingDirectory;
     }
 }

@@ -183,4 +183,68 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             assertIterableEquals(singletonList(expected), actualFiles);
         });
     }
+
+    public static Object[][] relativePathCases() {
+        return new Object[][]{
+                {"a","a"},
+                {"A","A"},
+                {"a-","a-"},
+                {"A-","A-"},
+                {"asd","asd"},
+                {"asd-","asd-"},
+                {"ASD-","ASD-"},
+                {"a/b/c","a/b/c"},
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource("relativePathCases")
+    public void relativePathTest(String input, String path) {
+        String actual = "Content";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName(input);
+
+            writeFile(imfsi.getWorkingDirectory().resolve(path).resolve("87668f").resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(path).toAbsolutePath() + "/87668f/cd3006-approved.content", "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    public static Object[][] absoluteRelativePathCases() {
+        return new Object[][]{
+                {"/a","/a"},
+                {"/A","/A"},
+                {"/a-","/a-"},
+                {"/A-","/A-"},
+                {"/asd","/asd"},
+                {"/asd-","/asd-"},
+                {"/ASD-","/ASD-"},
+                {"/a/b/c","/a/b/c"},
+        };
+    }
+
+    @ParameterizedTest
+    @MethodSource("absoluteRelativePathCases")
+    public void absoluteRelativePath(String input, String path) {
+        String actual = "Content";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName(input);
+
+            writeFile(imfsi.getInMemoryFileSystem().getPath(path).resolve("87668f").resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath(path).toAbsolutePath() + "/87668f/cd3006-approved.content", "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
 }

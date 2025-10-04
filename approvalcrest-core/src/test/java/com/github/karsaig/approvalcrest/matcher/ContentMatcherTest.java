@@ -617,7 +617,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPathName("notHash").withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.content"), actual);
 
@@ -635,7 +635,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName("notHash").withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPathName("notHash").withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("notHash").resolve("single-line-2-approved.content"), "Different content");
 
