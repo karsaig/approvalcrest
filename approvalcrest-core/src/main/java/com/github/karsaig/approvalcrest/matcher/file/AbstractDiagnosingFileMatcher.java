@@ -38,6 +38,8 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     protected String testClassNameHash;
 
     protected Path fileNameWithPath;
+    protected String filenameWithRelativePath;
+
 
     public AbstractDiagnosingFileMatcher(TestMetaInformation testMetaInformation, FileMatcherConfig fileMatcherConfig, FileStoreMatcherUtils fileStoreMatcherUtils) {
         this.testMetaInformation = Objects.requireNonNull(testMetaInformation, "TestMetaInformation must not be null!");
@@ -63,15 +65,18 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
             }
         }
         if (pathName == null) {
-            if(isBlank(relativePathName)) {
                 testClassNameHash = hashFileName(testClassName);
-                pathName = testMetaInformation.getTestClassPath().resolve(testClassNameHash);
+                fileNameWithPath =  testMetaInformation.getTestClassPath().resolve(testClassNameHash).resolve(fileName);
+                filenameWithRelativePath =  Paths.get(testClassNameHash).resolve(fileName).toString();
+        } else {
+            if (pathName.isAbsolute()) {
+                fileNameWithPath = testMetaInformation.getTestClassPath().resolve(pathName.toString()).resolve(fileName);
+                filenameWithRelativePath =  fileNameWithPath.toString();
             } else {
-                pathName = testMetaInformation.getTestClassPath().resolve(relativePathName);
+                fileNameWithPath = testMetaInformation.getTestClassPath().resolve(pathName.toString()).resolve(fileName);
+                filenameWithRelativePath =  pathName.resolve(fileName).toString();
             }
         }
-
-        fileNameWithPath = pathName.resolve(fileName);
     }
 
     @SuppressWarnings("unchecked")
@@ -121,8 +126,9 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         if (testClassNameHash == null) {
             result = "Expected file " + fileNameWithPath.toString().replace(File.separator, "/") + "\n" + message;
         } else {
+            FileStoreMatcherUtils.CreatedFile fileAndInfo = fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), filenameWithRelativePath,true);
             result = "Expected file " + testClassNameHash + "/"
-                    + fileStoreMatcherUtils.getFullFileName(Paths.get(fileName), true).toString().replace(File.separator, "/") + "\n" + message;
+                    + fileAndInfo.getFileName().toString().replace(File.separator, "/") + "\n" + message;
         }
         return result;
     }
@@ -139,27 +145,20 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
      * @return true if the not-approved file was created, false otherwise.
      */
     protected boolean createNotApprovedFileIfNotExists(Object toApprove, Supplier<String> content) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        FileStoreMatcherUtils.CreatedFile approvedFileAndInfo = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath);
 
-        if (Files.notExists(approvedFile)) {
+        if (Files.notExists(approvedFileAndInfo.getFileName())) {
             try {
-                String approvedFileName = approvedFile.getFileName().toString();
-                String createdFileName = fileStoreMatcherUtils.createNotApproved(fileNameWithPath, content.get(), getCommentLine());
+                FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
                 if (!fileMatcherConfig.isPassOnCreateEnabled()) {
-                    String message;
-                    if (testClassNameHash == null) {
-                        message = "Not approved file created: '" + createdFileName
-                                + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
-                    } else {
-                        message = "Not approved file created: '" + testClassNameHash + File.separator + createdFileName
-                                + "';\n please verify its contents and rename it to '" + approvedFileName + "'.";
-                    }
+                    String message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
+                                + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.fileNameWithRelativePath + "'.";
                     fail(message);
                 }
                 return true;
             } catch (IOException e) {
                 throw new IllegalStateException(
-                        String.format("Exception while creating not approved file %s", toApprove.toString()), e);
+                        String.format("Exception while creating not approved file %s", filenameWithRelativePath), e);
             }
         }
         return false;
@@ -170,10 +169,10 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     }
 
     protected void overwriteApprovedFile(Object actual, Supplier<String> content) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileName();
         if (Files.exists(approvedFile)) {
             try {
-                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, content.get(), getCommentLine());
+                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
             } catch (IOException e) {
                 throw new IllegalStateException(
                         String.format("Exception while overwriting approved file %s", actual.toString()), e);
@@ -184,7 +183,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     }
 
     protected <V> V getExpectedFromFile(Function<String, V> processorAfterRead) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileName();
         try {
             String fileContent = fileStoreMatcherUtils.readFile(approvedFile);
             return processorAfterRead.apply(fileContent);

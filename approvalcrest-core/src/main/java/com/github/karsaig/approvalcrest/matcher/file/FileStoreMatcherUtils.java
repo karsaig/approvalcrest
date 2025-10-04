@@ -56,23 +56,25 @@ public class FileStoreMatcherUtils {
      * @return the filename
      * @throws IOException exception thrown when failed to create the file
      */
-    public String createNotApproved(Path fileNameWithPath, String jsonObject, String comment)
+    public CreatedFile createNotApproved(Path fileNameWithPath,String fileNameWithRelativePath, String jsonObject, String comment)
             throws IOException {
-        Path file = getFullFileName(fileNameWithPath, false);
-        Path parent = file.getParent();
+        CreatedFile fileAndInfo = getFullFileName(fileNameWithPath, fileNameWithRelativePath,false);
+        Path parent = fileAndInfo.getFileName().getParent();
         if (isPosixCompatible(parent)) {
             Files.createDirectories(parent, PosixFilePermissions.asFileAttribute(APPROVED_DIRECTORY_PERMISSIONS));
         } else {
             Files.createDirectories(parent);
         }
-        return writeToFile(file, jsonObject, comment);
+        writeToFile(fileAndInfo.getFileName(), jsonObject, comment);
+        return fileAndInfo;
     }
 
-    public String overwriteApprovedFile(Path fileNameWithPath, String jsonObject, String comment) throws IOException {
-        return writeToFile(getFullFileName(fileNameWithPath, true), jsonObject, comment);
+    public Path overwriteApprovedFile(Path fileNameWithPath,String fileNameWithRelativePath, String jsonObject, String comment) throws IOException {
+        CreatedFile fileAndInfo = getFullFileName(fileNameWithPath,fileNameWithRelativePath, true);
+        return writeToFile(fileAndInfo.getFileName(), jsonObject, comment);
     }
 
-    private String writeToFile(Path file, String jsonObject, String comment) throws IOException {
+    private Path writeToFile(Path file, String jsonObject, String comment) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(file, UTF_8)) {
             writer.write("/*" + comment + "*/");
             writer.write("\n");
@@ -81,7 +83,7 @@ public class FileStoreMatcherUtils {
         if (isPosixCompatible(file)) {
             Files.setPosixFilePermissions(file, APPROVED_FILE_PERMISSIONS);
         }
-        return file.getFileName().toString();
+        return file;
     }
 
     public String readFile(Path file) throws IOException {
@@ -101,36 +103,61 @@ public class FileStoreMatcherUtils {
      * @param fileNameWithPath the name of the file with full path (relative to project root)
      * @return the {@link Path} object
      */
-    public Path getApproved(Path fileNameWithPath) {
-        return getFullFileName(fileNameWithPath, true);
+    public CreatedFile getApproved(Path fileNameWithPath, String fileNameWithRelativePath) {
+        return getFullFileName(fileNameWithPath, fileNameWithRelativePath,true);
     }
 
-    public Path getFullFileName(Path fileName, boolean approved) {
-        return getFileNameWithExtension(fileName, approved);
+    public CreatedFile getFullFileName(Path fileName, String fileNameWithRelativePath, boolean approved) {
+        return getFileNameWithExtension(fileName, fileNameWithRelativePath, approved);
     }
 
-    private Path getFileNameWithExtension(Path fileName, boolean approved) {
+    private CreatedFile getFileNameWithExtension(Path fileName, String fileNameWithRelativePath, boolean approved) {
         Path parent = fileName.getParent();
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(fileName.getFileName().toString());
+
+        StringBuilder relativeFileNameBuilder = new StringBuilder();
+        relativeFileNameBuilder.append(fileNameWithRelativePath);
         if(stringBuilder.charAt(stringBuilder.length()-1) != SEPARATOR) {
             stringBuilder.append(SEPARATOR);
+            relativeFileNameBuilder.append(SEPARATOR);
         }
         if (approved) {
             stringBuilder.append(APPROVED_NAME_PART);
+            relativeFileNameBuilder.append(APPROVED_NAME_PART);
         } else {
             stringBuilder.append(NOT_APPROVED_NAME_PART);
+            relativeFileNameBuilder.append(NOT_APPROVED_NAME_PART);
         }
         stringBuilder.append(fileExtension);
+        relativeFileNameBuilder.append(fileExtension);
 
         if (parent == null) {
-            return Paths.get(stringBuilder.toString());
+            return new CreatedFile(Paths.get(stringBuilder.toString()),relativeFileNameBuilder.toString());
         }
-        return parent.resolve(stringBuilder.toString());
+        return new CreatedFile(parent.resolve(stringBuilder.toString()),relativeFileNameBuilder.toString());
     }
 
     private boolean isPosixCompatible(Path path) {
         return path.getFileSystem().supportedFileAttributeViews().contains("posix");
+    }
+
+    public static class CreatedFile {
+        Path fileName;
+        String fileNameWithRelativePath;
+
+        public CreatedFile(Path fileName, String fileNameWithRelativePath) {
+            this.fileName = fileName;
+            this.fileNameWithRelativePath = fileNameWithRelativePath;
+        }
+
+        public Path getFileName() {
+            return fileName;
+        }
+
+        public String getFileNameWithRelativePath() {
+            return fileNameWithRelativePath;
+        }
     }
 }

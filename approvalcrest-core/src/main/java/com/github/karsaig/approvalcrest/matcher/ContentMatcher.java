@@ -100,6 +100,6 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
         if (fileNameWithPath == null) {
             return "ContentMatcher";
         }
-        return "ContentMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        return "ContentMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileNameWithRelativePath();
     }
 }

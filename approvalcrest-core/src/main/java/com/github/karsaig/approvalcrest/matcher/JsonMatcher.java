@@ -317,7 +317,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         if (fileNameWithPath == null) {
             return "JsonMatcher";
         }
-        return "JsonMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath);
+        return "JsonMatcher for " + fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileNameWithRelativePath();
     }
 
     private static class Either {
