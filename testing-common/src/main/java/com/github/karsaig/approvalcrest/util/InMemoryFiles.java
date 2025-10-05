@@ -5,10 +5,16 @@ import java.util.Objects;
 public class InMemoryFiles {
     private final String path;
     private final String content;
+    private final String originalPath;
 
     public InMemoryFiles(String path, String content) {
+        this(path,content,null);
+    }
+
+    public InMemoryFiles(String path, String content, String originalPath) {
         this.path = path;
         this.content = content;
+        this.originalPath = originalPath;
     }
 
     public String getContent() {
@@ -38,6 +44,7 @@ public class InMemoryFiles {
         return "InMemoryFiles{" +
                 "path='" + path + '\'' +
                 ", content='" + content + '\'' +
+                (originalPath != null ? "originalPath='" + originalPath + '\'' : "" ) +
                 '}';
     }
 }

@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -56,20 +58,30 @@ public class InMemoryFsUtil {
     private InMemoryFsUtil() {
     }
 
+    public static Configuration JIMFS_UNIX_CONFIG = Configuration.unix()
+            .toBuilder()
+            .setAttributeViews("basic", "owner", "posix", "unix")
+            .build();
+
     public static void inMemoryUnixFsWithFileAttributeSupport(Consumer<InMemoryFsInfo> test) {
-        Configuration config = Configuration.unix()
-                .toBuilder()
-                .setAttributeViews("basic", "owner", "posix", "unix")
-                //.setWorkingDirectory("/work")
+        inMemoryFs(JIMFS_UNIX_CONFIG, test);
+    }
+
+    public static Configuration JIMFS_WINDOWS_CONFIG = Configuration.windows()
+            .toBuilder()
                 .build();
-        inMemoryFs(config, test);
+
+    public static Collection<Configuration> TESTED_OS_CONFIGS = getTestedOsConfigs();
+
+    private static Collection<Configuration> getTestedOsConfigs(){
+        List<Configuration> testedOsConfigs = new ArrayList<>();
+        testedOsConfigs.add(JIMFS_WINDOWS_CONFIG);
+        testedOsConfigs.add(JIMFS_UNIX_CONFIG);
+        return Collections.unmodifiableList(testedOsConfigs);
     }
 
     public static void inMemoryWindowsFs(Consumer<InMemoryFsInfo> test) {
-        Configuration config = Configuration.windows()
-                .toBuilder()
-                .build();
-        inMemoryFs(config, test);
+        inMemoryFs(JIMFS_WINDOWS_CONFIG, test);
     }
 
     public static void inMemoryFs(Configuration config, Consumer<InMemoryFsInfo> test) {
@@ -79,7 +91,14 @@ public class InMemoryFsUtil {
             Path pathWithDirs = Files.createDirectories(testPath);
             resourcePath = Files.createDirectories(resourcePath);
             Path workdir = fs.getPath("work");
-            test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath,workdir));
+            try {
+                test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath, workdir));
+            } catch (Error e) {
+                List<InMemoryFiles> state = getFiles(fs);
+                System.out.println("In memory fs content:");
+                System.out.println(state.toString());
+                throw e;
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -100,12 +119,14 @@ public class InMemoryFsUtil {
                 })
                 .map(p -> {
                     String fullPath = p.toString();
-                    if (fullPath.startsWith("/work/test/path/")) {
-                        fullPath = fullPath.substring(16);
-                    } else if (fullPath.startsWith("C:\\work\\test\\path\\")) {
-                        fullPath = fullPath.substring(18);
-                    }
-                    return new InMemoryFiles(fullPath, readFile(p));
+                    String originalPath = fullPath;
+                        if (fullPath.startsWith("/work/test/path/")) {
+                            fullPath = fullPath.substring(16);
+                        } else if (fullPath.startsWith("C:\\work\\test\\path\\")) {
+                            fullPath = fullPath.substring(18);
+                        }
+
+                    return new InMemoryFiles(fullPath, readFile(p),originalPath);
                 })
                 .collect(Collectors.toList());
     }

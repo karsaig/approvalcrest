@@ -364,7 +364,7 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         String actual = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(Paths.get("src/test/contents")).withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.content"), "Different content");
 
