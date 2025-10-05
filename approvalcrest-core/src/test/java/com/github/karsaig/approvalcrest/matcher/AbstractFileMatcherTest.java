@@ -6,7 +6,9 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.*;
 import com.google.common.collect.ImmutableList;
+import com.google.common.jimfs.Configuration;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.provider.Arguments;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,14 +17,17 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
 import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.TESTED_OS_CONFIGS;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -179,6 +184,18 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         InMemoryFsUtil.inMemoryWindowsFs(test);
     }
 
+    protected void inMemoryFs(Configuration config, Consumer<InMemoryFsInfo> test) {
+        InMemoryFsUtil.inMemoryFs(config, test);
+    }
+
+    public static Stream<Arguments> supportedOsPermutations(Object[][] input){
+        return Arrays.stream(input).flatMap(in -> TESTED_OS_CONFIGS.stream().map(os -> {
+            Object[] newArray = new Object[in.length + 1];
+            newArray[0] = os;
+            System.arraycopy(in, 0, newArray, 1, in.length);
+            return Arguments.of(newArray);
+        }));
+    }
 
     protected class DummyInformation implements TestMetaInformation {
 

@@ -10,7 +10,7 @@ public class FileMatcherConfig {
     private static final String BUILD_INDEX_NAME = "buildFileIndex";
     private static final String APPROVED_DIRECTORY_NAME = "useApprovedDirectory";
     private static final String SORT_INPUT_FILE = "sortInputFile";
-    private static final String STRICT_MATCHING = "strictMatching";
+    private static final String STRICT_MATCHING = "fileMatcherStrictFileMatching";
 
 
     private final boolean overwriteInPlaceEnabled;

@@ -6,9 +6,13 @@ import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import org.hamcrest.MatcherAssert;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import com.google.common.jimfs.Configuration;
 
 import java.util.List;
+import java.util.stream.Stream;
+
 
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -197,11 +201,15 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
         };
     }
 
+    public static Stream<Arguments> relativePathCasesForEveryOs(){
+        return supportedOsPermutations(relativePathCases());
+    }
+
     @ParameterizedTest
-    @MethodSource("relativePathCases")
-    public void relativePathTest(String input, String path) {
+    @MethodSource("relativePathCasesForEveryOs")
+    public void relativePathTest(Configuration osConfig,String input, String path) {
         String actual = "Content";
-        inMemoryUnixFs(imfsi -> {
+        inMemoryFs(osConfig, imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName(input);
 
@@ -210,7 +218,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(path).toAbsolutePath() + "/87668f/cd3006-approved.content", "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(path).resolve("87668f").resolve("cd3006-approved.content").toAbsolutePath().toString(), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -243,6 +251,37 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath(path).toAbsolutePath() + "/87668f/cd3006-approved.content", "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+
+    public static Object[][] customRelativeaPathAndCustomePathCases() {
+        return new Object[][]{
+                {"a","b","a/b/"},
+                {"a/b","c/d","a/b/c/d"},
+        };
+    }
+
+    public static Stream<Arguments> customRelativeaPathAndCustomePathCasesForEveryOs(){
+        return supportedOsPermutations(customRelativeaPathAndCustomePathCases());
+    }
+
+    @ParameterizedTest
+    @MethodSource("customRelativeaPathAndCustomePathCasesForEveryOs")
+    public void customRelativeaPathAndCustomePath(Configuration osConfig, String relativePath,String customPath, String actualPath) {
+        String actual = "Content";
+        inMemoryFs(osConfig, imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withRelativePathName(relativePath).withPathName(customPath);
+
+            writeFile(imfsi.getWorkingDirectory().resolve(relativePath).resolve(customPath).resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(relativePath).resolve(customPath).resolve("cd3006-approved.content").toAbsolutePath().toString(), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
