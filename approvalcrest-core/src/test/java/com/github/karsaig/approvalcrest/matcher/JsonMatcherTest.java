@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -474,7 +475,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldNotThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathName");
-            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(Paths.get("src/test/contents")).withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.json"), getBeanWithPrimitivesAsJsonString());
 
@@ -493,7 +494,7 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{ beanLong: 5, beanString: \"Different content\", beanInt: 10  }";
         inMemoryUnixFs(imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "shouldThrowAssertionErrorWhenContentIsSameContentAsApprovedWithFileNameAndRelativePathNameAndContentDiffers");
-            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(imfsi.getTestPath().resolve("src/test/contents")).withFileName("single-line-2");
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.<BeanWithPrimitives>jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig()).withPath(Paths.get("src/test/contents")).withFileName("single-line-2");
 
             writeFile(imfsi.getTestPath().resolve("src/test/contents").resolve("single-line-2-approved.json"), approvedFileContent);
 
