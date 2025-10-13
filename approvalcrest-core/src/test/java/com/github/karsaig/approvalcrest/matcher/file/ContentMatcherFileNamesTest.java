@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import com.google.common.jimfs.Configuration;
 
+
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -29,11 +30,17 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
         };
     }
 
+
+    public static Stream<Arguments> uniqueIndexIgnoredCasesForEveryOs(){
+        return supportedOsPermutations(uniqueIndexIgnoredCases());
+    }
+
+
     @ParameterizedTest
-    @MethodSource("uniqueIndexIgnoredCases")
-    public void uniqueIdShouldBeIgnored(String input) {
+    @MethodSource("uniqueIndexIgnoredCasesForEveryOs")
+    public void uniqueIdShouldBeIgnored(Configuration osConfig,String input) {
         String actual = "Content";
-        inMemoryUnixFs(imfsi -> {
+        inMemoryFs(osConfig, imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId(input);
 
@@ -42,7 +49,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("87668f/cd3006-approved.content", "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath("87668f").resolve("cd3006-approved.content"), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -62,11 +69,15 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
         };
     }
 
+    public static Stream<Arguments> uniqueIdShouldBeAppliedCasesForEveryOs(){
+        return supportedOsPermutations(uniqueIdShouldBeAppliedCases());
+    }
+
     @ParameterizedTest
-    @MethodSource("uniqueIdShouldBeAppliedCases")
-    public void uniqueIdShouldBeApplied(String input,String fileNamePart) {
+    @MethodSource("uniqueIdShouldBeAppliedCasesForEveryOs")
+    public void uniqueIdShouldBeApplied(Configuration osConfig,String input,String fileNamePart) {
         String actual = "Content";
-        inMemoryUnixFs(imfsi -> {
+        inMemoryFs(osConfig,imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withUniqueId(input);
 
@@ -75,7 +86,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("87668f/cd3006-"+fileNamePart+"-approved.content", "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath("87668f").resolve("cd3006-"+fileNamePart+"-approved.content"), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -97,12 +108,16 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
         };
     }
 
+    public static Stream<Arguments> customFileNameCasesForEveryOs(){
+        return supportedOsPermutations(customFileNameCases());
+    }
+
     @ParameterizedTest
-    @MethodSource("customFileNameCases")
-    public void customFileNameTest(String input, String fileName) {
+    @MethodSource("customFileNameCasesForEveryOs")
+    public void customFileNameTest(Configuration osConfig, String input, String fileName) {
         String actual = "Content";
         String actualFileName = fileName == null ? "cd3006-approved.content" : fileName + "-approved.content";
-        inMemoryUnixFs(imfsi -> {
+        inMemoryFs(osConfig,imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withFileName(input);
 
@@ -111,7 +126,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles("87668f/"+actualFileName, "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath("87668f").resolve(actualFileName), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -134,12 +149,16 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
         };
     }
 
+    public static Stream<Arguments> customPathCasesForEveryOs(){
+        return supportedOsPermutations(customPathCases());
+    }
+
     @ParameterizedTest
-    @MethodSource("customPathCases")
-    public void relativeCustomPathTest(String input, String path) {
+    @MethodSource("customPathCasesForEveryOs")
+    public void relativeCustomPathTest(Configuration osConfig, String input, String path) {
         String actual = "Content";
         String actualPath = path == null ? "87668f" : path;
-        inMemoryUnixFs(imfsi -> {
+        inMemoryFs(osConfig, imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
             ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig()).withPathName(input);
 
@@ -148,7 +167,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles(actualPath + "/cd3006-approved.content", "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getInMemoryFileSystem().getPath(actualPath).resolve("cd3006-approved.content"), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -218,7 +237,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(path).resolve("87668f").resolve("cd3006-approved.content").toAbsolutePath().toString(), "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(path).resolve("87668f").resolve("cd3006-approved.content").toAbsolutePath(), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
@@ -257,20 +276,20 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
     }
 
 
-    public static Object[][] customRelativeaPathAndCustomePathCases() {
+    public static Object[][] customRelativePathAndCustomPathCases() {
         return new Object[][]{
                 {"a","b","a/b/"},
                 {"a/b","c/d","a/b/c/d"},
         };
     }
 
-    public static Stream<Arguments> customRelativeaPathAndCustomePathCasesForEveryOs(){
-        return supportedOsPermutations(customRelativeaPathAndCustomePathCases());
+    public static Stream<Arguments> customRelativePathAndCustomPathCasesForEveryOs(){
+        return supportedOsPermutations(customRelativePathAndCustomPathCases());
     }
 
     @ParameterizedTest
-    @MethodSource("customRelativeaPathAndCustomePathCasesForEveryOs")
-    public void customRelativeaPathAndCustomePath(Configuration osConfig, String relativePath,String customPath, String actualPath) {
+    @MethodSource("customRelativePathAndCustomPathCasesForEveryOs")
+    public void customRelativePathAndCustomPath(Configuration osConfig, String relativePath,String customPath, String actualPath) {
         String actual = "Content";
         inMemoryFs(osConfig, imfsi -> {
             DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
@@ -281,7 +300,7 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
             MatcherAssert.assertThat(actual, underTest);
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
-            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(relativePath).resolve(customPath).resolve("cd3006-approved.content").toAbsolutePath().toString(), "Content");
+            InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(relativePath).resolve(customPath).resolve("cd3006-approved.content").toAbsolutePath(), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });

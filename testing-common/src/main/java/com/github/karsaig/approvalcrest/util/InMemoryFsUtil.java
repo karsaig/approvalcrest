@@ -91,12 +91,17 @@ public class InMemoryFsUtil {
             Path pathWithDirs = Files.createDirectories(testPath);
             resourcePath = Files.createDirectories(resourcePath);
             Path workdir = fs.getPath("work");
+            List<InMemoryFiles> stateBefore = Collections.emptyList();
             try {
+                stateBefore = getFiles(fs);
                 test.accept(new InMemoryFsInfo(fs, pathWithDirs, resourcePath, workdir));
             } catch (Error e) {
                 List<InMemoryFiles> state = getFiles(fs);
                 System.out.println("In memory fs content:");
-                System.out.println(state.toString());
+                state.forEach(System.out::println);
+                System.out.println();
+                System.out.println("before test:");
+                stateBefore.forEach(System.out::println);
                 throw e;
             }
         } catch (IOException e) {

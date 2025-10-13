@@ -1,11 +1,16 @@
 package com.github.karsaig.approvalcrest.util;
 
+import java.nio.file.Path;
 import java.util.Objects;
 
 public class InMemoryFiles {
     private final String path;
     private final String content;
     private final String originalPath;
+
+    public InMemoryFiles(Path path, String content) {
+        this(path.toString(), content);
+    }
 
     public InMemoryFiles(String path, String content) {
         this(path,content,null);
