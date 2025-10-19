@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import org.hamcrest.Matcher;
 
 import java.util.function.Function;
@@ -164,4 +165,14 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      */
     U sortField(String... fieldPaths);
+
+    U sortFieldMatcher(SortField<Matcher<String>> fieldNamePattern);
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    U sortFieldMatcher(SortField<Matcher<String>>... fieldNamePatterns);
+
+    U sortFieldPath(SortField<String> fieldPath);
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    U sortFieldPath(SortField<String>... fieldPaths);
 }

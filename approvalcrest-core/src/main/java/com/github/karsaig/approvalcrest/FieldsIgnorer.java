@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest;
 
+import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.*;
 import org.hamcrest.Matcher;
 
@@ -17,6 +18,7 @@ import java.util.regex.Pattern;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
 /**
  * Responsible for traversing the Json tree and ignore the specified set of field paths.
@@ -25,14 +27,14 @@ public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
-    public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind, List<Matcher<String>> fieldMatchersToSort, Set<String> pathsToSort) {
+    public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
         sortJsonFields(filteredJson, true);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
-            sortJsonArray(filteredJson.getAsJsonArray());
+            sortJsonArray(filteredJson.getAsJsonArray(),pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
             return filteredJson;
         }
         return filteredJson;
@@ -108,7 +110,7 @@ public class FieldsIgnorer {
         }
     }
 
-    public static void applySorting(JsonElement jsonElement, Set<String> pathsToSort, List<Matcher<String>> fieldMatchersToSort, boolean sortFile) {
+    public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
         if (jsonElement != null && !jsonElement.isJsonNull()) {
             if (jsonElement.isJsonObject()) {
                 Map<String, PathLevel> pathMap = getPathsMap(pathsToSort);
@@ -122,8 +124,10 @@ public class FieldsIgnorer {
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
                     applySorting(actualValue, pathLevel.nextLevel, fieldMatchersToSort, sortFile);
                     if (actualValue.isJsonArray()) {
-                        if (fieldNamePair.shouldSortDueToType() || anyPathMatch(fieldNamePair.newKey, pathMap, sortFile) || anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile)) {
-                            sortJsonArray(actualValue.getAsJsonArray());
+                        List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, sortFile);
+                        List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile);
+                        if (fieldNamePair.shouldSortDueToType() || !matchingPathMatchers.isEmpty() || !matchingFieldMatchers.isEmpty()) {
+                            sortJsonArray(actualValue.getAsJsonArray(),matchingPathMatchers,matchingFieldMatchers);
                         }
                     }
                 }
@@ -140,86 +144,111 @@ public class FieldsIgnorer {
         }
     }
 
-    private static boolean anyPathMatch(String fieldName, Map<String, PathLevel> pathMap, boolean sortFile) {
+    private static List<SortField<String>> anyPathMatch(String fieldName, Map<String, PathLevel> pathMap, boolean sortFile) {
         if (sortFile) {
             PathLevel nextLevelSet = pathMap.get(fieldName);
-            return nextLevelSet != null && nextLevelSet.isMatchCurrentLevel();
+            if(nextLevelSet != null){
+                return nextLevelSet.currentLevel;
+            }
         }
-        return false;
+        return emptyList();
     }
 
-    private static Map<String, PathLevel> getPathsMap(Set<String> pathsToSort) {
+    private static Map<String, PathLevel> getPathsMap(Map<String, List<SortField<String>>> pathsToSort) {
         if (pathsToSort.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, PathLevel> result = new HashMap<>();
-        for (String path : pathsToSort) {
+        for (Map.Entry<String,List<SortField<String>>> pathEntry : pathsToSort.entrySet()) {
+            String path = pathEntry.getKey();
             int indexOfNextLevel = path.indexOf(".");
             if (indexOfNextLevel < 0) {
-                result.computeIfAbsent(path, k -> new PathLevel()).setMatchCurrentLevel();
+                result.computeIfAbsent(path, k -> new PathLevel()).addCurrentLevel(pathEntry.getValue());
             } else {
-                result.computeIfAbsent(path.substring(0, indexOfNextLevel), k -> new PathLevel()).addNextLevel(path.substring(indexOfNextLevel + 1));
+                result.computeIfAbsent(path.substring(0, indexOfNextLevel), k -> new PathLevel()).addNextLevel(path.substring(indexOfNextLevel + 1), pathEntry.getValue());
             }
         }
         return result;
     }
 
     private static class PathLevel {
-        public static final PathLevel EMPTY = new PathLevel(false, Collections.emptySet());
+        public static final PathLevel EMPTY = new PathLevel(emptyList(), Collections.emptyMap());
 
-        private boolean matchCurrentLevel;
-        private final Set<String> nextLevel;
+        private final List<SortField<String>> currentLevel;
+        private final Map<String, List<SortField<String>>> nextLevel;
 
 
         public PathLevel() {
-            this(false, new HashSet<>());
+            this(new ArrayList<>(), new HashMap<>());
         }
 
-        public PathLevel(boolean matchCurrentLevel, Set<String> nextLevel) {
-            this.matchCurrentLevel = matchCurrentLevel;
+        public PathLevel(List<SortField<String>> currentLevel, Map<String, List<SortField<String>>> nextLevel) {
+            this.currentLevel = currentLevel;
             this.nextLevel = nextLevel;
         }
 
-        public Set<String> getNextLevel() {
+        public Map<String, List<SortField<String>>> getNextLevel() {
             return nextLevel;
         }
 
-        public boolean addNextLevel(String input) {
-            return nextLevel.add(input);
+        public void addNextLevel(String input, List<SortField<String>> sortFields) {
+            nextLevel.put(input,sortFields);
         }
 
-        public void setMatchCurrentLevel() {
-            this.matchCurrentLevel = true;
-        }
-
-        public boolean isMatchCurrentLevel() {
-            return matchCurrentLevel;
+        public void addCurrentLevel(List<SortField<String>> sortFields) {
+            currentLevel.addAll(sortFields);
         }
     }
 
-    private static boolean anyFieldMatcherMatches(String fieldName, List<Matcher<String>> fieldMatchersToSort, boolean sortFile) {
+    private static List<SortField<Matcher<String>>> anyFieldMatcherMatches(String fieldName, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
         if (sortFile) {
-            for (Matcher<String> matcher : fieldMatchersToSort) {
-                if (matcher.matches(fieldName)) {
-                    return true;
+            List<SortField<Matcher<String>>> result = new ArrayList<>();
+            for (SortField<Matcher<String>> matcher : fieldMatchersToSort) {
+                if (matcher.getSortFieldSelector().matches(fieldName)) {
+                    result.add(matcher);
                 }
             }
+            return result;
         }
-        return false;
+        return emptyList();
     }
 
-    private static void sortJsonArray(JsonArray input) {
+    private static void sortJsonArray(JsonArray input,List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers) {
         List<SortElement> toSort = new ArrayList<>(input.size());
         Iterator<JsonElement> iter = input.iterator();
         while (iter.hasNext()) {
             JsonElement actual = iter.next();
-            toSort.add(new SortElement(actual.toString(), actual));
+            toSort.add(new SortElement(getFilteredStringForSorting(actual,matchingPathMatchers,matchingFieldMatchers), actual));
             iter.remove();
         }
         Collections.sort(toSort);
         for (SortElement actual : toSort) {
             input.add(actual.original);
         }
+    }
+
+    private static String getFilteredStringForSorting(JsonElement actual,List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers){
+        if(areAllMatchersEmpty(matchingPathMatchers,matchingFieldMatchers)){
+            return actual.toString();
+        }
+        throw new IllegalStateException("Not implemented yet");
+    }
+
+    private static boolean areAllMatchersEmpty(List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers){
+        if(matchingPathMatchers.isEmpty() && matchingFieldMatchers.isEmpty()){
+            return true;
+        }
+        for(SortField<String> matchingPathMatcher : matchingPathMatchers) {
+            if(!matchingPathMatcher.isEmpty()){
+                return false;
+            }
+        }
+        for(SortField<Matcher<String>> matchingFieldMatcher : matchingFieldMatchers) {
+            if(!matchingFieldMatcher.isEmpty()){
+                return false;
+            }
+        }
+        return true;
     }
 
     private static class SortElement implements Comparable<SortElement> {

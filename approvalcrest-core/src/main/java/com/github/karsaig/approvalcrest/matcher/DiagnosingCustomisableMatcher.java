@@ -10,6 +10,7 @@
 package com.github.karsaig.approvalcrest.matcher;
 
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.hamcrest.Description;
@@ -205,6 +206,34 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     public DiagnosingCustomisableMatcher<T> sortField(String... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
         return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortFieldMatcher(SortField<Matcher<String>> fieldNamePattern) {
+        matcherConfiguration.addPatternToSort(fieldNamePattern);
+        return this;
+    }
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    @SafeVarargs
+    @Override
+    public final DiagnosingCustomisableMatcher<T> sortFieldMatcher(SortField<Matcher<String>>... fieldNamePatterns) {
+        matcherConfiguration.addPatternToSort(fieldNamePatterns);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortFieldPath(SortField<String> fieldPath) {
+        matcherConfiguration.addPathToSort(fieldPath);
+        return this;
+    }
+
+    @SuppressWarnings({"varargs", "unchecked"})
+    @SafeVarargs
+    @Override
+    public final DiagnosingCustomisableMatcher<T> sortFieldPath(SortField<String>... fieldPaths) {
+        matcherConfiguration.addPathToSort(fieldPaths);
+        return null;
     }
 
     @Override

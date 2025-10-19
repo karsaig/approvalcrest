@@ -1,10 +1,12 @@
 package com.github.karsaig.approvalcrest;
 
+import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import org.hamcrest.Matcher;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,8 +22,8 @@ public class MatcherConfiguration {
     private final List<Class<?>> typesToIgnore = new ArrayList<>();
     private final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
-    private final Set<String> pathsToSort = new HashSet<>();
-    private final List<Matcher<String>> patternsToSort = new ArrayList<>();
+    private final Map<String, List<SortField<String>>> pathsToSort = new HashMap<>();
+    private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -47,11 +49,11 @@ public class MatcherConfiguration {
         return typesToIgnore;
     }
 
-    public Set<String> getPathsToSort() {
+    public Map<String, List<SortField<String>>> getPathsToSort() {
         return pathsToSort;
     }
 
-    public List<Matcher<String>> getPatternsToSort() {
+    public List<SortField<Matcher<String>>> getPatternsToSort() {
         return patternsToSort;
     }
 
@@ -83,9 +85,7 @@ public class MatcherConfiguration {
     }
 
     public MatcherConfiguration addTypeToIgnore(Class<?>[] clazzs) {
-        for (Class<?> clazz : clazzs) {
-            typesToIgnore.add(clazz);
-        }
+        Collections.addAll(typesToIgnore,clazzs);
         return this;
     }
 
@@ -100,9 +100,7 @@ public class MatcherConfiguration {
     }
 
     public MatcherConfiguration addPatternToIgnore(Matcher<String>[] fieldNamePatterns) {
-        for (Matcher<String> matcher : fieldNamePatterns) {
-            patternsToIgnore.add(matcher);
-        }
+        Collections.addAll(patternsToIgnore,fieldNamePatterns);
         return this;
     }
 
@@ -118,43 +116,67 @@ public class MatcherConfiguration {
 
 
     public MatcherConfiguration addSkipCircularReferenceChecker(Function<Object, Boolean>[] checkers) {
-        for (Function<Object, Boolean> actual : checkers) {
-            skipCircularReferenceCheck.add(actual);
-        }
+        Collections.addAll(skipCircularReferenceCheck,checkers);
         return this;
     }
 
     public MatcherConfiguration addPatternToSort(Matcher<String> fieldNamePattern) {
+        patternsToSort.add(SortField.of(fieldNamePattern));
+        return this;
+    }
+
+    public MatcherConfiguration addPatternToSort(SortField<Matcher<String>> fieldNamePattern) {
         patternsToSort.add(fieldNamePattern);
         return this;
     }
 
     public MatcherConfiguration addPatternToSort(Matcher<String>[] fieldNamePatterns) {
         for (Matcher<String> matcher : fieldNamePatterns) {
-            patternsToSort.add(matcher);
+            patternsToSort.add(SortField.of(matcher));
         }
         return this;
     }
 
+    public MatcherConfiguration addPatternToSort(SortField<Matcher<String>>[] fieldNamePatterns) {
+        Collections.addAll(patternsToSort,fieldNamePatterns);
+        return this;
+    }
+
     public MatcherConfiguration addPatternToSort(Collection<Matcher<String>> fieldNamePattern) {
-        patternsToSort.addAll(fieldNamePattern);
+        for (Matcher<String> matcher : fieldNamePattern) {
+            patternsToSort.add(SortField.of(matcher));
+        }
         return this;
     }
 
     public MatcherConfiguration addPathToSort(String path) {
-        pathsToSort.add(path);
+        pathsToSort.computeIfAbsent(path, k -> new ArrayList<>()).add(SortField.of(path));
         return this;
     }
 
     public MatcherConfiguration addPathToSort(String[] fieldPaths) {
         for (String fieldPath : fieldPaths) {
-            pathsToSort.add(fieldPath);
+            pathsToSort.computeIfAbsent(fieldPath, k -> new ArrayList<>()).add(SortField.of(fieldPath));
+        }
+        return this;
+    }
+
+    public MatcherConfiguration addPathToSort(SortField<String> path) {
+        pathsToSort.computeIfAbsent(path.getSortFieldSelector(), k -> new ArrayList<>()).add(path);
+        return this;
+    }
+
+    public MatcherConfiguration addPathToSort(SortField<String>[] fieldPaths) {
+        for (SortField<String> fieldPath : fieldPaths) {
+            pathsToSort.computeIfAbsent(fieldPath.getSortFieldSelector(), k -> new ArrayList<>()).add(fieldPath);
         }
         return this;
     }
 
     public MatcherConfiguration addPathToSort(Collection<String> fieldPaths) {
-        pathsToSort.addAll(fieldPaths);
+        for (String fieldPath : fieldPaths) {
+            pathsToSort.computeIfAbsent(fieldPath, k -> new ArrayList<>()).add(SortField.of(fieldPath));
+        }
         return this;
     }
 }
