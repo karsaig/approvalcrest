@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest.matcher.sorting;
 import org.hamcrest.Matcher;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -10,6 +11,28 @@ public class SortField<T> {
 
     public static <U> SortField<U> of(U sortFieldSelector){
         return new SortField<>(sortFieldSelector,Collections.emptyList(),Collections.emptyList());
+    }
+
+    public static <U> SortField<U> of(U sortFieldSelector, String... ignoredPathsForSorting){
+        return new SortField<>(sortFieldSelector, Arrays.asList(ignoredPathsForSorting),Collections.emptyList());
+    }
+
+    public static <U> SortField<U> of(U sortFieldSelector, String ignoredPathsForSorting){
+        return new SortField<>(sortFieldSelector,Collections.singletonList(ignoredPathsForSorting),Collections.emptyList());
+    }
+
+    @SuppressWarnings("varargs")
+    @SafeVarargs
+    public static <U> SortField<U> of(U sortFieldSelector, Matcher<String>... ignoredFieldMatchersForSorting){
+        return new SortField<>(sortFieldSelector,Collections.emptyList(),Arrays.asList(ignoredFieldMatchersForSorting));
+    }
+
+    public static <U> SortField<U> of(U sortFieldSelector, Matcher<String> ignoredFieldMatchersForSorting){
+        return new SortField<>(sortFieldSelector,Collections.emptyList(),Collections.singletonList(ignoredFieldMatchersForSorting));
+    }
+
+    public static <U> SortField<U> of(U sortFieldSelector, String ignoredPathsForSorting, Matcher<String> ignoredFieldMatchersForSorting){
+        return new SortField<>(sortFieldSelector,Collections.singletonList(ignoredPathsForSorting),Collections.singletonList(ignoredFieldMatchersForSorting));
     }
 
     public static <U> SortField<U> of(U sortFieldSelector, List<String> ignoredPathsForSorting, List<Matcher<String>> ignoredFieldMatchersForSorting){
