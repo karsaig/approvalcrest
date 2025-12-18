@@ -49,4 +49,23 @@ public class BeanMatcherCustomMatchingTest {
 
         assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("banana")));
     }
+
+    @Test
+    public void matchesIntFieldViaJsonFallback() {
+        // Bean path returns Integer(0); equalTo(0L) fails on Integer but passes on Long(0) from JSON.
+        ParentBean.Builder expected = parent().childBean(child());
+        ParentBean.Builder actual = parent().childBean(child());
+
+        assertThat(actual, sameBeanAs(expected).with("childBean.childInteger", equalTo(0L)));
+    }
+
+    @Test
+    public void matchesPrimitiveWithCustomMatcherRescuingDifferentValue() {
+        // expected has "kiwi", actual has "banana"; custom matcher handles childString so the
+        // structural comparison only sees the fields that are not covered by a custom matcher.
+        ParentBean.Builder expected = parent().childBean(child().childString("kiwi"));
+        ParentBean.Builder actual = parent().childBean(child().childString("banana"));
+
+        assertThat(actual, sameBeanAs(expected).with("childBean.childString", equalTo("banana")));
+    }
 }

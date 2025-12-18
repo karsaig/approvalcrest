@@ -124,14 +124,14 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         }
         initExpectedFromFile();
 
-        if (areCustomMatchersMatching(actual, mismatchDescription, gson, matcherConfiguration)) {
+        JsonElement actualJsonElement = getAsJsonElement(gson, actual);
+
+        if (areCustomMatchersMatchingBeanOrJson(actual, actualJsonElement, mismatchDescription, gson, matcherConfiguration)) {
 
             String expectedJson = expected.getOriginalContent();
             if (expected.isParsedJson()) {
-                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictMatching(), fileMatcherConfig.isStrictMatching());
+                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictFileMatching(), fileMatcherConfig.isStrictFileMatching());
             }
-
-            JsonElement actualJsonElement = getAsJsonElement(gson, actual);
 
             if (actual == null) {
                 matches = appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");

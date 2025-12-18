@@ -27,6 +27,16 @@ public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
+    public static JsonElement findPaths(JsonElement preComputedJson, Object objectForTypeCheck, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
+        JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
+        sortJsonFields(filteredJson, true);
+        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
+        if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
+        }
+        return filteredJson;
+    }
+
     public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
 

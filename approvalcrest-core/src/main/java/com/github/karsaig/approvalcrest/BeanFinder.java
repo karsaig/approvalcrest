@@ -12,9 +12,11 @@ package com.github.karsaig.approvalcrest;
 import static java.util.Arrays.asList;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 
@@ -25,33 +27,71 @@ public class BeanFinder {
 
     private final static String PATH_REGEX = Pattern.quote(".");
 
-    public static Object findBeanAt(String fieldPath, Object object) {
-        try {
-            return findBeanAt(asList(fieldPath.split(PATH_REGEX)), object);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(fieldPath + " does not exist");
+    /**
+     * Tagged list returned when a path segment traverses through a {@link Collection}.
+     * Each element is the value found in the corresponding collection element.
+     * Callers that need to distinguish "the field IS a collection" from "we fanned out
+     * through a collection" can use {@code instanceof FanoutResult}.
+     */
+    public static class FanoutResult extends ArrayList<Object> {
+        private static final long serialVersionUID = 1L;
+        public FanoutResult() {
+            super();
         }
     }
 
-    private static Object findBeanAt(List<String> fields, Object object) {
-        if (object == null) {
-            throw new PathNullPointerException(fields.get(0));
-        }
-        for (Field field : getEveryField(object.getClass())) {
-            field.setAccessible(true);
-            if (headOf(fields).equals(field.getName())) {
-                try {
-                    if (fields.size() == 1) {
-                        return field.get(object);
-                    } else {
-                        return findBeanAt(fields.subList(1, fields.size()), field.get(object));
+    public static Either<RuntimeException,Object> findBeanAt(String fieldPath, Object object) {
+            return findBeanAt(fieldPath, asList(fieldPath.split(PATH_REGEX)), object);
+    }
+
+    private static Either<RuntimeException,Object> findBeanAt(String fullPath, List<String> fields, Object object) {
+        try {
+            if (object == null) {
+                return Either.left(new PathNullPointerException(fields.get(0)));
+            }
+            // Transparent collection traversal: fan out into each element, mirroring
+            // FieldsIgnorer's array-traversal behaviour.
+            if (object instanceof Collection) {
+                Collection<?> coll = (Collection<?>) object;
+                FanoutResult fanout = new FanoutResult();
+                for (Object element : coll) {
+                    if (element == null) {
+                        fanout.add(null);
+                        continue;
                     }
-                } catch (IllegalAccessException e) {
+                    Either<RuntimeException, Object> r = findBeanAt(fullPath, fields, element);
+                    if (r.isLeft()) {
+                        return r;
+                    }
+                    fanout.add(r.getRight());
+                }
+                return Either.right(fanout);
+            }
+            for (Field field : getEveryField(object.getClass())) {
+                field.setAccessible(true);
+                if (headOf(fields).equals(field.getName())) {
+                    try {
+                        if (fields.size() == 1) {
+                            return Either.right(field.get(object));
+                        } else {
+                            Object next = field.get(object);
+                            if (next == null) {
+                                // Capture the name of the field that is null so the error message
+                                // says "childBean is null" rather than the confusing
+                                // "parent bean of childString is null".
+                                return Either.left(new PathNullPointerException(field.getName()));
+                            }
+                            return findBeanAt(fullPath, fields.subList(1, fields.size()), next);
+                        }
+                    } catch (IllegalAccessException ignored) {
+                    }
                 }
             }
-        }
 
-        throw new IllegalArgumentException();
+            return Either.left(new IllegalArgumentException(fullPath + " does not exist"));
+        } catch (Exception e) {
+            return Either.left(new IllegalArgumentException("Error searching for: " + fullPath,e));
+        }
     }
 
     private static String headOf(Collection<String> paths) {

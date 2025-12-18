@@ -1,0 +1,367 @@
+package com.github.karsaig.approvalcrest.matcher.custom;
+
+import com.github.karsaig.approvalcrest.matcher.ignores.AbstractJsonMatcherIgnoreTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.iterableWithSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.core.IsEqual.equalTo;
+
+public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest {
+
+    /** Both inputs carry childBean with childString="banana", childInteger=0. */
+    public static Object[][] customeMatchersTestcases() {
+        return new Object[][]{
+                {"Object input", parent().childBean(child().childString("banana")).build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childInteger\": 0,\n" +
+                        "    \"childString\": \"banana\"\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    /** Both inputs carry parentString="hello" in addition to childBean. */
+    public static Object[][] customMatcherInputsWithParentString() {
+        return new Object[][]{
+                {"Object input", parent().childBean(child().childString("banana")).parentString("hello").build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childInteger\": 0,\n" +
+                        "    \"childString\": \"banana\"\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": \"hello\"\n" +
+                        "}"}
+        };
+    }
+
+    /** Both inputs have a null childBean (Object omits the key; JSON string uses explicit null). */
+    public static Object[][] customMatcherInputsWithNullChildBean() {
+        return new Object[][]{
+                {"Object input", parent().build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": null,\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    /** Both inputs carry a single-element childBeanList. */
+    public static Object[][] customMatcherInputsWithOneChildBean() {
+        return new Object[][]{
+                {"Object input", parent().addToChildBeanList(child().childString("banana")).build()},
+                {"Json string input", "{\n" +
+                        "  \"childBeanList\": [\n" +
+                        "    {\n" +
+                        "      \"childInteger\": 0,\n" +
+                        "      \"childString\": \"banana\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // Primitive string field matchers
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesPrimitiveWithCustomMatcher(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesStringFieldWithContainsString(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", containsString("nan")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesStringFieldWithStartsWith(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", startsWith("ban")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesStringFieldWithNotMatcher(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", not(equalTo("kiwi"))), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesStringFieldWithGreaterThanOrEqualTo(String testName, Object input) {
+        // "banana" >= "apple" lexicographically
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", greaterThanOrEqualTo("apple")), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Integer field via JSON fallback (int bean value vs Long JSON value)
+    // -----------------------------------------------------------------------
+
+    /**
+     * The bean path returns Integer(0) for an int field; equalTo(0L) fails because Integer != Long.
+     * The JSON fallback returns Long(0), which passes.  This is the core int/Long bridge test.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesIntegerFieldViaJsonFallback(String testName, Object input) {
+        // childString stays in approved (exact match); childInteger handled by custom matcher
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childString\": \"banana\"\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childInteger", equalTo(0L)), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Chain of custom matchers
+    // -----------------------------------------------------------------------
+
+    /**
+     * Both childString and childInteger are handled by custom matchers.
+     * After filterJson removes both, childBean becomes empty and is itself removed,
+     * so the approved file has no childBean at all.
+     * childInteger specifically exercises the JSON fallback int/Long bridge.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void matchesFieldWithChainOfCustomMatchers(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBean.childString", equalTo("banana"))
+                        .with("childBean.childInteger", equalTo(0L)),
+                null, null);
+    }
+
+    /**
+     * Three independent custom matchers covering three different paths.
+     * Removing any single matcher would leave its path in the structural comparison;
+     * the differing value in the approved file would then cause a failure.
+     * {@code childBean.childInteger} also exercises the int/Long JSON-fallback bridge.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithParentString")
+    public void matchesWithThreeIndependentCustomMatchers(String testName, Object input) {
+        // After filtering all three paths, nothing remains inside childBean (it is pruned),
+        // and parentString is also absent – only the two empty collections are left.
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBean.childString", equalTo("banana"))
+                        .with("childBean.childInteger", equalTo(0L))
+                        .with("parentString", equalTo("hello")),
+                null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Top-level field
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithParentString")
+    public void matchesTopLevelStringField(String testName, Object input) {
+        // parentString handled by matcher; all other fields in approved exactly
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0,\n" +
+                "    \"childString\": \"banana\"\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("parentString", equalTo("hello")), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Null field
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithNullChildBean")
+    public void matchesNullFieldWithNullValueMatcher(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean", nullValue()), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Collection matcher
+    // -----------------------------------------------------------------------
+
+    /**
+     * iterableWithSize works for both a Java List (Object input) and a JsonArray (JSON fallback),
+     * since JsonArray implements Iterable.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithOneChildBean")
+    public void matchesCollectionSizeWithIterableHasSize(String testName, Object input) {
+        // childBeanList handled by matcher; after filtering, only childBeanMap remains
+        String approvedFileContent = "{\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", iterableWithSize(1)), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Custom matcher rescues a value that differs from the approved snapshot
+    // -----------------------------------------------------------------------
+
+    /**
+     * The approved file stores "kiwi" for childString, but the actual value is "banana".
+     * Without the custom matcher the structural comparison would see banana ≠ kiwi and fail.
+     * With {@code .with("childBean.childString", equalTo("banana"))}, the matcher passes and
+     * the field is filtered from both sides before structural comparison, so the test passes.
+     * The counterpart failure test is in {@link JsonMatcherCustomFailureTest}.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void passesWhenCustomMatcherRescuesValueThatDiffersFromApproved(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0,\n" +
+                "    \"childString\": \"kiwi\"\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Deeply nested field path (3 levels: box.item.value)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Custom matcher on a 3-level deep path {@code box.item.value}.
+     * The value at depth is verified by the matcher; the path is also filtered from both actual
+     * and the approved snapshot before structural comparison, so only {@code box.label} and
+     * {@code name} are compared structurally.
+     * For the JSON-string input, {@code findBeanAt} fails on the raw String and the JSON
+     * fallback ({@code findJsonValueAt}) successfully navigates the parsed tree.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("deepContainerInputs")
+    public void matchesDeeplyNestedFieldPath(String testName, Object input) {
+        // After filtering box.item.value, item becomes empty and is removed, leaving box.label intact
+        String approvedFileContent = "{\n" +
+                "  \"box\": {\n" +
+                "    \"label\": \"box1\"\n" +
+                "  },\n" +
+                "  \"name\": \"container\"\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("box.item.value", equalTo("deepValue")), null, null);
+    }
+
+    public static Object[][] deepContainerInputs() {
+        Container.Box.Item item = new Container.Box.Item();
+        item.value = "deepValue";
+        Container.Box box = new Container.Box();
+        box.label = "box1";
+        box.item = item;
+        Container container = new Container();
+        container.name = "container";
+        container.box = box;
+        return new Object[][]{
+                {"Object input", container},
+                // JSON fields are sorted alphabetically by sortJsonFields; box (b) < name (n), item (i) < label (l)
+                {"Json string input", "{\n" +
+                        "  \"box\": {\n" +
+                        "    \"item\": {\n" +
+                        "      \"value\": \"deepValue\"\n" +
+                        "    },\n" +
+                        "    \"label\": \"box1\"\n" +
+                        "  },\n" +
+                        "  \"name\": \"container\"\n" +
+                        "}"}
+        };
+    }
+
+    // Test-local deeply nested data structure used by matchesDeeplyNestedFieldPath
+    static class Container {
+        String name;
+        Box box;
+
+        static class Box {
+            String label;
+            Item item;
+
+            static class Item {
+                String value;
+            }
+        }
+    }
+}

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher;
@@ -172,10 +173,12 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         if (Files.notExists(approvedFileAndInfo.getFileName())) {
             try {
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
+                String message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
+                        + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
                 if (!fileMatcherConfig.isPassOnCreateEnabled()) {
-                    String message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
-                                + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
                     fail(message);
+                } else {
+                    System.out.println(message);
                 }
                 return true;
             } catch (IOException e) {

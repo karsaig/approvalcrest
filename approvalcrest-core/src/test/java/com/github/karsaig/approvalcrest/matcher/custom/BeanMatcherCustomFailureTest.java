@@ -81,6 +81,27 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
 
 
     @Test
+    public void failsWhenIntFieldMatcherDoesNotMatchValueEvenViaJsonFallback() {
+        // Bean path: Integer(0), equalTo(5L) → false.  JSON fallback: Long(0), equalTo(5L) → still false.
+        // The failure report preserves the original bean-path value (Integer 0) for the mismatch message.
+        ParentBean expectedBean = parent().childBean(child().childString("apple")).build();
+        ParentBean inputBean = parent().childBean(child().childString("apple")).build();
+
+        assertDiagnosingMatcher(inputBean, expectedBean, sameBeanAs -> sameBeanAs.with("childBean.childInteger", equalTo(5L)), AssertionError.class, thrown -> {
+            Assertions.assertEquals("\n" +
+                    "Expected: {\n" +
+                    "  \"childBean\": {\n" +
+                    "    \"childString\": \"apple\"\n" +
+                    "  },\n" +
+                    "  \"childBeanList\": [],\n" +
+                    "  \"childBeanMap\": []\n" +
+                    "}\n" +
+                    "and childBean.childInteger <5L>\n" +
+                    "     but: childBean.childInteger was <0>", thrown.getMessage());
+        });
+    }
+
+    @Test
     public void doesNotIncludeParentBeanFromFieldPath() {
         ParentBean expectedBean = parent().childBean(child().childString("apple")).build();
         ParentBean inputBean = parent().build();
@@ -96,9 +117,22 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                     "  \"childBeanMap\": []\n" +
                     "}\n" +
                     "and childBean.childString \"apple\"\n" +
-                    "     but: parent bean of childString is null", thrown.getMessage());
+                    "     but: childBean is null", thrown.getMessage());
         });
     }
 
+    @Test
+    public void failsWhenPathThroughEmptyCollectionIsUsed() {
+        // When childBeanList is empty there are no values at childBeanList.childString to
+        // validate against.  The custom matcher must NOT silently pass (vacuous truth).
+        ParentBean expectedBean = parent().build();
+        ParentBean inputBean   = parent().build();
+
+        assertDiagnosingMatcher(inputBean, expectedBean, sameBeanAs -> sameBeanAs.with("childBeanList.childString", equalTo("apple")), AssertionError.class, thrown -> {
+            Assertions.assertTrue(
+                    thrown.getMessage().contains("childBeanList.childString"),
+                    "Expected mismatch mentioning the path, got: " + thrown.getMessage());
+        });
+    }
 
 }

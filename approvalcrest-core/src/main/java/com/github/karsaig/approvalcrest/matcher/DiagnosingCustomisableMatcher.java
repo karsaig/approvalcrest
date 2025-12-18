@@ -74,7 +74,9 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         circularReferenceTypes.addAll(getClassesWithCircularReferences(expected, matcherConfiguration));
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
 
-        if (!areCustomMatchersMatching(actual, mismatchDescription, gson, matcherConfiguration)) {
+        JsonElement actualAsJsonElement = actual != null ? gson.toJsonTree(actual) : null;
+
+        if (!areCustomMatchersMatchingBeanOrJson(actual, actualAsJsonElement, mismatchDescription, gson, matcherConfiguration)) {
             return false;
         }
 
@@ -84,7 +86,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
             return appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
         }
 
-        String actualJson = filterJson(gson, actual);
+        String actualJson = filterJson(gson, actualAsJsonElement, actual);
 
         return assertEquals(expectedJson, actualJson, mismatchDescription);
     }
@@ -144,6 +146,15 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
         JsonElement filteredJson = findPaths(gson, object, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
+
+        return removeSetMarker(gson.toJson(filteredJson));
+    }
+
+    private String filterJson(Gson gson, JsonElement preComputedJson, Object objectForTypeCheck) {
+        Set<String> set = new HashSet<>();
+        set.addAll(matcherConfiguration.getPathsToIgnore());
+        set.addAll(matcherConfiguration.getCustomMatchers().keySet());
+        JsonElement filteredJson = findPaths(preComputedJson, objectForTypeCheck, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
 
         return removeSetMarker(gson.toJson(filteredJson));
     }

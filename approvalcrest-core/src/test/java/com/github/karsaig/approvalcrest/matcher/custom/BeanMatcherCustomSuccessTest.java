@@ -7,6 +7,9 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
@@ -55,6 +58,26 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         ParentBean actual = parent().childBean(child().childString("banana").childInteger(2)).parentString("strawberry").build();
 
         assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean", childStringEqualTo("banana")).with("parentString", equalTo("strawberry")));
+    }
+
+    @Test
+    public void matchesWithThreeIndependentCustomMatchers() {
+        // expected and actual differ on all three paths.  Removing any one matcher would leave
+        // that path in the structural comparison and the differing value would cause a failure.
+        // childBean.childInteger also exercises the int/Long JSON-fallback bridge (Integer vs Long).
+        ParentBean expected = parent()
+                .childBean(child().childString("kiwi").childInteger(5))
+                .parentString("apple")
+                .build();
+        ParentBean actual = parent()
+                .childBean(child().childString("banana").childInteger(9))
+                .parentString("strawberry")
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher
+                .with("childBean.childString", equalTo("banana"))
+                .with("childBean.childInteger", equalTo(9L))
+                .with("parentString", equalTo("strawberry")));
     }
 
     @Test
@@ -148,12 +171,105 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
                 "     but: string was null");
     }
 
-    @Disabled
+    @Test
+    public void matchesIntFieldViaJsonFallback() {
+        // Bean path for an int/Integer field returns Integer(0); equalTo(0L) fails because
+        // Integer != Long.  The JSON fallback returns Long(0), which passes the matcher.
+        ParentBean expected = parent().childBean(child().childString("apple")).build();
+        ParentBean actual = parent().childBean(child().childString("apple")).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean.childInteger", equalTo(0L)));
+    }
+
+    @Test
+    public void matchesPrimitiveWithCustomMatcherRescuingDifferentValue() {
+        // expected has "kiwi", actual has "banana".  Without the custom matcher the structural
+        // comparison would see kiwi != banana and fail.  With the custom matcher the field is
+        // filtered from both sides before comparison, so only the matching parts are compared.
+        ParentBean expected = parent().childBean(child().childString("kiwi")).build();
+        ParentBean actual = parent().childBean(child().childString("banana")).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean.childString", equalTo("banana")));
+    }
+
+    @Test
+    public void matchesDeeplyNestedFieldPath() {
+        // 3-level deep path box.item.value is verified by the custom matcher; box.label and name
+        // are compared structurally.
+        BeanContainer.BeanBox.BeanItem item = new BeanContainer.BeanBox.BeanItem();
+        item.value = "deepValue";
+        BeanContainer.BeanBox box = new BeanContainer.BeanBox();
+        box.label = "box1";
+        box.item = item;
+        BeanContainer expected = new BeanContainer();
+        expected.name = "container";
+        expected.box = box;
+
+        BeanContainer.BeanBox.BeanItem actualItem = new BeanContainer.BeanBox.BeanItem();
+        actualItem.value = "deepValue";
+        BeanContainer.BeanBox actualBox = new BeanContainer.BeanBox();
+        actualBox.label = "box1";
+        actualBox.item = actualItem;
+        BeanContainer actual = new BeanContainer();
+        actual.name = "container";
+        actual.box = actualBox;
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("box.item.value", equalTo("deepValue")));
+    }
+
+    // 3-level nested data structure used by matchesDeeplyNestedFieldPath
+    static class BeanContainer {
+        String name;
+        BeanBox box;
+
+        static class BeanBox {
+            String label;
+            BeanItem item;
+
+            static class BeanItem {
+                String value;
+            }
+        }
+    }
+
     @Test
     public void matchesPropertyOfItemInCollectionWithCustomMatcher() {
-        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi").childInteger(5)).addToChildBeanList(child().childString("pear").childInteger(8)).build();
-        ParentBean actual = parent().addToChildBeanList(child().childString("apple").childInteger(6)).addToChildBeanList(child().childString("banana").childInteger(7)).build();
+        // childString values differ between expected and actual but are handled by the custom matcher.
+        // Only childInteger is compared structurally, so it must match.
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).addToChildBeanList(child().childString("pear")).build();
+        ParentBean actual = parent().addToChildBeanList(child().childString("apple")).addToChildBeanList(child().childString("banana")).build();
 
         assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList.childString", Matchers.oneOf("apple","banana")));
+    }
+
+    /**
+     * Verifies transparent fanout through TWO nested collection levels.
+     * Path "parentBeans.childBeanList.childString" traverses:
+     *   List&lt;ParentBean&gt; → List&lt;ChildBean&gt; → childString
+     * Every leaf value must satisfy the custom matcher.
+     */
+    @Test
+    public void matchesPathThroughNestedCollections() {
+        ParentBean p1 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean p2 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+
+        NestedCollectionWrapper expected = new NestedCollectionWrapper(Arrays.asList(p1, p2));
+        NestedCollectionWrapper actual   = new NestedCollectionWrapper(Arrays.asList(p1, p2));
+
+        // All leaf childString values are "apple" → all must pass the matcher
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("parentBeans.childBeanList.childString", equalTo("apple")));
+    }
+
+    static class NestedCollectionWrapper {
+        List<ParentBean> parentBeans;
+        NestedCollectionWrapper(List<ParentBean> parentBeans) {
+            this.parentBeans = parentBeans;
+        }
     }
 }
