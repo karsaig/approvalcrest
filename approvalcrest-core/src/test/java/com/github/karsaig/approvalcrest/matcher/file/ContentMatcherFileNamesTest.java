@@ -5,16 +5,19 @@ import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
 import com.github.karsaig.approvalcrest.util.InMemoryFiles;
 import org.hamcrest.MatcherAssert;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import com.google.common.jimfs.Configuration;
 
-
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
 
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.TESTED_OS_CONFIGS;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
@@ -301,6 +304,133 @@ public class ContentMatcherFileNamesTest extends AbstractFileMatcherTest {
 
             List<InMemoryFiles> actualFiles = getFiles(imfsi);
             InMemoryFiles expected = new InMemoryFiles(imfsi.getWorkingDirectory().resolve(relativePath).resolve(customPath).resolve("cd3006-approved.content").toAbsolutePath(), "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    // f1-abs-rel-combo: absolute withRelativePathName + relative withPathName (Unix only,
+    // because the production code uses Paths.get(relativePathName) to check isAbsolute(), which
+    // relies on the host OS default filesystem; on Linux, strings starting with "/" are absolute).
+    public static Stream<Arguments> absoluteRelativePathWithCustomPathCases() {
+        return Stream.of(
+            Arguments.of("/abs", "sub", "/abs/sub/"),
+            Arguments.of("/abs/deep", "sub/dir", "/abs/deep/sub/dir/")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("absoluteRelativePathWithCustomPathCases")
+    public void absoluteRelativePathWithCustomPath(String relativePath, String customPath, String expectedDirPath) {
+        String actual = "Content";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .withRelativePathName(relativePath).withPathName(customPath);
+
+            // absolute relativePathName causes workingDirectory.resolve(relPath) → relPath itself
+            writeFile(imfsi.getInMemoryFileSystem().getPath(relativePath).resolve(customPath).resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(expectedDirPath + "cd3006-approved.content", "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    // f1-path-overload: withPath(null) behaves like no path was set (uses class-hash directory).
+    public static Stream<Arguments> allOsPermutations() {
+        return TESTED_OS_CONFIGS.stream().map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource("allOsPermutations")
+    public void withPathObjectNullBehavesLikeDefaultTest(Configuration osConfig) {
+        String actual = "Content";
+        inMemoryFs(osConfig, imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .withPath(null);
+
+            writeFile(imfsi.getTestPath().resolve("87668f").resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(
+                    imfsi.getInMemoryFileSystem().getPath("87668f").resolve("cd3006-approved.content"), "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    // f1-path-overload: withPath(Path) with a relative filesystem-native Path mirrors withPathName.
+    @ParameterizedTest
+    @MethodSource("allOsPermutations")
+    public void withPathObjectRelativeTest(Configuration osConfig) {
+        String actual = "Content";
+        inMemoryFs(osConfig, imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            Path relPath = imfsi.getInMemoryFileSystem().getPath("myPath");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .withPath(relPath);
+
+            writeFile(imfsi.getTestPath().resolve("myPath").resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(
+                    imfsi.getInMemoryFileSystem().getPath("myPath").resolve("cd3006-approved.content"), "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    // f1-path-overload + f1-windows-abs: withPath(absolutePath) with a Unix jimfs absolute Path.
+    @Test
+    public void withPathObjectAbsoluteUnixTest() {
+        String actual = "Content";
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            Path absPath = imfsi.getInMemoryFileSystem().getPath("/a");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .withPath(absPath);
+
+            writeFile(absPath.resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("/a/cd3006-approved.content", "Content");
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    // f1-windows-abs: withPath(absolutePath) with a Windows jimfs absolute Path (e.g. C:\a).
+    // withPathName(String) cannot cover this on a Linux host because Paths.get("C:\\a") creates a
+    // relative Linux path; withPath(Path) accepts the native filesystem Path directly.
+    @Test
+    public void withPathObjectAbsoluteWindowsTest() {
+        String actual = "Content";
+        inMemoryWindowsFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "ContentMatcherTest", "uniqueIdTest");
+            FileSystem fs = imfsi.getInMemoryFileSystem();
+            // Build a Windows absolute path: root (C:\) + "a" → C:\a
+            Path absWindowsPath = fs.getRootDirectories().iterator().next().resolve("a");
+            ContentMatcher<String> underTest = new ContentMatcher<String>(dummyTestInfo, getDefaultFileMatcherConfig())
+                    .withPath(absWindowsPath);
+
+            writeFile(absWindowsPath.resolve("cd3006-approved.content"), actual);
+
+            MatcherAssert.assertThat(actual, underTest);
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles(
+                    absWindowsPath.resolve("cd3006-approved.content"), "Content");
 
             assertIterableEquals(singletonList(expected), actualFiles);
         });
