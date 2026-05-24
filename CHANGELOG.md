@@ -1,6 +1,18 @@
 Changelog
 ===========
 
+Version 1.0.0
+-----
+
+- Added `withAlias(value, alias)` / `withAlias(fieldName, value, alias)` convenience methods and `withAliasMap(AliasMap)` for substituting volatile values (UUIDs, generated IDs, timestamps) with stable human-readable aliases before comparison. Aliases are applied after ignores and before sorting, so they affect sort keys. Applied on first run and on overwrite, so the approved file always contains the alias rather than the raw value.
+- Added `withMatcher(Matcher<String>, Matcher<V>)` to `CustomisableMatcher` — a pattern-based variant of `with()` that matches all fields at any depth whose name satisfies the supplied `Matcher<String>`. If no fields match, the check passes vacuously. Supported by both `sameBeanAs` and `sameJsonAsApproved`.
+- Custom matchers configured via `with()` now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. when the actual input is already a JSON string). Enables `sameJsonAsApproved().with(path, matcher)` to work correctly for string inputs.
+- Fixed sorting of root-level `List` and array inputs: explicit `sortField("")` now triggers sort on root `List`/array in addition to the existing auto-sort for `Set`/`Map`.
+- Fixed sort order to be bottom-up: nested arrays are fully sorted before their parent array's sort key is computed.
+- Fixed sorting of arrays-of-arrays and arrays-of-arrays-of-beans with correct fan-out semantics.
+- Fixed `withMatcher(Matcher<String>, ...)` pattern ignores being applied after sorting in `sameBeanAs`, causing matched fields to influence the sort key. Pattern ignores are now applied before sorting, consistent with `sameJsonAsApproved`.
+- Improved error message when a required `--add-opens` JVM flag is missing: now reports the exact flag name and shows ready-to-paste Maven surefire `<argLine>` and Gradle `jvmArgs` snippets.
+
 Version 0.62.3 - 2024/05/27
 -----
 
