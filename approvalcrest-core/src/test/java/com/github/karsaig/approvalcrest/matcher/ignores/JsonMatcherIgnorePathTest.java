@@ -6209,5 +6209,30 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         ignoreEveryFieldInBeanShouldNotLeaveEmpty(testName, input, jsonMatcher -> jsonMatcher.ignoring("childBean.childInteger","childBean.childString"));
     }
 
+    // f4-strict-ignored-field-fail: in strict mode the approved file is NOT filtered on the
+    // expected side, so if it contains an ignored field the comparison fails.
+    // In lenient mode both sides are filtered → passes.
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("subpathWithPrimitives")
+    void strictModeFailsWhenApprovedFileContainsIgnoredField(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childString\": \"banana\",\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.ignoring("childBean.childString"), null);
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("childBean.childString"),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("childString"),
+                        "Expected 'childString' in error but was: " + error.getMessage()),
+                AssertionError.class);
+    }
 
 }
