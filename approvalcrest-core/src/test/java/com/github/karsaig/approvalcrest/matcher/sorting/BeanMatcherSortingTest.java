@@ -5,6 +5,8 @@ import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.junit.jupiter.api.Test;
 
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
+import static org.hamcrest.Matchers.anything;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 /**
@@ -91,5 +93,27 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
         // no sortFieldPath configured — order mismatch → fails
         assertDiagnosingMatcher(actual, expected,
                 matcher -> matcher, AssertionError.class, thrown -> {});
+    }
+
+    @Test
+    public void withMatcherPatternFieldsAreExcludedFromSortKey() {
+        // withMatcher(pattern) fields must be stripped BEFORE sort key computation.
+        // actual[0]: childString="B", childInteger=10
+        // actual[1]: childString="A", childInteger=20
+        // If childInteger stays in the sort key its numeric prefix "10" < "20" makes
+        // "B"-element sort first — the wrong order.  After stripping it the sort key
+        // is childString only: "A" < "B" → "A"-element comes first (correct).
+        ParentBean actual = parent()
+                .addToChildBeanList("B", 10)
+                .addToChildBeanList("A", 20)
+                .build();
+        ParentBean expected = parent()
+                .addToChildBeanList("A", 20)
+                .addToChildBeanList("B", 10)
+                .build();
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher
+                        .withMatcher(containsString("childInteger"), anything())
+                        .sortFieldPath(SortField.of("childBeanList")));
     }
 }

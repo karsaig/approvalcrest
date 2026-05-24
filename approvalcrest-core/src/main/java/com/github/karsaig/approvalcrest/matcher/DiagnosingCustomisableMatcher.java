@@ -14,6 +14,7 @@ import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
@@ -32,7 +33,10 @@ import java.util.regex.Pattern;
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollectionSorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
 /**
@@ -155,8 +159,12 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        JsonElement filteredJson = findPaths(gson, object, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
+        JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
+        JsonElement filteredJson = findPaths(jsonElement, set);
         filterByCustomMatcherPatterns(filteredJson);
+        sortJsonFields(filteredJson, true);
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
+        applyRootCollectionSorting(filteredJson, object, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
@@ -164,8 +172,11 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        JsonElement filteredJson = findPaths(preComputedJson, objectForTypeCheck, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
+        JsonElement filteredJson = findPaths(preComputedJson, set);
         filterByCustomMatcherPatterns(filteredJson);
+        sortJsonFields(filteredJson, true);
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
         return removeSetMarker(gson.toJson(filteredJson));
     }
 

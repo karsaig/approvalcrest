@@ -27,6 +27,19 @@ public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
+    public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
+        if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
+            // Sets and Maps are always sorted by their root representation (no meaningful order)
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
+        } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
+            // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
+            List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
+            if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+            }
+        }
+    }
+
     public static JsonElement findPaths(JsonElement preComputedJson, Object objectForTypeCheck, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
         sortJsonFields(filteredJson, true);
