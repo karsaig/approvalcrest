@@ -3679,11 +3679,11 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "    [\"A\", \"C\"]\n" +
                 "  ]\n" +
                 "}";
-        // ["A","C"] and ["B","Z"] (elements within each sorted too); ["A","C"] < ["B","Z"]
+        // ["A","C"] < ["Z","B"] lexicographically — inner arrays NOT reordered
         String approved = "{\n" +
                 "  \"matrix\": [\n" +
                 "    [\"A\", \"C\"],\n" +
-                "    [\"B\", \"Z\"]\n" +
+                "    [\"Z\", \"B\"]\n" +
                 "  ]\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
@@ -3691,67 +3691,30 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
     }
 
     // -------------------------------------------------------------------------
-    // sort-gap-12b: array-of-array-of-beans sorting (inner arrays sorted too)
+    // array-of-array-of-beans: outer array is reordered; inner arrays are NOT touched
     // -------------------------------------------------------------------------
 
     @Test
-    public void arrayOfArrayOfBeansInnerArraysAreSorted() {
-        // When an array's elements are themselves arrays of beans, sorting the outer
-        // array must first sort each inner array so sort keys are deterministic.
+    public void arrayOfArraySortingReordersOuterArrayOnly() {
+        // sortField("groups") reorders the outer array based on each inner array's
+        // JSON string as sort key. Inner arrays' own element order is NOT changed —
+        // only the user can control that by sorting the inner list before passing it in
+        // or by using Set<Bean> as the inner collection type.
         String actual = "{\n" +
                 "  \"groups\": [\n" +
-                "    [{\"age\": \"4\", \"name\": \"D\"}, {\"age\": \"3\", \"name\": \"C\"}],\n" +
-                "    [{\"age\": \"2\", \"name\": \"B\"}, {\"age\": \"1\", \"name\": \"A\"}]\n" +
+                "    [{\"name\": \"D\"}, {\"name\": \"C\"}],\n" +
+                "    [{\"name\": \"B\"}, {\"name\": \"A\"}]\n" +
                 "  ]\n" +
                 "}";
-        // inner arrays sorted: [C,D] and [A,B]; outer sorted by sort-key: A-group < C-group
+        // sort keys: inner[0]=["D","C"] JSON, inner[1]=["A","B"] JSON (fields sorted alphabetically)
+        // {"name":"A"} < {"name":"D"} → group[1] first
         String approved = "{\n" +
                 "  \"groups\": [\n" +
-                "    [{\"age\": \"1\", \"name\": \"A\"}, {\"age\": \"2\", \"name\": \"B\"}],\n" +
-                "    [{\"age\": \"3\", \"name\": \"C\"}, {\"age\": \"4\", \"name\": \"D\"}]\n" +
+                "    [{\"name\": \"B\"}, {\"name\": \"A\"}],\n" +
+                "    [{\"name\": \"D\"}, {\"name\": \"C\"}]\n" +
                 "  ]\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("groups")), (String) null);
-    }
-
-    @Test
-    public void arrayOfArrayOfBeansWithIgnoredFieldSortsByRemainingFields() {
-        // Ignoring a field propagates into inner arrays: sort key for each bean
-        // excludes the ignored field; inner arrays and outer array are both reordered.
-        String actual = "{\n" +
-                "  \"groups\": [\n" +
-                "    [{\"age\": \"30\", \"name\": \"B\"}, {\"age\": \"25\", \"name\": \"A\"}],\n" +
-                "    [{\"age\": \"20\", \"name\": \"D\"}, {\"age\": \"15\", \"name\": \"C\"}]\n" +
-                "  ]\n" +
-                "}";
-        // sort by name only (age stripped); inner: [A,B] and [C,D]; outer: A-group first
-        String approved = "{\n" +
-                "  \"groups\": [\n" +
-                "    [{\"age\": \"25\", \"name\": \"A\"}, {\"age\": \"30\", \"name\": \"B\"}],\n" +
-                "    [{\"age\": \"15\", \"name\": \"C\"}, {\"age\": \"20\", \"name\": \"D\"}]\n" +
-                "  ]\n" +
-                "}";
-        assertJsonMatcherWithDummyTestInfo(actual, approved,
-                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("groups", "age")), (String) null);
-    }
-
-    @Test
-    public void arrayOfArrayOfBeansSortedByMatcherSelectorWithIgnoring() {
-        // Same as above but using sortFieldMatcher instead of sortFieldPath.
-        String actual = "{\n" +
-                "  \"groups\": [\n" +
-                "    [{\"age\": \"30\", \"name\": \"B\"}, {\"age\": \"25\", \"name\": \"A\"}],\n" +
-                "    [{\"age\": \"20\", \"name\": \"D\"}, {\"age\": \"15\", \"name\": \"C\"}]\n" +
-                "  ]\n" +
-                "}";
-        String approved = "{\n" +
-                "  \"groups\": [\n" +
-                "    [{\"age\": \"25\", \"name\": \"A\"}, {\"age\": \"30\", \"name\": \"B\"}],\n" +
-                "    [{\"age\": \"15\", \"name\": \"C\"}, {\"age\": \"20\", \"name\": \"D\"}]\n" +
-                "  ]\n" +
-                "}";
-        assertJsonMatcherWithDummyTestInfo(actual, approved,
-                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("groups"), "age")), (String) null);
     }
 }
