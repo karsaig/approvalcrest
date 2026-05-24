@@ -3409,6 +3409,11 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items", "age")), (String) null);
+        // negative: WITHOUT ignoring "age", sort key includes age; "25" < "30" → banana
+        // sorts first, but approved (sorted by name) has apple first → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, approved, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")),
+                thrown -> {}, AssertionFailedError.class);
     }
 
     // -------------------------------------------------------------------------
@@ -3433,6 +3438,11 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"), "age")), (String) null);
+        // negative: WITHOUT ignoring "age", sort key includes age → banana sorts first,
+        // approved has apple first → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, approved, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
     }
 
     // -------------------------------------------------------------------------
@@ -3523,6 +3533,11 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items").ignoring("addr")), (String) null);
+        // negative: WITHOUT ignoring "addr", the complex field is included in sort key;
+        // Alpha < Zeta → B sorts first, but approved has A first → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, approved, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")),
+                thrown -> {}, AssertionFailedError.class);
     }
 
     @Test
@@ -3543,6 +3558,10 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items")).ignoring("addr")), (String) null);
+        // negative: WITHOUT ignoring "addr", Alpha < Zeta → B sorts first → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, approved, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
     }
 
     // -------------------------------------------------------------------------
