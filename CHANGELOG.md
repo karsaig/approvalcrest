@@ -4,6 +4,11 @@ Changelog
 Version 1.0.0
 -----
 
+- Added strict matching mode (`strictMatching` system property, enabled by default): in strict mode `ignoring()` strips fields from the actual side only, leaving the approved file untouched. Disable with `-DstrictMatching=false` to restore the old two-sided stripping behaviour.
+- Added type/class comparison to `sameBeanAs`: the matcher now fails when actual and expected objects have incompatible runtime types, with a clear message. Suppress with `skipClassComparison()` on the matcher or the `beanMatcherSkipClassComparison` environment variable.
+- Fixed `withPathName` / relative path handling in `JsonMatcher` and `ContentMatcher`: absolute paths, relative paths, and the default hash-based directory are now all computed consistently; blank path arguments are treated as no-ops.
+- Fixed unique ID / filename separator handling: no extra `-` separator is inserted when the unique ID already starts with one, or when the filename already ends with one; blank unique IDs are ignored.
+- Fixed `FieldsIgnorer`: ignoring a field inside a `Map` value no longer leaves an orphaned empty array in the serialised output.
 - Added `withAlias(value, alias)` / `withAlias(fieldName, value, alias)` convenience methods and `withAliasMap(AliasMap)` for substituting volatile values (UUIDs, generated IDs, timestamps) with stable human-readable aliases before comparison. Aliases are applied after ignores and before sorting, so they affect sort keys. Applied on first run and on overwrite, so the approved file always contains the alias rather than the raw value.
 - Added `withMatcher(Matcher<String>, Matcher<V>)` to `CustomisableMatcher` — a pattern-based variant of `with()` that matches all fields at any depth whose name satisfies the supplied `Matcher<String>`. If no fields match, the check passes vacuously. Supported by both `sameBeanAs` and `sameJsonAsApproved`.
 - Custom matchers configured via `with()` now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. when the actual input is already a JSON string). Enables `sameJsonAsApproved().with(path, matcher)` to work correctly for string inputs.
