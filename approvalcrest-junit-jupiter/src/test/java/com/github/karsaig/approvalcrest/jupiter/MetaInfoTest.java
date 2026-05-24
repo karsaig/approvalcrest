@@ -2,6 +2,7 @@ package com.github.karsaig.approvalcrest.jupiter;
 
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Paths;
 
@@ -35,5 +36,19 @@ public class MetaInfoTest {
         DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(input2);
         matcher.skipClassComparison();
         assertThat(input1, matcher);
+    }
+
+    @Test
+    public void toStringContainsAllFields() {
+        JunitJupiterTestMeta underTest = new JunitJupiterTestMeta(
+                Paths.get("src/test/java/com/github/karsaig/approvalcrest/jupiter"),
+                "com.github.karsaig.approvalcrest.jupiter.MetaInfoTest",
+                "toStringContainsAllFields",
+                Paths.get("src/test/resources/approvalcrest"));
+        String result = underTest.toString();
+        assertTrue(result.contains("com.github.karsaig.approvalcrest.jupiter.MetaInfoTest#toStringContainsAllFields"));
+        assertTrue(result.contains("cp="));
+        assertTrue(result.contains("ad="));
+        assertTrue(result.contains("wd="));
     }
 }

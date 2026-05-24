@@ -72,4 +72,12 @@ abstract class Junit5TestMetaBase implements TestMetaInformation {
         return workingDirectory;
     }
 
+    @Override
+    public String toString() {
+        return testClassName + "#" + testMethodName +
+                "[cp=" + testClassPath +
+                ",ad=" + approvedDirectory +
+                ",wd=" + workingDirectory + "]";
+    }
+
 }

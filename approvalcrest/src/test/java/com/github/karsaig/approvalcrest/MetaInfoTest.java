@@ -11,6 +11,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
 
+import static org.junit.Assert.assertTrue;
+
 public class MetaInfoTest {
 
     @Rule
@@ -40,6 +42,20 @@ public class MetaInfoTest {
         DiagnosingCustomisableMatcher<Object> matcher = sameBeanAs(input2);
         matcher.skipClassComparison();
         assertThat(input1, matcher);
+    }
+
+    @Test
+    public void toStringContainsAllFields() {
+        Junit4TestMeta underTest = new Junit4TestMeta(
+                Paths.get("src/test/java/com/github/karsaig/approvalcrest"),
+                "com.github.karsaig.approvalcrest.MetaInfoTest",
+                "toStringContainsAllFields",
+                Paths.get("src/test/resources/approvalcrest"));
+        String result = underTest.toString();
+        assertTrue(result.contains("com.github.karsaig.approvalcrest.MetaInfoTest#toStringContainsAllFields"));
+        assertTrue(result.contains("cp="));
+        assertTrue(result.contains("ad="));
+        assertTrue(result.contains("wd="));
     }
 
 }
