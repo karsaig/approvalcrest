@@ -617,4 +617,25 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")), null, null);
     }
+
+    // -----------------------------------------------------------------------
+    // withMatcher — strict mode
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void strictModePassesWhenPatternMatcherFieldAbsentFromApprovedFile(String testName, Object input) {
+        // In strict mode the approved file is taken as-is (filterByCustomMatcherPatterns skipped on
+        // expected). The actual still has the field stripped. If the approved file was correctly
+        // created without the pattern-matched field, both sides agree → passes.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")), null, null);
+    }
 }

@@ -418,5 +418,29 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "Expected null mismatch in message, was: " + error.getMessage()),
                 AssertionError.class);
     }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputs")
+    public void strictModeFailsWhenPatternMatcherFieldPresentInApprovedFile(String testName, Object input) {
+        // In strict mode the approved file is taken as-is: filterByCustomMatcherPatterns is skipped
+        // on expected. The actual still has childString stripped. So expected retains childString but
+        // actual does not → structural diff → fails.
+        // This documents that approved files must not contain fields handled by withMatcher(), just
+        // as they must not contain fields handled by the path-based with().
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childString\": \"banana\",\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("childString"),
+                        "Expected 'childString' in error but was: " + error.getMessage()),
+                AssertionError.class);
+    }
 }
 
