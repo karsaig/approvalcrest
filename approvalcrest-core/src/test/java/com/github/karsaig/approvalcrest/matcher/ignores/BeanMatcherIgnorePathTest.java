@@ -418,4 +418,28 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
                             "failure should report childString diff");
                 });
     }
+
+    @Test
+    void ignoreFieldInNestedRootList() {
+        List<List<ChildBean>> actual = Lists.newArrayList(
+                Lists.newArrayList(
+                        child().childString("banana").childInteger(1).build(),
+                        child().childString("apple").childInteger(2).build()),
+                Lists.newArrayList(
+                        child().childString("cherry").childInteger(3).build()));
+        List<List<ChildBean>> expected = Lists.newArrayList(
+                Lists.newArrayList(
+                        child().childString("kiwi").childInteger(1).build(),
+                        child().childString("grape").childInteger(2).build()),
+                Lists.newArrayList(
+                        child().childString("plum").childInteger(3).build()));
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.ignoring("childString").skipClassComparison());
+        assertDiagnosingMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison,
+                AssertionFailedError.class, thrown -> {
+                    Assertions.assertTrue(thrown.getMessage().contains("childString"),
+                            "failure should report childString diff");
+                });
+    }
 }

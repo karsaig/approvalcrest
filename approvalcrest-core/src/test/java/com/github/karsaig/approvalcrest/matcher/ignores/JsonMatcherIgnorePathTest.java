@@ -6344,4 +6344,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 jsonMatcher -> jsonMatcher.ignoring("childString"), null);
     }
 
+    // -----------------------------------------------------------------------
+    // Nested root-collection inputs: Collection-in-Collection / array-in-array
+    // -----------------------------------------------------------------------
+
+    public static Object[][] nestedRootCollectionCases() {
+        ChildBean banana = child().childString("banana").childInteger(1).build();
+        ChildBean apple  = child().childString("apple").childInteger(2).build();
+        ChildBean cherry = child().childString("cherry").childInteger(3).build();
+        return new Object[][]{
+                {"List of Lists",
+                        Lists.newArrayList(
+                                Lists.newArrayList(banana, apple),
+                                Lists.newArrayList(cherry))},
+                {"Array of arrays", new ChildBean[][]{{banana, apple}, {cherry}}},
+                {"Json string input",
+                        "[[{\"childString\": \"banana\", \"childInteger\": 1}," +
+                        "  {\"childString\": \"apple\", \"childInteger\": 2}]," +
+                        " [{\"childString\": \"cherry\", \"childInteger\": 3}]]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("nestedRootCollectionCases")
+    void ignoreFieldInNestedRootCollection(String testName, Object input) {
+        String approvedFileContent =
+                "[[{\"childInteger\": 1}, {\"childInteger\": 2}], [{\"childInteger\": 3}]]";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("childString"), null);
+    }
+
 }
