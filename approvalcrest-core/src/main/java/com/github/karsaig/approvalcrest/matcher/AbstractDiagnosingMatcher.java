@@ -11,12 +11,15 @@ import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
+import static com.github.karsaig.approvalcrest.JsonElementUtil.collectValuesByFieldNamePattern;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.findJsonValueAt;
+import static com.github.karsaig.approvalcrest.JsonElementUtil.jsonElementToJavaValue;
 
 public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> {
 
@@ -43,80 +46,98 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
     }
 
     protected boolean areCustomMatchersMatchingBeanOrJson(Object actual, JsonElement actualAsJsonElement, Description mismatchDescription, Gson gson, MatcherConfiguration matcherConfiguration) {
-        if (matcherConfiguration.getCustomMatchers().isEmpty()) {
+        boolean hasCustomMatchers = !matcherConfiguration.getCustomMatchers().isEmpty();
+        boolean hasCustomMatcherPatterns = !matcherConfiguration.getCustomMatcherPatterns().isEmpty();
+
+        if (!hasCustomMatchers && !hasCustomMatcherPatterns) {
             return true;
         }
 
-        if (actual == null) {
-            for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-                Matcher<?> matcher = entry.getValue();
-                if (!matcher.matches(null)) {
-                    appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
-                    matcher.describeMismatch(null, mismatchDescription);
-                    appendFieldJsonSnippet(null, mismatchDescription, gson);
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        List<FailEntry> retryList = new ArrayList<>();
-
-        for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
-            String path = entry.getKey();
-            Matcher<?> matcher = entry.getValue();
-            Either<RuntimeException, Object> beanResult = findBeanAt(path, actual);
-            if (beanResult.isRight()) {
-                Object beanValue = beanResult.getRight();
-                if (!matcherPassesOnValue(matcher, beanValue)) {
-                    retryList.add(FailEntry.matcherFailed(path, matcher, reportValueFor(matcher, beanValue)));
-                }
-            } else {
-                retryList.add(FailEntry.beanPath(path, matcher, beanResult.getLeft()));
-            }
-        }
-
-        if (retryList.isEmpty()) {
-            return true;
-        }
-
-        List<FailEntry> finalFailures = new ArrayList<>();
-
-        for (FailEntry retryEntry : retryList) {
-            Either<RuntimeException, Object> jsonResult = findJsonValueAt(retryEntry.path, actualAsJsonElement);
-            if (jsonResult.isRight()) {
-                Object jsonValue = jsonResult.getRight();
-                if (!matcherPassesOnValue(retryEntry.matcher, jsonValue)) {
-                    // If the bean path succeeded but the matcher still fails on JSON, keep the
-                    // original bean value so type-specific matchers describe mismatch correctly.
-                    if (retryEntry.kind == FailEntry.Kind.MATCHER_FAILED) {
-                        finalFailures.add(retryEntry);
-                    } else {
-                        finalFailures.add(FailEntry.jsonFailed(retryEntry.path, retryEntry.matcher, reportValueFor(retryEntry.matcher, jsonValue)));
+        if (hasCustomMatchers) {
+            if (actual == null) {
+                for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
+                    Matcher<?> matcher = entry.getValue();
+                    if (!matcher.matches(null)) {
+                        appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
+                        matcher.describeMismatch(null, mismatchDescription);
+                        appendFieldJsonSnippet(null, mismatchDescription, gson);
+                        return false;
                     }
                 }
             } else {
-                finalFailures.add(retryEntry);
+                List<FailEntry> retryList = new ArrayList<>();
+
+                for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
+                    String path = entry.getKey();
+                    Matcher<?> matcher = entry.getValue();
+                    Either<RuntimeException, Object> beanResult = findBeanAt(path, actual);
+                    if (beanResult.isRight()) {
+                        Object beanValue = beanResult.getRight();
+                        if (!matcherPassesOnValue(matcher, beanValue)) {
+                            retryList.add(FailEntry.matcherFailed(path, matcher, reportValueFor(matcher, beanValue)));
+                        }
+                    } else {
+                        retryList.add(FailEntry.beanPath(path, matcher, beanResult.getLeft()));
+                    }
+                }
+
+                if (!retryList.isEmpty()) {
+                    List<FailEntry> finalFailures = new ArrayList<>();
+
+                    for (FailEntry retryEntry : retryList) {
+                        Either<RuntimeException, Object> jsonResult = findJsonValueAt(retryEntry.path, actualAsJsonElement);
+                        if (jsonResult.isRight()) {
+                            Object jsonValue = jsonResult.getRight();
+                            if (!matcherPassesOnValue(retryEntry.matcher, jsonValue)) {
+                                if (retryEntry.kind == FailEntry.Kind.MATCHER_FAILED) {
+                                    finalFailures.add(retryEntry);
+                                } else {
+                                    finalFailures.add(FailEntry.jsonFailed(retryEntry.path, retryEntry.matcher, reportValueFor(retryEntry.matcher, jsonValue)));
+                                }
+                            }
+                        } else {
+                            finalFailures.add(retryEntry);
+                        }
+                    }
+
+                    if (!finalFailures.isEmpty()) {
+                        FailEntry first = finalFailures.get(0);
+                        if (first.kind == FailEntry.Kind.BEAN_PATH) {
+                            RuntimeException e = first.exception;
+                            if (e instanceof PathNullPointerException) {
+                                mismatchDescription.appendText(String.format("%s is null", ((PathNullPointerException) e).getPath()));
+                                return false;
+                            }
+                            throw e;
+                        }
+                        appendFieldPath(first.matcher, mismatchDescription, matcherConfiguration);
+                        first.matcher.describeMismatch(first.value, mismatchDescription);
+                        appendFieldJsonSnippet(first.value, mismatchDescription, gson);
+                        return false;
+                    }
+                }
             }
         }
 
-        if (finalFailures.isEmpty()) {
-            return true;
+        if (hasCustomMatcherPatterns && actual != null
+                && actualAsJsonElement != null && !actualAsJsonElement.isJsonNull()) {
+            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : matcherConfiguration.getCustomMatcherPatterns()) {
+                Matcher<String> fieldNamePattern = entry.getKey();
+                Matcher<?> valueMatcher = entry.getValue();
+                List<JsonElement> matchingValues = collectValuesByFieldNamePattern(actualAsJsonElement, fieldNamePattern);
+                for (JsonElement je : matchingValues) {
+                    Object value = jsonElementToJavaValue(je);
+                    if (!valueMatcher.matches(value)) {
+                        mismatchDescription.appendDescriptionOf(fieldNamePattern).appendText(" ");
+                        valueMatcher.describeMismatch(value, mismatchDescription);
+                        appendFieldJsonSnippet(value, mismatchDescription, gson);
+                        return false;
+                    }
+                }
+            }
         }
 
-        FailEntry first = finalFailures.get(0);
-        if (first.kind == FailEntry.Kind.BEAN_PATH) {
-            RuntimeException e = first.exception;
-            if (e instanceof PathNullPointerException) {
-                mismatchDescription.appendText(String.format("%s is null", ((PathNullPointerException) e).getPath()));
-                return false;
-            }
-            throw e;
-        }
-        appendFieldPath(first.matcher, mismatchDescription, matcherConfiguration);
-        first.matcher.describeMismatch(first.value, mismatchDescription);
-        appendFieldJsonSnippet(first.value, mismatchDescription, gson);
-        return false;
+        return true;
     }
 
     /**

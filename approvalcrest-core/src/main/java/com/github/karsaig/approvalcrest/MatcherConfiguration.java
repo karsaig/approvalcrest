@@ -4,6 +4,7 @@ import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import org.hamcrest.Matcher;
 
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,6 +25,7 @@ public class MatcherConfiguration {
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
     private final Map<String, List<SortField<String>>> pathsToSort = new HashMap<>();
     private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
+    private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -57,6 +59,10 @@ public class MatcherConfiguration {
         return patternsToSort;
     }
 
+    public List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> getCustomMatcherPatterns() {
+        return customMatcherPatterns;
+    }
+
     public MatcherConfiguration addPathToIgnore(String path) {
         pathsToIgnore.add(path);
         return this;
@@ -76,6 +82,11 @@ public class MatcherConfiguration {
 
     public MatcherConfiguration addCustomMatcher(String fieldPath, Matcher<?> matcher) {
         customMatchers.put(fieldPath, matcher);
+        return this;
+    }
+
+    public <V> MatcherConfiguration addCustomMatcherPattern(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        customMatcherPatterns.add(new AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>(fieldNamePattern, matcher));
         return this;
     }
 

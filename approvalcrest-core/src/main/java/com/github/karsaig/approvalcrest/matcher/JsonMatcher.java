@@ -18,7 +18,6 @@ import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.*;
-import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -108,6 +107,12 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
+    public <V> JsonMatcher<T> withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        matcherConfiguration.addCustomMatcherPattern(fieldNamePattern, matcher);
+        return this;
+    }
+
+    @Override
     public JsonMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
         this.configuration = configuration;
         return this;
@@ -193,55 +198,25 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
         JsonElement filteredJson = findPaths(jsonElement, set);
-        filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
+        JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
+        if (!skipIgnores) {
+            filterByCustomMatcherPatterns(filteredJson);
+        }
         sortJsonFields(filteredJson, sortFile);
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
-    private void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
-        if (jsonElement != null && !matchers.isEmpty() && !jsonElement.isJsonNull()) {
-            filterFieldsByFieldMatchers(jsonElement, matchers);
-        }
-    }
-
-    private boolean filterFieldsByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
-        if (jsonElement.isJsonObject()) {
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-            boolean changes = false;
-
-            Iterator<Map.Entry<String, JsonElement>> iter = jsonObject.entrySet().iterator();
-            while (iter.hasNext()) {
-                Map.Entry<String, JsonElement> entry = iter.next();
-                if (anyMatchesFieldName(entry.getKey(), matchers)) {
-                    iter.remove();
-                    changes |= true;
-                } else {
-                    JsonElement je = entry.getValue();
-                    boolean changed = filterFieldsByFieldMatchers(je, matchers);
-                    if (changed && JsonElementUtil.isEmpty(je)) {
-                        iter.remove();
-                        changes |= true;
-                    }
-                }
+    private void filterByCustomMatcherPatterns(JsonElement json) {
+        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
+        if (!patterns.isEmpty()) {
+            List<Matcher<String>> patternKeys = new ArrayList<>();
+            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
+                patternKeys.add(entry.getKey());
             }
-            return changes;
-        } else if (jsonElement.isJsonArray()) {
-            JsonArray jsonArray = jsonElement.getAsJsonArray();
-            Iterator<JsonElement> iterator = jsonArray.iterator();
-            boolean changes = false;
-            while (iterator.hasNext()) {
-                JsonElement je = iterator.next();
-                boolean changed = filterFieldsByFieldMatchers(je, matchers);
-                if (changed && JsonElementUtil.isEmpty(je)) {
-                    iterator.remove();
-                    changes |= true;
-                }
-            }
-            return changes;
+            JsonElementUtil.filterByFieldMatchers(json, patternKeys);
         }
-        return false;
     }
 
     private boolean assertEquals(String expectedJson, String actualJson,

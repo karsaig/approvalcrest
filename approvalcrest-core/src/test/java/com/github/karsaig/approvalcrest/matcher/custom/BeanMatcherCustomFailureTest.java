@@ -154,4 +154,47 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                 });
     }
 
+    // -----------------------------------------------------------------------
+    // with(Matcher<String>, Matcher<V>) — pattern-based failures
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void patternMatcherFailsWhenMatchedFieldValueDoesNotMatch() {
+        // Pattern "childString" matches childBean.childString; actual is "banana" but matcher expects "kiwi".
+        ParentBean expected = parent().childBean(child().childString("apple")).build();
+        ParentBean actual = parent().childBean(child().childString("banana")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
+                AssertionError.class, error -> {
+                    String msg = error.getMessage();
+                    Assertions.assertTrue(
+                            msg.contains("was \"banana\""),
+                            "Expected mismatch mentioning actual value, was: " + msg);
+                });
+    }
+
+    @Test
+    public void patternMatcherFailsOnFirstNonMatchingFieldWhenMultipleMatch() {
+        // Pattern "childString" matches both childBean.childString and childBeanList[0].childString.
+        // First matched value is "banana", matcher expects "kiwi" → fails on first match.
+        ParentBean expected = parent()
+                .childBean(child().childString("apple"))
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean actual = parent()
+                .childBean(child().childString("banana"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
+                AssertionError.class, error -> {
+                    String msg = error.getMessage();
+                    Assertions.assertTrue(
+                            msg.contains("was \"banana\""),
+                            "Expected mismatch on matched field value, was: " + msg);
+                });
+    }
+
 }

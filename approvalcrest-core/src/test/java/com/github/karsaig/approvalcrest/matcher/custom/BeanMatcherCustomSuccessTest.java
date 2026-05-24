@@ -27,6 +27,78 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean.childString", equalTo("banana")));
     }
 
+    // -----------------------------------------------------------------------
+    // with(Matcher<String>, Matcher<V>) — pattern-based custom matchers
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void matchesNestedFieldWithPatternMatcher() {
+        // Pattern "childString" matches childBean.childString — the actual value "banana" passes.
+        // Expected has "apple" which would fail structurally; the pattern matcher rescues it.
+        ParentBean expected = parent().childBean(child().childString("apple")).build();
+        ParentBean actual = parent().childBean(child().childString("banana")).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.withMatcher(equalTo("childString"), equalTo("banana")));
+    }
+
+    @Test
+    public void matchesTopLevelFieldWithPatternMatcher() {
+        // Pattern "parentString" matches parentString at the top level of ParentBean.
+        ParentBean expected = parent().childBean(child().childString("apple")).parentString("hello").build();
+        ParentBean actual = parent().childBean(child().childString("apple")).parentString("world").build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.withMatcher(equalTo("parentString"), equalTo("world")));
+    }
+
+    @Test
+    public void matchesWithChainOfPatternMatchers() {
+        // Chain two pattern matchers: one for childString, one for parentString.
+        ParentBean expected = parent().childBean(child().childString("apple")).parentString("hello").build();
+        ParentBean actual = parent().childBean(child().childString("banana")).parentString("world").build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher
+                .withMatcher(equalTo("childString"), equalTo("banana"))
+                .withMatcher(equalTo("parentString"), equalTo("world")));
+    }
+
+    @Test
+    public void patternMatcherCombinedWithPathMatcher() {
+        // Path-based matcher handles parentString; pattern-based handles all "childString" fields.
+        ParentBean expected = parent().childBean(child().childString("apple")).parentString("hello").build();
+        ParentBean actual = parent().childBean(child().childString("banana")).parentString("world").build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher
+                .with("parentString", equalTo("world"))
+                .withMatcher(equalTo("childString"), equalTo("banana")));
+    }
+
+    @Test
+    public void patternMatcherMatchesMultipleFieldsAtDifferentLevels() {
+        // Pattern "childString" matches childBean.childString AND each element in childBeanList.
+        // Both actual values are "banana" → both pass equalTo("banana").
+        ParentBean expected = parent()
+                .childBean(child().childString("apple"))
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean actual = parent()
+                .childBean(child().childString("banana"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("childString"), equalTo("banana")));
+    }
+
+    @Test
+    public void patternMatcherPassesVacuouslyWhenNoFieldsMatch() {
+        // Pattern "nonExistentField" matches nothing → vacuous pass; structural comparison decides.
+        ParentBean expected = parent().childBean(child().childString("banana")).build();
+        ParentBean actual = parent().childBean(child().childString("banana")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("nonExistentField"), equalTo("anything")));
+    }
+
     @Test
     public void failsWhenCustomMatcherDoesNotMatchOnPrimitive() {
         ParentBean expected = parent().childBean(child().childString("apple")).build();

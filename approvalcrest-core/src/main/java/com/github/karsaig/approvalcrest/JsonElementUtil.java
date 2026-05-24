@@ -1,12 +1,16 @@
 package com.github.karsaig.approvalcrest;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class JsonElementUtil {
 
@@ -104,5 +108,72 @@ public class JsonElementUtil {
             }
         }
         return false;
+    }
+
+    public static void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+        if (jsonElement != null && !matchers.isEmpty() && !jsonElement.isJsonNull()) {
+            filterFieldsByFieldMatchers(jsonElement, matchers);
+        }
+    }
+
+    private static boolean filterFieldsByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            boolean changes = false;
+            Iterator<Map.Entry<String, JsonElement>> iter = jsonObject.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<String, JsonElement> entry = iter.next();
+                if (anyMatchesFieldName(entry.getKey(), matchers)) {
+                    iter.remove();
+                    changes |= true;
+                } else {
+                    JsonElement je = entry.getValue();
+                    boolean changed = filterFieldsByFieldMatchers(je, matchers);
+                    if (changed && isEmpty(je)) {
+                        iter.remove();
+                        changes |= true;
+                    }
+                }
+            }
+            return changes;
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            Iterator<JsonElement> iterator = jsonArray.iterator();
+            boolean changes = false;
+            while (iterator.hasNext()) {
+                JsonElement je = iterator.next();
+                boolean changed = filterFieldsByFieldMatchers(je, matchers);
+                if (changed && isEmpty(je)) {
+                    iterator.remove();
+                    changes |= true;
+                }
+            }
+            return changes;
+        }
+        return false;
+    }
+
+    public static List<JsonElement> collectValuesByFieldNamePattern(JsonElement root, Matcher<String> fieldNamePattern) {
+        List<JsonElement> result = new ArrayList<>();
+        collectValuesRecursive(root, fieldNamePattern, result);
+        return result;
+    }
+
+    private static void collectValuesRecursive(JsonElement element, Matcher<String> fieldNamePattern, List<JsonElement> result) {
+        if (element == null || element.isJsonNull() || element.isJsonPrimitive()) {
+            return;
+        }
+        if (element.isJsonObject()) {
+            for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
+                if (fieldNamePattern.matches(entry.getKey())) {
+                    result.add(entry.getValue());
+                }
+                collectValuesRecursive(entry.getValue(), fieldNamePattern, result);
+            }
+        } else if (element.isJsonArray()) {
+            for (JsonElement child : element.getAsJsonArray()) {
+                collectValuesRecursive(child, fieldNamePattern, result);
+            }
+        }
     }
 }

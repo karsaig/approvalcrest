@@ -325,4 +325,27 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "Expected 'childString' in error but was: " + error.getMessage()),
                 AssertionError.class);
     }
+
+    // -----------------------------------------------------------------------
+    // with(Matcher<String>, Matcher<V>) — pattern-based failures
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputs")
+    public void patternMatcherFailsWhenMatchedFieldValueDoesNotMatch(String testName, Object input) {
+        // Pattern "childString" matches childBean.childString; actual value "banana" does not match "kiwi".
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("was \"banana\""),
+                        "Expected mismatch mentioning actual value, was: " + error.getMessage()),
+                AssertionError.class);
+    }
 }

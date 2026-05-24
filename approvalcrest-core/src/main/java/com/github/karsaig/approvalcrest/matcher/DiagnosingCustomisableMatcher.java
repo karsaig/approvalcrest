@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.Gson;
@@ -20,7 +21,10 @@ import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -125,6 +129,12 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
+    public <V> DiagnosingCustomisableMatcher<T> withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        matcherConfiguration.addCustomMatcherPattern(fieldNamePattern, matcher);
+        return this;
+    }
+
+    @Override
     public DiagnosingCustomisableMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
         this.configuration = configuration;
         return this;
@@ -146,7 +156,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
         JsonElement filteredJson = findPaths(gson, object, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
-
+        filterByCustomMatcherPatterns(filteredJson);
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
@@ -155,8 +165,19 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
         JsonElement filteredJson = findPaths(preComputedJson, objectForTypeCheck, set, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
-
+        filterByCustomMatcherPatterns(filteredJson);
         return removeSetMarker(gson.toJson(filteredJson));
+    }
+
+    private void filterByCustomMatcherPatterns(JsonElement json) {
+        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
+        if (!patterns.isEmpty()) {
+            List<Matcher<String>> patternKeys = new ArrayList<>();
+            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
+                patternKeys.add(entry.getKey());
+            }
+            JsonElementUtil.filterByFieldMatchers(json, patternKeys);
+        }
     }
 
     private String removeSetMarker(String json) {

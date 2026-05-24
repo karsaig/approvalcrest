@@ -543,4 +543,78 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         List<ParentBean> parentBeans;
         NestedWrapper(List<ParentBean> parentBeans) { this.parentBeans = parentBeans; }
     }
+
+    // -----------------------------------------------------------------------
+    // with(Matcher<String>, Matcher<V>) — pattern-based custom matchers
+    // -----------------------------------------------------------------------
+
+    /** Both inputs carry childBean with childString="banana". */
+    public static Object[][] patternMatcherTestCases() {
+        return new Object[][]{
+                {"Object input", parent().childBean(child().childString("banana")).build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childInteger\": 0,\n" +
+                        "    \"childString\": \"banana\"\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    /** Both inputs have childString in childBean AND in one childBeanList element. */
+    public static Object[][] patternMatcherMultiFieldTestCases() {
+        return new Object[][]{
+                {"Object input", parent().childBean(child().childString("banana")).addToChildBeanList(child().childString("banana")).build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childInteger\": 0,\n" +
+                        "    \"childString\": \"banana\"\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [\n" +
+                        "    {\n" +
+                        "      \"childInteger\": 0,\n" +
+                        "      \"childString\": \"banana\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("patternMatcherTestCases")
+    public void matchesNestedFieldWithPatternMatcher(String testName, Object input) {
+        // Pattern "childString" finds childBean.childString; custom matcher passes; field stripped from approved.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("patternMatcherMultiFieldTestCases")
+    public void patternMatcherMatchesMultipleFieldsAtDifferentLevels(String testName, Object input) {
+        // Pattern "childString" matches both childBean.childString and childBeanList[0].childString.
+        // Both values are "banana" → matcher passes for each; both fields stripped from approved.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [\n" +
+                "    {\n" +
+                "      \"childInteger\": 0\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")), null, null);
+    }
 }

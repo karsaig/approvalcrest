@@ -74,6 +74,20 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     <V> U with(String fieldPath, Matcher<V> matcher);
 
     /**
+     * Specify a field name pattern and a custom matcher. All fields at any depth whose name
+     * matches the pattern will be matched with the provided matcher. If no fields match the
+     * pattern, the matcher passes vacuously.
+     * Example:
+     * <pre>sameJsonAsApproved().withMatcher(containsString("Date"), notNullValue())</pre>
+     *
+     * @param fieldNamePattern the Hamcrest matcher used to match field names.
+     * @param matcher          the Hamcrest matcher used to match the field value.
+     * @param <V>              type of the field value to match
+     * @return the instance of the matcher
+     */
+    <V> U withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher);
+
+    /**
      * Specify a custom configuration for the Gson, for example, providing additional TypeAdapters.
      *
      * @param configuration {@link GsonConfiguration} object, containing TypeAdapterFactories, TypeAdapters and
