@@ -6374,4 +6374,41 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 jsonMatcher -> jsonMatcher.ignoring("childString"), null);
     }
 
+    // -----------------------------------------------------------------------
+    // f2-complex-key-map: all key fields ignored → entry removed entirely
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("complexKeyMapCases")
+    void complexObjectKeyMapWithAllKeyFieldsIgnoredRemovesEntry(String testName, Object input) {
+        // Ignoring all fields of the key bean makes each key empty.
+        // An entry whose key is entirely empty should be removed from the map.
+        assertJsonMatcherWithDummyTestInfo(input, "[]", getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.ignoring("childString").ignoring("childInteger"), null);
+    }
+
+    // -----------------------------------------------------------------------
+    // f2-complex-key-map: empty-collection key is a valid entry — must not be removed
+    // -----------------------------------------------------------------------
+
+    public static Object[][] emptyCollectionKeyMapCases() {
+        java.util.Map<java.util.List<ChildBean>, String> objectInput = new java.util.LinkedHashMap<>();
+        objectInput.put(new java.util.ArrayList<>(), "someValue");
+        return new Object[][]{
+                {"Object input", objectInput},
+                {"Json string input", "[[[], \"someValue\"]]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("emptyCollectionKeyMapCases")
+    void complexMapWithEmptyCollectionKeyPreservesEntryWhenIgnoring(String testName, Object input) {
+        // An empty-list key is a legitimately valid map key.
+        // Applying ignoring() must not mistake it for a key-bean that became empty
+        // due to field removal, and must leave the entry intact.
+        assertJsonMatcherWithDummyTestInfo(input, "[[[], \"someValue\"]]",
+                getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.ignoring("childString"), null);
+    }
+
 }

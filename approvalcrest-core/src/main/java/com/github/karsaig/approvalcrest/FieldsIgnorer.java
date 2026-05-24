@@ -73,7 +73,8 @@ public class FieldsIgnorer {
 
     private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments) {
         if (jsonElement.isJsonArray()) {
-            Iterator<JsonElement> iterator = jsonElement.getAsJsonArray().iterator();
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            Iterator<JsonElement> iterator = jsonArray.iterator();
             boolean result = false;
             while (iterator.hasNext()) {
                 JsonElement arrayElement = iterator.next();
@@ -84,6 +85,26 @@ public class FieldsIgnorer {
                 if (ignoredElement && JsonElementUtil.isEmpty(arrayElement)) {
                     iterator.remove();
                     result |= true;
+                }
+            }
+            // If non-primitive elements were removed and only primitives/nulls remain,
+            // those are orphaned map values whose complex key was entirely stripped by
+            // ignoring.  Clear them so the inner array becomes empty and the outer
+            // loop's existing isEmpty check can remove the whole entry.
+            if (result) {
+                boolean hasNonPrimitive = false;
+                for (JsonElement remaining : jsonArray) {
+                    if (!remaining.isJsonNull() && !remaining.isJsonPrimitive()) {
+                        hasNonPrimitive = true;
+                        break;
+                    }
+                }
+                if (!hasNonPrimitive) {
+                    Iterator<JsonElement> cleanup = jsonArray.iterator();
+                    while (cleanup.hasNext()) {
+                        cleanup.next();
+                        cleanup.remove();
+                    }
                 }
             }
             return result;
