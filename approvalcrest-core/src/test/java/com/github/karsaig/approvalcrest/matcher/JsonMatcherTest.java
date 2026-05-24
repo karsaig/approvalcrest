@@ -809,6 +809,28 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
                 jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
     }
 
+    @Test
+    public void toStringShouldReturnGenericNameBeforeMatchRuns() {
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<String> underTest = MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+
+            Assertions.assertEquals("JsonMatcher", underTest.toString());
+        });
+    }
+
+    @Test
+    public void toStringShouldIncludeApprovedFilePathAfterMatchRuns() {
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<String> underTest = MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+
+            writeFile(imfsi.getTestPath().resolve("4ac405").resolve("11b2ef-approved.json"), "\"hello\"");
+
+            MatcherAssert.assertThat("hello", underTest);
+
+            Assertions.assertEquals("JsonMatcher for 4ac405/11b2ef-approved.json", underTest.toString());
+        });
+    }
+
     private static final String LONG_SUFFIX = " Long_variable";
 
     private class DummyStringJsonSerializer implements com.google.gson.JsonDeserializer<Long>, com.google.gson.JsonSerializer<Long> {

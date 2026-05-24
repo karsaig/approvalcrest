@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.custom;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.hamcrest.Matchers;
@@ -372,5 +373,23 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingMatcher(actual, expected,
                 beanMatcher -> beanMatcher.withMatcher(equalTo("childBean"), notNullValue()));
+    }
+
+    @Test
+    public void toStringReturnsSameBeanAsMatcherForBeanInput() {
+        DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher(Bean.Builder.bean().build());
+        org.junit.jupiter.api.Assertions.assertEquals("SameBeanAs matcher", underTest.toString());
+    }
+
+    @Test
+    public void toStringReturnsSameBeanAsNullMatcherForNullInput() {
+        DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher(null);
+        org.junit.jupiter.api.Assertions.assertEquals("SameBeanAs null matcher", underTest.toString());
+    }
+
+    @Test
+    public void toStringReturnsSameBeanAsEqualsMatcherForPrimitiveInput() {
+        DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher("hello");
+        org.junit.jupiter.api.Assertions.assertEquals("SameBeanAs equals matcher", underTest.toString());
     }
 }

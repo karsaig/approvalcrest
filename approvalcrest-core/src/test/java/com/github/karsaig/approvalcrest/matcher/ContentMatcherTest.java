@@ -655,5 +655,27 @@ public class ContentMatcherTest extends AbstractFileMatcherTest {
         });
     }
 
+    @Test
+    public void toStringShouldReturnGenericNameBeforeMatchRuns() {
+        inMemoryUnixFs(imfsi -> {
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+
+            Assertions.assertEquals("ContentMatcher", underTest.toString());
+        });
+    }
+
+    @Test
+    public void toStringShouldIncludeApprovedFilePathAfterMatchRuns() {
+        inMemoryUnixFs(imfsi -> {
+            ContentMatcher<String> underTest = new ContentMatcher<>(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+
+            writeFile(imfsi.getTestPath().resolve("4ac405").resolve("11b2ef-approved.content"), "hello");
+
+            MatcherAssert.assertThat("hello", underTest);
+
+            Assertions.assertEquals("ContentMatcher for 4ac405/11b2ef-approved.content", underTest.toString());
+        });
+    }
+
 
 }
