@@ -5,6 +5,7 @@ import com.github.karsaig.approvalcrest.matcher.ignores.AbstractJsonMatcherIgnor
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
 import com.google.common.collect.Sets;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
@@ -3336,5 +3337,234 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
         testingExplicitSortingByMatcherOfExpectedFile(input,
                 jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("array"),"notExisting2", is("notexisting1"))).sortFieldMatcher(SortField.of(is("previousAddresses"),"ne3",is("ne4"))).sortFieldMatcher(SortField.of(  is("hashMap"),"ne5",is("ne6"))).sortFieldMatcher(SortField.of(  is("set"),"ne7", is("ne8"))),
                 jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("array"),"notExisting2", is("notexisting1"))).sortFieldMatcher(SortField.of(is("previousAddresses"),"ne3",is("ne4"))).sortFieldMatcher(SortField.of(  is("hashMap"),"ne5",is("ne6"))).sortFieldMatcher(SortField.of(  is("set"),"ne7", is("ne8"))));
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-1/2/3: sortFieldPath API, real field ignoring, comparison invariant
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortIgnoredPrimitiveFieldIsStillIncludedInComparison() {
+        // sort-gap-1: fields in SortField.ignoring() are stripped from the sort key only;
+        // the full element (including the ignored field) is still compared against approved.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"},\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        // approved is sorted by name (ignoring age); the age values match the actual values
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items", "age")), (String) null);
+    }
+
+    @Test
+    public void sortIgnoredPrimitiveFieldFailsWhenValueDiffers() {
+        // sort-gap-1: even though "age" is ignored for sorting, it is still compared;
+        // if the age values in approved differ from actual the assertion fails.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"},\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        // approved has the same order as the sort result but different age values
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"99\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"99\", \"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items", "age")),
+                thrown -> {}, AssertionError.class);
+    }
+
+    @Test
+    public void sortFieldPathWithRealFieldChangesOrder() {
+        // sort-gap-3: sortFieldPath(SortField<String>) API with a real existing field;
+        // without ignoring "age", full JSON sort (age < name alphabetically) would keep
+        // the original order; with "age" ignored the sort uses only "name" → order inverts.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"},\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items", "age")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-4: matcher-based selector with real field ignoring
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldMatcherWithRealFieldChangesOrder() {
+        // sort-gap-4: SortField<Matcher<String>> with a real ignored field — same scenario as
+        // sortFieldPathWithRealFieldChangesOrder but using the matcher-based API.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"},\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"30\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"25\", \"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"), "age")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-5: strict mode for matcher-based sorting
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldMatcherDefaultConfigFailsWhenApprovedIsNotSorted() {
+        // sort-gap-5: with the default config (strict, approved not sorted by the framework),
+        // the actual side gets sorted by sortFieldMatcher but the approved stays as-is;
+        // if approved is not in sorted order the assertion fails.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"B\"},\n" +
+                "    {\"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        String unsortedApproved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"B\"},\n" +
+                "    {\"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        String sortedApproved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"A\"},\n" +
+                "    {\"name\": \"B\"}\n" +
+                "  ]\n" +
+                "}";
+        // default config: actual is sorted to [A, B] but approved stays [B, A] → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, unsortedApproved, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
+        // approved already in sorted order: actual sorted to [A, B] matches approved [A, B] → PASS
+        assertJsonMatcherWithDummyTestInfo(actual, sortedApproved,
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-8: fan-out — ignored field stripped from every element
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortIgnoringFieldIsAppliedToAllElements() {
+        // sort-gap-8: the ignored field is stripped from the sort key of every element,
+        // not only the first one; three elements confirm fan-out coverage.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"30\", \"name\": \"cherry\"},\n" +
+                "    {\"age\": \"25\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"20\", \"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        // sorted by name (ignoring age): apple < banana < cherry
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"age\": \"25\", \"name\": \"apple\"},\n" +
+                "    {\"age\": \"20\", \"name\": \"banana\"},\n" +
+                "    {\"age\": \"30\", \"name\": \"cherry\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items", "age")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-11/13: complex (object) field stripped from sort key
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortIgnoringComplexFieldExcludesItFromSortKey() {
+        // sort-gap-11: a whole complex (object) field listed in SortField.ignoring() must be
+        // stripped from the sort key, not recursed into unchanged.
+        // Without the fix, addr.city ("Alpha" < "Zeta") dominates and B sorts first.
+        // With the fix, addr is stripped; sort uses only "name" → A sorts first.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"},\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        // approved: sorted by name, addr values preserved as-is (original, not stripped)
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"},\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items").ignoring("addr")), (String) null);
+    }
+
+    @Test
+    public void sortFieldMatcherIgnoringComplexFieldExcludesItFromSortKey() {
+        // sort-gap-13: same as sortIgnoringComplexFieldExcludesItFromSortKey but using
+        // a matcher-based selector — confirms both APIs apply the fix.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"},\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"},\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items")).ignoring("addr")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-14: multi-level dot-path ignore
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortIgnoringMultiLevelPathExcludesNestedFieldFromSortKey() {
+        // sort-gap-14: a dot-path like "addr.city" strips only the leaf "city" from inside "addr";
+        // both elements then have addr={} in their sort keys, so "name" breaks the tie.
+        // Without the fix the recursive call looks up the wrong nextLevel key and addr is
+        // not filtered at all → city still present → B (Alpha) sorts before A (Zeta).
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"},\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        // approved: sorted by name (addr preserved in full for comparison)
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"addr\": {\"city\": \"Zeta\"}, \"name\": \"A\"},\n" +
+                "    {\"addr\": {\"city\": \"Alpha\"}, \"name\": \"B\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items").ignoring("addr.city")), (String) null);
     }
 }

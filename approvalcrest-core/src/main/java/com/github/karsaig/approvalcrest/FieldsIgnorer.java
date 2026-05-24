@@ -290,54 +290,76 @@ public class FieldsIgnorer {
         }
     }
 
-    private static JsonElement getFilteredStringForSorting(JsonElement jsonElement,List<SortField<String>> pathMatchers, List<SortField<Matcher<String>>> fieldMatchers){
-        if(areAllMatchersEmpty(pathMatchers,fieldMatchers)){
+    private static JsonElement getFilteredStringForSorting(JsonElement jsonElement, List<SortField<String>> pathMatchers, List<SortField<Matcher<String>>> fieldMatchers) {
+        if (areAllMatchersEmpty(pathMatchers, fieldMatchers)) {
             return jsonElement;
         }
 
-            if (jsonElement.isJsonObject()) {
-                JsonObject jsonForSort = new JsonObject();
+        if (jsonElement.isJsonObject()) {
+            JsonObject jsonForSort = new JsonObject();
 
-                Map<String, PathLevel> pathMap = getPathsMap(pathMatchers);
-                JsonObject jsonObject = jsonElement.getAsJsonObject();
-                for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
-                    JsonElement actualValue = actual.getValue();
-                    String actualKey = actual.getKey();
-                    FieldNamePair fieldNamePair = convertToKeyPair(actualKey);
-
-                    PathLevel matchingPath = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
-
-                    List<SortField<Matcher<String>>> fieldMatchersToCheck = new ArrayList<>(fieldMatchers);
-                    //matchingPath.currentLevel.forEach(sf -> fieldMatchersToCheck.addAll(sf.getIgnoredFieldMatchersForSorting()));
-
-
-                    List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchers, true);
-                    List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey,pathMap,true);
-
-                    if (actualValue.isJsonNull() || actualValue.isJsonPrimitive()) {
-                        if(matchingPathMatchers.isEmpty() && matchingFieldMatchers.isEmpty()) {
-                            jsonForSort.add(actualKey, actualValue);
-                        }
-                    } else {
-                        jsonForSort.add(actualKey,  getFilteredStringForSorting(actualValue, matchingPath.nextLevel.getOrDefault(fieldNamePair.newKey,Collections.emptyList()), fieldMatchers));
-                    }
+            // Merge ignored paths/matchers from fieldMatchers into the path map so that
+            // SortField<Matcher<String>>.ignoring(String) and .ignoring(Matcher) work for
+            // fields inside elements, not just path-based SortField<String>.
+            List<SortField<String>> combinedPaths = new ArrayList<>(pathMatchers);
+            List<Matcher<String>> innerIgnoredFieldMatchers = new ArrayList<>();
+            for (SortField<Matcher<String>> fm : fieldMatchers) {
+                for (String ignoredPath : fm.getIgnoredPathsForSorting()) {
+                    combinedPaths.add(SortField.of(ignoredPath, Collections.singletonList(ignoredPath), Collections.emptyList()));
                 }
+                innerIgnoredFieldMatchers.addAll(fm.getIgnoredFieldMatchersForSorting());
+            }
+            Map<String, PathLevel> pathMap = getPathsMap(combinedPaths);
 
-                return jsonForSort;
-            } else if (jsonElement.isJsonArray()) {
-                JsonArray actualArray = jsonElement.getAsJsonArray();
-                JsonArray jsonForSort = new JsonArray(actualArray.size());
-                for (JsonElement current : actualArray) {
-                    if (current.isJsonNull() || current.isJsonPrimitive()) {
-                        jsonForSort.add(current);
-                    } else {
-                        jsonForSort.add(getFilteredStringForSorting(current, pathMatchers, fieldMatchers));
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
+                JsonElement actualValue = actual.getValue();
+                String actualKey = actual.getKey();
+                FieldNamePair fieldNamePair = convertToKeyPair(actualKey);
+
+                PathLevel matchingPath = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
+
+                List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchers, true);
+                List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, true);
+                boolean matchedByInnerFieldMatcher = anyInnerMatcherMatches(fieldNamePair.newKey, innerIgnoredFieldMatchers);
+
+                if (!matchingPathMatchers.isEmpty() || !matchingFieldMatchers.isEmpty() || matchedByInnerFieldMatcher) {
+                    // leaf match — strip this field entirely from the sort key (primitive or complex)
+                } else if (actualValue.isJsonNull() || actualValue.isJsonPrimitive()) {
+                    jsonForSort.add(actualKey, actualValue);
+                } else {
+                    List<SortField<String>> nextLevelSortFields = new ArrayList<>();
+                    for (List<SortField<String>> sortFields : matchingPath.nextLevel.values()) {
+                        nextLevelSortFields.addAll(sortFields);
                     }
+                    jsonForSort.add(actualKey, getFilteredStringForSorting(actualValue, nextLevelSortFields, fieldMatchers));
                 }
-                return jsonForSort;
             }
 
+            return jsonForSort;
+        } else if (jsonElement.isJsonArray()) {
+            JsonArray actualArray = jsonElement.getAsJsonArray();
+            JsonArray jsonForSort = new JsonArray(actualArray.size());
+            for (JsonElement current : actualArray) {
+                if (current.isJsonNull() || current.isJsonPrimitive()) {
+                    jsonForSort.add(current);
+                } else {
+                    jsonForSort.add(getFilteredStringForSorting(current, pathMatchers, fieldMatchers));
+                }
+            }
+            return jsonForSort;
+        }
+
         return jsonElement;
+    }
+
+    private static boolean anyInnerMatcherMatches(String fieldName, List<Matcher<String>> matchers) {
+        for (Matcher<String> matcher : matchers) {
+            if (matcher.matches(fieldName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
