@@ -330,6 +330,29 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     // with(Matcher<String>, Matcher<V>) — pattern-based failures
     // -----------------------------------------------------------------------
 
+    /** Object + JSON-string inputs where multiple "childString" fields are present. */
+    public static Object[][] patternMultipleFieldInputs() {
+        return new Object[][]{
+                {"Object input", parent()
+                        .childBean(child().childString("banana"))
+                        .addToChildBeanList(child().childString("banana"))
+                        .build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": {\n" +
+                        "    \"childInteger\": 0,\n" +
+                        "    \"childString\": \"banana\"\n" +
+                        "  },\n" +
+                        "  \"childBeanList\": [\n" +
+                        "    {\n" +
+                        "      \"childInteger\": 0,\n" +
+                        "      \"childString\": \"banana\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("customMatcherInputs")
     public void patternMatcherFailsWhenMatchedFieldValueDoesNotMatch(String testName, Object input) {
@@ -348,4 +371,52 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "Expected mismatch mentioning actual value, was: " + error.getMessage()),
                 AssertionError.class);
     }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("patternMultipleFieldInputs")
+    public void patternMatcherFailsOnFirstNonMatchingFieldWhenMultipleMatch(String testName, Object input) {
+        // Pattern "childString" matches both childBean.childString and childBeanList[0].childString.
+        // First matched value "banana" does not match "kiwi" → fails immediately.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [\n" +
+                "    {\n" +
+                "      \"childInteger\": 0\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("was \"banana\""),
+                        "Expected mismatch on matched field value, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void patternMatcherFailsWhenExplicitNullFieldMatchedWithNotNullMatcher() {
+        // JSON-string input with childBean: null — the field IS present in the JSON element as
+        // JsonNull, so collectValuesByFieldNamePattern finds it. notNullValue() then fails.
+        // (For Object inputs, Gson omits null fields from serialisation, so the pattern would find
+        // nothing and pass vacuously — this is tested in BeanMatcherCustomSuccessTest.)
+        String input = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.withMatcher(equalTo("childBean"), notNullValue()),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("was null"),
+                        "Expected null mismatch in message, was: " + error.getMessage()),
+                AssertionError.class);
+    }
 }
+

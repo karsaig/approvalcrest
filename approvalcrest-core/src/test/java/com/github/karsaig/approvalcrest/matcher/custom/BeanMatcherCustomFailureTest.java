@@ -197,4 +197,23 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                 });
     }
 
+    @Test
+    public void patternMatcherMessageIncludesPatternDescription() {
+        // The pattern's description (from appendDescriptionOf) must appear in the failure message.
+        ParentBean expected = parent().childBean(child().childString("apple")).build();
+        ParentBean actual = parent().childBean(child().childString("banana")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
+                AssertionError.class, error -> {
+                    String msg = error.getMessage();
+                    Assertions.assertTrue(
+                            msg.contains("childString"),
+                            "Expected pattern description 'childString' in message, was: " + msg);
+                    Assertions.assertTrue(
+                            msg.contains("was \"banana\""),
+                            "Expected actual value in message, was: " + msg);
+                });
+    }
+
 }

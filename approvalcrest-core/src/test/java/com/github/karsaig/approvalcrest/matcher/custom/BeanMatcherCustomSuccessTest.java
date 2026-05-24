@@ -361,4 +361,16 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
             this.parentBeans = parentBeans;
         }
     }
+
+    @Test
+    public void patternMatcherPassesVacuouslyWhenNullFieldAbsentFromSerializedJson() {
+        // Gson omits null fields during serialisation, so a pattern that names a null field finds
+        // nothing in the JSON element and passes vacuously. This is the intended behaviour, and is
+        // distinct from the path-based with() which uses bean reflection and can find null fields.
+        ParentBean actual   = parent().build();   // childBean == null → omitted from JSON
+        ParentBean expected = parent().build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.withMatcher(equalTo("childBean"), notNullValue()));
+    }
 }
