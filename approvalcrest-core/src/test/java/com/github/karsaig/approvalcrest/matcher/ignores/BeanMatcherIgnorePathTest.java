@@ -3,7 +3,9 @@ package com.github.karsaig.approvalcrest.matcher.ignores;
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
+import com.google.common.collect.Lists;
 import org.hamcrest.DiagnosingMatcher;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static java.util.function.Function.identity;
 
 public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
@@ -396,5 +399,23 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "beanInt shouldn't be present");
             Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "beanInt shouldn't be present");
         });
+    }
+
+    @Test
+    void ignoreFieldInRootList() {
+        List<ChildBean> actual = Lists.newArrayList(
+                child().childString("banana").childInteger(1).build(),
+                child().childString("apple").childInteger(2).build());
+        List<ChildBean> expected = Lists.newArrayList(
+                child().childString("kiwi").childInteger(1).build(),
+                child().childString("grape").childInteger(2).build());
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.ignoring("childString").skipClassComparison());
+        assertDiagnosingMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison,
+                AssertionFailedError.class, thrown -> {
+                    Assertions.assertTrue(thrown.getMessage().contains("childString"),
+                            "failure should report childString diff");
+                });
     }
 }

@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.ignores;
 
 import com.github.karsaig.approvalcrest.testdata.*;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -6316,6 +6317,31 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 // JSON string written apple-first to match map-serializer sort order
                 {"Json string input", "[[{\"childString\":\"apple\",\"childInteger\":2},\"val2\"],[{\"childString\":\"banana\",\"childInteger\":1},\"val1\"]]"}
         };
+    }
+
+    // -----------------------------------------------------------------------
+    // Root-collection inputs: ignoring fans out across all array elements
+    // -----------------------------------------------------------------------
+
+    public static Object[][] rootCollectionCases() {
+        ChildBean banana = child().childString("banana").build();
+        ChildBean apple = child().childString("apple").build();
+        return new Object[][]{
+                {"List input", Lists.newArrayList(banana, apple)},
+                {"Set input", new java.util.LinkedHashSet<>(java.util.Arrays.asList(banana, apple))},
+                {"Array input", new ChildBean[]{banana, apple}},
+                {"Json string input",
+                        "[{\"childString\": \"banana\", \"childInteger\": 0}," +
+                        " {\"childString\": \"apple\", \"childInteger\": 0}]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("rootCollectionCases")
+    void ignoreFieldInRootCollection(String testName, Object input) {
+        String approvedFileContent = "[{\"childInteger\": 0}, {\"childInteger\": 0}]";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("childString"), null);
     }
 
 }
