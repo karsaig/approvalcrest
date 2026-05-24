@@ -17,9 +17,10 @@ Version 1.0.0
 - Fixed `FieldsIgnorer` array fan-out erroring on primitive array elements.
 - Fixed `FieldsIgnorer`: ignoring all fields of a bean `Map` key now removes the whole entry cleanly.
 - Fixed `FieldsIgnorer`: ignoring a field inside a `Map` value no longer leaves an orphaned empty array.
-- Fixed `withPathName` / relative path handling: absolute, relative, and hash-based directories computed consistently; blank arguments are no-ops.
-- Fixed unique ID / filename separator: no double `-` when the ID already starts with one; blank IDs ignored.
-- **[breaking]** `FileStoreMatcherUtils.SEPARATOR` type changed from `Object` to `char`; any code referencing this public constant by the old type must be updated. **Migration:** update the variable declaration from `Object sep = SEPARATOR` to `char sep = SEPARATOR` (or `String sep = String.valueOf(SEPARATOR)`).
+- **[breaking]** `withPathName(relativeStr)` approved file location changed: was `{relativeStr}/{file}` (working-directory relative), now `{testClassPath}/{relativeStr}/{file}`. **Migration:** move existing approved files from the old path to `{testClassPath}/{relativeStr}/`.
+- **[breaking]** `withRelativePathName(relStr)` approved file location changed: was `{testClassPath}/{relStr}/{file}`, now `{workingDir}/{relStr}/{classHash}/{file}` (base changed to working directory and class hash is inserted). **Migration:** move existing approved files to the new location, or switch to `withPathName` (which uses `testClassPath` as base).
+- **[breaking]** `withUniqueId(id)` when `id` starts with `-`: previously generated a double separator (`hash--id-approved.json`), now produces `hash-id-approved.json`. **Migration:** rename affected approved files to drop the extra `-`.
+- **[breaking]** `FileStoreMatcherUtils` public API changed: `getApproved(Path)` → `getApproved(Path, String)` returning `CreatedFile`; `getFullFileName(Path, boolean)` → `getFullFileName(Path, String, boolean)` returning `CreatedFile`; `createNotApproved` and `overwriteApprovedFile` signatures updated similarly. **Migration:** update any direct `FileStoreMatcherUtils` calls or `AbstractDiagnosingFileMatcher` subclass overrides to the new signatures.
 - Improved `--add-opens` missing error: reports the exact flag and shows ready-to-paste Maven/Gradle snippets.
 - Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (`TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`).
 
