@@ -66,7 +66,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
-    protected boolean matches(Object actual, Description mismatchDescription) {
+    protected boolean doMatches(Object actual, Description mismatchDescription) {
         if (actual != null  && expected != null) {
             if(!skipClassComparison && !expected.getClass().isInstance(actual)){
                 mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");

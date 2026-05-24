@@ -119,7 +119,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
-    protected boolean matches(Object actual, Description mismatchDescription) {
+    protected boolean doMatches(Object actual, Description mismatchDescription) {
         boolean matches = false;
         circularReferenceTypes.addAll(getClassesWithCircularReferences(actual, matcherConfiguration));
         init();

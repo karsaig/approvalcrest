@@ -15,6 +15,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.collectValuesByFieldNamePattern;
@@ -23,7 +24,74 @@ import static com.github.karsaig.approvalcrest.JsonElementUtil.jsonElementToJava
 
 public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> {
 
+    // Class name string — keeps this file compilable on Java 8 since InaccessibleObjectException
+    // was introduced in Java 9.
+    private static final String INACCESSIBLE_OBJECT_EXCEPTION =
+            "java.lang.reflect.InaccessibleObjectException";
+    private static final Pattern ADD_OPENS_PATTERN =
+            Pattern.compile("module (\\S+) does not \"opens (\\S+)\"");
+
     private boolean comparisonDescriptionNeeded = false;
+
+    /**
+     * Template-method entry point. Subclasses implement their matching logic here.
+     * This is called by {@link #matches(Object, Description)}, which provides the
+     * single catch-point for {@code InaccessibleObjectException}.
+     */
+    protected abstract boolean doMatches(Object actual, Description mismatchDescription);
+
+    /**
+     * Dispatches to {@link #doMatches} and intercepts any {@code InaccessibleObjectException}
+     * (checked by class name so this compiles on Java 8) buried anywhere in the cause chain.
+     * When found it throws an {@link IllegalStateException} with a human-readable explanation
+     * and the exact {@code --add-opens} JVM flag the developer needs to configure.
+     */
+    @Override
+    protected final boolean matches(Object actual, Description mismatchDescription) {
+        try {
+            return doMatches(actual, mismatchDescription);
+        } catch (RuntimeException e) {
+            Throwable inaccessible = findCause(e, INACCESSIBLE_OBJECT_EXCEPTION);
+            if (inaccessible != null) {
+                throw new IllegalStateException(buildAddOpensMessage(inaccessible), e);
+            }
+            throw e;
+        }
+    }
+
+    private static Throwable findCause(Throwable t, String className) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (className.equals(cause.getClass().getName())) {
+                return cause;
+            }
+        }
+        return null;
+    }
+
+    private static String buildAddOpensMessage(Throwable inaccessible) {
+        String flag = extractAddOpensFlag(inaccessible.getMessage());
+        String placeholder = "--add-opens <module>/<package>=ALL-UNNAMED";
+        String example = flag != null ? flag : placeholder;
+        return "approvalcrest could not access a field via reflection.\n"
+                + "This happens on Java 9+ when the required '--add-opens' JVM argument is missing.\n"
+                + (flag != null ? "\nAdd the following JVM argument:\n  " + flag + "\n" : "")
+                + "\nFor Maven (maven-surefire-plugin), add to pom.xml:\n"
+                + "  <configuration>\n"
+                + "    <argLine>" + example + "</argLine>\n"
+                + "  </configuration>\n"
+                + "\nFor Gradle, add to your test block:\n"
+                + "  jvmArgs '" + example + "'\n"
+                + "\nFor IDEs (IntelliJ / Eclipse), add to 'VM options' in the run/test configuration.\n"
+                + "\nOriginal error: " + inaccessible.getMessage();
+    }
+
+    private static String extractAddOpensFlag(String message) {
+        if (message == null) {
+            return null;
+        }
+        java.util.regex.Matcher m = ADD_OPENS_PATTERN.matcher(message);
+        return m.find() ? "--add-opens " + m.group(1) + "/" + m.group(2) + "=ALL-UNNAMED" : null;
+    }
 
     protected boolean appendMismatchDescription(Description mismatchDescription, String expected, String actual, String message) {
         if (comparisonDescriptionNeeded && ComparisonDescription.class.isInstance(mismatchDescription)) {

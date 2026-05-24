@@ -31,7 +31,7 @@ public class IsEqualMatcher<T> extends DiagnosingCustomisableMatcher<T> {
     }
 
     @Override
-    protected boolean matches(Object actual, Description mismatchDescription) {
+    protected boolean doMatches(Object actual, Description mismatchDescription) {
         Matcher<T> equalTo = equalTo(expected);
         boolean matches = equalTo.matches(actual);
         if (!matches) {

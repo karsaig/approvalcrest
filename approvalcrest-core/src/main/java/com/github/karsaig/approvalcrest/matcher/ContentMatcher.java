@@ -50,7 +50,7 @@ public class ContentMatcher<T> extends AbstractDiagnosingFileMatcher<T, ContentM
     }
 
     @Override
-    protected boolean matches(Object actual, Description mismatchDescription) {
+    protected boolean doMatches(Object actual, Description mismatchDescription) {
         if (!String.class.isInstance(actual)) {
             throw new IllegalArgumentException("Only String content matcher is supported!");
         }
