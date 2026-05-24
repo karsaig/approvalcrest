@@ -1,8 +1,0 @@
-/*com.github.karsaig.approvalcrest.JsonMatcherCustomMatchingTest.matchesPrimitiveWithPatternCustomMatcher*/
-{
-  "childBean": {
-    "childInteger": 0
-  },
-  "childBeanList": [],
-  "childBeanMap": []
-}

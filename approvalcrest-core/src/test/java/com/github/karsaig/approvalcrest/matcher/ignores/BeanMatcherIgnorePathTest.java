@@ -524,4 +524,20 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
                             "actual side should not contain ignored field name");
                 });
     }
+
+    @Test
+    void ignoredFieldIsAbsentFromBothSidesOfFailureOutput() {
+        // When a field is ignored, its VALUE must not appear in either the expected or actual
+        // side of the failure output (the comparison excludes the field entirely).
+        Bean expected = bean().string("value-expected").integer(1).build();
+        Bean actual   = bean().string("value-actual").integer(2).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.ignoring("string"),
+                AssertionFailedError.class, thrown -> {
+                    Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains("value-expected"),
+                            "Ignored field 'string' value must not appear in expected side");
+                    Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains("value-actual"),
+                            "Ignored field 'string' value must not appear in actual side");
+                });
+    }
 }

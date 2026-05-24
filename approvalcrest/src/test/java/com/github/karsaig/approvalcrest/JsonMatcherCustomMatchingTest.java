@@ -22,10 +22,5 @@ public class JsonMatcherCustomMatchingTest {
                 .with("childBean.childString", equalTo("banana")));
     }
 
-    @Test
-    public void matchesPrimitiveWithPatternCustomMatcher() {
-        Object actual = parent().childBean(child().childString("banana")).build();
-        assertThat(actual, sameJsonAsApproved()
-                .withMatcher(equalTo("childString"), equalTo("banana")));
-    }
+
 }

@@ -3782,4 +3782,49 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("groups")), (String) null);
     }
+
+    // -------------------------------------------------------------------------
+    // f5-empty-collection-sort: sortField on empty collection
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldOnEmptyCollectionDoesNotThrow() {
+        // Applying sortFieldPath to an empty array must not crash;
+        // the empty array is returned unchanged.
+        String actual   = "{\"items\": []}";
+        String approved = "{\"items\": []}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // f5-null-in-sorted-array: null element inside a sorted array
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldWithNullElementProducesConsistentOrder() {
+        // A null element inside a sorted array must not cause an NPE.
+        // SortElement.compareTo uses the filtered JSON string as key; for JsonNull
+        // getFilteredStringForSorting returns "null", so nulls sort consistently
+        // (lexicographically before any non-null value that doesn't start with '"n').
+        // The test just verifies no exception and a deterministic approved order.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"banana\"},\n" +
+                "    null,\n" +
+                "    {\"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        // After sorting: null sorts before {"name":"apple"} and {"name":"banana"}
+        // because "null" < "{" lexicographically.
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    null,\n" +
+                "    {\"name\": \"apple\"},\n" +
+                "    {\"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")), (String) null);
+    }
 }
