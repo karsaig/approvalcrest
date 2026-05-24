@@ -24,8 +24,16 @@ abstract class Junit5TestMetaBase implements TestMetaInformation {
         this(buildClassPath(testClassName),testClassName,testMethodName,APPROVED_DIRECTORY);
     }
 
+    protected Junit5TestMetaBase(String testClassName, String testMethodName, String sourceRoutePathString) {
+        this(buildClassPath(testClassName, sourceRoutePathString),testClassName,testMethodName,APPROVED_DIRECTORY);
+    }
+
     protected static Path buildClassPath(String testClassName) {
-        return Paths.get(getSourceRoutePathString() + DOT_LITERAL_PATTERN.matcher(testClassName).replaceAll(Matcher.quoteReplacement(File.separator))).getParent();
+        return buildClassPath(testClassName, getSourceRoutePathString());
+    }
+
+    protected static Path buildClassPath(String testClassName, String sourceRoutePathString) {
+        return Paths.get(sourceRoutePathString + DOT_LITERAL_PATTERN.matcher(testClassName).replaceAll(Matcher.quoteReplacement(File.separator))).getParent();
     }
 
     protected static Path detectWorkingDirectory() {

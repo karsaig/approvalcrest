@@ -13,8 +13,18 @@ import org.junit.jupiter.api.TestTemplate;
 
 public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
+    private static final String CANNOT_DETERMINE_TEST_METHOD_ERROR = "Cannot determine test method for JunitJupiterTestMeta, do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed.";
+
     public JunitJupiterTestMeta() {
-        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), "Cannot determine test method for JunitJupiterTestMeta, do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed."));
+        this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
+    }
+
+    protected JunitJupiterTestMeta(String sourceRoutePathString) {
+        this(sourceRoutePathString, Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
+    }
+
+    private JunitJupiterTestMeta(String sourceRoutePathString, StackTraceElement testStackTraceElement) {
+        super(testStackTraceElement.getClassName(), testStackTraceElement.getMethodName(), sourceRoutePathString);
     }
 
     private JunitJupiterTestMeta(StackTraceElement testStackTraceElement) {

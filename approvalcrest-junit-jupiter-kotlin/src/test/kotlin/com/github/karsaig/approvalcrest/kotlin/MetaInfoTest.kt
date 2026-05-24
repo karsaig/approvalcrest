@@ -1,7 +1,7 @@
 package com.github.karsaig.approvalcrest.kotlin
 
 import com.github.karsaig.approvalcrest.jupiter.MatcherAssert
-import com.github.karsaig.approvalcrest.jupiter.matcher.Matchers
+import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
 import java.nio.file.Paths
@@ -36,6 +36,8 @@ class MetaInfoTest {
         val input1 = KotlinTestMeta()
         val input2 = KotlinInfoBasedTestMeta(testInfo)
 
-        MatcherAssert.assertThat(input1, Matchers.sameBeanAs(input2))
+        val matcher = Matchers.sameBeanAs<Any>(input2)
+        matcher.skipClassComparison()
+        MatcherAssert.assertThat(input1, matcher)
     }
 }

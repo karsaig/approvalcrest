@@ -12,6 +12,10 @@ public class Junit5InfoBasedTestMeta extends Junit5TestMetaBase {
         super(getRequiredClassName(testInfo), getTestMethodName(testInfo));
     }
 
+    public Junit5InfoBasedTestMeta(TestInfo testInfo, String sourceRoutePathString) {
+        super(getRequiredClassName(testInfo), getTestMethodName(testInfo), sourceRoutePathString);
+    }
+
     public Junit5InfoBasedTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
         super(testClassPath, testClassName, testMethodName, approvedDirectory);
     }

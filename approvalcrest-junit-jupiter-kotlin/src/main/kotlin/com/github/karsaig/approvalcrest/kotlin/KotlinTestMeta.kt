@@ -6,13 +6,10 @@ import java.nio.file.Path
 
 class KotlinTestMeta : JunitJupiterTestMeta {
 
-    constructor() : super()
+    constructor() : super(SRC_TEST_KOTLIN_PATH)
 
     internal constructor(testClassPath: Path, testClassName: String, testMethodName: String, approvedDirectory: Path) :
             super(testClassPath, testClassName, testMethodName, approvedDirectory)
-
-
-    override fun getSourceRoutePathString(): String = SRC_TEST_KOTLIN_PATH
 
     companion object {
         internal val SRC_TEST_KOTLIN_PATH = "src${File.separator}test${File.separator}kotlin${File.separator}"

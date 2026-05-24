@@ -7,11 +7,9 @@ import java.nio.file.Path
 
 class KotlinInfoBasedTestMeta: Junit5InfoBasedTestMeta {
 
-    constructor(testInfo: TestInfo) : super(testInfo)
+    constructor(testInfo: TestInfo) : super(testInfo, SRC_TEST_KOTLIN_PATH)
 
     internal constructor(testClassPath: Path, testClassName: String, testMethodName: String, approvedDirectory: Path) :
             super(testClassPath, testClassName, testMethodName, approvedDirectory)
-
-    override fun getSourceRoutePathString(): String = SRC_TEST_KOTLIN_PATH
 
 }
