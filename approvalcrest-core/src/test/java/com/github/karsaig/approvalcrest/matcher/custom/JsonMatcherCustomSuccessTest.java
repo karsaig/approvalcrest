@@ -313,6 +313,24 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
      * fallback ({@code findJsonValueAt}) successfully navigates the parsed tree.
      */
     @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customeMatchersTestcases")
+    public void strictModePassesWhenCustomMatcherFieldAbsentFromApprovedFile(String testName, Object input) {
+        // .with(path, matcher) internally calls ignoring(path), so in strict mode the path is
+        // stripped from actual only. If the approved file was created without that field
+        // (the normal case), both sides agree and the comparison passes.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": {\n" +
+                "    \"childInteger\": 0\n" +
+                "  },\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")), null, null);
+    }
+
+
+    @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("deepContainerInputs")
     public void matchesDeeplyNestedFieldPath(String testName, Object input) {
         // After filtering box.item.value, item becomes empty and is removed, leaving box.label intact
