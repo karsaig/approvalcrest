@@ -281,11 +281,12 @@ public class FieldsIgnorer {
         Iterator<JsonElement> iter = input.iterator();
         while (iter.hasNext()) {
             JsonElement actual = iter.next();
-            // When a direct element is itself an array (e.g. List<List<Bean>>), sort it
-            // with the same configuration before computing its sort key — the sort was
-            // explicitly requested for this level and fan-out applies.
-            // Elements that are objects (beans) are NOT touched here; only explicitly
-            // configured fields inside them will be sorted via applySorting.
+            // When a direct element is itself an array (e.g. List<List<Bean>>), apply
+            // the configured sort to it before computing its sort key. The sort was
+            // configured for this collection; direct array elements are part of that
+            // same collection and fan-out applies.
+            // Elements that are objects (beans) are NOT sorted here; only their fields
+            // that were explicitly configured via sortField will be sorted via applySorting.
             if (actual.isJsonArray()) {
                 sortJsonArray(actual.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
             }

@@ -3597,13 +3597,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
     }
 
     // -------------------------------------------------------------------------
-    // sort-gap-6: root-level Set is auto-sorted
+    // sort-gap-6: root-level Set is sorted (type-based sort configuration)
     // -------------------------------------------------------------------------
 
     @Test
-    public void rootSetIsSortedAutomatically() {
-        // sort-gap-6: when the root object is a Set, its elements are always sorted
-        // automatically (exercises the pathsToSort.getOrDefault("", ...) code path).
+    public void rootSetIsSortedByTypeBasedConfiguration() {
+        // sort-gap-6: Set fields are configured for sorting by their Java type;
+        // when the root object is a Set its elements are sorted
+        // (exercises the pathsToSort.getOrDefault("", ...) code path).
         Set<String> actual = new LinkedHashSet<>(Arrays.asList("cherry", "apple", "banana"));
         String approved = "[\"apple\",\"banana\",\"cherry\"]";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
@@ -3692,7 +3693,8 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
     }
 
     // -------------------------------------------------------------------------
-    // array-of-array-of-beans: inner arrays sorted too; bean fields NOT auto-sorted
+    // array-of-array-of-beans: configured sort fans out into direct inner arrays;
+    // fields inside beans are only sorted when explicitly configured
     // -------------------------------------------------------------------------
 
     @Test
@@ -3741,10 +3743,10 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
     }
 
     @Test
-    public void beanFieldsInsideSortedArrayAreNotAutoSorted() {
-        // When the direct elements of a sorted array are beans (objects), the beans'
-        // own fields are NOT auto-sorted. Only array fields of beans that are
-        // explicitly configured will be sorted.
+    public void beanFieldsInsideSortedArrayAreOnlySortedWhenConfigured() {
+        // When the direct elements of a sorted array are beans (objects), only fields
+        // that were explicitly configured via sortField are sorted inside them.
+        // Fields with no sort configuration keep their original order.
         String actual = "{\n" +
                 "  \"groups\": [\n" +
                 "    {\"name\": \"B\", \"tags\": [\"z\", \"a\"]},\n" +
