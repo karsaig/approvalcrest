@@ -6411,4 +6411,74 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 jsonMatcher -> jsonMatcher.ignoring("childString"), null);
     }
 
+    // -----------------------------------------------------------------------
+    // Cascade-to-empty: ignoring the only value at each level empties every
+    // ancestor up to the root.
+    // -----------------------------------------------------------------------
+
+    public static Object[][] deeplyNestedObjectCascadeCases() {
+        // Two-level nesting, 1 field at each level. Ignoring the leaf removes
+        // the inner object → becomes {} → that removes the outer field → root {}.
+        return new Object[][]{
+                {"Object input", new NestedCascadeRoot(new NestedCascadeLeaf("deep"))},
+                {"JSON string input", "{\"nested\": {\"leaf\": \"deep\"}}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("deeplyNestedObjectCascadeCases")
+    void ignoringDeepestFieldInNestedObjectCascadesToEmptyRoot(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, "{}", getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("nested.leaf"), null);
+    }
+
+    @SuppressWarnings("unused")
+    private static class NestedCascadeLeaf {
+        private final String leaf;
+        NestedCascadeLeaf(String leaf) { this.leaf = leaf; }
+    }
+
+    @SuppressWarnings("unused")
+    private static class NestedCascadeRoot {
+        private final NestedCascadeLeaf nested;
+        NestedCascadeRoot(NestedCascadeLeaf nested) { this.nested = nested; }
+    }
+
+    public static Object[][] singleElementCollectionCascadeCases() {
+        // A list with 1 element containing 1 field. Ignoring the field makes the
+        // element {} → empty → removed → list becomes [].
+        java.util.Map<String, Object> element = new java.util.LinkedHashMap<>();
+        element.put("leaf", "deep");
+        return new Object[][]{
+                {"Object input", Lists.newArrayList(element)},
+                {"JSON string input", "[{\"leaf\": \"deep\"}]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("singleElementCollectionCascadeCases")
+    void ignoringOnlyFieldInSingleCollectionElementCascadesToEmptyArray(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, "[]", getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("leaf"), null);
+    }
+
+    public static Object[][] nestedCollectionBeanAllFieldsCascadeCases() {
+        // List of lists, innermost element is a bean. Ignoring all bean fields
+        // empties the bean → removed from inner list → inner list [] → removed
+        // from outer list → outer list [].
+        ChildBean bean = child().childString("foo").childInteger(1).build();
+        return new Object[][]{
+                {"Object input", Lists.newArrayList(Lists.newArrayList(bean))},
+                {"JSON string input",
+                        "[[{\"childString\": \"foo\", \"childInteger\": 1}]]"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("nestedCollectionBeanAllFieldsCascadeCases")
+    void ignoringAllBeanFieldsInNestedCollectionCascadesToEmptyArray(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, "[]", getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("childString").ignoring("childInteger"), null);
+    }
+
 }

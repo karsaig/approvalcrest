@@ -442,4 +442,70 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
                             "failure should report childString diff");
                 });
     }
+
+    // -----------------------------------------------------------------------
+    // Cascade-to-empty: ignoring the only value at each level empties every
+    // ancestor up to the root.
+    // -----------------------------------------------------------------------
+
+    @Test
+    void ignoringDeepestFieldInNestedBeanCascadesToEmpty() {
+        NestedCascadeRoot actual   = new NestedCascadeRoot(new NestedCascadeLeaf("actual_value"));
+        NestedCascadeRoot expected = new NestedCascadeRoot(new NestedCascadeLeaf("expected_value"));
+
+        // With the leaf ignored both sides cascade to {} and match.
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.ignoring("nested.leaf").skipClassComparison());
+        // Without ignoring the values differ.
+        assertDiagnosingMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison,
+                AssertionFailedError.class, thrown ->
+                        Assertions.assertTrue(thrown.getMessage().contains("leaf"),
+                                "failure should report leaf diff"));
+    }
+
+    @Test
+    void ignoringOnlyFieldInSingleCollectionElementCascadesToEmpty() {
+        List<ChildBean> actual   = Lists.newArrayList(child().childString("foo").childInteger(1).build());
+        List<ChildBean> expected = Lists.newArrayList(child().childString("bar").childInteger(2).build());
+
+        // Ignoring all fields: every element → {} → removed → both lists [].
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.ignoring("childString").ignoring("childInteger").skipClassComparison());
+        assertDiagnosingMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison,
+                AssertionFailedError.class, thrown ->
+                        Assertions.assertTrue(
+                                thrown.getMessage().contains("childString") || thrown.getMessage().contains("childInteger"),
+                                "failure should report field diffs"));
+    }
+
+    @Test
+    void ignoringAllBeanFieldsInNestedCollectionCascadesToEmpty() {
+        List<ChildBean> innerActual   = Lists.newArrayList(child().childString("foo").childInteger(1).build());
+        List<ChildBean> innerExpected = Lists.newArrayList(child().childString("bar").childInteger(2).build());
+        List<List<ChildBean>> actual   = new ArrayList<>();
+        actual.add(innerActual);
+        List<List<ChildBean>> expected = new ArrayList<>();
+        expected.add(innerExpected);
+
+        // bean → {} → removed → inner [] → removed → outer [].
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.ignoring("childString").ignoring("childInteger").skipClassComparison());
+        assertDiagnosingMatcher(actual, expected, DiagnosingCustomisableMatcher::skipClassComparison,
+                AssertionFailedError.class, thrown ->
+                        Assertions.assertTrue(
+                                thrown.getMessage().contains("childString") || thrown.getMessage().contains("childInteger"),
+                                "failure should report field diffs"));
+    }
+
+    @SuppressWarnings("unused")
+    private static class NestedCascadeLeaf {
+        private final String leaf;
+        NestedCascadeLeaf(String leaf) { this.leaf = leaf; }
+    }
+
+    @SuppressWarnings("unused")
+    private static class NestedCascadeRoot {
+        private final NestedCascadeLeaf nested;
+        NestedCascadeRoot(NestedCascadeLeaf nested) { this.nested = nested; }
+    }
 }
