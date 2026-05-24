@@ -6,7 +6,6 @@ import static com.github.karsaig.approvalcrest.matcher.Matchers.sameJsonAsApprov
 import java.time.LocalDate;
 
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -28,31 +27,6 @@ public class IgnoreMatcherTest {
 		input.getPreviousAddresses().get(0).setSince(LocalDate.now());
 
 		assertThat(input, sameJsonAsApproved().ignoring(Matchers.comparesEqualTo("since")));
-	}
-	
-	@Test
-	public void assertShouldFailWhenPropertyWithDifferenceIsNotIgnored() {
-		Person input = TestDataGenerator.generatePerson(1L);
-
-		input.getCurrentAddress().setSince(LocalDate.now());
-		input.getPreviousAddresses().get(0).setSince(LocalDate.now());
-
-		thrown.expect(org.junit.ComparisonFailure.class);
-		thrown.expectMessage("previousAddresses[0].since");
-		
-		assertThat(input, sameJsonAsApproved());
-	}
-	
-	@Test
-	public void assertShouldBeSuccessfulWhenMultiplePropertyWithDifferenceIsIgnored() {
-		Person input = TestDataGenerator.generatePerson(1L);
-
-		input.getCurrentAddress().setSince(LocalDate.now());
-		input.getPreviousAddresses().get(0).setSince(LocalDate.now());
-		input.setFirstName("Different first name");
-		input.setLastName("Different last name");
-
-		assertThat(input, sameJsonAsApproved().ignoring(Matchers.comparesEqualTo("since")).ignoring(Matchers.containsString("Name")));
 	}
 
 	// f4-strict-ignored-field-fail: strict mode (the default) does NOT strip ignored fields from

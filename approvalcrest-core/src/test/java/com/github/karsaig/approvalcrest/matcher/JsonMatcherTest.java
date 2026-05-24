@@ -787,5 +787,47 @@ public class JsonMatcherTest extends AbstractFileMatcherTest {
         });
     }
 
+    @Test
+    public void shouldNotThrowAssertionErrorWhenGsonConfigurationIsProvided() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        GsonConfiguration config = new GsonConfiguration();
+        config.addTypeAdapter(Long.class, new DummyStringJsonSerializer());
+
+        // beanLong (value 6) is serialised as "6 Long_variable" by the custom adapter
+        String approvedFileContent = "{\n" +
+                "  \"beanBoolean\": true,\n" +
+                "  \"beanByte\": 2,\n" +
+                "  \"beanChar\": \"c\",\n" +
+                "  \"beanDouble\": 5.0,\n" +
+                "  \"beanFloat\": 3.0,\n" +
+                "  \"beanInteger\": 4,\n" +
+                "  \"beanLong\": \"6 Long_variable\",\n" +
+                "  \"beanShort\": 1\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent,
+                jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
+    }
+
+    private static final String LONG_SUFFIX = " Long_variable";
+
+    private class DummyStringJsonSerializer implements com.google.gson.JsonDeserializer<Long>, com.google.gson.JsonSerializer<Long> {
+
+        @Override
+        public Long deserialize(com.google.gson.JsonElement json, java.lang.reflect.Type typeOfT,
+                com.google.gson.JsonDeserializationContext context) throws com.google.gson.JsonParseException {
+            if (json.isJsonNull()) {
+                return null;
+            }
+            return Long.parseLong(json.getAsString().replace(LONG_SUFFIX, ""));
+        }
+
+        @Override
+        public com.google.gson.JsonElement serialize(Long src, java.lang.reflect.Type typeOfSrc,
+                com.google.gson.JsonSerializationContext context) {
+            return new com.google.gson.JsonPrimitive(src + LONG_SUFFIX);
+        }
+    }
+
 
 }

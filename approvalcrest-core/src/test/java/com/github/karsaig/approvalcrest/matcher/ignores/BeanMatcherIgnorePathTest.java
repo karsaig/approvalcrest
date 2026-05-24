@@ -2,6 +2,7 @@ package com.github.karsaig.approvalcrest.matcher.ignores;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static java.util.function.Function.identity;
 
@@ -507,5 +509,19 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
     private static class NestedCascadeRoot {
         private final NestedCascadeLeaf nested;
         NestedCascadeRoot(NestedCascadeLeaf nested) { this.nested = nested; }
+    }
+
+    @Test
+    void ignoredFieldShouldNotAppearInFailureDiagnostic() {
+        Bean expected = bean().string("value1").integer(1).build();
+        Bean actual = bean().string("value2").integer(2).build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.ignoring("string"),
+                AssertionFailedError.class, thrown -> {
+                    Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains("string"),
+                            "expected side should not contain ignored field name");
+                    Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains("string"),
+                            "actual side should not contain ignored field name");
+                });
     }
 }

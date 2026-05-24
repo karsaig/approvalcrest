@@ -6481,4 +6481,43 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 jsonMatcher -> jsonMatcher.ignoring("childString").ignoring("childInteger"), null);
     }
 
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("simpleDiffCases")
+    void assertShouldFailWhenIgnoredFieldIsPresentInApprovedFileInStrictMode(String testName, Object input) {
+        // Approved file matches actual (firstName = "FirstName1"). Without ignoring: passes.
+        // With ignoring("firstName") in strict mode: actual loses firstName, expected keeps it → FAILS.
+        String approvedFileContent = "{\n" +
+                "  \"firstName\": \"FirstName1\",\n" +
+                "  \"lastName\": \"LastName1\",\n" +
+                "  \"email\": \"e1@e.mail\",\n" +
+                "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                "  \"birthCountry\": \"BELGIUM\",\n" +
+                "  \"currentAddress\": {\n" +
+                "    \"country\": \"BELGIUM\",\n" +
+                "    \"city\": \"CityName1\",\n" +
+                "    \"streetName\": \"StreetName60\",\n" +
+                "    \"streetNumber\": 43,\n" +
+                "    \"postCode\": \"PostCode64\",\n" +
+                "    \"since\": \"2017-04-02\"\n" +
+                "  },\n" +
+                "  \"previousAddresses\": [\n" +
+                "    {\n" +
+                "      \"country\": \"EGYPT\",\n" +
+                "      \"city\": \"CityName11\",\n" +
+                "      \"streetName\": \"StreetName70\",\n" +
+                "      \"streetNumber\": 53,\n" +
+                "      \"postCode\": \"PostCode74\",\n" +
+                "      \"since\": \"2017-04-12\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), identity(), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("firstName"),
+                thrown -> Assertions.assertTrue(thrown.getMessage().contains("firstName"),
+                        "failure message should reference the ignored field still present in approved file"),
+                AssertionFailedError.class);
+    }
+
 }

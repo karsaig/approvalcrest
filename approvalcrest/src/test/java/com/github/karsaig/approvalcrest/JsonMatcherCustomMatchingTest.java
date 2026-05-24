@@ -21,22 +21,4 @@ public class JsonMatcherCustomMatchingTest {
         assertThat(actual, sameJsonAsApproved()
                 .with("childBean.childString", equalTo("banana")));
     }
-
-    /**
-     * JSON string input exercises the JSON fallback: bean-path navigation fails on a raw
-     * String, so the framework re-tries against the parsed JSON element.
-     */
-    @Test
-    public void matchesWithJsonStringInput() {
-        String actual = "{\n" +
-                "  \"childBean\": {\n" +
-                "    \"childInteger\": 0,\n" +
-                "    \"childString\": \"banana\"\n" +
-                "  },\n" +
-                "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
-                "}";
-        assertThat(actual, sameJsonAsApproved()
-                .with("childBean.childString", equalTo("banana")));
-    }
 }

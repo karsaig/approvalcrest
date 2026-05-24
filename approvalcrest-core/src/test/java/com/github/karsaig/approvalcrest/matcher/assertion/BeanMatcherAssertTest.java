@@ -8,8 +8,17 @@ import org.opentest4j.AssertionFailedError;
 import com.github.karsaig.approvalcrest.TestAssertImpl;
 import com.github.karsaig.approvalcrest.matcher.AbstractTest;
 import com.github.karsaig.approvalcrest.matcher.TestMatcherFactory;
+import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
 import com.github.karsaig.approvalcrest.util.PreBuilt;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Sets.newHashSet;
 
 public class BeanMatcherAssertTest extends AbstractTest {
 
@@ -281,5 +290,67 @@ public class BeanMatcherAssertTest extends AbstractTest {
                 "  \"beanLong\": 13,\n" +
                 "  \"beanShort\": 1\n" +
                 "}", thrown.getExpected().getStringRepresentation());
+    }
+
+    @Test
+    void assertThatShouldThrowComparisonExceptionWhenBeanMatcherForBeanAndNullActualDoesNotMatch() {
+        Bean expected = bean().string("value1").integer(1).build();
+        Bean actual = null;
+
+        AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
+                () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
+                        comparisonDescriptionHandler()));
+
+        Assertions.assertEquals("actual was null", thrown.getMessage());
+        Assertions.assertNotNull(thrown.getExpected().getStringRepresentation());
+        Assertions.assertEquals("null", thrown.getActual().getStringRepresentation());
+    }
+
+    @Test
+    void assertThatShouldThrowComparisonExceptionWhenBeanMatcherForNullExpectedBeanAndNonNullActualDoesNotMatch() {
+        Bean expected = null;
+        Bean actual = bean().string("value1").integer(1).build();
+
+        AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
+                () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
+                        comparisonDescriptionHandler()));
+
+        Assertions.assertEquals("actual is not null", thrown.getMessage());
+        Assertions.assertEquals("null", thrown.getExpected().getStringRepresentation());
+        Assertions.assertNotNull(thrown.getActual().getStringRepresentation());
+    }
+
+    @Test
+    void assertThatShouldNotIncludeMarkerInDiagnosticsForSets() {
+        Bean expected = bean().set(newHashSet(bean().integer(1).build())).build();
+        Bean actual = bean().set(newHashSet(bean().integer(2).build())).build();
+
+        AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
+                () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
+                        comparisonDescriptionHandler()));
+
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MARKER),
+                "expected side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MARKER),
+                "actual side should not contain MARKER sentinel");
+    }
+
+    @Test
+    void assertThatShouldNotIncludeMarkerInDiagnosticsForMaps() {
+        Map<Bean, Bean> expectedMap = newHashMap();
+        expectedMap.put(bean().integer(1).build(), bean().integer(1).build());
+        Map<Bean, Bean> actualMap = newHashMap();
+        actualMap.put(bean().integer(2).build(), bean().integer(2).build());
+        Bean expected = bean().map(expectedMap).integer(1).build();
+        Bean actual = bean().map(actualMap).build();
+
+        AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
+                () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
+                        comparisonDescriptionHandler()));
+
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MARKER),
+                "expected side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MARKER),
+                "actual side should not contain MARKER sentinel");
     }
 }
