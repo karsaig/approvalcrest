@@ -422,6 +422,29 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
                 jsonMatcher -> jsonMatcher.with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))), null, null);
     }
 
+    /**
+     * Both childBeanList and childBeanMap are covered by bean-only matchers (hasItem / hasEntry).
+     * Both pass at the bean level and must NOT be retried against the JSON form:
+     * hasItem and hasEntry operate on Java collection/map types and would fail if applied
+     * to the JsonArray representation used in the retry path.
+     * This test verifies that multiple bean-form matchers are each evaluated once at the
+     * bean level, and that neither falls through to the JSON retry when it already passed.
+     */
+    @Test
+    public void multipleBeanOnlyMatchersPassWithoutJsonRetry() {
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .putToChildBeanMap("key", child().childString("banana"))
+                .build();
+        // Both fields are handled by their matchers; nothing else serialises, so approved is {}.
+        assertJsonMatcherWithDummyTestInfo(input, "{}", enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBeanList", hasItem(childStringEqualTo("banana")))
+                        .with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))),
+                null, null);
+    }
+
     // -----------------------------------------------------------------------
     // Two-level nested collection fanout (f6-json-nested-fanout)
     // -----------------------------------------------------------------------
