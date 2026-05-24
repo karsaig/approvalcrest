@@ -4,24 +4,23 @@ Changelog
 Version 1.0.0
 -----
 
-- Added strict matching mode (`strictMatching` system property, enabled by default): in strict mode `ignoring()` strips fields from the actual side only, leaving the approved file untouched. Disable with `-DstrictMatching=false` to restore the old two-sided stripping behaviour.
-- Added type/class comparison to `sameBeanAs`: the matcher now fails when actual and expected objects have incompatible runtime types, with a clear message. Suppress with `skipClassComparison()` on the matcher or the `beanMatcherSkipClassComparison` environment variable.
-- Fixed `withPathName` / relative path handling in `JsonMatcher` and `ContentMatcher`: absolute paths, relative paths, and the default hash-based directory are now all computed consistently; blank path arguments are treated as no-ops.
-- Fixed unique ID / filename separator handling: no extra `-` separator is inserted when the unique ID already starts with one, or when the filename already ends with one; blank unique IDs are ignored.
-- Fixed `FieldsIgnorer`: ignoring a field inside a `Map` value no longer leaves an orphaned empty array in the serialised output.
-- Added `withAlias(value, alias)` / `withAlias(fieldName, value, alias)` convenience methods and `withAliasMap(AliasMap)` for substituting volatile values (UUIDs, generated IDs, timestamps) with stable human-readable aliases before comparison. Aliases are applied after ignores and before sorting, so they affect sort keys. Applied on first run and on overwrite, so the approved file always contains the alias rather than the raw value.
-- Added `withMatcher(Matcher<String>, Matcher<V>)` to `CustomisableMatcher` — a pattern-based variant of `with()` that matches all fields at any depth whose name satisfies the supplied `Matcher<String>`. If no fields match, the check passes vacuously. Supported by both `sameBeanAs` and `sameJsonAsApproved`.
-- Custom matchers configured via `with()` now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. when the actual input is already a JSON string). Enables `sameJsonAsApproved().with(path, matcher)` to work correctly for string inputs.
-- Fixed sorting of root-level `List` and array inputs: explicit `sortField("")` now triggers sort on root `List`/array in addition to the existing auto-sort for `Set`/`Map`.
-- Fixed sort order to be bottom-up: nested arrays are fully sorted before their parent array's sort key is computed.
-- Fixed sorting of arrays-of-arrays and arrays-of-arrays-of-beans with correct fan-out semantics.
-- Fixed `withMatcher(Matcher<String>, ...)` pattern ignores being applied after sorting in `sameBeanAs`, causing matched fields to influence the sort key. Pattern ignores are now applied before sorting, consistent with `sameJsonAsApproved`.
-- Fixed three bugs in sort-key filtering (`FieldsIgnorer.getFilteredStringForSorting`): (1) complex/object fields with a matching ignore path were not stripped from the sort key; (2) multi-level ignore paths (e.g. `addr.city`) did not propagate correctly and the leaf was never stripped; (3) `SortField<Matcher<String>>.ignoring(path/matcher)` calls had no effect on sort key computation.
-- Fixed array-of-arrays sort semantics: `sortField("X")` where elements are inner arrays now only reorders the outer array by each inner array's serialised form; inner array element order is no longer modified as a side-effect.
-- Fixed `FieldsIgnorer` array fan-out to skip primitive elements instead of attempting to recurse into them, preventing spurious field-lookup failures when arrays contain primitive values.
-- Fixed `FieldsIgnorer` cleanup when all fields of a bean used as a `Map` key are ignored: the orphaned value was previously left in the serialised form, preventing the whole map entry from being removed as expected.
-- Improved error message when a required `--add-opens` JVM flag is missing: now reports the exact flag name and shows ready-to-paste Maven surefire `<argLine>` and Gradle `jvmArgs` snippets.
-- Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (format: `TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`), making matcher configuration visible in test failure output and IDE debuggers.
+- Added strict matching mode (`strictMatching` system property, on by default): `ignoring()` strips fields from the actual side only; use `-DstrictMatching=false` to restore the old two-sided behaviour.
+- Added type comparison to `sameBeanAs`: fails with a clear message when actual and expected have incompatible types. Suppress with `skipClassComparison()` or the `beanMatcherSkipClassComparison` env variable.
+- Added `withAliasMap(AliasMap)` / `withAlias(value, alias)` / `withAlias(field, value, alias)`: replaces volatile values (UUIDs, timestamps) with stable aliases before comparison and file creation. Aliases are applied after ignores and before sorting.
+- Added `withMatcher(Matcher<String>, Matcher<V>)`: pattern-based custom matcher that applies to all fields at any depth whose name matches the supplied `Matcher<String>`. Supported by both `sameBeanAs` and `sameJsonAsApproved`.
+- Custom matchers now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. JSON string input to `sameJsonAsApproved`).
+- Fixed sorting of root-level `List` / array inputs via `sortField("")`.
+- Fixed sort order to be bottom-up: nested arrays sorted before their parent's key is computed.
+- Fixed sorting of arrays-of-arrays: only the outer array is reordered; inner array element order is preserved.
+- Fixed three bugs in sort-key filtering: complex fields not stripped, multi-level paths (e.g. `addr.city`) broken, `SortField<Matcher<String>>.ignoring()` had no effect.
+- Fixed `withMatcher` pattern ignores being applied after sorting in `sameBeanAs` instead of before.
+- Fixed `FieldsIgnorer` array fan-out erroring on primitive array elements.
+- Fixed `FieldsIgnorer`: ignoring all fields of a bean `Map` key now removes the whole entry cleanly.
+- Fixed `FieldsIgnorer`: ignoring a field inside a `Map` value no longer leaves an orphaned empty array.
+- Fixed `withPathName` / relative path handling: absolute, relative, and hash-based directories computed consistently; blank arguments are no-ops.
+- Fixed unique ID / filename separator: no double `-` when the ID already starts with one; blank IDs ignored.
+- Improved `--add-opens` missing error: reports the exact flag and shows ready-to-paste Maven/Gradle snippets.
+- Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (`TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`).
 
 Version 0.62.3 - 2024/05/27
 -----
