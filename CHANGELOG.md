@@ -4,14 +4,14 @@ Changelog
 Version 1.0.0
 -----
 
-- Added strict matching mode (`strictMatching` system property, on by default): `ignoring()` strips fields from the actual side only; use `-DstrictMatching=false` to restore the old two-sided behaviour.
-- Added type comparison to `sameBeanAs`: fails with a clear message when actual and expected have incompatible types. Suppress with `skipClassComparison()` or the `beanMatcherSkipClassComparison` env variable.
+- **[breaking]** Added strict matching mode (`strictMatching` system property, on by default): `ignoring()` strips fields from the actual side only; use `-DstrictMatching=false` to restore the old two-sided behaviour.
+- **[breaking]** Added type comparison to `sameBeanAs`: fails with a clear message when actual and expected have incompatible types. Suppress with `skipClassComparison()` or the `beanMatcherSkipClassComparison` env variable.
 - Added `withAliasMap(AliasMap)` / `withAlias(value, alias)` / `withAlias(field, value, alias)`: replaces volatile values (UUIDs, timestamps) with stable aliases before comparison and file creation. Aliases are applied after ignores and before sorting.
 - Added `withMatcher(Matcher<String>, Matcher<V>)`: pattern-based custom matcher that applies to all fields at any depth whose name matches the supplied `Matcher<String>`. Supported by both `sameBeanAs` and `sameJsonAsApproved`.
 - Custom matchers now fall back to the JSON-serialised form when the Java-bean reflection path is unavailable (e.g. JSON string input to `sameJsonAsApproved`).
 - Fixed sorting of root-level `List` / array inputs via `sortField("")`.
 - Fixed sort order to be bottom-up: nested arrays sorted before their parent's key is computed.
-- Fixed sorting of arrays-of-arrays: only the outer array is reordered; inner array element order is preserved.
+- **[breaking]** Fixed sorting of arrays-of-arrays: only the outer array is reordered; inner array element order is preserved. Previously inner arrays were implicitly sorted as a side-effect.
 - Fixed three bugs in sort-key filtering: complex fields not stripped, multi-level paths (e.g. `addr.city`) broken, `SortField<Matcher<String>>.ignoring()` had no effect.
 - Fixed `withMatcher` pattern ignores being applied after sorting in `sameBeanAs` instead of before.
 - Fixed `FieldsIgnorer` array fan-out erroring on primitive array elements.
@@ -19,6 +19,7 @@ Version 1.0.0
 - Fixed `FieldsIgnorer`: ignoring a field inside a `Map` value no longer leaves an orphaned empty array.
 - Fixed `withPathName` / relative path handling: absolute, relative, and hash-based directories computed consistently; blank arguments are no-ops.
 - Fixed unique ID / filename separator: no double `-` when the ID already starts with one; blank IDs ignored.
+- **[breaking]** `FileStoreMatcherUtils.SEPARATOR` type changed from `Object` to `char`; any code referencing this public constant by the old type must be updated.
 - Improved `--add-opens` missing error: reports the exact flag and shows ready-to-paste Maven/Gradle snippets.
 - Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (`TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`).
 
