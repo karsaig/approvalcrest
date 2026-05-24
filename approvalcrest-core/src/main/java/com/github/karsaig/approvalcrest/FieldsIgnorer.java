@@ -276,12 +276,17 @@ public class FieldsIgnorer {
         return emptyList();
     }
 
-    private static void sortJsonArray(JsonArray input,List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers) {
+    private static void sortJsonArray(JsonArray input, List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers) {
         List<SortElement> toSort = new ArrayList<>(input.size());
         Iterator<JsonElement> iter = input.iterator();
         while (iter.hasNext()) {
             JsonElement actual = iter.next();
-            toSort.add(new SortElement(getFilteredStringForSorting(actual,matchingPathMatchers,matchingFieldMatchers).toString(), actual));
+            // When elements are themselves arrays (e.g. List<List<Bean>>), sort them
+            // recursively before computing the sort key so the key is deterministic.
+            if (actual.isJsonArray()) {
+                sortJsonArray(actual.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
+            }
+            toSort.add(new SortElement(getFilteredStringForSorting(actual, matchingPathMatchers, matchingFieldMatchers).toString(), actual));
             iter.remove();
         }
         Collections.sort(toSort);
