@@ -392,4 +392,18 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher("hello");
         org.junit.jupiter.api.Assertions.assertEquals("SameBeanAs equals matcher", underTest.toString());
     }
+
+    // -----------------------------------------------------------------------
+    // plain-string input (no JSON object/array)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void withMatcherOnPlainStringIsVacuouslyIgnored() {
+        // For plain strings, beanMatcher() returns an IsEqualMatcher which overrides
+        // doMatches() with a plain equalTo() check and never inspects matcherConfiguration.
+        // Any withMatcher()/with()/sortFieldPath() calls are accepted but silently ignored;
+        // the assertion passes or fails purely by string equality.
+        assertDiagnosingMatcher("hello", "hello",
+                beanMatcher -> beanMatcher.withMatcher(containsString("field"), equalTo("anything")));
+    }
 }
