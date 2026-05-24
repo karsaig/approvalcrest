@@ -6281,14 +6281,14 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     // f2-complex-key-map: Map<Bean,String> with a key-field ignored
     // -----------------------------------------------------------------------
 
-    @Test
-    void complexObjectKeyMapWithIgnoredKeyField() {
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("complexKeyMapCases")
+    void complexObjectKeyMapWithIgnoredKeyField(String testName, Object input) {
         // Map<ChildBean, String>: each entry is serialised as [[keyFields], "value"].
         // ignoring("childString") should remove childString from every key bean.
-        java.util.Map<Object, String> input = new java.util.LinkedHashMap<>();
-        input.put(child().childString("banana").childInteger(1).build(), "val1");
-        input.put(child().childString("apple").childInteger(2).build(), "val2");
-
+        // Both Object and JSON string inputs are tested.
+        // Object input is sorted apple-before-banana by the map serializer; JSON string
+        // input preserves insertion order (also written apple-first to share content).
         String approvedFileContent = "[\n" +
                 "  [\n" +
                 "    {\n" +
@@ -6305,6 +6305,17 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "]";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.ignoring("childString"), null);
+    }
+
+    public static Object[][] complexKeyMapCases() {
+        java.util.Map<Object, String> objectInput = new java.util.LinkedHashMap<>();
+        objectInput.put(child().childString("banana").childInteger(1).build(), "val1");
+        objectInput.put(child().childString("apple").childInteger(2).build(), "val2");
+        return new Object[][]{
+                {"Object input", objectInput},
+                // JSON string written apple-first to match map-serializer sort order
+                {"Json string input", "[[{\"childString\":\"apple\",\"childInteger\":2},\"val2\"],[{\"childString\":\"banana\",\"childInteger\":1},\"val1\"]]"}
+        };
     }
 
 }
