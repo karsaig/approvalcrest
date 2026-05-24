@@ -135,4 +135,23 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
         });
     }
 
+    @Test
+    public void reportsOnlyFirstFailureWhenBothMatchersFail() {
+        // Both matchers fail; only the first (HashMap iteration order) should appear in mismatch.
+        ParentBean actual   = parent().childBean(child().childString("banana").childInteger(0)).build();
+        ParentBean expected = parent().childBean(child().childString("kiwi").childInteger(99)).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher
+                        .with("childBean.childString", equalTo("kiwi"))
+                        .with("childBean.childInteger", equalTo(99L)),
+                AssertionError.class, error -> {
+                    String msg = error.getMessage();
+                    String mismatchSection = msg.contains("but:") ? msg.substring(msg.lastIndexOf("but:")) : msg;
+                    Assertions.assertFalse(
+                            mismatchSection.contains("childBean.childString") && mismatchSection.contains("childBean.childInteger"),
+                            "Only first failure should be reported in mismatch section, was: " + msg);
+                });
+    }
+
 }

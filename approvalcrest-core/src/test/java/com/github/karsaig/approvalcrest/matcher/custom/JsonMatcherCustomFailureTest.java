@@ -139,8 +139,106 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     }
 
     // -----------------------------------------------------------------------
-    // Non-existing field path
+    // Null actual object
     // -----------------------------------------------------------------------
+
+    @Test
+    public void failsWhenActualIsNull() {
+        // When actual is null, the custom matcher sees null as the value for the path.
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(null, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("null"),
+                        "Expected null-related mismatch message, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Null parent bean in path — JSON-string input
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void doesNotIncludeParentBeanFromFieldPathForJsonStringInput() {
+        // Same scenario as doesNotIncludeParentBeanFromFieldPath but using a JSON string
+        // as the actual input.  childBean is null in the JSON; the path childBean.childString
+        // cannot be resolved and the mismatch should mention "childBean".
+        String input = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("apple")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("childBean"),
+                        "Expected childBean-related message, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Empty collection path
+    // -----------------------------------------------------------------------
+
+    public static Object[][] emptyParentInputs() {
+        return new Object[][]{
+                {"Object input", parent().build()},
+                {"Json string input", "{\n  \"childBeanList\": [],\n  \"childBeanMap\": []\n}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("emptyParentInputs")
+    public void failsWhenPathThroughEmptyCollectionIsUsed(String testName, Object input) {
+        // When childBeanList is empty there are no values at childBeanList.childString to
+        // validate against.  The custom matcher must NOT silently pass (vacuous truth).
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList.childString", equalTo("apple")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("childBeanList.childString"),
+                        "Expected mismatch mentioning the path, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Two custom matchers both failing — only first reported
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputs")
+    public void reportsOnlyFirstFailureWhenBothMatchersFail(String testName, Object input) {
+        // Both matchers fail (childString is "banana", not "kiwi"; childInteger is 0, not 99).
+        // Only the first failure (HashMap iteration order) should appear in the mismatch section.
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBean.childString", equalTo("kiwi"))
+                        .with("childBean.childInteger", equalTo(99L)),
+                error -> {
+                    String msg = error.getMessage();
+                    String mismatchSection = msg.contains("but:") ? msg.substring(msg.lastIndexOf("but:")) : msg;
+                    Assertions.assertFalse(
+                            mismatchSection.contains("childBean.childString") && mismatchSection.contains("childBean.childInteger"),
+                            "Only first failure should be reported in mismatch section, was: " + msg);
+                },
+                AssertionError.class);
+    }
+
+
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("customMatcherInputs")

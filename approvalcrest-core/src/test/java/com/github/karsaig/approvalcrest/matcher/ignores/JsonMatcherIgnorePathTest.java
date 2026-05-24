@@ -6235,4 +6235,46 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 AssertionError.class);
     }
 
+    // -----------------------------------------------------------------------
+    // f2-single-entry-map: single-entry map where the sole key is ignored → []
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("singleEntryMapCases")
+    void singleEntryMapIgnoredKeyProducesEmptyArray(String testName, Object input) {
+        // The map has exactly one entry; ignoring its key should yield [] not [{}].
+        assertJsonMatcherWithDummyTestInfo(input, "[]", getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("key3"), null);
+    }
+
+    public static Object[][] singleEntryMapCases() {
+        return new Object[][]{
+                {"Object input", new java.util.HashMap<String, String>() {{ put("key3", "value3"); }}},
+                {"Json string input", "[{\"key3\": \"value3\"}]"}
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // f2-map-subpath: ignore a sub-field inside a specific map value
+    // -----------------------------------------------------------------------
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("mapWithBeanValueCases")
+    void ignoreSubpathInMapValueRemovesFieldFromSpecificEntry(String testName, Object input) {
+        // ignoring("key1.childString") removes childString only from the value of "key1",
+        // leaving the entry itself and the other fields intact.
+        String approvedFileContent = "[{\"key1\": {\"childInteger\": 0}}]";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("key1.childString"), null);
+    }
+
+    public static Object[][] mapWithBeanValueCases() {
+        return new Object[][]{
+                {"Object input", new java.util.HashMap<String, Object>() {{
+                    put("key1", child().childString("banana").build());
+                }}},
+                {"Json string input", "[{\"key1\": {\"childString\": \"banana\", \"childInteger\": 0}}]"}
+        };
+    }
+
 }

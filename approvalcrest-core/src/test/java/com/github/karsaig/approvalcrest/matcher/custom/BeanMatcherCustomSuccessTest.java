@@ -266,6 +266,23 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
                 beanMatcher -> beanMatcher.with("parentBeans.childBeanList.childString", equalTo("apple")));
     }
 
+    @Test
+    public void matchesPathThroughCollectionContainingNullElement() {
+        // childBeanList contains a null element; the custom matcher uses anyOf so both
+        // null and "banana" pass — confirming no NPE occurs on the null element.
+        ParentBean expected = parent()
+                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        ParentBean actual = parent()
+                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("childBeanList.childString", org.hamcrest.Matchers.anyOf(org.hamcrest.Matchers.nullValue(), equalTo("banana"))));
+    }
+
     static class NestedCollectionWrapper {
         List<ParentBean> parentBeans;
         NestedCollectionWrapper(List<ParentBean> parentBeans) {

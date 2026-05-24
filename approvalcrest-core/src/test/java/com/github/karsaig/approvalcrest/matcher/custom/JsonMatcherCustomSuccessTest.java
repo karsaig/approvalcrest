@@ -1,13 +1,21 @@
 package com.github.karsaig.approvalcrest.matcher.custom;
 
 import com.github.karsaig.approvalcrest.matcher.ignores.AbstractJsonMatcherIgnoreTest;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Arrays;
+import java.util.List;
+
+import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -381,5 +389,101 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
                 String value;
             }
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // hasItem / hasEntry on collection and map fields (f6-json-map-collection-matchers)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void matchesItemInCollectionWithCustomMatcher() {
+        // childBeanList has two elements; the custom matcher requires "banana" to be present.
+        // The approved file omits childBeanList (it is handled by the custom matcher).
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        String approvedFileContent = "{\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", hasItem(childStringEqualTo("banana"))), null, null);
+    }
+
+    @Test
+    public void matchesItemInMap() {
+        // childBeanMap has one entry; the custom matcher checks the entry for key "key".
+        // The approved file omits childBeanMap (it is handled by the custom matcher).
+        Object input = parent().putToChildBeanMap("key", child().childString("banana")).build();
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("banana"))), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Two-level nested collection fanout (f6-json-nested-fanout)
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void matchesPathThroughNestedCollections() {
+        // Path "parentBeans.childBeanList.childString" fans out through two collection levels.
+        // All leaf childString values are "apple" so the matcher passes.
+        ParentBean p1 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean p2 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        NestedWrapper input = new NestedWrapper(Arrays.asList(p1, p2));
+
+        // After stripping parentBeans.childBeanList.childString only childInteger remains
+        // inside each childBeanList entry; childBeanMap is [] for each parentBean.
+        String approvedFileContent = "{\n" +
+                "  \"parentBeans\": [\n" +
+                "    {\n" +
+                "      \"childBeanList\": [\n" +
+                "        {\"childInteger\": 0},\n" +
+                "        {\"childInteger\": 0}\n" +
+                "      ],\n" +
+                "      \"childBeanMap\": []\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childBeanList\": [\n" +
+                "        {\"childInteger\": 0}\n" +
+                "      ],\n" +
+                "      \"childBeanMap\": []\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("parentBeans.childBeanList.childString", equalTo("apple")), null, null);
+    }
+
+    @Test
+    public void matchesPathThroughCollectionContainingNullElement() {
+        // childBeanList contains a null element followed by a real element.
+        // anyOf(nullValue, equalTo("banana")) ensures no NPE on the null element.
+        Object input = parent()
+                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        // After stripping childBeanList.childString the list retains [null, {childInteger:0}].
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [\n" +
+                "    null,\n" +
+                "    {\"childInteger\": 0}\n" +
+                "  ],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList.childString", org.hamcrest.Matchers.anyOf(org.hamcrest.Matchers.nullValue(), equalTo("banana"))), null, null);
+    }
+
+    static class NestedWrapper {
+        List<ParentBean> parentBeans;
+        NestedWrapper(List<ParentBean> parentBeans) { this.parentBeans = parentBeans; }
     }
 }
