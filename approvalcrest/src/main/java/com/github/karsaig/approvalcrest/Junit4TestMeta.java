@@ -20,7 +20,7 @@ public class Junit4TestMeta extends Junit4TestMetaBase {
         super(testClassPath, testClassName, testMethodName, approvedDirectory);
     }
 
-    private static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
+    static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
         StackTraceElement result = null;
         for (StackTraceElement s : stackTrace) {
             if (isTestMethod(s)) {

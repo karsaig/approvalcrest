@@ -26,7 +26,7 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
     }
 
 
-    private static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
+    static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
         StackTraceElement result = null;
         for (StackTraceElement s : stackTrace) {
             if (isTestMethod(s)) {
