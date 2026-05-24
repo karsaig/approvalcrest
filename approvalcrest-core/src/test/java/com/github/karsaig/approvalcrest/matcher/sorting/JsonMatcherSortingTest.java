@@ -10,9 +10,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -3628,6 +3630,60 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
         String approved = "[\"apple\",\"banana\",\"cherry\"]";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher, (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // root-list-sort: root List is sorted the same way as root Set
+    // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // root-list-sort: root List/array is sorted when configured with "" path
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void rootListOfStringsIsSortedWhenConfiguredWithEmptyPathSortField() {
+        // When the root object is a List, it can be sorted by configuring sortFieldPath
+        // with an empty-string selector (meaning "sort the root array itself").
+        List<String> actual = new ArrayList<>(Arrays.asList("cherry", "apple", "banana"));
+        String approved = "[\"apple\",\"banana\",\"cherry\"]";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("")), (String) null);
+    }
+
+    @Test
+    public void rootArrayOfBeansIsSortedByFullJsonRepresentationWhenConfigured() {
+        // Root JSON array (string input) is sorted by the full JSON representation of
+        // each element when an explicit empty-path sort field is configured.
+        String actual = "[\n" +
+                "  {\"name\": \"cherry\"},\n" +
+                "  {\"name\": \"apple\"},\n" +
+                "  {\"name\": \"banana\"}\n" +
+                "]";
+        String approved = "[\n" +
+                "  {\"name\": \"apple\"},\n" +
+                "  {\"name\": \"banana\"},\n" +
+                "  {\"name\": \"cherry\"}\n" +
+                "]";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("")), (String) null);
+    }
+
+    @Test
+    public void rootArraySortedWithIgnoredFieldFromSortKey() {
+        // Root array (JSON string input) sorted with one field excluded from the sort key.
+        // Without ignoring "age", {age:99,name:"banana"} > {age:1,name:"apple"} by age.
+        // Ignoring "age" makes sort key depend on "name" only → apple < banana.
+        String actual = "[\n" +
+                "  {\"name\": \"banana\", \"age\": 99},\n" +
+                "  {\"name\": \"apple\",  \"age\": 1}\n" +
+                "]";
+        String approved = "[\n" +
+                "  {\"age\": 1,  \"name\": \"apple\"},\n" +
+                "  {\"age\": 99, \"name\": \"banana\"}\n" +
+                "]";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("").ignoring("age")),
+                (String) null);
     }
 
     // -------------------------------------------------------------------------
