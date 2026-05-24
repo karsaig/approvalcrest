@@ -426,19 +426,11 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
     // Two-level nested collection fanout (f6-json-nested-fanout)
     // -----------------------------------------------------------------------
 
-    @Test
-    public void matchesPathThroughNestedCollections() {
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("nestedCollectionInputs")
+    public void matchesPathThroughNestedCollections(String testName, Object input) {
         // Path "parentBeans.childBeanList.childString" fans out through two collection levels.
         // All leaf childString values are "apple" so the matcher passes.
-        ParentBean p1 = parent()
-                .addToChildBeanList(child().childString("apple"))
-                .addToChildBeanList(child().childString("apple"))
-                .build();
-        ParentBean p2 = parent()
-                .addToChildBeanList(child().childString("apple"))
-                .build();
-        NestedWrapper input = new NestedWrapper(Arrays.asList(p1, p2));
-
         // After stripping parentBeans.childBeanList.childString only childInteger remains
         // inside each childBeanList entry; childBeanMap is [] for each parentBean.
         String approvedFileContent = "{\n" +
@@ -462,14 +454,42 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
                 jsonMatcher -> jsonMatcher.with("parentBeans.childBeanList.childString", equalTo("apple")), null, null);
     }
 
-    @Test
-    public void matchesPathThroughCollectionContainingNullElement() {
+    public static Object[][] nestedCollectionInputs() {
+        ParentBean p1 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean p2 = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        return new Object[][]{
+                {"Object input", new NestedWrapper(Arrays.asList(p1, p2))},
+                {"Json string input",
+                        "{\n" +
+                        "  \"parentBeans\": [\n" +
+                        "    {\n" +
+                        "      \"childBeanList\": [\n" +
+                        "        {\"childInteger\": 0, \"childString\": \"apple\"},\n" +
+                        "        {\"childInteger\": 0, \"childString\": \"apple\"}\n" +
+                        "      ],\n" +
+                        "      \"childBeanMap\": []\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"childBeanList\": [\n" +
+                        "        {\"childInteger\": 0, \"childString\": \"apple\"}\n" +
+                        "      ],\n" +
+                        "      \"childBeanMap\": []\n" +
+                        "    }\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("nullElementCollectionInputs")
+    public void matchesPathThroughCollectionContainingNullElement(String testName, Object input) {
         // childBeanList contains a null element followed by a real element.
         // anyOf(nullValue, equalTo("banana")) ensures no NPE on the null element.
-        Object input = parent()
-                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
-                .addToChildBeanList(child().childString("banana"))
-                .build();
         // After stripping childBeanList.childString the list retains [null, {childInteger:0}].
         String approvedFileContent = "{\n" +
                 "  \"childBeanList\": [\n" +
@@ -480,6 +500,20 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBeanList.childString", org.hamcrest.Matchers.anyOf(org.hamcrest.Matchers.nullValue(), equalTo("banana"))), null, null);
+    }
+
+    public static Object[][] nullElementCollectionInputs() {
+        return new Object[][]{
+                {"Object input", parent()
+                        .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                        .addToChildBeanList(child().childString("banana"))
+                        .build()},
+                {"Json string input",
+                        "{\n" +
+                        "  \"childBeanList\": [null, {\"childString\": \"banana\", \"childInteger\": 0}],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
     }
 
     static class NestedWrapper {
