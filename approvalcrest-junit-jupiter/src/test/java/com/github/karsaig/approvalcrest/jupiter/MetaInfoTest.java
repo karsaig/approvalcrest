@@ -46,7 +46,8 @@ public class MetaInfoTest {
                 "toStringContainsAllFields",
                 Paths.get("src/test/resources/approvalcrest"));
         String result = underTest.toString();
-        assertTrue(result.contains("com.github.karsaig.approvalcrest.jupiter.MetaInfoTest#toStringContainsAllFields"));
+        assertTrue(result.contains("cn=com.github.karsaig.approvalcrest.jupiter.MetaInfoTest"));
+        assertTrue(result.contains("mn=toStringContainsAllFields"));
         assertTrue(result.contains("cp="));
         assertTrue(result.contains("ad="));
         assertTrue(result.contains("wd="));
