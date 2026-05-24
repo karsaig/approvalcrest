@@ -3679,11 +3679,12 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "    [\"A\", \"C\"]\n" +
                 "  ]\n" +
                 "}";
-        // ["A","C"] < ["Z","B"] lexicographically — inner arrays NOT reordered
+        // inner arrays are sorted too (direct fan-out): ["A","C"] and ["B","Z"];
+        // outer sort: ["A","C"] < ["B","Z"]
         String approved = "{\n" +
                 "  \"matrix\": [\n" +
                 "    [\"A\", \"C\"],\n" +
-                "    [\"Z\", \"B\"]\n" +
+                "    [\"B\", \"Z\"]\n" +
                 "  ]\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
@@ -3691,27 +3692,70 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
     }
 
     // -------------------------------------------------------------------------
-    // array-of-array-of-beans: outer array is reordered; inner arrays are NOT touched
+    // array-of-array-of-beans: inner arrays sorted too; bean fields NOT auto-sorted
     // -------------------------------------------------------------------------
 
     @Test
-    public void arrayOfArraySortingReordersOuterArrayOnly() {
-        // sortField("groups") reorders the outer array based on each inner array's
-        // JSON string as sort key. Inner arrays' own element order is NOT changed —
-        // only the user can control that by sorting the inner list before passing it in
-        // or by using Set<Bean> as the inner collection type.
+    public void arrayOfArrayOfBeansSortsInnerArraysAndReordersOuter() {
+        // sortField("groups") sorts the outer array. Because the direct elements are
+        // themselves arrays, each inner array is also sorted (fan-out applies).
+        // The sort key for the outer comparison is computed after inner sorting.
         String actual = "{\n" +
                 "  \"groups\": [\n" +
                 "    [{\"name\": \"D\"}, {\"name\": \"C\"}],\n" +
                 "    [{\"name\": \"B\"}, {\"name\": \"A\"}]\n" +
                 "  ]\n" +
                 "}";
-        // sort keys: inner[0]=["D","C"] JSON, inner[1]=["A","B"] JSON (fields sorted alphabetically)
-        // {"name":"A"} < {"name":"D"} → group[1] first
+        // inner[0] sorted → [{name:C},{name:D}]; inner[1] sorted → [{name:A},{name:B}]
+        // outer sort keys: {"name":"C"}... vs {"name":"A"}... → A-group first
         String approved = "{\n" +
                 "  \"groups\": [\n" +
-                "    [{\"name\": \"B\"}, {\"name\": \"A\"}],\n" +
-                "    [{\"name\": \"D\"}, {\"name\": \"C\"}]\n" +
+                "    [{\"name\": \"A\"}, {\"name\": \"B\"}],\n" +
+                "    [{\"name\": \"C\"}, {\"name\": \"D\"}]\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("groups")), (String) null);
+    }
+
+    @Test
+    public void arrayOfArrayOfBeansWithIgnoredFieldSortsByRemainingFields() {
+        // Ignoring a field propagates into inner arrays: sort key strips the ignored
+        // field from each bean within the inner arrays.
+        String actual = "{\n" +
+                "  \"groups\": [\n" +
+                "    [{\"age\": \"30\", \"name\": \"B\"}, {\"age\": \"25\", \"name\": \"A\"}],\n" +
+                "    [{\"age\": \"20\", \"name\": \"D\"}, {\"age\": \"15\", \"name\": \"C\"}]\n" +
+                "  ]\n" +
+                "}";
+        // inner sorted by name (age stripped from sort key): [A,B] and [C,D]
+        // outer: A-group first; original age values preserved in output
+        String approved = "{\n" +
+                "  \"groups\": [\n" +
+                "    [{\"age\": \"25\", \"name\": \"A\"}, {\"age\": \"30\", \"name\": \"B\"}],\n" +
+                "    [{\"age\": \"15\", \"name\": \"C\"}, {\"age\": \"20\", \"name\": \"D\"}]\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("groups", "age")), (String) null);
+    }
+
+    @Test
+    public void beanFieldsInsideSortedArrayAreNotAutoSorted() {
+        // When the direct elements of a sorted array are beans (objects), the beans'
+        // own fields are NOT auto-sorted. Only array fields of beans that are
+        // explicitly configured will be sorted.
+        String actual = "{\n" +
+                "  \"groups\": [\n" +
+                "    {\"name\": \"B\", \"tags\": [\"z\", \"a\"]},\n" +
+                "    {\"name\": \"A\", \"tags\": [\"y\", \"b\"]}\n" +
+                "  ]\n" +
+                "}";
+        // outer sorted by full bean JSON: A-bean first; tags arrays left untouched
+        String approved = "{\n" +
+                "  \"groups\": [\n" +
+                "    {\"name\": \"A\", \"tags\": [\"y\", \"b\"]},\n" +
+                "    {\"name\": \"B\", \"tags\": [\"z\", \"a\"]}\n" +
                 "  ]\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
