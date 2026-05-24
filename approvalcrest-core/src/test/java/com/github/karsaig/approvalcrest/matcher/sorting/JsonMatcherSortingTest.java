@@ -3686,6 +3686,33 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 (String) null);
     }
 
+    @Test
+    public void rootArraySortOrderIsBottomUp() {
+        // Nested arrays inside root elements must be sorted BEFORE the root sort key
+        // is computed, so the root ordering reflects the fully-sorted element JSON.
+        // Each element has a "tags" array that is also configured for sorting.
+        // tags are sorted first; then root is sorted by the resulting full element JSON.
+        // Element with tags ["apple","cherry"] sorts before ["banana","date"] because
+        // "apple" < "banana" lexicographically.
+        String actual = "[\n" +
+                "  {\"name\": \"beta\",  \"tags\": [\"cherry\", \"apple\"]},\n" +
+                "  {\"name\": \"alpha\", \"tags\": [\"date\",   \"banana\"]}\n" +
+                "]";
+        // After bottom-up sort:
+        //   element 0 tags sorted → ["apple","cherry"]  → full JSON: {name:beta, tags:[apple,cherry]}
+        //   element 1 tags sorted → ["banana","date"]   → full JSON: {name:alpha,tags:[banana,date]}
+        // Root sort by full JSON: alpha-bean < beta-bean  → alpha first
+        String approved = "[\n" +
+                "  {\"name\": \"alpha\", \"tags\": [\"banana\", \"date\"]},\n" +
+                "  {\"name\": \"beta\",  \"tags\": [\"apple\",  \"cherry\"]}\n" +
+                "]";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher
+                        .sortFieldPath(SortField.of(""))
+                        .sortFieldPath(SortField.of("tags")),
+                (String) null);
+    }
+
     // -------------------------------------------------------------------------
     // sort-gap-9: matcher-based ignore strips all matching fields
     // -------------------------------------------------------------------------

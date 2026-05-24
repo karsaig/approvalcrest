@@ -177,14 +177,8 @@ public class FieldsIgnorer {
                     }
                 }
             } else if (jsonElement.isJsonArray()) {
-                // Sort the array itself when the "" (root) path is configured.
-                List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
-                List<SortField<Matcher<String>>> rootFieldMatchers = anyFieldMatcherMatches("", fieldMatchersToSort, sortFile);
-                if (!rootSortFields.isEmpty() || !rootFieldMatchers.isEmpty()) {
-                    sortJsonArray(jsonElement.getAsJsonArray(), rootSortFields, rootFieldMatchers);
-                }
-                // Recurse into each element using paths without the "" root key so it
-                // doesn't trigger again when descending into object elements.
+                // Recurse into each element first so nested arrays are sorted before
+                // computing the root sort key (bottom-up ordering).
                 Map<String, List<SortField<String>>> innerPathsToSort;
                 if (pathsToSort.containsKey("")) {
                     innerPathsToSort = new HashMap<>(pathsToSort);
@@ -199,6 +193,13 @@ public class FieldsIgnorer {
                         continue;
                     }
                     applySorting(current, innerPathsToSort, fieldMatchersToSort, sortFile);
+                }
+                // Sort the array itself last (root), so the sort key reflects the
+                // already-sorted state of nested elements.
+                List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
+                List<SortField<Matcher<String>>> rootFieldMatchers = anyFieldMatcherMatches("", fieldMatchersToSort, sortFile);
+                if (!rootSortFields.isEmpty() || !rootFieldMatchers.isEmpty()) {
+                    sortJsonArray(jsonElement.getAsJsonArray(), rootSortFields, rootFieldMatchers);
                 }
             }
         }
