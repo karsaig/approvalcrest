@@ -11,6 +11,10 @@ public class EnvVarReader {
 
     public static boolean getBooleanProperty(String key, String defaultValue) {
         String value = getProperty(key, defaultValue);
+        return parseBoolean(value);
+    }
+
+    static boolean parseBoolean(String value) {
         return "true".equalsIgnoreCase(value) || "t".equalsIgnoreCase(value) || "1".equals(value) || "yes".equalsIgnoreCase(value) || "y".equalsIgnoreCase(value);
     }
 
