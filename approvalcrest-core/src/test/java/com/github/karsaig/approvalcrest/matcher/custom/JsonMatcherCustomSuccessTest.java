@@ -638,4 +638,34 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")), null, null);
     }
+
+    // -----------------------------------------------------------------------
+    // plain-string / JSON-primitive input
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void withMatcherOnJsonPrimitiveStringInputIsVacuouslyIgnored() {
+        // When the input is a Java String containing a JSON primitive (e.g. "\"hello\""),
+        // getAsJsonElement() parses it to JsonPrimitive.  withMatcher(pattern, valueMatcher)
+        // calls collectValuesByFieldNamePattern on a primitive — no fields are found, so the
+        // custom matcher is silently skipped.  The assertion falls back to JSON equality.
+        String actual = "\"hello\"";
+        String approved = "\"hello\"";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.withMatcher(containsString("field"), equalTo("anything")),
+                (String) null);
+    }
+
+    @Test
+    public void withMatcherOnRawNonJsonStringInput() {
+        // When the input is a Java String that is NOT valid strict JSON (e.g. "hello" without
+        // quotes), JsonParser.parseString() is called.  Gson's parser is lenient and treats bare
+        // identifiers as string primitives, so the result is JsonPrimitive("hello").
+        // withMatcher finds no fields → vacuously ignored → equality passes.
+        String actual = "hello";
+        String approved = "\"hello\"";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.withMatcher(containsString("field"), equalTo("anything")),
+                (String) null);
+    }
 }
