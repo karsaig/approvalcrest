@@ -10,10 +10,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentest4j.AssertionFailedError;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Function;
 
 import static com.github.karsaig.approvalcrest.util.TestDataGenerator.generatePerson;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
@@ -3566,5 +3570,123 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "}";
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items").ignoring("addr.city")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-2: sortFieldPath(SortField<String>) basic API (no ignoring)
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldPathApiSortsWithoutIgnoring() {
+        // sort-gap-2: sortFieldPath(SortField<String>) without any ignoring must produce the
+        // same result as the plain sortField(String) shorthand — verify the SortField API route.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"banana\"},\n" +
+                "    {\"name\": \"apple\"}\n" +
+                "  ]\n" +
+                "}";
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"name\": \"apple\"},\n" +
+                "    {\"name\": \"banana\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-6: root-level Set is auto-sorted
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void rootSetIsSortedAutomatically() {
+        // sort-gap-6: when the root object is a Set, its elements are always sorted
+        // automatically (exercises the pathsToSort.getOrDefault("", ...) code path).
+        Set<String> actual = new LinkedHashSet<>(Arrays.asList("cherry", "apple", "banana"));
+        String approved = "[\"apple\",\"banana\",\"cherry\"]";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher, (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-9: matcher-based ignore strips all matching fields
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortIgnoringByMatcherStripsAllMatchingFieldsFromSortKey() {
+        // sort-gap-9: a Matcher<String> in ignoring() that matches multiple field names
+        // (e.g. containsString("Date")) strips ALL matched fields from the sort key,
+        // not just the first.
+        String actual = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"startDate\": \"2023-01\", \"endDate\": \"2023-12\", \"name\": \"B\"},\n" +
+                "    {\"startDate\": \"2022-01\", \"endDate\": \"2022-12\", \"name\": \"A\"}\n" +
+                "  ]\n" +
+                "}";
+        // sorted by name only (both *Date fields stripped from sort key): A < B
+        String approved = "{\n" +
+                "  \"items\": [\n" +
+                "    {\"startDate\": \"2022-01\", \"endDate\": \"2022-12\", \"name\": \"A\"},\n" +
+                "    {\"startDate\": \"2023-01\", \"endDate\": \"2023-12\", \"name\": \"B\"}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items").ignoring(containsString("Date"))),
+                (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-10: matcher selector applied to multiple nested locations (fan-out)
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortFieldMatcherSelectorAppliedToMultipleNestedLocations() {
+        // sort-gap-10: when a field-matcher selector matches the same field name at
+        // multiple nested locations (e.g. "tags" inside every group element), sorting and
+        // ignoring is applied to each occurrence independently.
+        String actual = "{\n" +
+                "  \"groups\": [\n" +
+                "    {\"tags\": [{\"w\": \"5\", \"name\": \"Z\"}, {\"w\": \"3\", \"name\": \"A\"}]},\n" +
+                "    {\"tags\": [{\"w\": \"1\", \"name\": \"Y\"}, {\"w\": \"2\", \"name\": \"B\"}]}\n" +
+                "  ]\n" +
+                "}";
+        // each tags sorted by name (w stripped): first → [A, Z], second → [B, Y]
+        String approved = "{\n" +
+                "  \"groups\": [\n" +
+                "    {\"tags\": [{\"w\": \"3\", \"name\": \"A\"}, {\"w\": \"5\", \"name\": \"Z\"}]},\n" +
+                "    {\"tags\": [{\"w\": \"2\", \"name\": \"B\"}, {\"w\": \"1\", \"name\": \"Y\"}]}\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("tags"), "w")),
+                (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // sort-gap-12: collection-in-collection sort elements
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void collectionInCollectionSortingOrdersInnerArraysByTheirContent() {
+        // sort-gap-12: sort a collection whose elements are themselves collections;
+        // getFilteredStringForSorting hits the isJsonArray branch for inner elements
+        // and uses their full JSON as sort key.
+        String actual = "{\n" +
+                "  \"matrix\": [\n" +
+                "    [\"Z\", \"B\"],\n" +
+                "    [\"A\", \"C\"]\n" +
+                "  ]\n" +
+                "}";
+        // ["A","C"] < ["Z","B"] lexicographically
+        String approved = "{\n" +
+                "  \"matrix\": [\n" +
+                "    [\"A\", \"C\"],\n" +
+                "    [\"Z\", \"B\"]\n" +
+                "  ]\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(actual, approved,
+                jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("matrix")), (String) null);
     }
 }
