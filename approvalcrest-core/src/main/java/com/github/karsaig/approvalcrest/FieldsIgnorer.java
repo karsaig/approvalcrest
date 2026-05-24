@@ -77,7 +77,7 @@ public class FieldsIgnorer {
             boolean result = false;
             while (iterator.hasNext()) {
                 JsonElement arrayElement = iterator.next();
-                if (arrayElement.isJsonNull()) {
+                if (arrayElement.isJsonNull() || arrayElement.isJsonPrimitive()) {
                     continue;
                 }
                 boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments);

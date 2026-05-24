@@ -6277,4 +6277,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         };
     }
 
+    // -----------------------------------------------------------------------
+    // f2-complex-key-map: Map<Bean,String> with a key-field ignored
+    // -----------------------------------------------------------------------
+
+    @Test
+    void complexObjectKeyMapWithIgnoredKeyField() {
+        // Map<ChildBean, String>: each entry is serialised as [[keyFields], "value"].
+        // ignoring("childString") should remove childString from every key bean.
+        java.util.Map<Object, String> input = new java.util.LinkedHashMap<>();
+        input.put(child().childString("banana").childInteger(1).build(), "val1");
+        input.put(child().childString("apple").childInteger(2).build(), "val2");
+
+        String approvedFileContent = "[\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 2\n" +
+                "    },\n" +
+                "    \"val2\"\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 1\n" +
+                "    },\n" +
+                "    \"val1\"\n" +
+                "  ]\n" +
+                "]";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.ignoring("childString"), null);
+    }
+
 }
