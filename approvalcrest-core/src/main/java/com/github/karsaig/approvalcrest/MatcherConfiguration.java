@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest;
 
+import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import org.hamcrest.Matcher;
 
@@ -26,6 +27,7 @@ public class MatcherConfiguration {
     private final Map<String, List<SortField<String>>> pathsToSort = new HashMap<>();
     private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
     private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
+    private AliasMap aliasMap = AliasMap.builder().build();
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -188,6 +190,25 @@ public class MatcherConfiguration {
         for (String fieldPath : fieldPaths) {
             pathsToSort.computeIfAbsent(fieldPath, k -> new ArrayList<>()).add(SortField.of(fieldPath));
         }
+        return this;
+    }
+
+    public AliasMap getAliasMap() {
+        return aliasMap;
+    }
+
+    public MatcherConfiguration addAliasMap(AliasMap other) {
+        aliasMap = aliasMap.merge(other);
+        return this;
+    }
+
+    public MatcherConfiguration addAlias(String value, String alias) {
+        aliasMap = aliasMap.merge(AliasMap.builder().add(value, alias).build());
+        return this;
+    }
+
+    public MatcherConfiguration addAlias(String fieldName, String value, String alias) {
+        aliasMap = aliasMap.merge(AliasMap.builder().add(fieldName, value, alias).build());
         return this;
     }
 }

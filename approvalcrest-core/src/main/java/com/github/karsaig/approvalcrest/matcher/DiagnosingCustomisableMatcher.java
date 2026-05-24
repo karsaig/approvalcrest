@@ -11,6 +11,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -162,6 +163,10 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
         JsonElement filteredJson = findPaths(jsonElement, set);
         filterByCustomMatcherPatterns(filteredJson);
+        AliasMap aliasMap = matcherConfiguration.getAliasMap();
+        if (!aliasMap.isEmpty()) {
+            JsonElementUtil.applyAliases(filteredJson, aliasMap);
+        }
         sortJsonFields(filteredJson, true);
         applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
         applyRootCollectionSorting(filteredJson, object, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
@@ -174,6 +179,10 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
         JsonElement filteredJson = findPaths(preComputedJson, set);
         filterByCustomMatcherPatterns(filteredJson);
+        AliasMap aliasMap = matcherConfiguration.getAliasMap();
+        if (!aliasMap.isEmpty()) {
+            JsonElementUtil.applyAliases(filteredJson, aliasMap);
+        }
         sortJsonFields(filteredJson, true);
         applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
         applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
@@ -277,6 +286,24 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     public final DiagnosingCustomisableMatcher<T> sortFieldPath(SortField<String>... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
         return null;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> withAliasMap(AliasMap aliasMap) {
+        matcherConfiguration.addAliasMap(aliasMap);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> withAlias(String value, String alias) {
+        matcherConfiguration.addAlias(value, alias);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> withAlias(String fieldName, String value, String alias) {
+        matcherConfiguration.addAlias(fieldName, value, alias);
+        return this;
     }
 
     @Override

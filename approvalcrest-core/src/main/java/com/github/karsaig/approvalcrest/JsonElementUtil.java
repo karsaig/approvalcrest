@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest;
 
+import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class JsonElementUtil {
 
@@ -176,4 +178,59 @@ public class JsonElementUtil {
             }
         }
     }
+
+    /**
+     * Walks {@code root} recursively and replaces every non-boolean, non-null JSON primitive
+     * that matches an entry in {@code aliases} with the alias string (in-place mutation).
+     * The last registered matching entry in the map wins.
+     */
+    public static void applyAliases(JsonElement root, AliasMap aliases) {
+        applyAliasesRecursive(root, aliases, "", null);
+    }
+
+    private static void applyAliasesRecursive(JsonElement element, AliasMap aliases,
+                                               String currentPath, String fieldName) {
+        if (element == null || element.isJsonNull()) {
+            return;
+        }
+        if (element.isJsonObject()) {
+            JsonObject obj = element.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : new ArrayList<>(obj.entrySet())) {
+                String childField = entry.getKey();
+                String childPath = currentPath.isEmpty() ? childField : currentPath + "." + childField;
+                JsonElement child = entry.getValue();
+                if (child.isJsonPrimitive()) {
+                    JsonPrimitive prim = child.getAsJsonPrimitive();
+                    if (!prim.isBoolean()) {
+                        String coerced = prim.getAsString();
+                        Optional<String> alias = aliases.resolve(childPath, childField, coerced);
+                        if (alias.isPresent()) {
+                            obj.addProperty(childField, alias.get());
+                        }
+                    }
+                } else {
+                    applyAliasesRecursive(child, aliases, childPath, childField);
+                }
+            }
+        } else if (element.isJsonArray()) {
+            JsonArray arr = element.getAsJsonArray();
+            for (int i = 0; i < arr.size(); i++) {
+                JsonElement child = arr.get(i);
+                if (child.isJsonPrimitive()) {
+                    JsonPrimitive prim = child.getAsJsonPrimitive();
+                    if (!prim.isBoolean()) {
+                        String coerced = prim.getAsString();
+                        // for array elements, fieldName is the array's own field name
+                        Optional<String> alias = aliases.resolve(currentPath, fieldName != null ? fieldName : "", coerced);
+                        if (alias.isPresent()) {
+                            arr.set(i, new JsonPrimitive(alias.get()));
+                        }
+                    }
+                } else {
+                    applyAliasesRecursive(child, aliases, currentPath, fieldName);
+                }
+            }
+        }
+    }
 }
+

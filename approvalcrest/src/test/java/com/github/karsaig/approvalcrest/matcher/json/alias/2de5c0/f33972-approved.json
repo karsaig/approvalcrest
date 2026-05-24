@@ -1,0 +1,21 @@
+/*com.github.karsaig.approvalcrest.matcher.json.alias.JsonMatcherAliasTest.aliasAppliedBeforeSort*/
+[
+  {
+    "childBean": {
+      "childInteger": 0,
+      "childString": "\u003caaa\u003e"
+    },
+    "childBeanList": [],
+    "childBeanMap": [],
+    "parentString": "item2"
+  },
+  {
+    "childBean": {
+      "childInteger": 0,
+      "childString": "\u003czzz\u003e"
+    },
+    "childBeanList": [],
+    "childBeanMap": [],
+    "parentString": "item1"
+  }
+]

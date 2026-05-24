@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import org.hamcrest.Matcher;
 
@@ -189,4 +190,36 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
 
     @SuppressWarnings({"varargs", "unchecked"})
     U sortFieldPath(SortField<String>... fieldPaths);
+
+    /**
+     * Merge the given {@link AliasMap} into this matcher. Alias entries are appended;
+     * when two entries match the same primitive, the last registered wins.
+     * Multiple calls to {@code withAliasMap} accumulate — they do not replace earlier maps.
+     *
+     * @param aliasMap the alias map to merge
+     * @return the instance of the matcher
+     */
+    U withAliasMap(AliasMap aliasMap);
+
+    /**
+     * Convenience: add a single alias rule that replaces any primitive whose coerced string
+     * value equals {@code value} (regardless of field name or path) with {@code alias}.
+     *
+     * @param value the raw value to match (coerced to String via {@code getAsString()})
+     * @param alias the alias string to substitute
+     * @return the instance of the matcher
+     */
+    U withAlias(String value, String alias);
+
+    /**
+     * Convenience: add a single alias rule scoped to a specific field name.
+     * Replaces any primitive on a field named {@code fieldName} whose coerced value equals
+     * {@code value} with {@code alias}.
+     *
+     * @param fieldName exact field name to scope the rule
+     * @param value     the raw value to match
+     * @param alias     the alias string to substitute
+     * @return the instance of the matcher
+     */
+    U withAlias(String fieldName, String value, String alias);
 }

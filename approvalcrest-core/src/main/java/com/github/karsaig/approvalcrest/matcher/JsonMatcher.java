@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest.matcher;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
+import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
@@ -202,6 +203,10 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         if (!skipIgnores) {
             filterByCustomMatcherPatterns(filteredJson);
         }
+        AliasMap aliasMap = matcherConfiguration.getAliasMap();
+        if (!aliasMap.isEmpty()) {
+            JsonElementUtil.applyAliases(filteredJson, aliasMap);
+        }
         sortJsonFields(filteredJson, sortFile);
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
@@ -315,6 +320,24 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public final JsonMatcher<T> sortFieldPath(SortField<String>... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> withAliasMap(AliasMap aliasMap) {
+        matcherConfiguration.addAliasMap(aliasMap);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> withAlias(String value, String alias) {
+        matcherConfiguration.addAlias(value, alias);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> withAlias(String fieldName, String value, String alias) {
+        matcherConfiguration.addAlias(fieldName, value, alias);
         return this;
     }
 
