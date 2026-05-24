@@ -11,7 +11,12 @@ Version 1.0.0
 - Fixed sort order to be bottom-up: nested arrays are fully sorted before their parent array's sort key is computed.
 - Fixed sorting of arrays-of-arrays and arrays-of-arrays-of-beans with correct fan-out semantics.
 - Fixed `withMatcher(Matcher<String>, ...)` pattern ignores being applied after sorting in `sameBeanAs`, causing matched fields to influence the sort key. Pattern ignores are now applied before sorting, consistent with `sameJsonAsApproved`.
+- Fixed three bugs in sort-key filtering (`FieldsIgnorer.getFilteredStringForSorting`): (1) complex/object fields with a matching ignore path were not stripped from the sort key; (2) multi-level ignore paths (e.g. `addr.city`) did not propagate correctly and the leaf was never stripped; (3) `SortField<Matcher<String>>.ignoring(path/matcher)` calls had no effect on sort key computation.
+- Fixed array-of-arrays sort semantics: `sortField("X")` where elements are inner arrays now only reorders the outer array by each inner array's serialised form; inner array element order is no longer modified as a side-effect.
+- Fixed `FieldsIgnorer` array fan-out to skip primitive elements instead of attempting to recurse into them, preventing spurious field-lookup failures when arrays contain primitive values.
+- Fixed `FieldsIgnorer` cleanup when all fields of a bean used as a `Map` key are ignored: the orphaned value was previously left in the serialised form, preventing the whole map entry from being removed as expected.
 - Improved error message when a required `--add-opens` JVM flag is missing: now reports the exact flag name and shows ready-to-paste Maven surefire `<argLine>` and Gradle `jvmArgs` snippets.
+- Added `toString()` to `Junit4TestMetaBase` and `Junit5TestMetaBase` (format: `TestMeta[cn=…,mn=…,cp=…,ad=…,wd=…]`), making matcher configuration visible in test failure output and IDE debuggers.
 
 Version 0.62.3 - 2024/05/27
 -----
