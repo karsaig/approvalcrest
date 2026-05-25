@@ -1,92 +1,24 @@
 package com.github.karsaig.approvalcrest.jupiter;
 
-import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
+import com.github.karsaig.approvalcrest.matcher.AbstractTestMetaBase;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-abstract class Junit5TestMetaBase implements TestMetaInformation {
-
-    private static final String SRC_TEST_JAVA_PATH = "src" + File.separator + "test" + File.separator + "java" + File.separator;
-    private static final Pattern DOT_LITERAL_PATTERN = Pattern.compile(".", Pattern.LITERAL);
-    private static final Path APPROVED_DIRECTORY = Paths.get("src" + File.separator + "test" + File.separator + "resources" + File.separator + "approvalcrest");
-
-    private final Path testClassPath;
-    private final String testClassName;
-    private final String testMethodName;
-    private final Path approvedDirectory;
-    private final Path workingDirectory;
+abstract class Junit5TestMetaBase extends AbstractTestMetaBase {
 
     protected Junit5TestMetaBase(String testClassName, String testMethodName) {
-        this(buildClassPath(testClassName),testClassName,testMethodName,APPROVED_DIRECTORY);
+        super(testClassName, testMethodName);
     }
 
     protected Junit5TestMetaBase(String testClassName, String testMethodName, String sourceRoutePathString) {
-        this(buildClassPath(testClassName, sourceRoutePathString),testClassName,testMethodName,APPROVED_DIRECTORY);
-    }
-
-    protected static Path buildClassPath(String testClassName) {
-        return buildClassPath(testClassName, getSourceRoutePathString());
-    }
-
-    protected static Path buildClassPath(String testClassName, String sourceRoutePathString) {
-        return Paths.get(sourceRoutePathString + DOT_LITERAL_PATTERN.matcher(testClassName).replaceAll(Matcher.quoteReplacement(File.separator))).getParent();
-    }
-
-    protected static Path detectWorkingDirectory() {
-        return Paths.get("").toAbsolutePath();
-    }
-
-
-    protected static String getSourceRoutePathString() {
-        return SRC_TEST_JAVA_PATH;
+        super(testClassName, testMethodName, sourceRoutePathString);
     }
 
     protected Junit5TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
-        this(testClassPath,testClassName,testMethodName,approvedDirectory,detectWorkingDirectory());
+        super(testClassPath, testClassName, testMethodName, approvedDirectory);
     }
 
-    protected Junit5TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory,Path workingDirectory) {
-        this.testClassPath = testClassPath;
-        this.testClassName = testClassName;
-        this.testMethodName = testMethodName;
-        this.approvedDirectory = approvedDirectory;
-        this.workingDirectory = workingDirectory;
+    protected Junit5TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory, Path workingDirectory) {
+        super(testClassPath, testClassName, testMethodName, approvedDirectory, workingDirectory);
     }
-
-    @Override
-    public Path getTestClassPath() { return testClassPath; }
-
-    @Override
-    public String testClassName() {
-        return testClassName;
-    }
-
-    @Override
-    public String testMethodName() {
-        return testMethodName;
-    }
-
-    @Override
-    public Path getApprovedDirectory() {
-        return approvedDirectory;
-    }
-
-    @Override
-    public Path workingDirectory(){
-        return workingDirectory;
-    }
-
-    @Override
-    public String toString() {
-        return "TestMeta[cn=" + testClassName +
-                ",mn=" + testMethodName +
-                ",cp=" + testClassPath +
-                ",ad=" + approvedDirectory +
-                ",wd=" + workingDirectory + "]";
-    }
-
 }

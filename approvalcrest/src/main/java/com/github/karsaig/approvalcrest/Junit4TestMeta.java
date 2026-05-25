@@ -21,39 +21,16 @@ public class Junit4TestMeta extends Junit4TestMetaBase {
     }
 
     static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
-        StackTraceElement result = null;
-        for (StackTraceElement s : stackTrace) {
-            if (isTestMethod(s)) {
-                result = s;
-                break;
-            }
-        }
-        return result;
+        return findTestStackTraceElement(stackTrace, Junit4TestMeta::isTestMethod);
     }
 
     private static boolean isTestMethod(StackTraceElement element) {
-        boolean isTest;
-
-        String fullClassName = element.getClassName();
-        Class<?> clazz;
         try {
-            clazz = Class.forName(fullClassName);
+            Class<?> clazz = Class.forName(element.getClassName());
             Method method = findMethod(clazz, element.getMethodName());
-            isTest = method != null && method.isAnnotationPresent(Test.class);
+            return method != null && method.isAnnotationPresent(Test.class);
         } catch (Throwable e) {
-            isTest = false;
+            return false;
         }
-
-        return isTest;
-    }
-
-    private static Method findMethod(Class<?> clazz, String methodName) {
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
-                return method;
-            }
-        }
-        return null;
     }
 }

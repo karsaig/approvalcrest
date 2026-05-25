@@ -37,30 +37,17 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
 
     static StackTraceElement getTestStackTraceElement(StackTraceElement[] stackTrace) {
-        StackTraceElement result = null;
-        for (StackTraceElement s : stackTrace) {
-            if (isTestMethod(s)) {
-                result = s;
-                break;
-            }
-        }
-        return result;
+        return findTestStackTraceElement(stackTrace, JunitJupiterTestMeta::isTestMethod);
     }
 
     private static boolean isTestMethod(StackTraceElement element) {
-        boolean isTest;
-
-        String fullClassName = element.getClassName();
-        Class<?> clazz;
         try {
-            clazz = Class.forName(fullClassName);
+            Class<?> clazz = Class.forName(element.getClassName());
             Method method = findMethod(clazz, element.getMethodName());
-            isTest = method != null && hasTestMethodAnnotation(method);
+            return method != null && hasTestMethodAnnotation(method);
         } catch (Throwable e) {
-            isTest = false;
+            return false;
         }
-
-        return isTest;
     }
 
     private static boolean hasTestMethodAnnotation(Method method) {
@@ -91,15 +78,5 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
             Arrays.stream(annotationClass.getDeclaredAnnotations()).forEach(a -> collectAnnotationClasses(annotationClasses, a));
         }
-    }
-
-    private static Method findMethod(Class<?> clazz, String methodName) {
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
-                return method;
-            }
-        }
-        return null;
     }
 }
