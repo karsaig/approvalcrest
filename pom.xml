@@ -184,4 +184,43 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>junit6</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>17</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-junit-jupiter-integration-tests-junit6</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>junit6-21</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>21</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-junit-jupiter-integration-tests-junit6</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>junit6-25</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>25</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-junit-jupiter-integration-tests-junit6</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>
