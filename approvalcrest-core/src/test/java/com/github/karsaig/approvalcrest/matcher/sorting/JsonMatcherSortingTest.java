@@ -3910,4 +3910,189 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.sortFieldPath(SortField.of("items")), (String) null);
     }
+
+    // =========================================================================
+    // Backward compatibility: legacy approved files and the sort-input-file flag
+    //
+    // These tests document exactly how the two independent flags interact when
+    // an approved file was written by an older version of the code (before
+    // field sorting was introduced, April 2021):
+    //
+    //   sortInputFile (arg 5 of FileMatcherConfig):
+    //     false (default) – approved file is not sorted at all; sortFile=false
+    //                       is passed through to FieldsIgnorer, which gates ALL
+    //                       sorting (both key reordering and custom array sorts)
+    //     true            – approved file has its JSON object keys sorted
+    //                       alphabetically (same as actual); custom array sorts
+    //                       are applied only when strictFileMatching is also false
+    //
+    //   strictFileMatching (arg 6 of FileMatcherConfig):
+    //     true  (default) – ignores and custom sortings are NOT applied to the
+    //                       approved side (skipIgnores=true, skipCustomSortings=true)
+    //     false           – same ignores and custom sortings applied to BOTH sides;
+    //                       but sorting still requires sortInputFile=true because
+    //                       FieldsIgnorer.anyPathMatch/anyFieldMatcherMatches return
+    //                       empty when sortFile=false regardless of skipCustomSortings
+    //
+    // The actual side ALWAYS has its JSON object keys sorted and all configured
+    // custom sortings applied (sortFile=true, skipIgnores=false, skipCustomSortings=false).
+    //
+    // Key findings:
+    //   • JSON object key order never matters: JSONAssert treats objects as
+    //     unordered maps, so pre-sort approved files with non-alphabetical keys
+    //     always pass in ALL four modes.
+    //   • JSON array order DOES matter for configured sortField/sortFieldMatcher.
+    //     Only the combination sortInputFile=true + strictFileMatching=false
+    //     (enableExpectedFileSortingWithLenientMatching) makes legacy unsorted-array
+    //     approved files pass.
+    //   • Lenient mode alone (strictFileMatching=false, sortInputFile=false) does
+    //     NOT sort the approved side — it only changes ignore behaviour. Array-order
+    //     mismatches still fail.
+    //   • sortInputFile=true alone (strict) re-sorts object keys but leaves array
+    //     element order untouched, so mismatches still fail.
+    // =========================================================================
+
+    // -------------------------------------------------------------------------
+    // Group A: JSON object key order — all four modes pass
+    // (JSONAssert treats objects as unordered; key order in the file is irrelevant)
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void legacyApprovedFileWithNonAlphabeticalObjectKeysPassesInDefaultStrictMode() {
+        // Old approved files written before sorting was added have non-alphabetical
+        // key order. JSONAssert does not care about key order in JSON objects, so
+        // they pass even in the default strict mode without any migration.
+        String actual = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        String legacyApproved = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        // actual serialised/sorted to {"a":1,"m":2,"z":3}; approved stays {"z":3,"m":2,"a":1}
+        // JSONAssert treats objects as unordered → PASS
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfig(), (String) null);
+    }
+
+    @Test
+    public void legacyApprovedFileWithNonAlphabeticalObjectKeysPassesInLenientMode() {
+        String actual = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        String legacyApproved = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfigWithLenientMatching(), (String) null);
+    }
+
+    @Test
+    public void legacyApprovedFileWithNonAlphabeticalObjectKeysPassesWithSortInputFileEnabled() {
+        String actual = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        String legacyApproved = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSorting(), (String) null);
+    }
+
+    @Test
+    public void legacyApprovedFileWithNonAlphabeticalObjectKeysPassesWithSortInputFileAndLenientEnabled() {
+        String actual = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        String legacyApproved = "{\n  \"z\": 3,\n  \"m\": 2,\n  \"a\": 1\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSortingWithLenientMatching(), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Group B: JSON array order with configured sortField — all four modes
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayFailsInDefaultStrictModeWhenSortFieldConfigured() {
+        // A legacy approved file whose array is in its original (unsorted) order
+        // fails in strict mode: actual sorted, approved used as-is → array mismatch.
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        // actual after sortField("items"): ["A","B","C"]; approved: ["C","B","A"] → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortField("items"),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayAlsoFailsInLenientModeWithoutSortInputFile() {
+        // Lenient mode (strictFileMatching=false) changes ignore behaviour but does
+        // NOT sort the approved side. FieldsIgnorer gates all sorting behind sortFile,
+        // which is false when sortInputFile=false. Array order mismatch still fails.
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.sortField("items"),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayAlsoFailsWhenOnlySortInputFileEnabledInStrictMode() {
+        // sortInputFile=true re-sorts JSON object keys in the approved file, but
+        // custom array sortings are still skipped (strictFileMatching=true sets
+        // skipCustomSortings=true). Array order mismatch still fails.
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        // enableExpectedFileSorting() = sortInputFile=true, strictFileMatching=true
+        // approved keys sorted (no effect — only key is "items"), array stays ["C","B","A"] → FAIL
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSorting(),
+                jsonMatcher -> jsonMatcher.sortField("items"),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayPassesOnlyWhenBothSortInputFileAndLenientAreEnabled() {
+        // The only combination that makes a legacy unsorted-array approved file pass:
+        // sortInputFile=true (enables sortFile=true for approved) AND
+        // strictFileMatching=false (skipCustomSortings=false → custom array sort applied).
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        // enableExpectedFileSortingWithLenientMatching() = sortInputFile=true, strictFileMatching=false
+        // approved: keys sorted + sortField applied → ["A","B","C"] → PASS
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.sortField("items"), (String) null);
+    }
+
+    // -------------------------------------------------------------------------
+    // Group C: same four modes using sortFieldMatcher (pattern-based API)
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayFailsInDefaultStrictModeWhenSortFieldMatcherConfigured() {
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayAlsoFailsInLenientModeWithoutSortInputFileWhenSortFieldMatcherConfigured() {
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                getDefaultFileMatcherConfigWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayAlsoFailsWhenOnlySortInputFileEnabledWhenSortFieldMatcherConfigured() {
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSorting(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))),
+                thrown -> {}, AssertionFailedError.class);
+    }
+
+    @Test
+    public void legacyApprovedFileWithUnsortedArrayPassesOnlyWhenBothSortInputFileAndLenientAreEnabledWithSortFieldMatcher() {
+        String actual = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        String legacyApproved = "{\n  \"items\": [\"C\", \"B\", \"A\"]\n}";
+        assertJsonMatcherWithDummyTestInfo(actual, legacyApproved,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.sortFieldMatcher(SortField.of(is("items"))), (String) null);
+    }
 }
