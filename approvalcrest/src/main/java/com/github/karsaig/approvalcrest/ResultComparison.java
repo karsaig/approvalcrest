@@ -9,8 +9,6 @@
 */
 package com.github.karsaig.approvalcrest;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import org.hamcrest.Description;
 import org.junit.ComparisonFailure;
 
@@ -31,15 +29,11 @@ class ResultComparison {
 			ComparisonDescription shazamDescription = (ComparisonDescription) description;
 			if (shazamDescription.isComparisonFailure()) {
 				throw new ComparisonFailure(
-						comparisonFailureMessage(reason, shazamDescription),
+						shazamDescription.toFailureMessage(reason),
 						shazamDescription.getExpected(),
 						shazamDescription.getActual()
 				);
 			}
 		}
-	}
-
-	private static String comparisonFailureMessage(String reason, ComparisonDescription shazamDescription) {
-		return (isNotBlank(reason) ? reason + "\n" : "") + shazamDescription.getDifferencesMessage();
 	}
 }

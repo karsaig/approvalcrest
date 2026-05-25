@@ -9,6 +9,8 @@
  */
 package com.github.karsaig.approvalcrest;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import org.hamcrest.StringDescription;
 
 /**
@@ -50,5 +52,9 @@ public class ComparisonDescription extends StringDescription {
 
 	public boolean isComparisonFailure() {
 		return comparisonFailure;
+	}
+
+	public String toFailureMessage(String reason) {
+		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage();
 	}
 }

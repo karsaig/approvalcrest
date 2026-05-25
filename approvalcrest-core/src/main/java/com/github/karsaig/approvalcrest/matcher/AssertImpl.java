@@ -27,7 +27,7 @@ public class AssertImpl {
                 matcher.describeMismatch(actual, description);
 
                 if (description.isComparisonFailure()) {
-                    failureHandler.accept(comparisonFailureMessage(reason, description), description);
+                    failureHandler.accept(description.toFailureMessage(reason), description);
                 }
 
                 throw new AssertionError(description.toString());
@@ -39,10 +39,6 @@ public class AssertImpl {
                 org.hamcrest.MatcherAssert.assertThat(actual, matcher);
             }
         }
-    }
-
-    private static String comparisonFailureMessage(String reason, ComparisonDescription shazamDescription) {
-        return (isNotBlank(reason) ? reason + "\n" : "") + shazamDescription.getDifferencesMessage();
     }
 
     /*

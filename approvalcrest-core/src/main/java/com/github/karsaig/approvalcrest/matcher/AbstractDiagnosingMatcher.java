@@ -10,11 +10,14 @@ import com.google.gson.JsonElement;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
+import org.json.JSONException;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
@@ -91,6 +94,15 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
         }
         java.util.regex.Matcher m = ADD_OPENS_PATTERN.matcher(message);
         return m.find() ? "--add-opens " + m.group(1) + "/" + m.group(2) + "=ALL-UNNAMED" : null;
+    }
+
+    protected boolean assertJsonEquals(String expectedJson, String actualJson, Description mismatchDescription, Function<Throwable, String> messageExtractor) {
+        try {
+            JSONAssert.assertEquals(expectedJson, actualJson, true);
+        } catch (AssertionError | JSONException e) {
+            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, messageExtractor.apply(e));
+        }
+        return true;
     }
 
     protected boolean appendMismatchDescription(Description mismatchDescription, String expected, String actual, String message) {
