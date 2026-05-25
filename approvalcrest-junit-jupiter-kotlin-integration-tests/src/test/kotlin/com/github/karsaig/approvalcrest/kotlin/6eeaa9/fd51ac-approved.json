@@ -1,0 +1,4 @@
+/*com.github.karsaig.approvalcrest.kotlin.KotlinSameJsonTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+{
+  "different" : "content"
+}

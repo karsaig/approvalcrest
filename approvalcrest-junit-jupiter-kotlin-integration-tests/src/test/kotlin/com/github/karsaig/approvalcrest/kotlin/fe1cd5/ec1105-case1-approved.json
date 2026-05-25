@@ -1,0 +1,5 @@
+/*com.github.karsaig.approvalcrest.kotlin.KotlinSameJsonParameterizedTest.testPublicParameterizedWorks*/
+{
+  "dummyString": "dummy1",
+  "genericValue": "val1"
+}
