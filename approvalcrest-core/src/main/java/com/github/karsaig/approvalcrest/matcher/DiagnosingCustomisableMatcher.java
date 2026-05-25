@@ -19,24 +19,17 @@ import com.google.gson.JsonParser;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
-import org.json.JSONException;
-import org.skyscreamer.jsonassert.JSONAssert;
 
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollectionSorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeSetMarker;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.sortJsonFields;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
@@ -45,7 +38,6 @@ import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
  * ignore in the comparison, or fields to be matched with a custom matcher
  */
 public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> implements CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>> {
-    private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
     protected final Set<Class<?>> circularReferenceTypes = new HashSet<>();
     protected final T expected;
     private GsonConfiguration configuration;
@@ -147,30 +139,11 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
 
 
     private boolean assertEquals(String expectedJson, String actualJson, Description mismatchDescription) {
-        try {
-            JSONAssert.assertEquals(expectedJson, actualJson, true);
-        } catch (AssertionError | JSONException e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, e.getMessage());
-        }
-
-        return true;
+        return assertJsonEquals(expectedJson, actualJson, mismatchDescription, Throwable::getMessage);
     }
 
     private String filterJson(Gson gson, Object object) {
-        Set<String> set = new HashSet<>();
-        set.addAll(matcherConfiguration.getPathsToIgnore());
-        set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
-        JsonElement filteredJson = findPaths(jsonElement, set);
-        filterByCustomMatcherPatterns(filteredJson);
-        AliasMap aliasMap = matcherConfiguration.getAliasMap();
-        if (!aliasMap.isEmpty()) {
-            JsonElementUtil.applyAliases(filteredJson, aliasMap);
-        }
-        sortJsonFields(filteredJson, true);
-        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
-        applyRootCollectionSorting(filteredJson, object, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
-        return removeSetMarker(gson.toJson(filteredJson));
+        return filterJson(gson, JsonParser.parseString(gson.toJson(object)), object);
     }
 
     private String filterJson(Gson gson, JsonElement preComputedJson, Object objectForTypeCheck) {
@@ -178,7 +151,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
         JsonElement filteredJson = findPaths(preComputedJson, set);
-        filterByCustomMatcherPatterns(filteredJson);
+        JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
             JsonElementUtil.applyAliases(filteredJson, aliasMap);
@@ -187,21 +160,6 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
         applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
         return removeSetMarker(gson.toJson(filteredJson));
-    }
-
-    private void filterByCustomMatcherPatterns(JsonElement json) {
-        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
-        if (!patterns.isEmpty()) {
-            List<Matcher<String>> patternKeys = new ArrayList<>();
-            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
-                patternKeys.add(entry.getKey());
-            }
-            JsonElementUtil.filterByFieldMatchers(json, patternKeys);
-        }
-    }
-
-    private String removeSetMarker(String json) {
-        return MARKER_PATTERN.matcher(json).replaceAll("");
     }
 
     @Override
@@ -285,7 +243,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     @Override
     public final DiagnosingCustomisableMatcher<T> sortFieldPath(SortField<String>... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
-        return null;
+        return this;
     }
 
     @Override

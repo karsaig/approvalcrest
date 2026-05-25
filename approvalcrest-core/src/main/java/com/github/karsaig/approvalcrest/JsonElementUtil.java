@@ -8,6 +8,7 @@ import com.google.gson.JsonPrimitive;
 import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -80,6 +81,17 @@ public class JsonElementUtil {
             }
         }
         return el;
+    }
+
+    public static void filterByCustomMatcherPatterns(JsonElement json, MatcherConfiguration matcherConfiguration) {
+        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
+        if (!patterns.isEmpty()) {
+            List<Matcher<String>> patternKeys = new ArrayList<>();
+            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
+                patternKeys.add(entry.getKey());
+            }
+            filterByFieldMatchers(json, patternKeys);
+        }
     }
 
     public static boolean isEmpty(JsonElement jsonElement) {

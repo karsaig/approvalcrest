@@ -10,12 +10,9 @@ import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.*;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.json.JSONException;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.*;
@@ -48,7 +45,6 @@ import static java.util.Collections.emptySet;
  * @author Andras_Gyuro
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {
-    private static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
 
     private final MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
     private final Set<Class<?>> circularReferenceTypes = new HashSet<>();
@@ -144,7 +140,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             } else {
                 String actualJson = filterJson(gson, actualJsonElement, true, false, false);
 
-                matches = assertEquals(expectedJson, actualJson, mismatchDescription);
+                matches = assertJsonEquals(expectedJson, actualJson, mismatchDescription, e -> getAssertMessage(fileStoreMatcherUtils, e));
                 if (!matches) {
                     matches = handleInPlaceOverwrite(actual, gson);
                 }
@@ -201,7 +197,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         JsonElement filteredJson = findPaths(jsonElement, set);
         JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
         if (!skipIgnores) {
-            filterByCustomMatcherPatterns(filteredJson);
+            JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
         }
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
@@ -211,34 +207,6 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
         return removeSetMarker(gson.toJson(filteredJson));
-    }
-
-    private void filterByCustomMatcherPatterns(JsonElement json) {
-        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
-        if (!patterns.isEmpty()) {
-            List<Matcher<String>> patternKeys = new ArrayList<>();
-            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
-                patternKeys.add(entry.getKey());
-            }
-            JsonElementUtil.filterByFieldMatchers(json, patternKeys);
-        }
-    }
-
-    private boolean assertEquals(String expectedJson, String actualJson,
-                                 Description mismatchDescription) {
-        try {
-            JSONAssert.assertEquals(expectedJson, actualJson, true);
-        } catch (AssertionError e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(fileStoreMatcherUtils, e));
-        } catch (JSONException e) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, actualJson, getAssertMessage(fileStoreMatcherUtils, e));
-        }
-
-        return true;
-    }
-
-    private String removeSetMarker(String json) {
-        return MARKER_PATTERN.matcher(json).replaceAll("");
     }
 
     private boolean createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {

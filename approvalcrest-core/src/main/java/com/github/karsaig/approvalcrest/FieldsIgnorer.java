@@ -25,7 +25,12 @@ import static java.util.Collections.emptyList;
  */
 public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
+    public static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
+
+    public static String removeSetMarker(String json) {
+        return MARKER_PATTERN.matcher(json).replaceAll("");
+    }
 
     public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
