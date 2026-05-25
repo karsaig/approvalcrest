@@ -442,5 +442,44 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "Expected 'childString' in error but was: " + error.getMessage()),
                 AssertionError.class);
     }
+
+    // -----------------------------------------------------------------------
+    // Null element inside fanned-out collection — failure side
+    // -----------------------------------------------------------------------
+
+    /** Object + JSON-string inputs: childBeanList = [null, child("apple")]. */
+    public static Object[][] nullElementCollectionFailureInputs() {
+        return new Object[][]{
+                {"Object input", parent()
+                        .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                        .addToChildBeanList(child().childString("apple"))
+                        .build()},
+                {"Json string input",
+                        "{\n" +
+                        "  \"childBeanList\": [null, {\"childString\": \"apple\", \"childInteger\": 0}],\n" +
+                        "  \"childBeanMap\": []\n" +
+                        "}"}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("nullElementCollectionFailureInputs")
+    public void failsWhenNullElementInFanoutCollectionAndMatcherDoesNotAcceptNull(String testName, Object input) {
+        // Fan-out over [null, child("apple")] collects [null, "apple"] for childBeanList.childString.
+        // equalTo("apple") fails on null → overall match fails; approved file retains [null, {childInteger:0}].
+        String approvedFileContent = "{\n" +
+                "  \"childBeanList\": [\n" +
+                "    null,\n" +
+                "    {\"childInteger\": 0}\n" +
+                "  ],\n" +
+                "  \"childBeanMap\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList.childString", equalTo("apple")),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("childBeanList.childString"),
+                        "Expected path in failure message, was: " + error.getMessage()),
+                AssertionError.class);
+    }
 }
 

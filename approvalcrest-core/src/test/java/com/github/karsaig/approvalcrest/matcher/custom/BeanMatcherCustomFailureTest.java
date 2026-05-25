@@ -216,4 +216,26 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                 });
     }
 
+    @Test
+    public void failsWhenNullElementInFanoutCollectionAndMatcherDoesNotAcceptNull() {
+        // childBeanList = [null, child("apple")].  The fan-out collects [null, "apple"] for
+        // childBeanList.childString.  equalTo("apple") passes on "apple" but fails on null,
+        // so the overall match fails on the null element.
+        ParentBean expected = parent()
+                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+        ParentBean actual = parent()
+                .addToChildBeanList((com.github.karsaig.approvalcrest.testdata.ChildBean) null)
+                .addToChildBeanList(child().childString("apple"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("childBeanList.childString", equalTo("apple")),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList.childString"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
 }

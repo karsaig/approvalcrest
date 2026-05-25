@@ -243,6 +243,27 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
     }
 
     @Test
+    void skipClassComparisonViaSystemPropertyTest() {
+        // When beanMatcherSkipClassComparison=true the type check is bypassed entirely.
+        // BeanOne and BeanTwo are distinct classes with identical field values; without the
+        // system property they would fail the instanceof guard in DiagnosingCustomisableMatcher.
+        BeanWithGeneric<String> actual   = new BeanOne("dummy", "value");
+        BeanWithGeneric<String> expected = new BeanTwo("dummy", "value");
+
+        String previous = System.getProperty("beanMatcherSkipClassComparison");
+        System.setProperty("beanMatcherSkipClassComparison", "true");
+        try {
+            assertDiagnosingMatcher(actual, expected);
+        } finally {
+            if (previous == null) {
+                System.clearProperty("beanMatcherSkipClassComparison");
+            } else {
+                System.setProperty("beanMatcherSkipClassComparison", previous);
+            }
+        }
+    }
+
+    @Test
     void subclassActualPassesTypeCheckAgainstSuperclassExpected() {
         // BeanOne extends BeanWithGeneric<String>.
         // expected.getClass().isInstance(actual) → BeanWithGeneric.isInstance(BeanOne) → true
