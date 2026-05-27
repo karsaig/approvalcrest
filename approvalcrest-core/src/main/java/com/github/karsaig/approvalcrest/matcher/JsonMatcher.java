@@ -12,7 +12,6 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
 import java.util.*;
-import java.util.AbstractMap;
 import java.util.function.Function;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
@@ -194,23 +193,19 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings) {
         Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
-        List<Matcher<String>> matchers = new ArrayList<>();
+
+        JsonElement filteredJson = findPaths(jsonElement, set);
+        JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
         if (!skipIgnores) {
-            matchers.addAll(matcherConfiguration.getPatternsToIgnore());
-            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : matcherConfiguration.getCustomMatcherPatterns()) {
-                matchers.add(entry.getKey());
-            }
+            JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
         }
-        // #4: Single-pass field removal
-        removeFieldsInPlace(jsonElement, set, matchers);
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
-            JsonElementUtil.applyAliases(jsonElement, aliasMap);
+            JsonElementUtil.applyAliases(filteredJson, aliasMap);
         }
-        // #3+#5: sortJsonFields merged into applySorting
-        applySorting(jsonElement, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
+        applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
-        return removeSetMarker(gson.toJson(jsonElement));
+        return removeSetMarker(gson.toJson(filteredJson));
     }
 
     private boolean createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {

@@ -19,10 +19,7 @@ import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -30,7 +27,7 @@ import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClasse
 import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollectionSorting;
-import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeFieldsInPlace;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeSetMarker;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
@@ -151,20 +148,15 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        // #4: Single-pass field removal (findPaths + filterByCustomMatcherPatterns merged)
-        List<Matcher<String>> matcherPatterns = new ArrayList<>();
-        for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : matcherConfiguration.getCustomMatcherPatterns()) {
-            matcherPatterns.add(entry.getKey());
-        }
-        removeFieldsInPlace(preComputedJson, set, matcherPatterns);
+        JsonElement filteredJson = findPaths(preComputedJson, set);
+        JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
-            JsonElementUtil.applyAliases(preComputedJson, aliasMap);
+            JsonElementUtil.applyAliases(filteredJson, aliasMap);
         }
-        // #3+#5: sortJsonFields merged into applySorting
-        applySorting(preComputedJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
-        applyRootCollectionSorting(preComputedJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort());
-        return removeSetMarker(gson.toJson(preComputedJson));
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort());
+        return removeSetMarker(gson.toJson(filteredJson));
     }
 
     @Override
