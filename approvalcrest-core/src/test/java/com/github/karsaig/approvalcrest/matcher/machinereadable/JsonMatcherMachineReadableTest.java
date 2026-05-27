@@ -9,6 +9,7 @@ import org.opentest4j.AssertionFailedError;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -129,6 +130,103 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
 
             assertEquals(getNotApprovedCreationMessage("4ac405", "11b2ef-not-approved.json", "11b2ef-approved.json"),
                     error.getMessage());
+        });
+    }
+
+    // Deep path — Case B (content mismatch), working dir completely unrelated to file path
+    @Test
+    public void shouldShowCorrectAbsolutePathWithDeepDirectoryStructureAndUnrelatedWorkingDirectory() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            FileSystem fs = imfsi.getInMemoryFileSystem();
+            // 5 levels deep: /projects/myapp/module/src/test/java
+            Path deepTestPath;
+            try {
+                deepTestPath = Files.createDirectories(fs.getPath("/projects/myapp/module/src/test/java"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            // Working dir is in a completely separate part of the filesystem
+            Path workingDir = fs.getPath("/home/ci/builds/workspace");
+
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+
+            Path classHashDir = deepTestPath.resolve("4ac405");
+            Path approvedFile = classHashDir.resolve("11b2ef-approved.json");
+            writeApprovedFile(classHashDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            String expectedAbsPath = approvedFile.toAbsolutePath().toString();
+            assertTrue(error.getMessage().contains("Approved file (expected): " + expectedAbsPath),
+                    "Absolute path must point to the correct file even when working dir is unrelated. Got: " + error.getMessage());
+        });
+    }
+
+    // Deep path — Case A (no approved file), working dir completely unrelated to file path
+    @Test
+    public void shouldShowCorrectAbsoluteNotApprovedPathWithDeepDirectoryStructureAndUnrelatedWorkingDirectory() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            FileSystem fs = imfsi.getInMemoryFileSystem();
+            Path deepTestPath;
+            try {
+                deepTestPath = Files.createDirectories(fs.getPath("/projects/myapp/module/src/test/java"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            Path workingDir = fs.getPath("/home/ci/builds/workspace");
+
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+
+            Path classHashDir = deepTestPath.resolve("4ac405");
+            Path notApprovedFile = classHashDir.resolve("11b2ef-not-approved.json");
+            Path approvedFile = classHashDir.resolve("11b2ef-approved.json");
+
+            AssertionError error = assertThrows(AssertionError.class,
+                    () -> MatcherAssert.assertThat(actual, underTest));
+
+            String expectedMsg = getMachineReadableNotApprovedCreationMessage(notApprovedFile, approvedFile);
+            assertEquals(expectedMsg, error.getMessage(),
+                    "Both paths in Case A message must be absolute and correct even when working dir is unrelated");
+        });
+    }
+
+    // Deep path — Case B (content mismatch), working dir is an ancestor of the approved file
+    @Test
+    public void shouldShowCorrectAbsolutePathWithDeepDirectoryStructureAndWorkingDirAsAncestor() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            FileSystem fs = imfsi.getInMemoryFileSystem();
+            // 5 levels deep test path: /deep/project/src/test/java/classes
+            Path deepTestPath;
+            try {
+                deepTestPath = Files.createDirectories(fs.getPath("/deep/project/src/test/java/classes"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            // Working dir is an ancestor of the approved file's location
+            Path workingDir = fs.getPath("/deep/project");
+
+            DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+
+            Path classHashDir = deepTestPath.resolve("4ac405");
+            Path approvedFile = classHashDir.resolve("11b2ef-approved.json");
+            writeApprovedFile(classHashDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            String expectedAbsPath = approvedFile.toAbsolutePath().toString();
+            assertTrue(error.getMessage().contains("Approved file (expected): " + expectedAbsPath),
+                    "Absolute path must be correct even when working dir is an ancestor of the file. Got: " + error.getMessage());
         });
     }
 
