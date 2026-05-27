@@ -192,6 +192,20 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     U sortFieldPath(SortField<String>... fieldPaths);
 
     /**
+     * Automatically sort any {@code Collection} or array field whose element type is one of the
+     * specified classes, as if it were a {@code Set}. This mirrors the automatic sorting applied
+     * to {@code Set} and {@code Map} fields.
+     *
+     * <pre>sameBeanAs(expected).sortType(Person.class)</pre>
+     * <pre>sameBeanAs(expected).sortType(Person.class, Address.class)</pre>
+     *
+     * @param types the element types whose containing collections should be sorted
+     * @return the instance of the matcher
+     */
+    @SuppressWarnings({"varargs", "unchecked"})
+    U sortType(Class<?>... types);
+
+    /**
      * Merge the given {@link AliasMap} into this matcher. Alias entries are appended;
      * when two entries match the same primitive, the last registered wins.
      * Multiple calls to {@code withAliasMap} accumulate — they do not replace earlier maps.

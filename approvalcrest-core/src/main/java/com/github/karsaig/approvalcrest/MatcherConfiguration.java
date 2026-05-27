@@ -26,6 +26,7 @@ public class MatcherConfiguration {
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
     private final Map<String, List<SortField<String>>> pathsToSort = new HashMap<>();
     private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
+    private final List<Class<?>> typesToSort = new ArrayList<>();
     private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
     private AliasMap aliasMap = AliasMap.builder().build();
 
@@ -59,6 +60,10 @@ public class MatcherConfiguration {
 
     public List<SortField<Matcher<String>>> getPatternsToSort() {
         return patternsToSort;
+    }
+
+    public List<Class<?>> getTypesToSort() {
+        return typesToSort;
     }
 
     public List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> getCustomMatcherPatterns() {
@@ -104,6 +109,21 @@ public class MatcherConfiguration {
 
     public MatcherConfiguration addTypeToIgnore(Collection<Class<?>> clazzs) {
         typesToIgnore.addAll(clazzs);
+        return this;
+    }
+
+    public MatcherConfiguration addTypeToSort(Class<?> clazz) {
+        typesToSort.add(clazz);
+        return this;
+    }
+
+    public MatcherConfiguration addTypeToSort(Class<?>[] clazzs) {
+        Collections.addAll(typesToSort, clazzs);
+        return this;
+    }
+
+    public MatcherConfiguration addTypeToSort(Collection<Class<?>> clazzs) {
+        typesToSort.addAll(clazzs);
         return this;
     }
 

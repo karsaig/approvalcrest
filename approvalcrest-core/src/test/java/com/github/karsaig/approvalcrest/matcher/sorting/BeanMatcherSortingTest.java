@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.sorting;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.junit.jupiter.api.Test;
 
@@ -189,5 +190,85 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
                 matcher -> matcher
                         .sortField("childBeanList")
                         .sortField(is("childBeanList")));
+    }
+
+    // -------------------------------------------------------------------------
+    // sortType — auto-sort List<T> without explicit field path
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void sortTypeAutomaticallySortsListOfThatType() {
+        // sortType(ChildBean.class) marks the childBeanList field for auto-sorting,
+        // just as Set fields are sorted automatically.
+        ParentBean actual = parent()
+                .addToChildBeanList("banana", 1)
+                .addToChildBeanList("apple", 2)
+                .build();
+        ParentBean expected = parent()
+                .addToChildBeanList("apple", 2)
+                .addToChildBeanList("banana", 1)
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher.sortType(ChildBean.class));
+    }
+
+    @Test
+    public void sortTypeWithThreeElementsSortsListOfThatType() {
+        ParentBean actual = parent()
+                .addToChildBeanList("cherry", 3)
+                .addToChildBeanList("apple", 1)
+                .addToChildBeanList("banana", 2)
+                .build();
+        ParentBean expected = parent()
+                .addToChildBeanList("apple", 1)
+                .addToChildBeanList("banana", 2)
+                .addToChildBeanList("cherry", 3)
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher.sortType(ChildBean.class));
+    }
+
+    @Test
+    public void withoutSortTypeListOrderMatters() {
+        // Baseline negative test: without sortType the list is order-sensitive.
+        ParentBean actual = parent()
+                .addToChildBeanList("banana", 1)
+                .addToChildBeanList("apple", 2)
+                .build();
+        ParentBean expected = parent()
+                .addToChildBeanList("apple", 2)
+                .addToChildBeanList("banana", 1)
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher, AssertionError.class, thrown -> {});
+    }
+
+    @Test
+    public void sortTypeWithUnrelatedTypeIsNoOp() {
+        // sortType with a class not present in the bean should have no effect;
+        // the test still passes because actual and expected are in the same order.
+        ParentBean actual = parent()
+                .addToChildBeanList("apple", 1)
+                .addToChildBeanList("banana", 2)
+                .build();
+        ParentBean expected = parent()
+                .addToChildBeanList("apple", 1)
+                .addToChildBeanList("banana", 2)
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher.sortType(String.class));
+    }
+
+    @Test
+    public void sortTypeOnEmptyListDoesNotThrow() {
+        ParentBean actual = parent().build();
+        ParentBean expected = parent().build();
+
+        assertDiagnosingMatcher(actual, expected,
+                matcher -> matcher.sortType(ChildBean.class));
     }
 }

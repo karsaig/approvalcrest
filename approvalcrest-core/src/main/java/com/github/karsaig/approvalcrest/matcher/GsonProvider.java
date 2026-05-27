@@ -14,7 +14,9 @@ import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldNa
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +116,7 @@ class GsonProvider {
 
         registerMapSerialisation(gsonBuilder);
 
-        markSetAndMapFields(gsonBuilder);
+        markSortedFields(gsonBuilder, matcherConfiguration.getTypesToSort());
 
         registerExclusionStrategies(gsonBuilder, matcherConfiguration);
     }
@@ -161,10 +163,25 @@ class GsonProvider {
         });
     }
 
-    private static void markSetAndMapFields(GsonBuilder gsonBuilder) {
+    private static void markSortedFields(GsonBuilder gsonBuilder, List<Class<?>> typesToSort) {
         gsonBuilder.setFieldNamingStrategy(f -> {
             if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
                 return MARKER + f.getName();
+            }
+            if (!typesToSort.isEmpty()) {
+                if (Collection.class.isAssignableFrom(f.getType())) {
+                    java.lang.reflect.Type generic = f.getGenericType();
+                    if (generic instanceof ParameterizedType) {
+                        java.lang.reflect.Type arg = ((ParameterizedType) generic).getActualTypeArguments()[0];
+                        if (typesToSort.contains(arg)) {
+                            return MARKER + f.getName();
+                        }
+                    }
+                } else if (f.getType().isArray()) {
+                    if (typesToSort.contains(f.getType().getComponentType())) {
+                        return MARKER + f.getName();
+                    }
+                }
             }
             return f.getName();
         });

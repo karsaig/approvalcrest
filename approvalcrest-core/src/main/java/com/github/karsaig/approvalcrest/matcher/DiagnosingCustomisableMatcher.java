@@ -158,7 +158,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         }
         sortJsonFields(filteredJson, true);
         applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
-        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort());
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort());
         return removeSetMarker(gson.toJson(filteredJson));
     }
 
@@ -243,6 +243,12 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     @Override
     public final DiagnosingCustomisableMatcher<T> sortFieldPath(SortField<String>... fieldPaths) {
         matcherConfiguration.addPathToSort(fieldPaths);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> sortType(Class<?>... types) {
+        matcherConfiguration.addTypeToSort(types);
         return this;
     }
 

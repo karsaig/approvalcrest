@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
@@ -154,7 +155,7 @@ public class BeanMatcherAliasTest extends AbstractBeanMatcherTest {
         AliasMap map = AliasMap.builder()
                 .entry()
                     .field("parentString")
-                    .valuePattern("user-\\d+")
+                    .valuePattern(Pattern.compile("user-\\d+"))
                     .alias(v -> "<user:" + v.split("-")[1] + ">")
                 .register()
                 .build();

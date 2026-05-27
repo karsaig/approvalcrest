@@ -5,6 +5,8 @@ import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.junit.jupiter.api.Test;
 
+import java.util.regex.Pattern;
+
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -221,7 +223,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
         ParentBean input = parent().parentString("abc-123-def").build();
 
         AliasMap map = AliasMap.builder()
-                .addByPattern(".*String", "[a-z]+-\\d+-[a-z]+", "<token>")
+                .addByPattern(Pattern.compile(".*String"), Pattern.compile("[a-z]+-\\d+-[a-z]+"), "<token>")
                 .build();
 
         String approvedFileContent =
@@ -273,7 +275,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
         AliasMap map = AliasMap.builder()
                 .entry()
                     .field("parentString")
-                    .valuePattern("user-\\d+")
+                    .valuePattern(Pattern.compile("user-\\d+"))
                     .alias(v -> "<user:" + v.split("-")[1] + ">")
                 .register()
                 .build();

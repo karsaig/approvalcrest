@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest.matcher.alias;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -76,7 +77,7 @@ public class AliasMapTest {
     @Test
     void regexFieldMatchesMatchingField() {
         AliasMap map = AliasMap.builder()
-                .addByPattern(".*[Ii]d.*", "[a-f0-9\\-]{36}", "<uuid>")
+                .addByPattern(Pattern.compile(".*[Ii]d.*"), Pattern.compile("[a-f0-9\\-]{36}"), "<uuid>")
                 .build();
 
         String uuid = "550e8400-e29b-41d4-a716-446655440000";
@@ -86,7 +87,7 @@ public class AliasMapTest {
     @Test
     void regexFieldDoesNotMatchNonMatchingField() {
         AliasMap map = AliasMap.builder()
-                .addByPattern(".*[Ii]d.*", "[a-f0-9\\-]{36}", "<uuid>")
+                .addByPattern(Pattern.compile(".*[Ii]d.*"), Pattern.compile("[a-f0-9\\-]{36}"), "<uuid>")
                 .build();
 
         String uuid = "550e8400-e29b-41d4-a716-446655440000";
@@ -96,7 +97,7 @@ public class AliasMapTest {
     @Test
     void regexFieldOnlyWithDynamicAlias() {
         AliasMap map = AliasMap.builder()
-                .addByPattern(".*[Ii]d$", v -> "<id:" + v.substring(0, 4) + "...>")
+                .addByPattern(Pattern.compile(".*[Ii]d$"), v -> "<id:" + v.substring(0, 4) + "...>")
                 .build();
 
         Optional<String> result = map.resolve("user.userId", "userId", "abc-123-xyz");
@@ -141,7 +142,7 @@ public class AliasMapTest {
     void entryBuilderFieldPattern() {
         AliasMap map = AliasMap.builder()
                 .entry()
-                    .fieldPattern(".*[Tt]oken.*")
+                    .fieldPattern(Pattern.compile(".*[Tt]oken.*"))
                     .value("T-12345")
                     .alias("<token>")
                 .register()
@@ -154,7 +155,7 @@ public class AliasMapTest {
     void entryBuilderValuePattern() {
         AliasMap map = AliasMap.builder()
                 .entry()
-                    .valuePattern("\\d{4}-\\d{2}-\\d{2}T.*")
+                    .valuePattern(Pattern.compile("\\d{4}-\\d{2}-\\d{2}T.*"))
                     .alias("<timestamp>")
                 .register()
                 .build();
@@ -279,4 +280,157 @@ public class AliasMapTest {
                 .build()
         );
     }
+
+    // -------------------------------------------------------------------------
+    // Strategy selection: ExactAliasMapStrategy (Tier 2)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void allExactEntriesUseExactStrategy() {
+        AliasMap map = AliasMap.builder()
+                .add("userId", "abc-123", "<id>")
+                .add("name", "Alice", "<name>")
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(true));
+    }
+
+    @Test
+    void valueOnlyEntryDowngradesToIndexedStrategy() {
+        // add(value, alias) has no field key → not fully exact
+        AliasMap map = AliasMap.builder()
+                .add("abc-123", "<id>")
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false));
+    }
+
+    @Test
+    void regexEntryDowngradesToIndexedStrategy() {
+        AliasMap map = AliasMap.builder()
+                .addByPattern(Pattern.compile(".*[Ii]d.*"), Pattern.compile("[a-f0-9\\-]{36}"), "<uuid>")
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false));
+    }
+
+    @Test
+    void functionResolverDowngradesToIndexedStrategy() {
+        AliasMap map = AliasMap.builder()
+                .add("id", "abc-123", v -> "<id:" + v.length() + ">")
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false));
+    }
+
+    @Test
+    void pathConstraintDowngradesToIndexedStrategy() {
+        AliasMap map = AliasMap.builder()
+                .entry()
+                    .path(p -> p.startsWith("response"))
+                    .field("id")
+                    .value("abc")
+                    .alias("<id>")
+                .register()
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false));
+    }
+
+    @Test
+    void emptyMapUsesExactStrategy() {
+        AliasMap map = AliasMap.builder().build();
+
+        // An empty map trivially satisfies the all-exact condition.
+        assertThat(map.usesExactStrategy(), is(true));
+        assertThat(map.isEmpty(), is(true));
+    }
+
+    @Test
+    void exactStrategyResolvesCorrectly() {
+        AliasMap map = AliasMap.builder()
+                .add("userId", "abc-123", "<id>")
+                .add("name", "Alice", "<name>")
+                .build();
+
+        assertThat(map.resolve("user.userId", "userId", "abc-123"), is(Optional.of("<id>")));
+        assertThat(map.resolve("user.name", "name", "Alice"), is(Optional.of("<name>")));
+        // wrong field → no match
+        assertThat(map.resolve("user.name", "name", "abc-123"), is(Optional.empty()));
+        // wrong value → no match
+        assertThat(map.resolve("user.userId", "userId", "unknown"), is(Optional.empty()));
+    }
+
+    @Test
+    void exactStrategyLastRegisteredWins() {
+        AliasMap map = AliasMap.builder()
+                .add("id", "v", "<first>")
+                .add("id", "v", "<second>")
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(true));
+        assertThat(map.resolve("x", "id", "v"), is(Optional.of("<second>")));
+    }
+
+    @Test
+    void mergeTwoExactMapsStaysExact() {
+        AliasMap a = AliasMap.builder().add("id", "val-a", "<a>").build();
+        AliasMap b = AliasMap.builder().add("name", "val-b", "<b>").build();
+
+        AliasMap merged = a.merge(b);
+
+        assertThat(merged.usesExactStrategy(), is(true));
+        assertThat(merged.resolve("x", "id", "val-a"), is(Optional.of("<a>")));
+        assertThat(merged.resolve("x", "name", "val-b"), is(Optional.of("<b>")));
+    }
+
+    @Test
+    void mergeExactWithIndexedDowngradesToIndexed() {
+        AliasMap exact = AliasMap.builder().add("id", "v", "<id>").build();
+        AliasMap indexed = AliasMap.builder().add("v", "<wild>").build(); // value-only → indexed
+
+        AliasMap merged = exact.merge(indexed);
+
+        assertThat(merged.usesExactStrategy(), is(false));
+    }
+
+    // -------------------------------------------------------------------------
+    // Cross-bucket ordering: wildcard vs exact-field entries in IndexedStrategy
+    // -------------------------------------------------------------------------
+
+    @Test
+    void wildcardEntryRegisteredAfterExactFieldEntryWins() {
+        // exact-field entry first, then a value-only (wildcard) entry for the same value
+        AliasMap map = AliasMap.builder()
+                .add("id", "target", "<from-exact>")   // exact field, registered first
+                .add("target", "<from-wildcard>")       // wildcard field, registered second → should win
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false)); // value-only → indexed
+        assertThat(map.resolve("x", "id", "target"), is(Optional.of("<from-wildcard>")));
+    }
+
+    @Test
+    void exactFieldEntryRegisteredAfterWildcardEntryWins() {
+        // wildcard entry first, exact-field entry second
+        AliasMap map = AliasMap.builder()
+                .add("target", "<from-wildcard>")       // wildcard field, registered first
+                .add("id", "target", "<from-exact>")   // exact field, registered second → should win
+                .build();
+
+        assertThat(map.usesExactStrategy(), is(false));
+        assertThat(map.resolve("x", "id", "target"), is(Optional.of("<from-exact>")));
+    }
+
+    @Test
+    void wildcardDoesNotAffectNonMatchingField() {
+        AliasMap map = AliasMap.builder()
+                .add("target", "<from-wildcard>")
+                .add("id", "target", "<from-exact>")
+                .build();
+
+        // "name" field: exact entry doesn't match (field is "id"), wildcard does
+        assertThat(map.resolve("x", "name", "target"), is(Optional.of("<from-wildcard>")));
+    }
 }
+

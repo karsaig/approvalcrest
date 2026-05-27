@@ -292,6 +292,12 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
+    public JsonMatcher<T> sortType(Class<?>... types) {
+        matcherConfiguration.addTypeToSort(types);
+        return this;
+    }
+
+    @Override
     public JsonMatcher<T> withAliasMap(AliasMap aliasMap) {
         matcherConfiguration.addAliasMap(aliasMap);
         return this;

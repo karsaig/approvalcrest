@@ -33,6 +33,10 @@ public class FieldsIgnorer {
     }
 
     public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, fieldMatchersToSort, pathsToSort, Collections.<Class<?>>emptyList());
+    }
+
+    public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort, Collection<Class<?>> typesToSort) {
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order)
             sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
@@ -41,6 +45,8 @@ public class FieldsIgnorer {
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
                 sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+            } else if (!typesToSort.isEmpty() && collectionElementMatchesTypesToSort((Collection<?>) objectForTypeCheck, typesToSort)) {
+                sortJsonArray(filteredJson.getAsJsonArray(), emptyList(), fieldMatchersToSort);
             }
         }
     }
@@ -555,5 +561,18 @@ public class FieldsIgnorer {
 
     private static String headOf(Collection<String> paths) {
         return paths.iterator().next();
+    }
+
+    private static boolean collectionElementMatchesTypesToSort(Collection<?> collection, Collection<Class<?>> typesToSort) {
+        for (Object element : collection) {
+            if (element != null) {
+                for (Class<?> type : typesToSort) {
+                    if (type.isInstance(element)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
