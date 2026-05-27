@@ -56,6 +56,10 @@ public class ComparisonDescription extends StringDescription {
 		return comparisonFailure;
 	}
 
+	public boolean isMachineReadable() {
+		return machineReadable;
+	}
+
 	public void setMachineReadable(boolean machineReadable) {
 		this.machineReadable = machineReadable;
 	}

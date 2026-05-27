@@ -49,6 +49,13 @@ public class MatcherAssert {
      */
     public static <T> void assertThat(String reason, T actual, Matcher<? super T> matcher) {
         ASSERT_IMPL.assertThat(reason, actual, matcher, (message, comparisonDescription) -> {
+            if (comparisonDescription.isMachineReadable()) {
+                throw new CleanMessageComparisonFailure(
+                        message,
+                        comparisonDescription.getExpected(),
+                        comparisonDescription.getActual()
+                );
+            }
             throw new ComparisonFailure(
                     message,
                     comparisonDescription.getExpected(),

@@ -32,7 +32,11 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
                 () -> assertTrue(msg.contains("=== END EXPECTED ==="), "Should contain EXPECTED block end"),
                 () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
                 () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
-                () -> assertFalse(msg.contains("Approved file (expected):"), "Should NOT contain approved file path label for bean matchers")
+                () -> assertFalse(msg.contains("Approved file (expected):"), "Should NOT contain approved file path label for bean matchers"),
+                () -> assertTrue(error.isExpectedDefined(), "Expected must be defined for IDE diff view"),
+                () -> assertTrue(error.isActualDefined(), "Actual must be defined for IDE diff view"),
+                () -> assertNotNull(error.getExpected().getValue(), "Expected value must be non-null for IDE diff view"),
+                () -> assertNotNull(error.getActual().getValue(), "Actual value must be non-null for IDE diff view")
         );
     }
 
