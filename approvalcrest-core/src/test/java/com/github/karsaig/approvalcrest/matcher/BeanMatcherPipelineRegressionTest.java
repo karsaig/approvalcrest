@@ -377,6 +377,124 @@ public class BeanMatcherPipelineRegressionTest extends AbstractBeanMatcherTest {
     }
 
     // =========================================================================
+    // Group 4b: Partial-key sorting — SortField.ignoring at multiple nesting depths
+    //
+    // Verify that the sort-key exclusion feature works when excluded fields are
+    // nested inside array elements (using a dot-path like "items.changeableValue"),
+    // when exclusions at multiple depths are combined, when accessed via
+    // sortFieldMatcher, and when combined with other pipeline stages.
+    // =========================================================================
+
+    @Test
+    void sortL2ByExcludingNestedL3FieldFromSortKey() {
+        // SortField.ignoring("items.changeableValue") strips L3.changeableValue from
+        // the sort key computed for each L2 element.
+        //
+        // Both L2 elements share id="L2-item" so the items[] sub-array becomes the
+        // tiebreaker.  Without the exclusion: "aaa" in the first element's L3
+        // causes it to sort before the second ("zzz") — wrong order.
+        // With .ignoring("items.changeableValue"): L3.id "l3-1" < "l3-2" gives the
+        // correct order.
+        L1Bean actual = l1("root", "stable", "same-l1-change")
+                .item(l2("L2-item", "z-stable-second", "same-l2-change")
+                        .item(l3("l3-2", "l3-stable-2", "aaa-makes-this-sort-first")))
+                .item(l2("L2-item", "a-stable-first", "same-l2-change")
+                        .item(l3("l3-1", "l3-stable-1", "zzz-makes-this-sort-last")));
+
+        L1Bean expected = l1("root", "stable", "same-l1-change")
+                .item(l2("L2-item", "a-stable-first", "same-l2-change")
+                        .item(l3("l3-1", "l3-stable-1", "zzz-makes-this-sort-last")))
+                .item(l2("L2-item", "z-stable-second", "same-l2-change")
+                        .item(l3("l3-2", "l3-stable-2", "aaa-makes-this-sort-first")));
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.sortFieldPath(SortField.of("items")
+                        .ignoring("items.changeableValue")));
+    }
+
+    @Test
+    void sortL2ExcludingBothElementAndNestedFieldsFromSortKey() {
+        // SortField.ignoring("changeableValue").ignoring("items.changeableValue") excludes
+        // both the L2.changeableValue and L3.changeableValue from the sort key.
+        //
+        // Without any exclusion: "aaa" L2.changeableValue on the first element forces it
+        // first — wrong.  With only L2 exclusion (.ignoring("changeableValue")): the first
+        // element's L3.changeableValue "aaa" still forces it first — still wrong.  Only
+        // with both exclusions does L3.id "l3-1" < "l3-2" yield the correct order.
+        L1Bean actual = l1("root", "stable", "same-l1-change")
+                .item(l2("L2-item", "z-stable-second", "aaa-l2-makes-this-sort-first")
+                        .item(l3("l3-2", "l3-stable-2", "aaa-l3-makes-this-sort-first")))
+                .item(l2("L2-item", "a-stable-first", "zzz-l2-makes-this-sort-last")
+                        .item(l3("l3-1", "l3-stable-1", "zzz-l3-makes-this-sort-last")));
+
+        L1Bean expected = l1("root", "stable", "same-l1-change")
+                .item(l2("L2-item", "a-stable-first", "zzz-l2-makes-this-sort-last")
+                        .item(l3("l3-1", "l3-stable-1", "zzz-l3-makes-this-sort-last")))
+                .item(l2("L2-item", "z-stable-second", "aaa-l2-makes-this-sort-first")
+                        .item(l3("l3-2", "l3-stable-2", "aaa-l3-makes-this-sort-first")));
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.sortFieldPath(SortField.of("items")
+                        .ignoring("changeableValue")           // exclude L2.changeableValue
+                        .ignoring("items.changeableValue")));  // exclude L3.changeableValue
+    }
+
+    @Test
+    void sortFieldMatcherWithFieldExclusionFromSortKey() {
+        // sortFieldMatcher() identifies the array to sort via a Matcher<String> on the
+        // field name; SortField.ignoring() then excludes a field from the sort key.
+        // Tests the sortFieldMatcher code path (fieldMatchersToSort) with partial-key
+        // exclusion — distinct from the sortFieldPath path (pathsToSort).
+        //
+        // Without .ignoring("changeableValue"): "aaa" in L2("B") causes B to sort first.
+        // With the exclusion: id "A" < "B" gives correct order.
+        L1Bean actual = l1("root", "stable", "same-l1-change")
+                .item(l2("B", "stable-B", "aaa-makes-B-sort-first")
+                        .item(l3("l3-b", "l3-stable-b", "l3-same-change")))
+                .item(l2("A", "stable-A", "zzz-makes-A-sort-last")
+                        .item(l3("l3-a", "l3-stable-a", "l3-same-change")));
+
+        L1Bean expected = l1("root", "stable", "same-l1-change")
+                .item(l2("A", "stable-A", "zzz-makes-A-sort-last")
+                        .item(l3("l3-a", "l3-stable-a", "l3-same-change")))
+                .item(l2("B", "stable-B", "aaa-makes-B-sort-first")
+                        .item(l3("l3-b", "l3-stable-b", "l3-same-change")));
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.sortFieldMatcher(SortField.of(is("items"))
+                        .ignoring("changeableValue")));
+    }
+
+    @Test
+    void sortPartialKeyInteractingWithWithMatcherOnDifferentField() {
+        // sortFieldPath + withMatcher target DIFFERENT fields simultaneously.
+        // withMatcher(is("stableValue"), ...) removes stableValue from the comparison
+        // JSON tree (filterByCustomMatcherPatterns, pipeline step 2).  Since sorting
+        // runs after that step, stableValue is absent from the sort key automatically.
+        // SortField.ignoring("changeableValue") additionally excludes changeableValue
+        // from the sort key.  These two mechanisms must not interfere with each other.
+        //
+        // Without SortField.ignoring: "aaa" in L2("B").changeableValue makes B sort
+        // first — wrong.  With both configured: sort key = {id, items, tags} →
+        // id "A" < "B" → correct order; stableValue differences are tolerated by withMatcher.
+        L1Bean actual = l1("root", "stable-L1", "same-l1-change")
+                .item(l2("B", "actual-stable-B", "aaa-makes-B-sort-first")
+                        .item(l3("l3-b", "actual-stable-l3-b", "l3-same-change")))
+                .item(l2("A", "actual-stable-A", "zzz-makes-A-sort-last")
+                        .item(l3("l3-a", "actual-stable-l3-a", "l3-same-change")));
+
+        L1Bean expected = l1("root", "stable-L1", "same-l1-change")
+                .item(l2("A", "expected-stable-A", "zzz-makes-A-sort-last")
+                        .item(l3("l3-a", "expected-stable-l3-a", "l3-same-change")))
+                .item(l2("B", "expected-stable-B", "aaa-makes-B-sort-first")
+                        .item(l3("l3-b", "expected-stable-l3-b", "l3-same-change")));
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.withMatcher(is("stableValue"), anything())                          // removes stableValue from comparison
+                        .sortFieldPath(SortField.of("items").ignoring("changeableValue"))); // sort by id only
+    }
+
+    // =========================================================================
     // Group 5: Auto-sorting of Set and Map fields with deep nesting
     //
     // Relevant optimizations: #5 (merge sortJsonFields into applySorting)
