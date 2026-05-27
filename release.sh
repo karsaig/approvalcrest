@@ -60,6 +60,8 @@ _tag_made=false
 _push_done=false
 
 cleanup() {
+    # Always remove versionsBackup files — they are never needed after versions:commit
+    find . -name "*.versionsBackup" -delete 2>/dev/null || true
     # If push already succeeded the release is done — leave local state as-is
     if [[ "$_push_done" == "true" ]]; then
         return
@@ -75,6 +77,18 @@ cleanup() {
     fi
 }
 trap cleanup EXIT
+
+# Pre-flight: check if the tag already exists
+if git tag -l "v${version}" | grep -q "v${version}"; then
+    if git ls-remote --tags origin "refs/tags/v${version}" 2>/dev/null | grep -q "v${version}"; then
+        echo "ERROR: tag 'v${version}' already exists and has been pushed to remote." >&2
+        echo "       Use a different version number." >&2
+    else
+        echo "ERROR: tag 'v${version}' already exists locally (not yet pushed)." >&2
+        echo "       To remove it and retry: git tag -d 'v${version}'" >&2
+    fi
+    exit 1
+fi
 
 if [[ "$dry_run" == "true" ]]; then
     echo "========================================"
