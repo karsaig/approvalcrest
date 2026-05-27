@@ -54,6 +54,28 @@ fi
 
 set -exuo pipefail
 
+# State tracking for cleanup
+_commit_made=false
+_tag_made=false
+_push_done=false
+
+cleanup() {
+    # If push already succeeded the release is done — leave local state as-is
+    if [[ "$_push_done" == "true" ]]; then
+        return
+    fi
+    if [[ "$_tag_made" == "true" ]]; then
+        git tag -d "v${version}" 2>/dev/null || true
+    fi
+    if [[ "$_commit_made" == "true" ]]; then
+        git reset --hard HEAD~1 || true
+    else
+        # versions:set ran but commit was never made — restore pom files
+        git checkout -- . 2>/dev/null || true
+    fi
+}
+trap cleanup EXIT
+
 if [[ "$dry_run" == "true" ]]; then
     echo "========================================"
     echo "  DRY RUN MODE"
@@ -71,14 +93,14 @@ mvn -f for-release-pom.xml versions:set -DnewVersion="${version}"
 mvn -f for-release-pom.xml versions:commit
 
 git commit -a -m "Release version ${version}"
+_commit_made=true
 git tag -a "v${version}" -m "Release ${version}"
+_tag_made=true
 
 mvn clean install -Djava.version.to.run="${jvtr}"
 
 if [[ "$dry_run" == "true" ]]; then
     mvn clean verify -f for-release-pom.xml -P sign-release
-    git tag -d "v${version}"
-    git reset --hard HEAD~1
     echo "========================================"
     echo "  DRY RUN COMPLETE"
     echo "  All checks passed. No remote changes made."
@@ -88,31 +110,5 @@ else
     mvn clean -f for-release-pom.xml
     mvn -f for-release-pom.xml deploy -P sign-release
     git push --follow-tags
-fi
-
-
-mvn versions:set -DnewVersion="${version}"
-mvn versions:commit
-
-mvn -f for-release-pom.xml versions:set -DnewVersion="${version}"
-mvn -f for-release-pom.xml versions:commit
-
-git commit -a -m "Release version ${version}"
-git tag -a "v${version}" -m "Release ${version}"
-
-mvn clean install -Djava.version.to.run="${jvtr}"
-
-if [[ "$dry_run" == "true" ]]; then
-    mvn clean verify -f for-release-pom.xml -P sign-release
-    git tag -d "v${version}"
-    git reset --hard HEAD~1
-    echo "========================================"
-    echo "  DRY RUN COMPLETE"
-    echo "  All checks passed. No remote changes made."
-    echo "  Local state restored to pre-release."
-    echo "========================================"
-else
-    mvn clean -f for-release-pom.xml
-    mvn -f for-release-pom.xml deploy -P sign-release
-    git push --follow-tags
+    _push_done=true
 fi
