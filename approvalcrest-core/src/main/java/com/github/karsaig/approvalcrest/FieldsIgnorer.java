@@ -53,7 +53,6 @@ public class FieldsIgnorer {
 
     public static JsonElement findPaths(JsonElement preComputedJson, Object objectForTypeCheck, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
-        sortJsonFields(filteredJson, true);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order)
@@ -69,10 +68,9 @@ public class FieldsIgnorer {
     }
 
     public static JsonElement findPaths(Gson gson, Object object, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
-        JsonElement jsonElement = JsonParser.parseString(gson.toJson(object));
+        JsonElement jsonElement = gson.toJsonTree(object);
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
-        sortJsonFields(filteredJson, true);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order)
@@ -180,10 +178,26 @@ public class FieldsIgnorer {
     }
 
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
+        if (jsonElement == null || jsonElement.isJsonNull()) return;
+        Map<String, PathLevel> pathMap = pathsToSort.isEmpty() ? Collections.emptyMap() : getPathsMap(pathsToSort);
+        applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile);
+    }
+
+    private static void applySortingInternal(JsonElement jsonElement, Map<String, PathLevel> pathMap,
+            Map<String, List<SortField<String>>> pathsToSort,
+            List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
         if (jsonElement != null && !jsonElement.isJsonNull()) {
             if (jsonElement.isJsonObject()) {
-                Map<String, PathLevel> pathMap = getPathsMap(pathsToSort);
                 JsonObject jsonObject = jsonElement.getAsJsonObject();
+                // Sort object keys inline (#5: replaces separate sortJsonFields pass)
+                if (sortFile) {
+                    List<FieldNamePair> toSort = getFiledNamePairs(jsonObject);
+                    Collections.sort(toSort);
+                    for (FieldNamePair pair : toSort) {
+                        JsonElement element = jsonObject.remove(pair.originalKey);
+                        jsonObject.add(pair.originalKey, element);
+                    }
+                }
                 for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
                     JsonElement actualValue = actual.getValue();
                     if (actualValue.isJsonNull() || actualValue.isJsonPrimitive()) {
@@ -191,12 +205,14 @@ public class FieldsIgnorer {
                     }
                     FieldNamePair fieldNamePair = convertToKeyPair(actual.getKey());
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
-                    applySorting(actualValue, pathLevel.nextLevel, fieldMatchersToSort, sortFile);
+                    Map<String, PathLevel> nextPathMap = pathLevel.nextLevel.isEmpty()
+                            ? Collections.emptyMap() : getPathsMap(pathLevel.nextLevel);
+                    applySortingInternal(actualValue, nextPathMap, pathLevel.nextLevel, fieldMatchersToSort, sortFile);
                     if (actualValue.isJsonArray()) {
                         List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, sortFile);
                         List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile);
                         if (fieldNamePair.shouldSortDueToType() || !matchingPathMatchers.isEmpty() || !matchingFieldMatchers.isEmpty()) {
-                            sortJsonArray(actualValue.getAsJsonArray(),matchingPathMatchers,matchingFieldMatchers);
+                            sortJsonArray(actualValue.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
                         }
                     }
                 }
@@ -210,13 +226,22 @@ public class FieldsIgnorer {
                 } else {
                     innerPathsToSort = pathsToSort;
                 }
+                // #3: Build the PathLevel map once for all elements in this array
+                Map<String, PathLevel> innerPathMap;
+                if (innerPathsToSort == pathsToSort) {
+                    innerPathMap = pathMap; // "" was not in map; same pathsToSort, reuse existing map
+                } else if (innerPathsToSort.isEmpty()) {
+                    innerPathMap = Collections.emptyMap();
+                } else {
+                    innerPathMap = getPathsMap(innerPathsToSort);
+                }
                 Iterator<JsonElement> iter = jsonElement.getAsJsonArray().iterator();
                 while (iter.hasNext()) {
                     JsonElement current = iter.next();
                     if (current.isJsonNull() || current.isJsonPrimitive()) {
                         continue;
                     }
-                    applySorting(current, innerPathsToSort, fieldMatchersToSort, sortFile);
+                    applySortingInternal(current, innerPathMap, innerPathsToSort, fieldMatchersToSort, sortFile);
                 }
                 // Sort the array itself last (root), so the sort key reflects the
                 // already-sorted state of nested elements.
@@ -488,6 +513,125 @@ public class FieldsIgnorer {
         public int compareTo(FieldNamePair keyPair) {
             return newKey.compareTo(keyPair.newKey);
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Single-pass field removal: merges path-based ignoring (findPaths) with
+    // matcher-based ignoring (filterByFieldMatchers / filterByCustomMatcherPatterns)
+    // into one recursive descent instead of two. (#4)
+    // -------------------------------------------------------------------------
+
+    private static final class IgnoreNode {
+        boolean removeAtThisLevel;
+        final Map<String, IgnoreNode> children = new HashMap<>();
+    }
+
+    private static Map<String, IgnoreNode> buildIgnoreTree(Set<String> paths) {
+        if (paths.isEmpty()) return Collections.emptyMap();
+        Map<String, IgnoreNode> root = new HashMap<>();
+        for (String path : paths) {
+            if (path.isEmpty()) continue;
+            String[] segments = path.split(PATH_SEPARATOR_PATTERN, -1);
+            Map<String, IgnoreNode> current = root;
+            for (int i = 0; i < segments.length; i++) {
+                IgnoreNode node = current.computeIfAbsent(segments[i], k -> new IgnoreNode());
+                if (i == segments.length - 1) {
+                    node.removeAtThisLevel = true;
+                } else {
+                    current = node.children;
+                }
+            }
+        }
+        return root;
+    }
+
+    /**
+     * Removes fields matching either path-based ignore entries or name matchers in one traversal.
+     * Replaces the sequential {@code findPaths + filterByFieldMatchers/filterByCustomMatcherPatterns}
+     * approach with a single recursive descent.
+     */
+    public static void removeFieldsInPlace(JsonElement root, Set<String> paths, List<Matcher<String>> matchers) {
+        if (root == null || root.isJsonNull()) return;
+        if (paths.isEmpty() && matchers.isEmpty()) return;
+        removeFields(root, buildIgnoreTree(paths), matchers, "");
+    }
+
+    private static boolean removeFields(JsonElement element, Map<String, IgnoreNode> ignoreAtLevel,
+            List<Matcher<String>> matchers, String pathSoFar) {
+        if (element.isJsonObject()) {
+            JsonObject obj = element.getAsJsonObject();
+            Iterator<Map.Entry<String, JsonElement>> iter = obj.entrySet().iterator();
+            boolean changed = false;
+            while (iter.hasNext()) {
+                Map.Entry<String, JsonElement> entry = iter.next();
+                String rawKey = entry.getKey();
+                // Strip MARKER prefix for path-tree lookup (users configure plain field names)
+                String lookupKey = rawKey.startsWith(MARKER) ? rawKey.substring(MARKER.length()) : rawKey;
+                String childPath = pathSoFar.isEmpty() ? lookupKey : pathSoFar + "." + lookupKey;
+                IgnoreNode node = ignoreAtLevel.get(lookupKey);
+                boolean removeByPath = node != null && node.removeAtThisLevel;
+                boolean removeByMatcher = !matchers.isEmpty() && JsonElementUtil.anyMatchesFieldName(rawKey, matchers);
+                if (removeByPath || removeByMatcher) {
+                    iter.remove();
+                    changed = true;
+                } else {
+                    Map<String, IgnoreNode> childIgnore = (node != null && !node.children.isEmpty())
+                            ? node.children : Collections.emptyMap();
+                    boolean childChanged = removeFields(entry.getValue(), childIgnore, matchers, childPath);
+                    if (childChanged && JsonElementUtil.isEmpty(entry.getValue())) {
+                        iter.remove();
+                        changed = true;
+                    }
+                }
+            }
+            return changed;
+        } else if (element.isJsonArray()) {
+            JsonArray arr = element.getAsJsonArray();
+            Iterator<JsonElement> iter = arr.iterator();
+            boolean changed = false;
+            while (iter.hasNext()) {
+                JsonElement child = iter.next();
+                if (child.isJsonNull() || child.isJsonPrimitive()) continue;
+                boolean childChanged = removeFields(child, ignoreAtLevel, matchers, pathSoFar);
+                if (childChanged && JsonElementUtil.isEmpty(child)) {
+                    iter.remove();
+                    changed = true;
+                }
+            }
+            // Orphaned primitive cleanup mirrors findPath's behavior for Map key removal
+            if (changed) {
+                boolean hasNonPrimitive = false;
+                for (JsonElement remaining : arr) {
+                    if (!remaining.isJsonNull() && !remaining.isJsonPrimitive()) {
+                        hasNonPrimitive = true;
+                        break;
+                    }
+                }
+                if (!hasNonPrimitive) {
+                    Iterator<JsonElement> cleanup = arr.iterator();
+                    while (cleanup.hasNext()) {
+                        cleanup.next();
+                        cleanup.remove();
+                    }
+                }
+            }
+            return changed;
+        } else if (!element.isJsonNull() && !ignoreAtLevel.isEmpty()) {
+            // Primitive element with path navigation attempted — mirror findPath's
+            // IllegalArgumentException for sub-paths on primitive fields.
+            Map.Entry<String, IgnoreNode> first = ignoreAtLevel.entrySet().iterator().next();
+            String offendingPath = buildDeepPath(
+                    pathSoFar.isEmpty() ? first.getKey() : pathSoFar + "." + first.getKey(),
+                    first.getValue());
+            throw new IllegalArgumentException(offendingPath + " does not exist");
+        }
+        return false;
+    }
+
+    private static String buildDeepPath(String prefix, IgnoreNode node) {
+        if (node.children.isEmpty()) return prefix;
+        Map.Entry<String, IgnoreNode> first = node.children.entrySet().iterator().next();
+        return buildDeepPath(prefix + "." + first.getKey(), first.getValue());
     }
 
     public static void sortJsonFields(JsonElement jsonElement, boolean sortFile) {
