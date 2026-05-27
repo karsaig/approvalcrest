@@ -1,8 +1,0 @@
-/*samecontent.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
-{
-  "0x1": {
-    "class": "java.lang.AssertionError",
-    "detailMessage": "Not approved file created: \u0027f89d26/fd51ac-not-approved.content\u0027;\n please verify its contents and rename it to \u0027fd51ac-approved.content\u0027.",
-    "suppressedExceptions": []
-  }
-}

@@ -1,5 +1,0 @@
-/*samejson.SameJsonParameterizedTest.testParameterizedWorksWithDescription[0]*/
-{
-  "dummyString": "dummy1",
-  "genericValue": "val1"
-}
