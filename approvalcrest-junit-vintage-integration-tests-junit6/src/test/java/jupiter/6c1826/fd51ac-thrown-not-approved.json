@@ -1,0 +1,8 @@
+/*jupiter.SameJsonTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+{
+  "0x1": {
+    "class": "java.lang.AssertionError",
+    "detailMessage": "Not approved file created: \u00276c1826/fd51ac-not-approved.json\u0027;\n please verify its contents and rename it to \u0027fd51ac-approved.json\u0027.",
+    "suppressedExceptions": []
+  }
+}

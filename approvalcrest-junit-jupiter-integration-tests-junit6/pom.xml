@@ -13,7 +13,7 @@
     <artifactId>approvalcrest-junit-jupiter-integration-tests-junit6</artifactId>
 
     <properties>
-        <junit6.version>6.0.3</junit6.version>
+        <junit6.version>6.1.0</junit6.version>
     </properties>
 
     <dependencies>
@@ -56,9 +56,6 @@
     </dependencies>
 
     <build>
-        <!-- Share test sources with the JUnit 5 integration test module -->
-        <testSourceDirectory>../approvalcrest-junit-jupiter-integration-tests/src/test/java</testSourceDirectory>
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

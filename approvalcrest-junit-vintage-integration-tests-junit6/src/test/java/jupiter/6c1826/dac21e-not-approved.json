@@ -1,0 +1,11 @@
+/*jupiter.SameJsonTest.runWithDefaultConfigShouldPassWithMatchingApprovedFile*/
+{
+  "beanBoolean": false,
+  "beanByte": 127,
+  "beanChar": "￿",
+  "beanDouble": 1.7976931348623157E308,
+  "beanFloat": 3.4028235E38,
+  "beanInteger": 2147483647,
+  "beanLong": 9223372036854775807,
+  "beanShort": 32767
+}

@@ -12,8 +12,8 @@
     <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
 
     <properties>
-        <kotlin.version>2.1.21</kotlin.version>
-        <dokka.version>1.9.20</dokka.version>
+        <kotlin.version>2.2.21</kotlin.version>
+        <dokka.version>2.2.0</dokka.version>
     </properties>
 
     <dependencies>

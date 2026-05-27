@@ -9,10 +9,25 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.karsaig.integration.tests</groupId>
-    <artifactId>approvalcrest-junit-jupiter-integration-tests</artifactId>
+    <artifactId>approvalcrest-junit-vintage-integration-tests-junit6</artifactId>
+
+    <properties>
+        <junit6.version>6.1.0</junit6.version>
+    </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest</artifactId>
+            <version>0.62.4-SNAPSHOT</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest-junit-jupiter</artifactId>
@@ -26,15 +41,21 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${junit6.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.14.4</version>
+            <version>${junit6.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.14.4</version>
+            <version>${junit6.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -46,6 +67,9 @@
     </dependencies>
 
     <build>
+        <!-- Share test sources with the JUnit 5 vintage integration test module -->
+        <testSourceDirectory>../approvalcrest-junit-vintage-integration-tests/src/test/java</testSourceDirectory>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -77,6 +101,9 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
+                            <!-- Set working directory to the JUnit 5 vintage module so the approvalcrest
+                                 library resolves approved files from that module's src/test/java directory -->
+                            <workingDirectory>${project.basedir}/../approvalcrest-junit-vintage-integration-tests</workingDirectory>
                         </configuration>
                     </execution>
                 </executions>

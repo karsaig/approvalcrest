@@ -13,7 +13,7 @@
     <artifactId>approvalcrest-junit-jupiter-kotlin-integration-tests</artifactId>
 
     <properties>
-        <kotlin.version>2.1.21</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
     </properties>
 
     <dependencies>
@@ -26,13 +26,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.13.4</version>
+            <version>5.14.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
-            <version>5.13.4</version>
+            <version>5.14.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
