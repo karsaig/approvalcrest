@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>approvalcrest-junit-jupiter</artifactId>
+    <name>Approvalcrest JUnit Jupiter</name>
 
     <properties>
         <junit5.version>5.10.2</junit5.version>

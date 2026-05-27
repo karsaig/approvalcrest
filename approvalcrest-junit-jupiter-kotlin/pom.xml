@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
+    <name>Approvalcrest JUnit Jupiter Kotlin</name>
 
     <properties>
         <kotlin.version>2.2.21</kotlin.version>
@@ -140,6 +141,19 @@
                         </plugin>
                     </dokkaPlugins>
                 </configuration>
+            </plugin>
+            <!-- Disable the standard javadoc plugin inherited from parent: this is a Kotlin-only
+                 module, standard javadoc cannot parse Kotlin sources. Dokka (above) generates
+                 the javadoc jar instead. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
