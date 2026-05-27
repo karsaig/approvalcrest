@@ -18,13 +18,7 @@
     <packaging>pom</packaging>
     <name>Approvalcrest-parent</name>
     <description>Library that extends the functionality of hamcrest</description>
-    <url>http://github.com/karsaig/approvalcrest</url>
-
-    <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
-    </parent>
+    <url>https://github.com/karsaig/approvalcrest</url>
 
     <properties>
         <java.target.version>8</java.target.version>
@@ -33,7 +27,7 @@
         <maven.source.plugin.version>3.3.1</maven.source.plugin.version>
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
-        <nexus.staging.maven.plugin.version>1.7.0</nexus.staging.maven.plugin.version>
+        <central.publishing.maven.plugin.version>0.10.0</central.publishing.maven.plugin.version>
         <maven.surefire.plugin.version>3.5.4</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.1</maven.shade.plugin.version>
         <maven.deploy.plugin.version>3.1.4</maven.deploy.plugin.version>
@@ -50,26 +44,19 @@
         </license>
     </licenses>
 
-    <developers/>
+    <developers>
+        <developer>
+            <id>karsaig</id>
+            <name>Gabor Karsai</name>
+            <email>sonic484@gmail.com</email>
+        </developer>
+    </developers>
 
     <scm>
         <connection>scm:git:git://github.com/karsaig/approvalcrest.git</connection>
         <developerConnection>scm:git:git@github.com/karsaig/approvalcrest.git</developerConnection>
-        <url>http://github.com/karsaig/approvalcrest</url>
+        <url>https://github.com/karsaig/approvalcrest</url>
     </scm>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <name>Nexus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-        </repository>
-    </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
