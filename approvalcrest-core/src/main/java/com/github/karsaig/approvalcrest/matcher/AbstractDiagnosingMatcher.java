@@ -24,6 +24,7 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.collectValuesByFieldNamePattern;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.findJsonValueAt;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.jsonElementToJavaValue;
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
 
 public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> {
 
@@ -35,6 +36,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             Pattern.compile("module (\\S+) does not \"opens (\\S+)\"");
 
     private boolean comparisonDescriptionNeeded = false;
+    protected boolean machineReadableOutput = getBooleanProperty("fileMatcherMachineReadable");
 
     /**
      * Template-method entry point. Subclasses implement their matching logic here.
@@ -112,6 +114,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             shazamMismatchDescription.setExpected(expected);
             shazamMismatchDescription.setActual(actual);
             shazamMismatchDescription.setDifferencesMessage(message);
+            shazamMismatchDescription.setMachineReadable(machineReadableOutput);
         }
         mismatchDescription.appendText(message);
         return false;

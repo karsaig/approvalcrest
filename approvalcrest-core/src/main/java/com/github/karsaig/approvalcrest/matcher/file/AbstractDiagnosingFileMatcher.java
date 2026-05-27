@@ -14,9 +14,12 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
+
+import org.hamcrest.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
@@ -139,6 +142,23 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         return (U) this;
     }
 
+    @SuppressWarnings("unchecked")
+    public U withMachineReadableOutput() {
+        this.machineReadableOutput = true;
+        return (U) this;
+    }
+
+    @Override
+    protected boolean appendMismatchDescription(Description mismatchDescription, String expected, String actual, String message) {
+        boolean result = super.appendMismatchDescription(mismatchDescription, expected, actual, message);
+        if (machineReadableOutput && mismatchDescription instanceof ComparisonDescription && fileNameWithPath != null) {
+            ComparisonDescription comparisonDescription = (ComparisonDescription) mismatchDescription;
+            Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath).getFileName();
+            comparisonDescription.setApprovedFilePath(approvedFile.toAbsolutePath().toString());
+        }
+        return result;
+    }
+
     @SuppressWarnings("deprecation")
     private String hashFileName(String fileName) {
         return Hashing.sha1().hashString(fileName, Charsets.UTF_8).toString().substring(0, NUM_OF_HASH_CHARS);
@@ -173,8 +193,14 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         if (Files.notExists(approvedFileAndInfo.getFileName())) {
             try {
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
-                String message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
-                        + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
+                String message;
+                if (machineReadableOutput) {
+                    message = "Not approved file created: '" + createdFileAndInfo.getFileName().toAbsolutePath()
+                            + "';\n to approve: copy it to '" + approvedFileAndInfo.getFileName().toAbsolutePath() + "'.";
+                } else {
+                    message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
+                            + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
+                }
                 if (!fileMatcherConfig.isPassOnCreateEnabled()) {
                     fail(message);
                 } else {

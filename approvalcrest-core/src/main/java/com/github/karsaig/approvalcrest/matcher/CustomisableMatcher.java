@@ -236,4 +236,14 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      */
     U withAlias(String fieldName, String value, String alias);
+
+    /**
+     * Enable machine-readable output mode for this matcher.
+     * When enabled, the failure message will contain the full expected/actual content with
+     * structured delimiters (and the approved file path for file-based matchers),
+     * instead of the default diff text. Useful for AI agents and CI environments.
+     *
+     * @return the instance of the matcher
+     */
+    U withMachineReadableOutput();
 }

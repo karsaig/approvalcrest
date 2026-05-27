@@ -268,6 +268,12 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
+    public DiagnosingCustomisableMatcher<T> withMachineReadableOutput() {
+        machineReadableOutput = true;
+        return this;
+    }
+
+    @Override
     public String toString() {
         return "SameBeanAs matcher";
     }

@@ -21,6 +21,8 @@ public class ComparisonDescription extends StringDescription {
 	private String expected;
 	private String differencesMessage;
 	private boolean comparisonFailure;
+	private boolean machineReadable;
+	private String approvedFilePath;
 
 	public String getActual() {
 		return actual;
@@ -54,7 +56,36 @@ public class ComparisonDescription extends StringDescription {
 		return comparisonFailure;
 	}
 
+	public void setMachineReadable(boolean machineReadable) {
+		this.machineReadable = machineReadable;
+	}
+
+	public void setApprovedFilePath(String approvedFilePath) {
+		this.approvedFilePath = approvedFilePath;
+	}
+
 	public String toFailureMessage(String reason) {
+		if (machineReadable) {
+			return buildMachineReadableMessage(reason);
+		}
 		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage();
+	}
+
+	private String buildMachineReadableMessage(String reason) {
+		StringBuilder sb = new StringBuilder();
+		if (isNotBlank(reason)) {
+			sb.append(reason).append("\n");
+		}
+		if (approvedFilePath != null) {
+			sb.append("Approved file (expected): ").append(approvedFilePath).append("\n");
+			sb.append("Tip: to update approved content with current actual, re-run with -DfileMatcherUpdateInPlace=true\n");
+		} else if (expected != null) {
+			sb.append("=== EXPECTED (full) ===\n").append(expected).append("\n=== END EXPECTED ===\n");
+		}
+		sb.append("\n");
+		if (actual != null) {
+			sb.append("=== ACTUAL (full) ===\n").append(actual).append("\n=== END ACTUAL ===");
+		}
+		return sb.toString();
 	}
 }

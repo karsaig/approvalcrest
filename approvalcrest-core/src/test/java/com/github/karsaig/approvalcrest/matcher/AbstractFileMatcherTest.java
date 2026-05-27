@@ -285,6 +285,11 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         return builder.toString();
     }
 
+    protected String getMachineReadableNotApprovedCreationMessage(Path notApprovedAbsolutePath, Path approvedAbsolutePath) {
+        return "Not approved file created: '" + notApprovedAbsolutePath.toAbsolutePath()
+                + "';\n to approve: copy it to '" + approvedAbsolutePath.toAbsolutePath() + "'.";
+    }
+
     protected void writeFile(Path path, String content) {
         InMemoryFsUtil.writeFile(path, content);
     }
