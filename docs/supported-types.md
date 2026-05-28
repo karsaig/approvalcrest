@@ -87,6 +87,49 @@ Circular object graphs are handled automatically. Each object instance is serial
 
 No configuration is needed — cycle detection is automatic.
 
+## Custom Types
+
+For types approvalcrest does not natively handle, register a custom Gson adapter using `withGsonConfiguration`. This also lets you change how any existing type is serialised — for example, serialising a class as a single string instead of a JSON object:
+
+```java
+import com.github.karsaig.approvalcrest.matcher.GsonConfiguration;
+import com.google.gson.JsonSerializer;
+import com.google.gson.JsonPrimitive;
+import java.util.UUID;
+
+GsonConfiguration gsonConfig = new GsonConfiguration();
+gsonConfig.addTypeAdapter(UUID.class,
+    (JsonSerializer<UUID>) (src, type, ctx) -> new JsonPrimitive(src.toString()));
+
+assertThat(actual, sameJsonAsApproved()
+    .withGsonConfiguration(gsonConfig));
+```
+
+Three registration methods are available on `GsonConfiguration`:
+
+| Method | When to use |
+|---|---|
+| `addTypeAdapter(Type, Object)` | Exact type — `UUID.class`, `MyValueType.class` |
+| `addTypeHierarchyAdapter(Class<?>, Object)` | Type and all subclasses — useful for interfaces or abstract base types |
+| `addTypeAdapterFactory(TypeAdapterFactory)` | When you need to inspect the type at resolution time |
+
+### Custom types and aliasing
+
+Aliasing applies only to JSON primitives (strings and numbers). When a custom adapter serialises a type as a JSON **string**, that field's value becomes available for aliasing:
+
+```java
+// UUID serialised as a string → value can be aliased
+GsonConfiguration gsonConfig = new GsonConfiguration();
+gsonConfig.addTypeAdapter(UUID.class,
+    (JsonSerializer<UUID>) (src, type, ctx) -> new JsonPrimitive(src.toString()));
+
+assertThat(actual, sameJsonAsApproved()
+    .withGsonConfiguration(gsonConfig)
+    .withAlias("orderId", "550e8400-e29b-41d4-a716-446655440000", "<orderId>"));
+```
+
+If the type is left as a Gson JSON object (the default for class instances), aliasing does not apply to it.
+
 ## Related
 
 - [same-bean-as](same-bean-as.md)

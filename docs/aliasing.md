@@ -6,7 +6,7 @@ Aliases let approved files contain human-readable placeholders (e.g. `<userId>`)
 
 Works with `sameJsonAsApproved` and `sameBeanAs`.
 
-**Applies to primitives only.** Aliases match against `String` and numeric values (numbers are coerced to their string form — `13` matches the rule for `"13"`). Boolean (`true`/`false`) and `null` values are never aliased.
+**Applies to primitives only.** Aliases match against `String` and numeric values (numbers are coerced to their string form — `13` matches the rule for `"13"`). Boolean (`true`/`false`) and `null` values are never aliased. Custom types that are normally serialised as JSON objects are not aliasable by default — register a custom Gson adapter that serialises the type as a JSON string to make it aliasable (see [supported-types](supported-types.md#custom-types)).
 
 ## By Value (Global)
 
@@ -174,3 +174,4 @@ assertThat(actual, sameJsonAsApproved()
 ## Related
 
 - [dynamic-values](dynamic-values.md) — choosing between ignore, alias, and custom matching
+- [supported-types](supported-types.md) — how types are serialised; registering custom Gson adapters
