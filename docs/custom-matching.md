@@ -60,6 +60,14 @@ assertThat(actual, sameJsonAsApproved()
 // Nested field must not be null
 assertThat(actual, sameJsonAsApproved()
     .with("order.trackingCode", notNullValue()));
+
+// Path through a collection (fan-out): asserts trackingCode is non-null in EVERY order
+assertThat(actual, sameJsonAsApproved()
+    .with("orders.trackingCode", notNullValue()));
+
+// Assert the collection itself (not each element) — orders must not be empty
+assertThat(actual, sameJsonAsApproved()
+    .with("orders", not(empty())));
 ```
 
 ## Paths Through Collections (Fan-out)
