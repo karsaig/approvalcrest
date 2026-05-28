@@ -3,172 +3,103 @@ Approvalcrest
 [![Java CI with Maven](https://github.com/karsaig/approvalcrest/actions/workflows/maven.yml/badge.svg)](https://github.com/karsaig/approvalcrest/actions/workflows/maven.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.karsaig/approvalcrest.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.github.karsaig%22%20AND%20a:%22approvalcrest%22)
 
+## Contents
 
-'Approvalcrest' is a library that extends the functionality of [Shazamcrest](https://github.com/shazam/shazamcrest).
+- [What is Approvalcrest](#what-is-approvalcrest)
+- [AI-friendly mode](#ai-friendly-mode)
+- [Version support](#version-support)
+- [Installation](#installation)
+- [Documentation](#documentation)
 
-Assertions on complete beans are made simpler by serialising the actual and expected beans to json, and comparing
-  the two. The diagnostics are leveraging the comparison functionality of IDEs like Eclipse or IntelliJ.
+## What is Approvalcrest
 
+Approvalcrest is a Java testing library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It serialises your objects to JSON and compares them against stored approved files, giving you IDE-friendly visual diffs when something changes.
 
-Usage
------
+Traditional assertions allowlist specific properties — you explicitly name the fields you want to check. Characterisation testing takes the opposite approach: it blocklists changes. Once you approve a snapshot, any unexpected change in any field will fail the test immediately. This is analogous to default-deny in security: silent changes do not pass.
 
-### sameBeanAs
+This makes approvalcrest a particularly effective guardrail when working with AI coding agents — snapshot coverage catches unintended side effects that targeted per-field assertions would miss. The library works at every level of testing: unit, integration, API, UI, and system tests all use the same API.
 
-Having a Person bean with the following structure:
+Approvalcrest was originally built on top of [Shazamcrest](https://github.com/shazam/shazamcrest), extending and evolving its functionality.
 
-<pre>Person person
-    |-- String name
-    |-- String surname
-    |-- Address address
-        |-- String streetName
-        |-- int streetNumber
-        |-- String postcode</pre>
+## AI-friendly mode
 
-to compare two Person beans with Approvalcrest we would write:
+When a test fails, enable machine-readable output so that AI agents and CI tooling can parse the failure details:
 
 ```java
-assertThat(actualPerson, sameBeanAs(expectedPerson));
+// Fluent API:
+assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
+```
+```
+# Or via system property:
+mvn test -DfileMatcherMachineReadable=true
 ```
 
-instead of explicitly match every field of the bean and sub-beans:
+In this mode, failure messages include absolute paths to approved files, full `=== ACTUAL (full) ===` content blocks, and a tip to re-run with `-DfileMatcherUpdateInPlace=true`. See [file-control.md](docs/file-control.md) for details.
 
-```java
-assertThat(actualPerson, allOf(
-        hasProperty("name", equalTo(expectedPerson.name)),
-        hasProperty("surname", equalTo(expectedPerson.surname)),
-        hasProperty("address", allOf(
-            hasProperty("streetName", equalTo(expectedPerson.address.streetName)),
-            hasProperty("streetNumber", equalTo(expectedPerson.address.streetNumber)),
-            hasProperty("postcode", equalTo(expectedPerson.address.postcode)))
-        )
-    ));
+## Version support
+
+| Dimension | Supported | Constantly tested on |
+|---|---|---|
+| JDK | 8+ | 8, 11, 17, 21, 25 |
+| JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
+| Kotlin | 1.x+ | 2.2.21 |
+
+## Installation
+
+Choose the artifact that matches your test runner.
+
+### JUnit 4 & JUnit 5 Vintage
+
+```xml
+<dependency>
+  <groupId>com.github.karsaig</groupId>
+  <artifactId>approvalcrest</artifactId>
+  <version>1.0.1</version>
+  <scope>test</scope>
+</dependency>
 ```
 
-### sameJsonAsApproved
+### JUnit 5 Jupiter
 
-Creating the expected beans like the Person bean above can be a cumbersome task especially in more complex cases.
-sameJsonAsApproved meant to help with this task, instead of creating the expected bean to match against, it serializes the actual bean to json on the first run, and stores it in a file.
-By verifying and renaming the file, the user approves the content thus creating the expectations. Every additional run will use the file as the expected bean.
+```xml
+<dependency>
+  <groupId>com.github.karsaig</groupId>
+  <artifactId>approvalcrest-junit-jupiter</artifactId>
+  <version>1.0.1</version>
+  <scope>test</scope>
+</dependency>
+```
 
+### Kotlin + JUnit 5
 
+```xml
+<dependency>
+  <groupId>com.github.karsaig</groupId>
+  <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
+  <version>1.0.1</version>
+  <scope>test</scope>
+</dependency>
+```
 
-### sameContentAsApproved
+For Gradle, replace the `<dependency>` blocks with the equivalent `testImplementation` notation.
 
+## Documentation
 
+| Doc | Description |
+|---|---|
+| [Getting started](docs/getting-started.md) | Artifact selection, minimal examples, IDE diff view |
+| [sameBeanAs](docs/same-bean-as.md) | Bean-to-bean comparison |
+| [sameJsonAsApproved](docs/same-json-as-approved.md) | JSON approval workflow and file naming |
+| [sameContentAsApproved](docs/same-content-as-approved.md) | Raw-text approval workflow |
+| [Ignoring fields](docs/ignoring-fields.md) | `.ignoring()` by path, Hamcrest matcher, or type |
+| [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` for field-level assertions |
+| [Sorting](docs/sorting.md) | Stable collection ordering |
+| [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
+| [Dynamic values](docs/dynamic-values.md) | Handling UUIDs, timestamps, and other run-to-run changes |
+| [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
+| [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
+| [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
+| [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |
+| [JUnit 5 Jupiter](docs/junit5-jupiter.md) | JUnit 5 Jupiter specifics |
+| [Kotlin](docs/kotlin.md) | Kotlin extension functions and KT-5464 workaround |
 
-Error Messages
------
-
-If the person address streetName does not match the expectations, the following diagnostic message is displayed:
-
-<pre>org.junit.ComparisonFailure: address.streetName
-        Expected: Via Roma
-    got: Via Veneto
-        expected:&lt;... "streetName": "Via [Roma]",
-    "streetNumber...&gt; but was:&lt;... "streetName": "Via [Veneto]",
-    "streetNumber...&gt;</pre>
-
-The exception thrown is a ComparisonFailure which can be used by IDEs like Eclipse and IntelliJ to display a visual representation of the differences.
-
-![Comparison failure diagnostic](/DiffScreenshot.png)
-
-Note: in order to get the ComparisonFailure on mismatch the "assertThat" to use is com.github.karsaig.approvalcrest.MatcherAssert.assertThat 
-rather than org.hamcrest.MatcherAssert.assertThat
-
-
-Ignoring fields
------
-
-If we are not interested in matching the street name, we can ignore it by specifying the field path:
-
-<code>assertThat(actualPerson, sameBeanAs(expectedPerson).ignoring("address.streetName"));</code>
-
-If we want to match the address only by the postcode, we can ignore street name and number by specifying the fields name pattern:
-
-<code>assertThat(actualPerson, sameBeanAs(expectedPerson).ignoring(startsWith("street")));</code>
-
-where startsWith is an Hamcrest matcher.
-
-
-Custom matching
------
-
-If we want to make sure that the street name starts with "Via" at least:
-
-<code>assertThat(actualPerson, sameBeanAs(expectedPerson).with("address.streetName"), startsWith("Via"));</code>
-
-
-Circular references
------
-
-Having a Shop bean with the following structure:
-
-<pre>Shop shop
-	|-- String name
-    |-- Store store
-        |-- Boss boss
-            |-- Clerk clerk
-                |-- Store store
-                |-- Boss boss</pre>
-        
-Comparing two Shop objects throws a StackOverflowError, because of the cycles Clerk -> Store -> Boss -> Clerk and Clerk -> Boss -> Clerk.
-
-From version 0.10 the circular reference is detected automatically and the serialiser is instructed to serialise the instance once and replace all the other occurrences with a pointer:
-
-<code>assertThat(actualShop, sameBeanAs(expectedShop));</code>
-
-produces the following representation:
-
-<pre>{
-  "store": {
-    "0x1": {
-      "0x1": {
-        "0x1": {
-          "boss": "0x2"
-        }
-      }
-    },
-    "0x2": {
-      "0x1": {
-        "0x1": {
-          "clerk": {
-            "boss": "0x2",
-            "store": "0x1"
-          }
-        }
-      }
-    }
-  },
-  "name": "shop"
-}</pre>
-
-
-QuickStart
------
-
-To use add the following to your project's pom.xml:
-
-### JUnit 4 & 5 Vintage
-
-    <dependency>
-      <groupId>com.github.karsaig</groupId>
-      <artifactId>approvalcrest</artifactId>
-      <version>0.62.3</version>
-    </dependency>
-
-### JUnit 5
-
-    <dependency>
-      <groupId>com.github.karsaig</groupId>
-      <artifactId>approvalcrest-junit-jupiter</artifactId>
-      <version>0.62.3</version>
-    </dependency>
-
-### Kotlin JUnit 5
-
-    <dependency>
-      <groupId>com.github.karsaig</groupId>
-      <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-      <version>0.62.3</version>
-    </dependency>
