@@ -2,6 +2,10 @@
 
 Control collection ordering to get stable comparisons regardless of iteration order.
 
+## Why Sorting Matters
+
+Collections that don't have a guaranteed iteration order — `HashSet`, `HashMap` values, results from a database query without an `ORDER BY` — can appear in a different order on every test run. Without sorting, a test that passes today may fail tomorrow because the JVM happened to hash elements differently. Sorting makes the approved file stable and the comparison deterministic.
+
 ## Automatic Set Ordering
 
 `HashSet` and other unordered sets are **automatically sorted** before comparison — no configuration needed. Elements with the same serialised form are treated as equal.
@@ -18,12 +22,20 @@ assertThat(actual, sameJsonAsApproved()
     .sortField("tags"));
 ```
 
-Chain multiple paths:
+Nested paths are supported — sort at multiple levels independently:
 
 ```java
+// Sort the orders list, then sort the items within each order
 assertThat(actual, sameJsonAsApproved()
     .sortField("orders")
     .sortField("orders.items"));
+```
+
+Sort the root-level list itself (use an empty string for the root):
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .sortField(""));
 ```
 
 ## Sort by Hamcrest Matcher on Field Name
@@ -58,16 +70,15 @@ assertThat(actual, sameBeanAs(expected)
 Use `sortType(Class<?>...)` to automatically sort any `Collection` or array whose element type matches one of the specified classes. This is equivalent to the automatic sorting that already applies to `Set` fields — no field path is needed:
 
 ```java
-import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
-import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
-
 // Sort all List<Person> and array-of-Person fields automatically
 assertThat(actual, sameJsonAsApproved()
     .sortType(Person.class));
 
-// Multiple types at once
+// Multiple types at once — covers every collection of Person or Address anywhere in the graph
 assertThat(actual, sameBeanAs(expected)
     .sortType(Person.class, Address.class));
 ```
+
+This is particularly useful when the same element type appears in multiple collections throughout a deep object graph and you want all of them sorted without listing each field path individually.
 
 Works with `sameBeanAs` and `sameJsonAsApproved`.

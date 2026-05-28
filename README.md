@@ -14,9 +14,15 @@ Approvalcrest
 
 ## What is Approvalcrest
 
-Approvalcrest is a Java testing library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It serialises your objects to JSON and compares them against stored approved files, giving you IDE-friendly visual diffs when something changes.
+Approvalcrest is a Java testing library for [golden master / characterisation testing](https://en.wikipedia.org/wiki/Characterization_test). It provides three matchers:
 
-Traditional assertions allowlist specific properties — you explicitly name the fields you want to check. Characterisation testing takes the opposite approach: it blocklists changes. Once you approve a snapshot, any unexpected change in any field will fail the test immediately. This is analogous to default-deny in security: silent changes do not pass.
+- **`sameBeanAs(expected)`** — performs a deep structural comparison of two live Java objects. Both are serialised to JSON and diffed field by field across the entire object graph. This intentionally bypasses Java's `equals()` method, which is often inadequate for testing: it can miss fields, be incorrectly implemented, or return `true` for objects that differ in ways that matter.
+
+- **`sameJsonAsApproved()`** — serialises the actual object to JSON and compares it against a stored *approved file* that you review once and commit. Any unexpected change to any field fails the test immediately.
+
+- **`sameContentAsApproved()`** — same approval workflow as above, but for arbitrary text content (templates, API responses, rendered HTML, log output) rather than structured objects.
+
+Traditional assertions *allowlist* specific properties — you explicitly name the fields you want to check. Characterisation testing takes the opposite approach: it *blocklists* changes. Once you approve a snapshot, any unexpected change in any field will fail the test immediately. This is analogous to default-deny in security: silent changes do not pass.
 
 This makes approvalcrest a particularly effective guardrail when working with AI coding agents — snapshot coverage catches unintended side effects that targeted per-field assertions would miss. The library works at every level of testing: unit, integration, API, UI, and system tests all use the same API.
 

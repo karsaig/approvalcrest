@@ -4,10 +4,23 @@ Replace field-level comparison with a custom Hamcrest matcher.
 
 ## Basic Usage
 
-Use `.with(String path, Matcher<T> matcher)` to assert a structural property of a field instead of an exact value. All other fields are still compared normally.
+Use `.with(String path, Matcher<T> matcher)` to assert a structural property of a field instead of an exact value. All other fields are still compared normally — either against the expected object (for `sameBeanAs`) or against the approved file (for `sameJsonAsApproved`).
+
+This is useful for fields whose exact value you cannot pin down (e.g. a generated ID) but whose shape you want to assert:
 
 ```java
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
+import static org.hamcrest.Matchers.notNullValue;
+
+// The id field must be present but its exact value is not pinned in the approved file
+assertThat(actual, sameJsonAsApproved()
+    .with("id", notNullValue()));
+```
+
+With `sameBeanAs`, the custom matcher replaces the field comparison for that path while everything else is diffed against `expected`:
+
+```java
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.startsWith;
 
@@ -39,19 +52,33 @@ assertThat(actual, sameJsonAsApproved()
 // Field is within a numeric range
 assertThat(actual, sameJsonAsApproved()
     .with("score", both(greaterThan(0)).and(lessThan(100))));
+
+// Field has a minimum length
+assertThat(actual, sameJsonAsApproved()
+    .with("description", hasLength(greaterThan(0))));
+
+// Nested field must not be null
+assertThat(actual, sameJsonAsApproved()
+    .with("order.trackingCode", notNullValue()));
 ```
 
 ## Match All Fields Whose Name Matches a Pattern
 
-Use `.withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher)` to apply a custom matcher to **every field at any depth** whose name matches the pattern. This is useful when many fields share a naming convention (e.g. all `*Id` fields must be non-null):
+Use `.withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher)` to apply a custom matcher to **every field at any depth** whose name matches the pattern. This is useful when many fields share a naming convention:
 
 ```java
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.matchesPattern;
 
 // Every field whose name ends with "Id" must be non-null
 assertThat(actual, sameJsonAsApproved()
     .withMatcher(endsWith("Id"), notNullValue()));
+
+// Every field whose name starts with "url" must be a valid HTTPS URL
+assertThat(actual, sameJsonAsApproved()
+    .withMatcher(startsWith("url"), matchesPattern("https://.*")));
 ```
 
 Chain multiple patterns freely:
@@ -62,7 +89,7 @@ assertThat(actual, sameJsonAsApproved()
     .withMatcher(startsWith("url"), matchesPattern("https://.*")));
 ```
 
-Supported by both `sameBeanAs` and `sameJsonAsApproved`. Pattern-based matchers are applied before sorting.
+Unlike `.with(path, matcher)` — which targets a single named field — `.withMatcher` scans the entire object graph and applies to every matching field name wherever it appears. Pattern-based matchers are applied before sorting.
 
 ## Works With
 

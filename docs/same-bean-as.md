@@ -1,6 +1,17 @@
 # same-bean-as
 
-Compare two Java beans by serialising both to JSON and diffing the result.
+Compare two Java beans with a deep structural comparison of the full object graph.
+
+## Why Not `equals()`?
+
+`sameBeanAs` intentionally bypasses Java's `equals()` method. In practice, `equals()` is frequently inadequate for testing:
+
+- **It can miss fields.** A hand-written `equals()` only checks the fields the developer thought about at the time. Fields added later are silently excluded from the comparison.
+- **It can be outright wrong.** IDE-generated `equals()` often covers only a subset of fields. Business objects frequently override `equals()` for identity purposes — comparing by ID only — which would pass the assertion even when every other field is wrong.
+- **It gives no diagnostic information.** When `equals()` returns `false` you know the objects differ but not where. `sameBeanAs` shows a JSON diff with the exact field path and both values.
+- **It can be `true` for objects that differ in ways that matter.** Two objects with the same ID but different state would pass an ID-based `equals()` — and your test would give you false confidence.
+
+By serialising both objects to JSON and comparing the full graph, `sameBeanAs` catches every field difference regardless of how (or whether) `equals()` is implemented.
 
 ## Basic Usage
 
