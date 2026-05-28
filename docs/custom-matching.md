@@ -62,6 +62,38 @@ assertThat(actual, sameJsonAsApproved()
     .with("order.trackingCode", notNullValue()));
 ```
 
+## Paths Through Collections (Fan-out)
+
+When any path segment resolves to a collection or array, `.with()` **fans out** — the matcher is applied to the resolved value **in every element** of that collection.
+
+```java
+// 'orders' is a List<Order>; each Order has a 'trackingCode' field.
+// The matcher must pass on trackingCode in EVERY order.
+assertThat(actual, sameJsonAsApproved()
+    .with("orders.trackingCode", notNullValue()));
+```
+
+**Important:** the matcher must pass on **every** element. If any one element fails, the whole assertion fails, and the error message identifies the first failing element.
+
+**Empty collection fails:** if the fanned-out collection is empty, the assertion fails. This prevents silent vacuous-truth passes when a list is unexpectedly empty.
+
+Fan-out is recursive — it applies at each level if multiple path segments are collections:
+
+```java
+// orders → List<Order>, each Order has items → List<Item>
+// Every item in every order must have a non-null sku
+assertThat(actual, sameJsonAsApproved()
+    .with("orders.items.sku", notNullValue()));
+```
+
+To assert a property of the collection **itself** (e.g. its size or which elements it contains) rather than each element individually, target the collection field directly:
+
+```java
+// The orders list as a whole must have at least one element
+assertThat(actual, sameJsonAsApproved()
+    .with("orders", not(empty())));
+```
+
 ## Match All Fields Whose Name Matches a Pattern
 
 Use `.withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher)` to apply a custom matcher to **every field at any depth** whose name matches the pattern. This is useful when many fields share a naming convention:

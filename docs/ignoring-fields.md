@@ -36,6 +36,28 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("order.customer.address.postCode"));
 ```
 
+## Paths Through Collections (Fan-out)
+
+When any path segment resolves to a collection or array, traversal **fans out** — the rest of the path is applied to every element of that collection. You write the same path regardless of whether intermediate segments are single objects or collections.
+
+```java
+// 'orders' is a List<Order>; each Order has a 'trackingCode' field.
+// This removes trackingCode from EVERY element of orders.
+assertThat(actual, sameJsonAsApproved()
+    .ignoring("orders.trackingCode"));
+```
+
+Fan-out applies at every level — if a sub-field is also a collection, it fans out again:
+
+```java
+// orders → List<Order>, each Order has items → List<Item>, each Item has a price
+// Removes price from every item in every order
+assertThat(actual, sameJsonAsApproved()
+    .ignoring("orders.items.price"));
+```
+
+This works identically whether the type is `List`, `Set`, any `Collection` subtype, or a JSON array. Paths through empty collections do nothing silently.
+
 ## By Hamcrest Matcher on Field Name
 
 Pass a `Matcher<String>` to exclude all fields whose name matches, at any depth in the object graph:

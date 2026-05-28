@@ -25,11 +25,15 @@ assertThat(actual, sameJsonAsApproved()
 Nested paths are supported — sort at multiple levels independently:
 
 ```java
-// Sort the orders list, then sort the items within each order
+// Sort the orders list, then sort the items within each order.
+// 'orders' is a List; sortField("orders.items") fans out into every order element
+// and sorts its items sub-collection.
 assertThat(actual, sameJsonAsApproved()
     .sortField("orders")
     .sortField("orders.items"));
 ```
+
+**Collection fan-out:** when a path segment resolves to a collection, the sort is applied to the matching sub-field inside **every element** of that collection. You write the path the same way whether intermediate segments are single objects or collections.
 
 Sort the root-level list itself (use an empty string for the root):
 

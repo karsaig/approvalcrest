@@ -99,7 +99,7 @@ No configuration is needed — the library detects cycles automatically.
 
 ## Related
 
-- [ignoring-fields](ignoring-fields.md) — exclude fields from comparison
-- [custom-matching](custom-matching.md) — assert constraints on individual fields
+- [ignoring-fields](ignoring-fields.md) — exclude fields from comparison; paths fan out through collections
+- [custom-matching](custom-matching.md) — assert constraints on individual fields; paths fan out through collections
 - [sorting](sorting.md) — stabilise collection order; `sortType` for element-type-based sorting
 - [supported-types](supported-types.md) — how common Java types are serialised
