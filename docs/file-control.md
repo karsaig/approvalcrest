@@ -4,18 +4,35 @@ Customise approved file names, paths, and update behaviour.
 
 ## `.withUniqueId(String id)`
 
-Appends an ID to the filename — essential for parameterized tests where multiple cases share a method name:
+Appends an ID to the approved filename. This is required in two common situations:
+
+**Multiple assertions in the same test method** — each file-based matcher call in a test resolves to the same filename by default (class hash + method hash). Without a unique ID the second assertion would read/write the same file as the first, causing a collision:
 
 ```java
-assertThat(value, sameJsonAsApproved().withUniqueId("case1"));
-// → creates: <classHash>/<methodHash>-case1-approved.json
+@Test
+void myTest() {
+    assertThat(result1, sameJsonAsApproved().withUniqueId("first"));
+    assertThat(result2, sameJsonAsApproved().withUniqueId("second"));
+    // → first-approved.json and second-approved.json — no collision
+}
 ```
 
-**Note:** if `id` starts with `-`, the leading `-` is absorbed into the separator so there is no double-dash:
+**Parameterized tests** — all iterations share the same method name, so each iteration needs a distinct ID:
+
+```java
+@ParameterizedTest
+@MethodSource("cases")
+void paramTest(String name, MyDto value) {
+    assertThat(value, sameJsonAsApproved().withUniqueId(name));
+    // → <methodHash>-<name>-approved.json per iteration
+}
+```
+
+**Note:** if `id` starts with `-`, the leading separator is not doubled:
 
 ```java
 assertThat(value, sameJsonAsApproved().withUniqueId("-scenario1"));
-// → creates: <classHash>/<methodHash>-scenario1-approved.json  (single dash)
+// → <methodHash>-scenario1-approved.json  (single dash)
 ```
 
 ## `.withFileName(String name)`

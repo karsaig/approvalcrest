@@ -146,6 +146,20 @@ Keep approved files alongside the test source files in the same package director
 
 See [file-control](file-control.md) for options to customise file naming and paths when needed for specific scenarios.
 
+## Multiple Assertions in One Test
+
+Each file-based matcher call derives its filename from the test class and method name. If a test makes more than one assertion with `sameJsonAsApproved()` or `sameContentAsApproved()`, all calls would resolve to the same filename and collide. Use `.withUniqueId(String id)` on every call to give each one a distinct filename:
+
+```java
+@Test
+void checkBothStates() {
+    assertThat(before, sameJsonAsApproved().withUniqueId("before"));
+    assertThat(after,  sameJsonAsApproved().withUniqueId("after"));
+}
+```
+
+The same rule applies to parameterized tests — each iteration must pass a distinct ID, typically the parameter name or index.
+
 ## Related
 
 - [dynamic-values](dynamic-values.md)
