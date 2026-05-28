@@ -29,14 +29,14 @@ assertThat(actual, sameJsonAsApproved().withFileName("my-custom-name"));
 
 ## `.withPath(Path path)`
 
-Override the directory where approved files are stored:
+Override the directory where approved files are stored. Use this for specific scenarios where the default location (alongside the test source) is not suitable — for example, storing approved files in a resources directory that is excluded from compilation:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
     .withPath(Paths.get("src/test/resources/approved")));
 ```
 
-Useful for centralising approved files in a shared directory rather than alongside each test class.
+The default behaviour — approved files living next to the test class — is generally preferred. It keeps the approved file and the test that owns it together, making them easy to find and review.
 
 ## `.withPathName(String relativeStr)`
 

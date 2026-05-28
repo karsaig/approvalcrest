@@ -142,12 +142,9 @@ Problems surface automatically in both contexts:
 
 ## File Organisation
 
-By default, approved files live alongside the test source files in the same package directory. For large projects, centralise them:
+Keep approved files alongside the test source files in the same package directory. This is the default behaviour and the correct approach: each approved file lives next to the test that owns it, making it easy to find, review, and understand what it covers. Separating approved files from their tests makes navigation harder and obscures the relationship between test and expectation.
 
-```java
-assertThat(actual, sameJsonAsApproved()
-    .withPath(Paths.get("src/test/resources/approved")));
-```
+See [file-control](file-control.md) for options to customise file naming and paths when needed for specific scenarios.
 
 ## Related
 
