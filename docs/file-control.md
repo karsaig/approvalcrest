@@ -11,6 +11,13 @@ assertThat(value, sameJsonAsApproved().withUniqueId("case1"));
 // → creates: <classHash>/<methodHash>-case1-approved.json
 ```
 
+**Note:** if `id` starts with `-`, the leading `-` is absorbed into the separator so there is no double-dash:
+
+```java
+assertThat(value, sameJsonAsApproved().withUniqueId("-scenario1"));
+// → creates: <classHash>/<methodHash>-scenario1-approved.json  (single dash)
+```
+
 ## `.withFileName(String name)`
 
 Override the auto-generated filename entirely:
@@ -30,6 +37,38 @@ assertThat(actual, sameJsonAsApproved()
 ```
 
 Useful for centralising approved files in a shared directory rather than alongside each test class.
+
+## `.withPathName(String relativeStr)`
+
+Override the approved file directory using a path **relative to the test class source directory**. Absolute paths are accepted as-is:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .withPathName("mydir"));
+// → writes to: {testClassPath}/mydir/<methodHash>-approved.json
+```
+
+**Absolute path example:**
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .withPathName("/abs/path"));
+// → writes to: /abs/path/<methodHash>-approved.json
+```
+
+**Migration from pre-1.0.1:** previously `withPathName("mydir")` wrote to `mydir/` relative to the working directory. Move existing approved files into the `{testClassPath}/mydir/` subtree.
+
+## `.withRelativePathName(String relStr)`
+
+Override the approved file directory using a path **relative to the working directory**, with the class-name hash inserted as a subdirectory:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .withRelativePathName("snapshots"));
+// → writes to: {workingDir}/snapshots/<classHash>/<methodHash>-approved.json
+```
+
+**Migration from pre-1.0.1:** previously `withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/`. Move existing approved files to `{workingDir}/snapshots/<classHash>/`.
 
 ## In-Place Update
 

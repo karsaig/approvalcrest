@@ -41,6 +41,29 @@ assertThat(actual, sameJsonAsApproved()
     .with("score", both(greaterThan(0)).and(lessThan(100))));
 ```
 
+## Match All Fields Whose Name Matches a Pattern
+
+Use `.withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher)` to apply a custom matcher to **every field at any depth** whose name matches the pattern. This is useful when many fields share a naming convention (e.g. all `*Id` fields must be non-null):
+
+```java
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.notNullValue;
+
+// Every field whose name ends with "Id" must be non-null
+assertThat(actual, sameJsonAsApproved()
+    .withMatcher(endsWith("Id"), notNullValue()));
+```
+
+Chain multiple patterns freely:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .withMatcher(endsWith("Id"),    notNullValue())
+    .withMatcher(startsWith("url"), matchesPattern("https://.*")));
+```
+
+Supported by both `sameBeanAs` and `sameJsonAsApproved`. Pattern-based matchers are applied before sorting.
+
 ## Works With
 
 - `sameBeanAs` — compare a specific field against a matcher while diffing the rest against `expected`

@@ -10,6 +10,7 @@ Approvalcrest
 - [Version support](#version-support)
 - [Installation](#installation)
 - [Documentation](#documentation)
+- [Changelog](CHANGELOG.md)
 
 ## What is Approvalcrest
 

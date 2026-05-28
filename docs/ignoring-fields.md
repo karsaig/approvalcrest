@@ -49,6 +49,31 @@ assertThat(actual, sameJsonAsApproved()
 
 Useful for excluding all timestamp fields when they share a type like `Instant`.
 
+## Strict Mode (default on)
+
+By default, `ignoring()` operates in **strict mode**: ignored fields are stripped from the **actual** side only. If the approved file was written before strict mode was enabled — and still contains the value of an ignored field — the test will fail.
+
+**Migration from pre-1.0.1 approved files:**
+
+Re-run your tests with `-DfileMatcherUpdateInPlace=true` to regenerate the approved files without the ignored fields:
+
+```bash
+mvn test -DfileMatcherUpdateInPlace=true
+```
+
+**Disabling strict mode globally** (restores the old two-sided behaviour where ignored fields are stripped from both actual and approved before comparison):
+
+```bash
+mvn test -DfileMatcherStrictFileMatching=false
+```
+
+**Disabling strict mode per test** (via `FileMatcherConfig` constructor — last parameter):
+
+```java
+// new FileMatcherConfig(overwriteInPlace, passOnCreate, buildIndex, approvedDir, sortInputFile, strictMatching)
+FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, false, false);
+```
+
 ## Chaining
 
 All three styles chain freely:

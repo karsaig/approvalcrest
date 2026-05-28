@@ -52,3 +52,22 @@ assertThat(actual, sameBeanAs(expected)
 ## Works With
 
 `sameBeanAs`, `sameJsonAsApproved`, and `sameContentAsApproved`.
+
+## Sort by Element Type
+
+Use `sortType(Class<?>...)` to automatically sort any `Collection` or array whose element type matches one of the specified classes. This is equivalent to the automatic sorting that already applies to `Set` fields — no field path is needed:
+
+```java
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
+
+// Sort all List<Person> and array-of-Person fields automatically
+assertThat(actual, sameJsonAsApproved()
+    .sortType(Person.class));
+
+// Multiple types at once
+assertThat(actual, sameBeanAs(expected)
+    .sortType(Person.class, Address.class));
+```
+
+Works with `sameBeanAs` and `sameJsonAsApproved`.

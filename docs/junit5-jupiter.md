@@ -67,6 +67,10 @@ assertThrows(sameBeanAs(expectedException),
     () -> assertThat(actual, sameBeanAs(wrongExpected)));
 ```
 
+## JUnit 6 Compatibility
+
+The `approvalcrest-junit-jupiter` module is verified against **JUnit Platform 6** (tested on JUnit 6.1.0 with Java 17, 21, and 25). No code changes are needed to run on JUnit 6 — the existing dependency and API work without modification.
+
 ## Related
 
 - [same-json-as-approved](same-json-as-approved.md)

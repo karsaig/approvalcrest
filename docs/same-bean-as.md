@@ -65,6 +65,8 @@ By default, `sameBeanAs` requires both objects to be the same type. Use `.skipCl
 assertThat(actualDto, sameBeanAs(expectedEntity).skipClassComparison());
 ```
 
+To suppress the type check globally, set `-DbeanMatcherSkipClassComparison=true`.
+
 ## Circular References
 
 Circular object graphs are handled automatically. Each object is serialised once; subsequent references to the same instance are replaced with a `0xN` pointer:
@@ -88,5 +90,5 @@ No configuration is needed — the library detects cycles automatically.
 
 - [ignoring-fields](ignoring-fields.md) — exclude fields from comparison
 - [custom-matching](custom-matching.md) — assert constraints on individual fields
-- [sorting](sorting.md) — stabilise collection order
+- [sorting](sorting.md) — stabilise collection order; `sortType` for element-type-based sorting
 - [supported-types](supported-types.md) — how common Java types are serialised
