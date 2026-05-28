@@ -53,21 +53,85 @@ assertThat(actual, sameJsonAsApproved()
     .sortField(is("orders"), is("items")));
 ```
 
-## Sort by Sub-Field (`SortField`) — Advanced
+## Excluding Fields from the Sort Key (`SortField`) — Advanced
 
-Use `SortField.of(collectionField, sortKey)` to sort a collection of objects by one of their sub-fields. Primarily useful with `sameBeanAs`:
+When sorting a collection of objects, the sort key for each element is its **full serialised JSON**. If elements contain volatile or irrelevant fields (IDs, timestamps, …), those fields make the sort key unstable. `SortField` lets you strip specified fields from the sort key so only the stable fields determine the order:
+
+```
+sort key = (full element JSON) − (excluded fields)
+```
+
+### Exclude one field from the sort key
 
 ```java
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
-import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
 
-assertThat(actual, sameBeanAs(expected)
-    .sortFieldPath(SortField.of("childBeanList", "childInteger")));
+// Elements in "items" are sorted by all their fields except "age"
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("items", "age")));
 ```
+
+### Exclude multiple fields
+
+Pass all of them as varargs, or chain `.ignoring()` calls — the result is identical:
+
+```java
+// Exclude both "id" and "createdAt" from the sort key
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("items", "id", "createdAt")));
+
+// Equivalent with chained calls
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("items").ignoring("id").ignoring("createdAt")));
+```
+
+### Exclude fields matching a pattern
+
+Use `.ignoring(Matcher<String>)` to strip every field whose **name** matches a Hamcrest matcher. Useful when volatile fields share a naming convention:
+
+```java
+import static org.hamcrest.Matchers.containsString;
+
+// Strip all fields whose name contains "Date" (e.g. "createdDate", "updatedDate")
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("items").ignoring(containsString("Date"))));
+```
+
+### Exclude nested fields from the sort key
+
+Dot-paths work — you can strip a sub-field of a nested object without removing the whole nested object from the sort key:
+
+```java
+// Sort "items" by all fields except the nested "address.city"
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("items").ignoring("address.city")));
+```
+
+### Matcher selector — apply to multiple collections at once
+
+When the collection selector itself is a `Matcher<String>` rather than a literal path, the sort is applied to **every collection whose name matches**, anywhere in the object tree. Use `.sortFieldMatcher()` for these:
+
+```java
+import static org.hamcrest.Matchers.is;
+
+// Sort every collection literally named "tags" throughout the whole object graph,
+// excluding "weight" from each element's sort key
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldMatcher(SortField.of(is("tags"), "weight")));
+```
+
+This fans out through intermediate collections too — if the object has `groups[].tags[]`, every `tags` inside each group element is sorted automatically.
+
+### Compound sort key
+
+When multiple fields remain in the sort key after exclusion, they all contribute to the element's order. Fields are serialised in **alphabetical order by field name**, so with `id` excluded from `{id, age, name}` the sort key becomes `{age, name}`, sorting primarily by `age` (alphabetically first) and using `name` as a tiebreaker. There is no explicit field-priority API — the alphabetical order of field names determines priority.
 
 ## Works With
 
 `sameBeanAs` and `sameJsonAsApproved`.
+
+Both `.sortFieldPath(SortField)` (literal-path selector) and `.sortFieldMatcher(SortField)` (Hamcrest-matcher selector) are available on both matchers.
 
 ## Sort by Element Type
 
