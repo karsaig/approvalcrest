@@ -63,7 +63,7 @@ assertThat(actual, sameBeanAs(expected)
 
 ## Works With
 
-`sameBeanAs`, `sameJsonAsApproved`, and `sameContentAsApproved`.
+`sameBeanAs` and `sameJsonAsApproved`.
 
 ## Sort by Element Type
 

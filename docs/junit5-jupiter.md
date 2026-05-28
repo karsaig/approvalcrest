@@ -54,6 +54,16 @@ static Stream<Arguments> data() {
 }
 ```
 
+The same pattern applies to `sameContentAsApproved`:
+
+```java
+@ParameterizedTest
+@MethodSource("templates")
+public void testContentParameterized(String name, String content, TestInfo testInfo) {
+    assertThat(content, sameContentAsApproved(testInfo).withUniqueId(name));
+}
+```
+
 Without `TestInfo`:
 - **Private** test methods cannot be resolved and throw a `NullPointerException` with a message explaining to add `TestInfo`.
 - **Public** test methods work — the stack trace is used to resolve method metadata.

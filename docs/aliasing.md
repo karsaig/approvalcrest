@@ -4,7 +4,7 @@ Replace volatile runtime values with stable aliases in approved files.
 
 Aliases let approved files contain human-readable placeholders (e.g. `<userId>`) instead of actual volatile values that change every run. The approved file documents the field clearly without being tied to a specific runtime value.
 
-Works with `sameJsonAsApproved` and `sameContentAsApproved`.
+Works with `sameJsonAsApproved` and `sameBeanAs`.
 
 ## By Value (Global)
 

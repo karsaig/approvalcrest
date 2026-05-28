@@ -2,6 +2,8 @@
 
 Customise approved file names, paths, and update behaviour.
 
+All options on this page apply to both `sameJsonAsApproved` and `sameContentAsApproved`.
+
 ## `.withUniqueId(String id)`
 
 Appends an ID to the approved filename. This is required in two common situations:

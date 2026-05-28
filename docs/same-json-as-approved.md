@@ -56,6 +56,7 @@ JUnit 4 requires a `Junit4DesciptionWatcher` rule. See [junit4-vintage](junit4-v
 
 ## Related
 
+- [same-content-as-approved](same-content-as-approved.md) — same approval workflow for arbitrary text
 - [file-control](file-control.md) — custom file names, paths, and in-place update
 - [ignoring-fields](ignoring-fields.md) — exclude fields from comparison
 - [aliasing](aliasing.md) — stable placeholders for volatile values

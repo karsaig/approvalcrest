@@ -88,7 +88,22 @@ See [same-json-as-approved](same-json-as-approved.md) for parameterized tests, f
 
 ## Your First `sameContentAsApproved` Assertion
 
-Works like `sameJsonAsApproved` but for arbitrary text (templates, log output, API responses). Uses a `.content` file extension. See [same-content-as-approved](same-content-as-approved.md).
+Works like `sameJsonAsApproved` but for arbitrary text — rendered templates, API response bodies, log output, generated reports, HTML fragments. Uses a `.content` file extension; no JSON parsing is performed.
+
+```java
+import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
+import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameContentAsApproved;
+
+@Test
+void renderedTemplateMatchesSnapshot() {
+    String actual = renderWelcomeEmail("Alice");
+    assertThat(actual, sameContentAsApproved());
+}
+```
+
+The approval workflow is identical to `sameJsonAsApproved`: on first run a `*-not-approved.content` file is created, you review and rename it to `*-approved.content`, and subsequent runs compare against it.
+
+See [same-content-as-approved](same-content-as-approved.md) for parameterized tests and further details.
 
 ## IDE Diff View
 

@@ -2,7 +2,7 @@
 
 Exclude specific fields from comparison using path, Hamcrest matcher, or type.
 
-Works with `sameBeanAs`, `sameJsonAsApproved`, and `sameContentAsApproved`. Multiple `.ignoring()` calls can be chained.
+Works with `sameBeanAs` and `sameJsonAsApproved`. Multiple `.ignoring()` calls can be chained.
 
 ## When to Use Ignoring
 

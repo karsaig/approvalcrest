@@ -33,6 +33,12 @@ public class MyTest {
         MyBean actual = buildMyBean();
         assertThat(actual, sameJsonAsApproved());
     }
+
+    @Test
+    public void myContentTest() {
+        String actual = renderTemplate();
+        assertThat(actual, sameContentAsApproved());
+    }
 }
 ```
 
@@ -81,6 +87,13 @@ public class MyParameterizedTest {
     public void testParameterizedWithDescription() {
         // Pass the description explicitly for full metadata resolution
         assertThat(value, sameJsonAsApproved(testWatcher.getDescription()).withUniqueId(name));
+    }
+
+    @Test
+    public void testContentParameterized() {
+        // sameContentAsApproved works the same way — pass .withUniqueId per case
+        String content = renderForCase(name);
+        assertThat(content, sameContentAsApproved().withUniqueId(name));
     }
 }
 ```

@@ -2,10 +2,11 @@
 
 Guidelines for effective use of approvalcrest in real projects.
 
-## Choosing Between `sameBeanAs` and File Matchers
+## Choosing Between Matchers
 
 - **`sameBeanAs(expected)`** — you maintain the expected object in code. The assertion is self-contained in the test file. Best when the expected value is straightforward to build and you want the test to read clearly alongside its assertion.
 - **`sameJsonAsApproved()`** — you review the serialised output once, rename the file to approve it, and commit it. Best for complex or large object graphs where maintaining an expected object in code becomes cumbersome. The approved file becomes the precise, versioned specification of the expected output.
+- **`sameContentAsApproved()`** — same approval workflow as `sameJsonAsApproved`, but for arbitrary text content: rendered templates, API response bodies, generated reports, log output, HTML fragments. Uses a `.content` file extension. No JSON parsing — content is compared byte-for-byte.
 
 ## What an Approved File Represents
 
@@ -22,7 +23,7 @@ approvalcrest works at every testing level. The API and approval workflow are id
 
 ### Unit Tests — Best Fit
 
-Both `sameBeanAs` and `sameJsonAsApproved` work equally well at the unit level. State control is trivial — everything is in-process and fast to reset. Tests run quickly, so even a change that affects many tests can be handled locally: run with `-DfileMatcherUpdateInPlace=true`, review the diff, and commit the updated approved files. No CI involvement needed for small changes.
+Both `sameBeanAs`, `sameJsonAsApproved`, and `sameContentAsApproved` work equally well at the unit level. State control is trivial — everything is in-process and fast to reset. Tests run quickly, so even a change that affects many tests can be handled locally: run with `-DfileMatcherUpdateInPlace=true`, review the diff, and commit the updated approved files. No CI involvement needed for small changes.
 
 ### Integration Tests — Effective but Fiddlier
 
