@@ -23,6 +23,7 @@ public class ComparisonDescription extends StringDescription {
 	private boolean comparisonFailure;
 	private boolean machineReadable;
 	private String approvedFilePath;
+	private String testInfo;
 
 	public String getActual() {
 		return actual;
@@ -68,21 +69,30 @@ public class ComparisonDescription extends StringDescription {
 		this.approvedFilePath = approvedFilePath;
 	}
 
+	public void setTestInfo(String testInfo) {
+		this.testInfo = testInfo;
+	}
+
 	public String toFailureMessage(String reason) {
 		if (machineReadable) {
 			return buildMachineReadableMessage(reason);
 		}
-		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage();
+		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage()
+				+ "\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.";
 	}
 
 	private String buildMachineReadableMessage(String reason) {
 		StringBuilder sb = new StringBuilder();
+		sb.append("FAILURE_TYPE: MISMATCH\n");
+		if (testInfo != null) {
+			sb.append("TEST: ").append(testInfo).append("\n");
+		}
 		if (isNotBlank(reason)) {
 			sb.append(reason).append("\n");
 		}
 		if (approvedFilePath != null) {
-			sb.append("Approved file (expected): ").append(approvedFilePath).append("\n");
-			sb.append("Tip: to update approved content with current actual, re-run with -DfileMatcherUpdateInPlace=true\n");
+			sb.append("APPROVED_FILE: ").append(approvedFilePath).append("\n");
+			sb.append("ACTION: Set system property fMUInPlace=true and re-run to update the approved file\n");
 		} else if (expected != null) {
 			sb.append("=== EXPECTED (full) ===\n").append(expected).append("\n=== END EXPECTED ===\n");
 		}

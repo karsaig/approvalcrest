@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher.machinereadable;
 
+import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.matcher.AbstractTest;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMatcherFactory;
@@ -28,11 +29,12 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
 
         String msg = error.getMessage();
         assertAll(
+                () -> assertTrue(msg.contains("FAILURE_TYPE: MISMATCH"), "Should contain failure type header"),
                 () -> assertTrue(msg.contains("=== EXPECTED (full) ==="), "Should contain EXPECTED block start"),
                 () -> assertTrue(msg.contains("=== END EXPECTED ==="), "Should contain EXPECTED block end"),
                 () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
                 () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
-                () -> assertFalse(msg.contains("Approved file (expected):"), "Should NOT contain approved file path label for bean matchers"),
+                () -> assertFalse(msg.contains("APPROVED_FILE:"), "Should NOT contain approved file path label for bean matchers"),
                 () -> assertTrue(error.isExpectedDefined(), "Expected must be defined for IDE diff view"),
                 () -> assertTrue(error.isActualDefined(), "Actual must be defined for IDE diff view"),
                 () -> assertNotNull(error.getExpected().getValue(), "Expected value must be non-null for IDE diff view"),
@@ -56,5 +58,14 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
                 () -> assertFalse(msg.contains("=== EXPECTED (full) ==="), "Should NOT contain machine-readable EXPECTED block"),
                 () -> assertFalse(msg.contains("=== ACTUAL (full) ==="), "Should NOT contain machine-readable ACTUAL block")
         );
+    }
+
+    @Test
+    public void shouldAppendAiTipAtEndOfNonMachineReadableFailureMessage() {
+        ComparisonDescription desc = new ComparisonDescription();
+        desc.setDifferencesMessage("some difference");
+        String message = desc.toFailureMessage("some reason");
+        assertTrue(message.endsWith(AI_TIP_SUFFIX),
+                "Non-machine-readable failure message must end with AI discovery tip. Got: " + message);
     }
 }

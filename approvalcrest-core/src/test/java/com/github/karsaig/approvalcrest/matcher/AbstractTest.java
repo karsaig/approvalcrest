@@ -11,6 +11,14 @@ import java.util.function.BiConsumer;
 public abstract class AbstractTest {
 
     protected static final TestAssertImpl TEST_ASSERT_IMPl = new TestAssertImpl();
+    protected static final String AI_TIP_SUFFIX = "\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.";
+
+    protected static String removeAiTip(String message) {
+        if (message != null && message.endsWith(AI_TIP_SUFFIX)) {
+            return message.substring(0, message.length() - AI_TIP_SUFFIX.length());
+        }
+        return message;
+    }
 
     protected <T> void assertThat(T input, Matcher<? super T> matcher) {
         TEST_ASSERT_IMPl.assertThat(null, input, matcher, comparisonDescriptionHandler());
@@ -19,7 +27,7 @@ public abstract class AbstractTest {
     protected BiConsumer<String, ComparisonDescription> comparisonDescriptionHandler() {
         return (s, cd) -> {
             throw new AssertionFailedError(
-                    s,
+                    removeAiTip(s),
                     cd.getExpected(),
                     cd.getActual()
             );

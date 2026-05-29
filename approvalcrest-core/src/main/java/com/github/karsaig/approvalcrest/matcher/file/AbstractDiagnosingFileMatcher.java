@@ -155,6 +155,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
             ComparisonDescription comparisonDescription = (ComparisonDescription) mismatchDescription;
             Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath).getFileName();
             comparisonDescription.setApprovedFilePath(approvedFile.toAbsolutePath().toString());
+            comparisonDescription.setTestInfo(testClassName + "#" + testMethodName);
         }
         return result;
     }
@@ -195,8 +196,11 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
                 String message;
                 if (machineReadableOutput) {
-                    message = "Not approved file created: '" + createdFileAndInfo.getFileName().toAbsolutePath()
-                            + "';\n to approve: copy it to '" + approvedFileAndInfo.getFileName().toAbsolutePath() + "'.";
+                    message = "FAILURE_TYPE: NEW_FILE\n"
+                            + "TEST: " + testClassName + "#" + testMethodName + "\n"
+                            + "Not approved file created: '" + createdFileAndInfo.getFileName().toAbsolutePath() + "';\n"
+                            + "APPROVE_TO: " + approvedFileAndInfo.getFileName().toAbsolutePath() + "\n"
+                            + "ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above";
                 } else {
                     message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
                             + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";

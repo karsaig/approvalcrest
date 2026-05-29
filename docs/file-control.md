@@ -115,12 +115,64 @@ assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 
 ```bash
 mvn test -DfileMatcherMachineReadable=true
+# or using the alias:
+mvn test -DfMMReadable=true
 ```
 
-In machine-readable mode, failure messages include:
-- Absolute path to the approved file
-- `=== ACTUAL (full) ===` … `=== END ACTUAL ===` blocks with the full current value
-- A tip to re-run with `-DfileMatcherUpdateInPlace=true`
+### Message format
+
+**File matcher — content mismatch:**
+```
+FAILURE_TYPE: MISMATCH
+TEST: MyTest#myTestMethod
+Expected file 4ac405/11b2ef-approved.json
+APPROVED_FILE: /abs/path/to/4ac405/11b2ef-approved.json
+ACTION: Set system property fMUInPlace=true and re-run to update the approved file
+
+=== ACTUAL (full) ===
+{ ... current serialized value ... }
+=== END ACTUAL ===
+```
+
+**File matcher — no approved file yet:**
+```
+FAILURE_TYPE: NEW_FILE
+TEST: MyTest#myTestMethod
+Not approved file created: '/abs/path/to/4ac405/11b2ef-not-approved.json';
+APPROVE_TO: /abs/path/to/4ac405/11b2ef-approved.json
+ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above
+```
+
+**Bean matcher — value mismatch:**
+```
+FAILURE_TYPE: MISMATCH
+
+=== EXPECTED (full) ===
+{ ... expected ... }
+=== END EXPECTED ===
+
+=== ACTUAL (full) ===
+{ ... actual ... }
+=== END ACTUAL ===
+```
+
+**Bean matcher — incompatible types:**
+```
+FAILURE_TYPE: TYPE_MISMATCH
+EXPECTED_TYPE: com.example.Foo
+ACTUAL_TYPE: com.example.Bar
+ACTION: Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true
+```
+
+### Passive AI discovery tip
+
+In the default (non-machine-readable) mode, every failure message ends with:
+
+```
+[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.
+```
+
+This allows AI agents that encounter a normal test failure to discover the machine-readable mode without any explicit configuration.
 
 ## Related
 

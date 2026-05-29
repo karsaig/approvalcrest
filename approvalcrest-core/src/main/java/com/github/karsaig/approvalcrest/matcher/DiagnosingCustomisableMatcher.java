@@ -65,7 +65,14 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     protected boolean doMatches(Object actual, Description mismatchDescription) {
         if (actual != null  && expected != null) {
             if(!skipClassComparison && !expected.getClass().isInstance(actual)){
-                mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
+                if (machineReadableOutput) {
+                    mismatchDescription.appendText("FAILURE_TYPE: TYPE_MISMATCH\n"
+                            + "EXPECTED_TYPE: " + expected.getClass().getName() + "\n"
+                            + "ACTUAL_TYPE: " + actual.getClass().getName() + "\n"
+                            + "ACTION: Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true");
+                } else {
+                    mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
+                }
                 jsonDescription = false;
                 return false;
             }

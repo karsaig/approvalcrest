@@ -107,7 +107,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, FileMatcherConfig initialConfig, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, String expectedExceptionMessage) {
-        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, initialConfig, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, error.getMessage()), AssertionError.class);
+        assertJsonMatcherWithDummyTestInfo(input, expectedFileContent, initialConfig, configurator, expectedExceptionMessage == null ? null : error -> Assertions.assertEquals(expectedExceptionMessage, removeAiTip(error.getMessage())), AssertionError.class);
     }
 
     protected <T extends Throwable> void assertJsonMatcherWithDummyTestInfo(Object input, String expectedFileContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator, Consumer<T> exceptionHandler, Class<T> clazz) {
@@ -286,8 +286,11 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected String getMachineReadableNotApprovedCreationMessage(Path notApprovedAbsolutePath, Path approvedAbsolutePath) {
-        return "Not approved file created: '" + notApprovedAbsolutePath.toAbsolutePath()
-                + "';\n to approve: copy it to '" + approvedAbsolutePath.toAbsolutePath() + "'.";
+        return "FAILURE_TYPE: NEW_FILE\n"
+                + "TEST: dummyTestClassName#dummyTestMethodName\n"
+                + "Not approved file created: '" + notApprovedAbsolutePath.toAbsolutePath() + "';\n"
+                + "APPROVE_TO: " + approvedAbsolutePath.toAbsolutePath() + "\n"
+                + "ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above";
     }
 
     protected void writeFile(Path path, String content) {

@@ -11,7 +11,7 @@ import com.github.karsaig.approvalcrest.util.PreBuilt;
 
 import static com.github.karsaig.approvalcrest.StringUtil.normalizeNewLines;
 
-class AssertImplTest {
+class AssertImplTest extends AbstractTest {
 
     private AssertImpl underTest = new AssertImpl();
     private TestMatcherFactory matcherFactory = new TestMatcherFactory();
@@ -103,7 +103,7 @@ class AssertImplTest {
 
         Assertions.assertEquals("beanLong\n" +
                 "Expected: 13\n" +
-                "     got: 6\n", thrown.getMessage());
+                "     got: 6\n", removeAiTip(thrown.getMessage()));
 
 
         Assertions.assertEquals(PreBuilt.getBeanWithPrimitivesAsJsonString(), thrown.getActual().getStringRepresentation());
@@ -171,7 +171,7 @@ class AssertImplTest {
         Assertions.assertEquals("This is a reason\n" +
                 "beanLong\n" +
                 "Expected: 13\n" +
-                "     got: 6\n", thrown.getMessage());
+                "     got: 6\n", removeAiTip(thrown.getMessage()));
 
 
         Assertions.assertEquals(PreBuilt.getBeanWithPrimitivesAsJsonString(), thrown.getActual().getStringRepresentation());

@@ -28,7 +28,7 @@ public abstract class AbstractBeanMatcherTest extends AbstractTest {
     }
 
     protected <T, C extends Throwable> void assertDiagnosingErrorMatcher(T input, T expected, Function<DiagnosingCustomisableMatcher<Object>, DiagnosingCustomisableMatcher<Object>> configurator, String expectedExceptionMessage, Class<C> clazz) {
-        assertDiagnosingMatcher(input, expected, configurator, clazz, expectedExceptionMessage == null ? null : ex -> Assertions.assertEquals(expectedExceptionMessage, ex.getMessage()));
+        assertDiagnosingMatcher(input, expected, configurator, clazz, expectedExceptionMessage == null ? null : ex -> Assertions.assertEquals(expectedExceptionMessage, removeAiTip(ex.getMessage())));
     }
 
     protected <T, C extends Throwable> void assertDiagnosingMatcher(T input, T expected, Function<DiagnosingCustomisableMatcher<Object>, DiagnosingCustomisableMatcher<Object>> configurator, Class<C> clazz, Consumer<C> exceptionHandler) {

@@ -37,8 +37,10 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             String msg = error.getMessage();
             String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
             assertAll(
-                    () -> assertTrue(msg.contains("Approved file (expected): " + approvedPath), "Should contain approved file path"),
-                    () -> assertTrue(msg.contains("Tip: to update approved content with current actual, re-run with -DfileMatcherUpdateInPlace=true"), "Should contain update tip"),
+                    () -> assertTrue(msg.contains("FAILURE_TYPE: MISMATCH"), "Should contain failure type header"),
+                    () -> assertTrue(msg.contains("TEST: dummyTestClassName#dummyTestMethodName"), "Should contain test info"),
+                    () -> assertTrue(msg.contains("APPROVED_FILE: " + approvedPath), "Should contain approved file path"),
+                    () -> assertTrue(msg.contains("ACTION: Set system property fMUInPlace=true and re-run to update the approved file"), "Should contain update action"),
                     () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
                     () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
                     () -> assertFalse(msg.contains("=== EXPECTED (full) ==="), "Should NOT contain EXPECTED block for file matchers")
@@ -64,7 +66,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
 
                 String msg = error.getMessage();
                 String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
-                assertTrue(msg.contains("Approved file (expected): " + approvedPath));
+                assertTrue(msg.contains("APPROVED_FILE: " + approvedPath));
                 assertTrue(msg.contains("=== ACTUAL (full) ==="));
                 assertTrue(msg.contains("=== END ACTUAL ==="));
             });
@@ -90,7 +92,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             String msg = error.getMessage();
             assertAll(
                     () -> assertFalse(msg.contains("=== ACTUAL (full) ==="), "Should NOT contain machine-readable ACTUAL block"),
-                    () -> assertFalse(msg.contains("Approved file (expected):"), "Should NOT contain approved file path label")
+                    () -> assertFalse(msg.contains("APPROVED_FILE:"), "Should NOT contain approved file path label")
             );
         });
     }
@@ -161,7 +163,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                     () -> assertThat(actual, underTest));
 
             String expectedAbsPath = approvedFile.toAbsolutePath().toString();
-            assertTrue(error.getMessage().contains("Approved file (expected): " + expectedAbsPath),
+            assertTrue(error.getMessage().contains("APPROVED_FILE: " + expectedAbsPath),
                     "Absolute path must point to the correct file even when working dir is unrelated. Got: " + error.getMessage());
         });
     }
@@ -225,7 +227,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                     () -> assertThat(actual, underTest));
 
             String expectedAbsPath = approvedFile.toAbsolutePath().toString();
-            assertTrue(error.getMessage().contains("Approved file (expected): " + expectedAbsPath),
+            assertTrue(error.getMessage().contains("APPROVED_FILE: " + expectedAbsPath),
                     "Absolute path must be correct even when working dir is an ancestor of the file. Got: " + error.getMessage());
         });
     }
@@ -257,7 +259,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
 
                 String msg = error.getMessage();
                 String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
-                assertTrue(msg.contains("Approved file (expected): " + approvedPath));
+                assertTrue(msg.contains("APPROVED_FILE: " + approvedPath));
                 assertTrue(msg.contains("=== ACTUAL (full) ==="));
                 assertTrue(msg.contains("=== END ACTUAL ==="));
             });

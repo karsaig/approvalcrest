@@ -35,8 +35,9 @@ public class ContentMatcherMachineReadableTest extends AbstractFileMatcherTest {
             String msg = error.getMessage();
             String approvedPath = contentDir.resolve("11b2ef-approved.content").toAbsolutePath().toString();
             assertAll(
-                    () -> assertTrue(msg.contains("Approved file (expected): " + approvedPath), "Should contain approved file path"),
-                    () -> assertTrue(msg.contains("Tip: to update approved content with current actual, re-run with -DfileMatcherUpdateInPlace=true"), "Should contain update tip"),
+                    () -> assertTrue(msg.contains("FAILURE_TYPE: MISMATCH"), "Should contain failure type header"),
+                    () -> assertTrue(msg.contains("APPROVED_FILE: " + approvedPath), "Should contain approved file path"),
+                    () -> assertTrue(msg.contains("ACTION: Set system property fMUInPlace=true and re-run to update the approved file"), "Should contain update action"),
                     () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
                     () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
                     () -> assertTrue(msg.contains(actual), "Should contain full actual content"),
@@ -62,7 +63,7 @@ public class ContentMatcherMachineReadableTest extends AbstractFileMatcherTest {
             String msg = error.getMessage();
             assertAll(
                     () -> assertFalse(msg.contains("=== ACTUAL (full) ==="), "Should NOT contain machine-readable ACTUAL block"),
-                    () -> assertFalse(msg.contains("Approved file (expected):"), "Should NOT contain approved file path label"),
+                    () -> assertFalse(msg.contains("APPROVED_FILE:"), "Should NOT contain approved file path label"),
                     () -> assertTrue(msg.contains("Content does not match!"), "Should contain diff message")
             );
         });
