@@ -107,11 +107,21 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                         "     got: X differs:\n"},
                 {bean().string("string").integer(1).build(), "{\n" +
                         "  \"string\": \"string\",\n" +
-                        "  \"integer\": 1\n" +
+                        "  \"integer\": 1,\n" +
+                        "  \"set\": null,\n" +
+                        "  \"map\": null,\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"array\": null\n" +
                         "}", null},
                 {bean().string("string").integer(1).build(), "{\n" +
                         "  \"string\": \"string2\",\n" +
-                        "  \"integer\": 2\n" +
+                        "  \"integer\": 2,\n" +
+                        "  \"set\": null,\n" +
+                        "  \"map\": null,\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"array\": null\n" +
                         "}", "Expected file 4ac405/11b2ef-approved.json\n" +
                         "integer\n" +
                         "Expected: 2\n" +
@@ -125,7 +135,8 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                         "  \"set\": [],\n" +
                         "  \"map\": [],\n" +
                         "  \"hashSet\": [],\n" +
-                        "  \"hashMap\": []\n" +
+                        "  \"hashMap\": [],\n" +
+                        "  \"array\": null\n" +
                         "}", null},
                 {bean().string("string3").integer(13)
                         .map(new HashMap<Bean, Bean>() {{
@@ -139,7 +150,8 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                         "  \"set\": [],\n" +
                         "  \"map\": [],\n" +
                         "  \"hashSet\": [],\n" +
-                        "  \"hashMap\": []\n" +
+                        "  \"hashMap\": [],\n" +
+                        "  \"array\": null\n" +
                         "}", "Expected file 4ac405/11b2ef-approved.json\n" +
                         "integer\n" +
                         "Expected: 1\n" +
@@ -170,9 +182,14 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
     @MethodSource("typeSerializationTestCases")
     void supportedTypeAsIterablePropertyTest(Object input, String expected, String expectedExceptionMessage) {
         String expectedString = "{\n" +
+                "  \"dummyString\": null,\n" +
                 "  \"set\": [\n" +
                 "    " + expected + "\n" +
-                "  ]\n" +
+                "  ],\n" +
+                "  \"map\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"array\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(input)).build(), expectedString, expectedExceptionMessage == null);
     }

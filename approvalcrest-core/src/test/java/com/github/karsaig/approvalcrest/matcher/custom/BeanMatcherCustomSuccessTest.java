@@ -111,7 +111,8 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}\n" +
                 "and childBean.childString \"kiwi\"\n" +
                 "     but: childBean.childString was \"banana\"");
@@ -161,7 +162,8 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean", childStringEqualTo("kiwi")), "\n" +
                 "Expected: {\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}\n" +
                 "and childBean having string field \"kiwi\"\n" +
                 "     but: childBean string field was \"banana\"\n" +
@@ -186,7 +188,9 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", hasItem(childStringEqualTo("kiwi"))), "\n" +
                 "Expected: {\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}\n" +
                 "and childBeanList a collection containing having string field \"kiwi\"\n" +
                 "     but: childBeanList mismatches were: [string field was \"apple\", string field was \"banana\"]\n" +
@@ -217,7 +221,9 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanMap", hasEntry(equalTo("key"), childStringEqualTo("kiwi"))), "\n" +
                 "Expected: {\n" +
-                "  \"childBeanList\": []\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}\n" +
                 "and childBeanMap map containing [\"key\"->having string field \"kiwi\"]\n" +
                 "     but: childBeanMap map was [<key=ChildBean{childString='banana', childInteger=0}>]\n" +
@@ -238,7 +244,12 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingErrorMatcher(actual, expected, beanMatcher -> beanMatcher.with("string", startsWith("field")), "\n" +
                 "Expected: {\n" +
-                "  \"integer\": 0\n" +
+                "  \"array\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"integer\": 0,\n" +
+                "  \"map\": null,\n" +
+                "  \"set\": null\n" +
                 "}\n" +
                 "and string a string starting with \"field\"\n" +
                 "     but: string was null");
@@ -365,14 +376,15 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
     @Test
     public void patternMatcherPassesVacuouslyWhenNullFieldAbsentFromSerializedJson() {
-        // Gson omits null fields during serialisation, so a pattern that names a null field finds
-        // nothing in the JSON element and passes vacuously. This is the intended behaviour, and is
-        // distinct from the path-based with() which uses bean reflection and can find null fields.
-        ParentBean actual   = parent().build();   // childBean == null → omitted from JSON
+        // With serializeNulls enabled (default), null fields appear in the JSON and pattern
+        // matchers can find them. Call withoutSerializingNulls() to restore the old behaviour
+        // where null fields are absent, causing the pattern matcher to pass vacuously.
+        ParentBean actual   = parent().build();   // childBean == null
         ParentBean expected = parent().build();
 
         assertDiagnosingMatcher(actual, expected,
-                beanMatcher -> beanMatcher.withMatcher(equalTo("childBean"), notNullValue()));
+                beanMatcher -> beanMatcher.withoutSerializingNulls()
+                                          .withMatcher(equalTo("childBean"), notNullValue()));
     }
 
     @Test

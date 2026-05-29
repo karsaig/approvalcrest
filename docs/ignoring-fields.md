@@ -97,6 +97,35 @@ Useful for excluding all timestamp fields when they share a type. Multiple types
 assertThat(actual, sameJsonAsApproved()
     .ignoring(Instant.class)
     .ignoring(UUID.class));
+```
+
+## Null Field Serialization
+
+By default, null-valued fields are included in the serialized JSON. This is important for `.ignoring()` to work correctly when a field has a null value inside a collection element — without null serialization, the field is stripped before ignore logic runs and the ignored element is never removed from the collection.
+
+**Disabling null serialization globally** (restores the old behaviour where null fields are omitted):
+
+```bash
+mvn test -DapprovalcrestSerializeNulls=false
+```
+
+**Disabling null serialization per matcher:**
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .withoutSerializingNulls()
+    .ignoring("id"));
+```
+
+When null serialization is off, `.ignoring("field")` will have no effect if `field` is null — the field is not present in the JSON so there is nothing to remove.
+
+**Migration from pre-1.0.2 approved files:**
+
+Re-run your tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files that now include null fields:
+
+```bash
+mvn test -DfileMatcherUpdateInPlace=true
+```
 
 ## Strict Mode (default on)
 

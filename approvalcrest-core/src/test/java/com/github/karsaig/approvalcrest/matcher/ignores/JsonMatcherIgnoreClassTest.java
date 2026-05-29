@@ -35,6 +35,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("simpleDiffCases")
     public void assertShouldBeSuccessfulWhenStringIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "  \"birthCountry\": \"BELGIUM\",\n" +
                 "  \"currentAddress\": {\n" +
@@ -85,6 +86,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -124,6 +126,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    \"since\": \"2017-04-02\",\n" +
                 "    \"streetNumber\": 43\n" +
                 "  },\n" +
+                "  \"id\": null,\n" +
                 "  \"previousAddresses\": [\n" +
                 "    {\n" +
                 "      \"country\": \"EGYPT\",\n" +
@@ -150,6 +153,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("simplePathIgnoreWithNullCases")
     public void assertShouldBeSuccessfulWhenStringWithNullValueIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "  \"birthCountry\": \"BELGIUM\",\n" +
                 "  \"currentAddress\": {\n" +
@@ -182,6 +186,8 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 " ; \n" +
                 "Unexpected: email\n" +
                 " ; \n" +
+                "Unexpected: firstName\n" +
+                " ; \n" +
                 "Unexpected: lastName\n"));
     }
 
@@ -201,6 +207,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -239,6 +246,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -269,6 +277,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -349,6 +358,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -387,6 +397,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -417,6 +428,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -496,6 +508,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -534,6 +547,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -564,6 +578,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -612,6 +627,8 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "Unexpected: since\n" +
                 " ; lead.previousAddresses[2]\n" +
                 "Unexpected: since\n" +
+                " ; members[0].currentAddress\n" +
+                "Unexpected: since\n" +
                 " ; members[0].previousAddresses[0]\n" +
                 "Unexpected: since\n" +
                 " ; members[0].previousAddresses[1]\n" +
@@ -641,6 +658,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("multipleSimplePathDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -687,6 +705,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("multipleSimpleDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -738,6 +757,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -752,6 +772,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
@@ -792,6 +813,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("multipleMultiLevelPathWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -844,6 +866,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -857,6 +880,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
@@ -896,6 +920,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("multipleMultiLevelPathSingleIngoreWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -946,6 +971,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -979,6 +1005,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -1005,6 +1032,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -1134,6 +1162,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -1172,6 +1201,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1202,6 +1232,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1234,6 +1265,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String expected = "{\n" +
                     "  \"name\": \"TeamName2\",\n" +
                     "  \"lead\": {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
@@ -1267,6 +1299,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  \"members\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
@@ -1293,6 +1326,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
@@ -1352,12 +1386,14 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     public void simpleDifferenceInListTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      null\n" +
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      null,\n" +
@@ -1365,6 +1401,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": []\n" +
                 "  }\n" +
@@ -1423,6 +1460,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  {\n" +
                     "    \"birthCountry\": \"BELGIUM\",\n" +
                     "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
                     "    ]\n" +
@@ -1430,6 +1468,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  {\n" +
                     "    \"birthCountry\": \"CANADA\",\n" +
                     "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
                     "      null\n" +
@@ -1438,18 +1477,21 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  {\n" +
                     "    \"birthCountry\": \"DENMARK\",\n" +
                     "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": []\n" +
                     "  }\n" +
                     "]";
 
             String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
@@ -1457,6 +1499,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": []\n" +
                     "  }\n" +
@@ -1487,10 +1530,12 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     public void simpleDifferenceInSetTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": []\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      null,\n" +
@@ -1498,6 +1543,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      null\n" +
@@ -1561,11 +1607,13 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  {\n" +
                     "    \"birthCountry\": \"DENMARK\",\n" +
                     "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": []\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"birthCountry\": \"CANADA\",\n" +
                     "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
                     "      null\n" +
@@ -1574,6 +1622,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  {\n" +
                     "    \"birthCountry\": \"BELGIUM\",\n" +
                     "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
                     "    ]\n" +
@@ -1582,10 +1631,12 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
 
             String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": []\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null,\n" +
@@ -1593,6 +1644,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    ]\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      null\n" +
@@ -1626,10 +1678,12 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"genericValue\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": []\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null,\n" +
@@ -1637,6 +1691,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null\n" +
@@ -1704,11 +1759,13 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    {\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": []\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
@@ -1717,6 +1774,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -1727,10 +1785,12 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String expected = "{\n" +
                     "  \"genericValue\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
@@ -1738,6 +1798,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
@@ -1770,12 +1831,18 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("simpleDiffInSetAsProperty")
     public void simpleDifferenceInSetAsPropertyTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"array\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"map\": null,\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": []\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null,\n" +
@@ -1783,6 +1850,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null\n" +
@@ -1852,10 +1920,15 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -1863,6 +1936,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
@@ -1871,18 +1945,25 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    {\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": []\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"array\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
@@ -1890,6 +1971,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
@@ -1924,12 +2006,14 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "[\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": []\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null,\n" +
@@ -1939,6 +2023,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null\n" +
@@ -1988,6 +2073,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    \"p3\": {\n" +
                     "      \"birthCountry\": \"DENMARK\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": []\n" +
                     "    }\n" +
                     "  },\n" +
@@ -1995,6 +2081,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    \"p2\": {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
                     "        null\n" +
@@ -2005,6 +2092,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    \"p1\": {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
                     "      ]\n" +
@@ -2015,12 +2103,14 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
             String expected = "[\n" +
                     "  {\n" +
                     "    \"p3\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": []\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"p2\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null,\n" +
@@ -2030,6 +2120,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  },\n" +
                     "  {\n" +
                     "    \"p1\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        null\n" +
@@ -2065,12 +2156,14 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  \"genericValue\": [\n" +
                 "    {\n" +
                 "      \"p3\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": []\n" +
                 "      }\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"p2\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": [\n" +
                 "          null,\n" +
@@ -2080,6 +2173,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    },\n" +
                 "    {\n" +
                 "      \"p1\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": [\n" +
                 "          null\n" +
@@ -2133,6 +2227,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      \"p3\": {\n" +
                     "        \"birthCountry\": \"DENMARK\",\n" +
                     "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    },\n" +
@@ -2140,6 +2235,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      \"p2\": {\n" +
                     "        \"birthCountry\": \"CANADA\",\n" +
                     "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
                     "          null\n" +
@@ -2150,6 +2246,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      \"p1\": {\n" +
                     "        \"birthCountry\": \"BELGIUM\",\n" +
                     "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
                     "        ]\n" +
@@ -2162,12 +2259,14 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "  \"genericValue\": [\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
@@ -2177,6 +2276,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
@@ -2211,9 +2311,13 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
     @MethodSource("simpleDiffInMapAsProperty")
     public void simpleDifferenceInMapAsPropertyTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"array\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
                 "  \"map\": [\n" +
                 "    {\n" +
                 "      \"p1\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": [\n" +
                 "          null\n" +
@@ -2222,6 +2326,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    },\n" +
                 "    {\n" +
                 "      \"p2\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": [\n" +
                 "          null,\n" +
@@ -2231,11 +2336,13 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    },\n" +
                 "    {\n" +
                 "      \"p3\": {\n" +
+                "        \"id\": null,\n" +
                 "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                 "        \"previousAddresses\": []\n" +
                 "      }\n" +
                 "    }\n" +
-                "  ]\n" +
+                "  ],\n" +
+                "  \"set\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring(String.class, Country.class).ignoring(Address.class), null);
@@ -2290,11 +2397,15 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "Unexpected: birthCountry\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
                     "        \"birthCountry\": \"BELGIUM\",\n" +
                     "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
                     "        ]\n" +
@@ -2304,6 +2415,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      \"p2\": {\n" +
                     "        \"birthCountry\": \"CANADA\",\n" +
                     "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
                     "          null\n" +
@@ -2314,16 +2426,22 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "      \"p3\": {\n" +
                     "        \"birthCountry\": \"DENMARK\",\n" +
                     "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"set\": null\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"array\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2016-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null\n" +
@@ -2332,6 +2450,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2015-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          null,\n" +
@@ -2341,11 +2460,13 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"birthDate\": \"2014-04-01T13:42:11\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"set\": null\n" +
                     "}";
 
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "strings and address shouldn't be present");
@@ -2372,6 +2493,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
         String approvedFileContent = "{\n" +
                 "  \"lead\": {\n" +
                 "    \"birthDate\": \"2004-04-01T13:42:11\",\n" +
+                "    \"id\": null,\n" +
                 "    \"previousAddresses\": [\n" +
                 "      null,\n" +
                 "      null,\n" +
@@ -2381,6 +2503,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "  \"members\": [\n" +
                 "    {\n" +
                 "      \"birthDate\": \"1915-04-01T13:42:11\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null,\n" +
                 "        null\n" +
@@ -2388,6 +2511,7 @@ public class JsonMatcherIgnoreClassTest extends AbstractFileMatcherTest {
                 "    },\n" +
                 "    {\n" +
                 "      \"birthDate\": \"1914-04-01T13:42:11\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        null,\n" +
                 "        null,\n" +

@@ -24,7 +24,8 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                     "    \"childInteger\": 0\n" +
                     "  },\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}\n" +
                     "and childBean.childString \"kiwi\"\n" +
                     "     but: childBean.childString was \"banana\"", thrown.getMessage());
@@ -41,7 +42,8 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}\n" +
                     "and childBean having string field \"kiwi\"\n" +
                     "     but: childBean string field was \"banana\"\n" +
@@ -62,7 +64,8 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
             Assertions.assertEquals("\n" +
                     "Expected: {\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}\n" +
                     "and childBean having string field \"kiwi\"\n" +
                     "     but: childBean was null", thrown.getMessage());
@@ -94,7 +97,8 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                     "    \"childString\": \"apple\"\n" +
                     "  },\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}\n" +
                     "and childBean.childInteger <5L>\n" +
                     "     but: childBean.childInteger was <0>", thrown.getMessage());
@@ -114,10 +118,11 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                     "    \"childInteger\": 0\n" +
                     "  },\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}\n" +
                     "and childBean.childString \"apple\"\n" +
-                    "     but: childBean is null", thrown.getMessage());
+                    "     but: childBean.childString was null", thrown.getMessage());
         });
     }
 

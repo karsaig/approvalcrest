@@ -28,6 +28,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         return new Object[][]{
                 {"Object input", generatePerson(1L)},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -59,6 +60,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("simpleDiffCases")
     public void assertShouldBeSuccessfulWhenSimplePathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"Different first name\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -103,6 +105,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -129,6 +132,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -160,6 +164,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("simpleDiff2Cases")
     public void assertShouldBeSuccessfulWhenSimplePathWithDifferenceIsIgnoredAndMissingFromExpected(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
                 "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -202,6 +207,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"Different first name\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -227,6 +233,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Should not see this in not approved file\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -269,6 +276,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"streetNumber\": 43\n" +
                 "  },\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
+                "  \"id\": null,\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"previousAddresses\": [\n" +
                 "    {\n" +
@@ -293,6 +301,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
+                        "  \"firstName\": null,\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
                         "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -323,6 +333,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("simplePathIgnoreWithNullCases")
     public void assertShouldBeSuccessfulWhenSimplePathWithNullDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"NOT NULL\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -349,9 +360,9 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring(is("firstName")), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("\n" +
-                "Expected: firstName\n" +
-                "     but none found\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+                "Expected: NOT NULL\n" +
+                "     got: null\n"));
     }
 
 
@@ -364,6 +375,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -406,6 +418,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -439,6 +452,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -490,6 +504,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -532,6 +547,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -565,6 +581,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -624,6 +641,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -666,6 +684,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -699,6 +718,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -750,6 +770,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -792,6 +813,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -825,6 +847,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -883,6 +906,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -925,6 +949,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -935,7 +960,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "        \"city\": \"CityName102\",\n" +
                         "        \"streetName\": \"StreetName161\",\n" +
                         "        \"streetNumber\": 144,\n" +
-                        "        \"postCode\": \"PostCode165\"\n" +
+                        "        \"postCode\": \"PostCode165\",\n" +
+                        "        \"since\": null\n" +
                         "      },\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -957,6 +983,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1008,6 +1035,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1050,6 +1078,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -1083,6 +1112,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -1127,9 +1157,9 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring(is("since")), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
-                "Expected: since\n" +
-                "     but none found\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+                "Expected: 2019-12-25\n" +
+                "     got: null\n"));
     }
 
     public static Object[][] multiLevelPathInCollectionWithNullDiffCases() {
@@ -1138,6 +1168,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -1180,6 +1211,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -1213,6 +1245,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1264,6 +1297,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1306,6 +1340,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -1338,6 +1373,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -1394,6 +1430,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"Different last name\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1425,6 +1462,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("multipleSimplePathDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1475,6 +1513,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    \"streetNumber\": 43\n" +
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"Different last name\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -1489,6 +1528,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -1526,6 +1566,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"Different last name\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1557,6 +1598,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("multipleSimpleDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1599,6 +1641,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1630,6 +1673,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("multipleMultiLevelPathWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1680,6 +1724,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -1693,6 +1738,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
@@ -1729,6 +1775,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1760,6 +1807,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("multipleMultiLevelPathSingleIngoreWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1805,6 +1853,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -1847,6 +1896,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -1880,6 +1930,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1931,6 +1982,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1973,6 +2025,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -2006,6 +2059,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -2075,6 +2129,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2113,6 +2168,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2143,6 +2199,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2175,6 +2232,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
             String expected = "{\n" +
                     "  \"name\": \"TeamName2\",\n" +
                     "  \"lead\": {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
@@ -2213,6 +2271,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  \"members\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
@@ -2243,6 +2302,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
@@ -2302,6 +2362,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    },\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
+                "    \"id\": null,\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      {\n" +
@@ -2339,6 +2400,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      },\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2368,6 +2430,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      },\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2449,6 +2512,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2487,6 +2551,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2517,6 +2582,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2558,6 +2624,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2595,6 +2662,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2624,6 +2692,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2673,6 +2742,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 }))},
                 {"Json string input", "[\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"Different first name\",\n" +
                         "    \"lastName\": \"LastName1\",\n" +
                         "    \"email\": \"e1@e.mail\",\n" +
@@ -2698,6 +2768,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName2\",\n" +
                         "    \"lastName\": \"LastName2\",\n" +
                         "    \"email\": \"e2@e.mail\",\n" +
@@ -2731,6 +2802,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName3\",\n" +
                         "    \"lastName\": \"LastName3\",\n" +
                         "    \"email\": \"e3@e.mail\",\n" +
@@ -2755,6 +2827,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     public void simpleDifferenceInListTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName1\",\n" +
                 "    \"lastName\": \"LastName1\",\n" +
                 "    \"email\": \"e1@e.mail\",\n" +
@@ -2780,6 +2853,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName2\",\n" +
                 "    \"lastName\": \"LastName2\",\n" +
                 "    \"email\": \"e2@e.mail\",\n" +
@@ -2813,6 +2887,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName3\",\n" +
                 "    \"lastName\": \"LastName3\",\n" +
                 "    \"email\": \"e3@e.mail\",\n" +
@@ -2886,6 +2961,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
                     "    \"firstName\": \"Different first name\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName1\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -2901,6 +2977,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName2\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -2916,12 +2993,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName3\"\n" +
                     "  }\n" +
                     "]";
 
             String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName1\",\n" +
                     "    \"lastName\": \"LastName1\",\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
@@ -2937,6 +3016,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
                     "    \"lastName\": \"LastName2\",\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
@@ -2952,6 +3032,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
                     "    \"lastName\": \"LastName3\",\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
@@ -2987,6 +3068,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 }))},
                 {"Json string input", "[\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"Different first name\",\n" +
                         "    \"lastName\": \"LastName1\",\n" +
                         "    \"email\": \"e1@e.mail\",\n" +
@@ -3012,6 +3094,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName2\",\n" +
                         "    \"lastName\": \"LastName2\",\n" +
                         "    \"email\": \"e2@e.mail\",\n" +
@@ -3045,6 +3128,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName3\",\n" +
                         "    \"lastName\": \"LastName3\",\n" +
                         "    \"email\": \"e3@e.mail\",\n" +
@@ -3069,6 +3153,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     public void simpleDifferenceInSetTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName1\",\n" +
                 "    \"lastName\": \"LastName1\",\n" +
                 "    \"email\": \"e1@e.mail\",\n" +
@@ -3094,6 +3179,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName2\",\n" +
                 "    \"lastName\": \"LastName2\",\n" +
                 "    \"email\": \"e2@e.mail\",\n" +
@@ -3127,6 +3213,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName3\",\n" +
                 "    \"lastName\": \"LastName3\",\n" +
                 "    \"email\": \"e3@e.mail\",\n" +
@@ -3200,6 +3287,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
                     "    \"firstName\": \"Different first name\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName1\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -3215,6 +3303,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName2\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -3230,12 +3319,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName3\"\n" +
                     "  }\n" +
                     "]";
 
             String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName1\",\n" +
                     "    \"lastName\": \"LastName1\",\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
@@ -3251,6 +3342,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
                     "    \"lastName\": \"LastName2\",\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
@@ -3266,6 +3358,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
                     "    \"lastName\": \"LastName3\",\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
@@ -3303,6 +3396,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  \"dummyString\": \"String1\",\n" +
                         "  \"genericValue\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -3328,6 +3422,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -3361,6 +3456,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -3388,6 +3484,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  \"dummyString\": \"String1\",\n" +
                 "  \"genericValue\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"Different first name\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -3413,6 +3510,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -3446,6 +3544,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -3495,6 +3594,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 43\n" +
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3509,6 +3609,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 44\n" +
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3523,6 +3624,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 45\n" +
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  ]\n" +
@@ -3532,6 +3634,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  \"dummyString\": \"String1\",\n" +
                     "  \"genericValue\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -3546,6 +3649,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
@@ -3560,6 +3664,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
@@ -3594,9 +3699,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p3;
                 })))},
                 {"Json string input", "{\n" +
+                        "  \"array\": null,\n" +
                         "  \"dummyString\": \"String1\",\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"map\": null,\n" +
                         "  \"set\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -3622,6 +3732,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -3655,6 +3766,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -3679,9 +3791,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("simpleDiffInSetAsProperty")
     public void simpleDifferenceInSetAsPropertyTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"array\": null,\n" +
                 "  \"dummyString\": \"String1\",\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"map\": null,\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"Different first name\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -3707,6 +3824,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -3740,6 +3858,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -3775,7 +3894,11 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "     got: 2017-04-02\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -3789,6 +3912,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 43\n" +
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3803,6 +3927,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 44\n" +
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3817,15 +3942,21 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        \"streetNumber\": 45\n" +
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  ]\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -3840,6 +3971,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
@@ -3854,6 +3986,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
@@ -3890,6 +4023,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "[\n" +
                         "  {\n" +
                         "    \"p1\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -3917,6 +4051,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  {\n" +
                         "    \"p2\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -3952,6 +4087,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  {\n" +
                         "    \"p3\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -3978,6 +4114,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "[\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4005,6 +4142,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4040,6 +4178,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -4115,6 +4254,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"Different first name\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\"\n" +
                     "    }\n" +
                     "  },\n" +
@@ -4132,6 +4272,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\"\n" +
                     "    }\n" +
                     "  },\n" +
@@ -4149,6 +4290,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  }\n" +
@@ -4157,6 +4299,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
             String expected = "[\n" +
                     "  {\n" +
                     "    \"p1\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
@@ -4174,6 +4317,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  {\n" +
                     "    \"p2\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
@@ -4191,6 +4335,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  },\n" +
                     "  {\n" +
                     "    \"p3\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
@@ -4230,6 +4375,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  \"genericValue\": [\n" +
                         "    {\n" +
                         "      \"p1\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"Different first name\",\n" +
                         "        \"lastName\": \"LastName1\",\n" +
                         "        \"email\": \"e1@e.mail\",\n" +
@@ -4257,6 +4403,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    },\n" +
                         "    {\n" +
                         "      \"p2\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName2\",\n" +
                         "        \"lastName\": \"LastName2\",\n" +
                         "        \"email\": \"e2@e.mail\",\n" +
@@ -4292,6 +4439,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    },\n" +
                         "    {\n" +
                         "      \"p3\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName3\",\n" +
                         "        \"lastName\": \"LastName3\",\n" +
                         "        \"email\": \"e3@e.mail\",\n" +
@@ -4321,6 +4469,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  \"genericValue\": [\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4348,6 +4497,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4383,6 +4533,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -4461,6 +4612,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
                     "        \"firstName\": \"Different first name\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName1\"\n" +
                     "      }\n" +
                     "    },\n" +
@@ -4478,6 +4630,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName2\"\n" +
                     "      }\n" +
                     "    },\n" +
@@ -4495,6 +4648,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName3\"\n" +
                     "      }\n" +
                     "    }\n" +
@@ -4506,6 +4660,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "  \"genericValue\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName1\",\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
@@ -4523,6 +4678,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
@@ -4540,6 +4696,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
                     "        \"lastName\": \"LastName3\",\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
@@ -4576,10 +4733,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     return p3;
                 })))},
                 {"Json string input", "{\n" +
+                        "  \"array\": null,\n" +
                         "  \"dummyString\": \"String1\",\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"hashSet\": null,\n" +
                         "  \"map\": [\n" +
                         "    {\n" +
                         "      \"p1\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"Different first name\",\n" +
                         "        \"lastName\": \"LastName1\",\n" +
                         "        \"email\": \"e1@e.mail\",\n" +
@@ -4607,6 +4768,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    },\n" +
                         "    {\n" +
                         "      \"p2\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName2\",\n" +
                         "        \"lastName\": \"LastName2\",\n" +
                         "        \"email\": \"e2@e.mail\",\n" +
@@ -4642,6 +4804,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "    },\n" +
                         "    {\n" +
                         "      \"p3\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName3\",\n" +
                         "        \"lastName\": \"LastName3\",\n" +
                         "        \"email\": \"e3@e.mail\",\n" +
@@ -4658,7 +4821,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "        \"previousAddresses\": []\n" +
                         "      }\n" +
                         "    }\n" +
-                        "  ]\n" +
+                        "  ],\n" +
+                        "  \"set\": null\n" +
                         "}"}
         };
     }
@@ -4667,10 +4831,14 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("simpleDiffInMapAsProperty")
     public void simpleDifferenceInMapAsPropertyTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"array\": null,\n" +
                 "  \"dummyString\": \"String1\",\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
                 "  \"map\": [\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4698,6 +4866,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4733,6 +4902,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -4774,7 +4944,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      ]\n" +
                 "    }\n" +
                 "  }\n" +
-                "]\n" +
+                "],\n" +
+                "  \"set\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring(is("firstName"), is("country")).ignoring(is("previousAddresses")), null);
@@ -4795,7 +4966,10 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "     got: AUSTRIA\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
@@ -4811,6 +4985,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
                     "        \"firstName\": \"Different first name\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName1\"\n" +
                     "      }\n" +
                     "    },\n" +
@@ -4828,6 +5003,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName2\"\n" +
                     "      }\n" +
                     "    },\n" +
@@ -4845,17 +5021,23 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        },\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName3\"\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"set\": null\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName1\",\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
@@ -4873,6 +5055,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
@@ -4890,6 +5073,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    },\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
                     "        \"lastName\": \"LastName3\",\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
@@ -4905,7 +5089,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "        }\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"set\": null\n" +
                     "}";
 
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
@@ -4926,6 +5111,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"name\": \"Should not see this in not approved file!\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"Should not see this in not approved file!\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -4968,6 +5154,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -5001,6 +5188,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"Should not see this in not approved file!\",\n" +
@@ -5060,6 +5248,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "      \"streetNumber\": 55\n" +
                 "    },\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
+                "    \"id\": null,\n" +
                 "    \"previousAddresses\": [\n" +
                 "      {\n" +
                 "        \"city\": \"CityName23\",\n" +
@@ -5095,6 +5284,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "        \"streetNumber\": 144\n" +
                 "      },\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName112\",\n" +
@@ -5122,6 +5312,7 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                 "        \"streetNumber\": 145\n" +
                 "      },\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName113\",\n" +
@@ -5191,7 +5382,8 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
         String approvedFileContent = "{\n" +
                 "  \"childBean\": {},\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(), configurator, null);
@@ -5208,13 +5400,15 @@ public class JsonMatcherIgnoreMatcherTest extends AbstractJsonMatcherIgnoreTest 
                     "    \"childString\": \"banana\"\n" +
                     "  },\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}";
 
             String expected = "{\n" +
                     "  \"childBean\": {},\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}";
 
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "beanInt shouldn't be present");

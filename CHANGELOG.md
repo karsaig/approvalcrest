@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 1.0.2 - unreleased
+-----
+
+- **[breaking]** Gson now serializes null fields by default. Previously, null-valued fields were silently omitted from JSON serialization, which caused `.ignoring("field")` to silently fail when the field value was null inside a collection element — the field was stripped before ignore logic ran, so the ignored element was never removed from the collection. **Migration:** re-run tests with `-DfileMatcherUpdateInPlace=true` to regenerate approved files that now include null fields. To restore the old behaviour globally set `-DapprovalcrestSerializeNulls=false`. To restore it per-matcher call `.withoutSerializingNulls()` on the matcher. See [ignoring-fields](docs/ignoring-fields.md).
+
 Version 1.0.1 - 2026/05/28
 -----
 

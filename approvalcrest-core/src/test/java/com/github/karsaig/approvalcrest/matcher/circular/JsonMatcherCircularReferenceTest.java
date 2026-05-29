@@ -65,8 +65,9 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, "Expected file 4ac405/11b2ef-approved.json\n" +
-                "\n" +
-                "Unexpected: parent\n");
+                "parent\n" +
+                "Expected: null\n" +
+                "     got: a JSON object\n");
     }
 
     @Test
@@ -91,9 +92,11 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "    \"threeObject\": \"0x3\"\n" +
                 "  },\n" +
                 "  \"0x2\": {\n" +
+                "    \"subClassField\": null,\n" +
                 "    \"threeObject\": \"0x4\"\n" +
                 "  },\n" +
                 "  \"0x3\": {\n" +
+                "    \"subClassField\": null,\n" +
                 "    \"threeObject\": \"0x1\"\n" +
                 "  },\n" +
                 "  \"0x4\": {\n" +
@@ -155,6 +158,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
         RuntimeException actual = new RuntimeException();
         String approvedFileContent = "{\n" +
                 "  \"0x1\": {\n" +
+                "    \"detailMessage\": null,\n" +
                 "    \"suppressedExceptions\": [],\n" +
                 "    \"class\": \"java.lang.RuntimeException\"\n" +
                 "  }\n" +
@@ -173,6 +177,7 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
                 "      \"detailMessage\": \"java.lang.ClassCastException\",\n" +
                 "      \"cause\": {\n" +
                 "        \"0x1\": {\n" +
+                "          \"detailMessage\": null,\n" +
                 "          \"suppressedExceptions\": [],\n" +
                 "          \"class\": \"java.lang.ClassCastException\"\n" +
                 "        }\n" +
@@ -315,9 +320,13 @@ public class JsonMatcherCircularReferenceTest extends AbstractFileMatcherTest {
 
         String approvedFileContent = "{\n" +
                 "  \"subClassField\": {\n" +
+                "    \"subClassField\": null,\n" +
                 "    \"threeObject\": \"customSerializedOneCircle\"\n" +
                 "  },\n" +
-                "  \"threeObject\": {}\n" +
+                "  \"threeObject\": {\n" +
+                "    \"subClassField\": null,\n" +
+                "    \"threeObject\": null\n" +
+                "  }\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, jsonMatcher -> jsonMatcher.skipCircularReferenceCheck(skipper1).withGsonConfiguration(config), null);

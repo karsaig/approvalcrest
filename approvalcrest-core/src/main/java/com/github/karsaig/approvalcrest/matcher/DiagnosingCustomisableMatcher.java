@@ -274,6 +274,12 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
+    public DiagnosingCustomisableMatcher<T> withoutSerializingNulls() {
+        matcherConfiguration.setSerializeNulls(false);
+        return this;
+    }
+
+    @Override
     public String toString() {
         return "SameBeanAs matcher";
     }

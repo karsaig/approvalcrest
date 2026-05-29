@@ -94,12 +94,17 @@ class GsonProvider {
 
     private static void defaultGsonConfiguration(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
 
+        if (matcherConfiguration.isSerializeNulls()) {
+            gsonBuilder.serializeNulls();
+        }
+
         if (!circularReferenceTypes.isEmpty()) {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
         }
 
         gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
+        gsonBuilder.registerTypeHierarchyAdapter(java.util.Optional.class, new JavaOptionalSerializer<>());
         gsonBuilder.registerTypeAdapterFactory(DateAdapter.FACTORY);
         gsonBuilder.registerTypeAdapterFactory(ClassAdapter.FACTORY);
         gsonBuilder.registerTypeAdapter(InstantAdapter.INSTANT_TYPE, new InstantAdapter());
@@ -278,6 +283,19 @@ class GsonProvider {
 
     private static GsonBuilder initGson() {
         return new GsonBuilder().serializeSpecialFloatingPointValues().setPrettyPrinting();
+    }
+
+    private static class JavaOptionalSerializer<T> implements JsonSerializer<java.util.Optional<T>> {
+
+        @Override
+        public JsonElement serialize(java.util.Optional<T> src, Type typeOfSrc, JsonSerializationContext context) {
+            if (!src.isPresent()) {
+                return new JsonObject();
+            }
+            JsonObject result = new JsonObject();
+            result.add("value", context.serialize(src.get()));
+            return result;
+        }
     }
 
     private static class OptionalSerializer<T> implements JsonSerializer<Optional<T>> {

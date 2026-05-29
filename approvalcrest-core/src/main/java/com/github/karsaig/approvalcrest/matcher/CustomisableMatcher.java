@@ -246,4 +246,17 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      */
     U withMachineReadableOutput();
+
+    /**
+     * Disable null serialization for this matcher. By default, null-valued fields are
+     * included in the serialized JSON so that {@code ignoring("field")} works correctly
+     * even when the field value is null. Calling this method restores the legacy behaviour
+     * where Gson omits null-valued fields from the output.
+     * <p>
+     * The default can also be changed globally by setting the system property
+     * {@code approvalcrestSerializeNulls=false}.
+     *
+     * @return the instance of the matcher
+     */
+    U withoutSerializingNulls();
 }

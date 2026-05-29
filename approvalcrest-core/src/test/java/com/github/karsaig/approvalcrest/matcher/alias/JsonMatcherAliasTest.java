@@ -26,6 +26,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
 
         String approvedFileContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"<id>\"\n" +
@@ -70,6 +71,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
 
         String approvedFileContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"<secret>\"\n" +
@@ -91,6 +93,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
         // Gson HTML-escapes < and > to \u003c / \u003e when writing files
         String expectedNotApprovedContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"\\u003cid\\u003e\"\n" +
@@ -116,7 +119,8 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
                 "    \"childString\": null\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,
@@ -160,6 +164,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
 
         String approvedFileContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"<override>\"\n" +
@@ -228,6 +233,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
 
         String approvedFileContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"<token>\"\n" +
@@ -282,6 +288,7 @@ public class JsonMatcherAliasTest extends AbstractFileMatcherTest {
 
         String approvedFileContent =
                 "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": \"<user:42>\"\n" +

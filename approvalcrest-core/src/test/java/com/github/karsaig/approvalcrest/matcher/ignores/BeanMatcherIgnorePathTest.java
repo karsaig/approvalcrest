@@ -225,8 +225,8 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
         result.add(outerMap1);
 
 
-        assertDiagnosingMatcher(input, result, beanMatcher -> beanMatcher.ignoring("outerKey1.genericValue.innerKey1", "outerKey1.genericValue.innerKey2", "outerKey1.genericValue.innerKey3", "outerKey1.genericValue.innerKey4"));
-        assertDiagnosingMatcher(input, result, identity(), AssertionFailedError.class, thrown -> {
+        assertDiagnosingMatcher(input, result, beanMatcher -> beanMatcher.withoutSerializingNulls().ignoring("outerKey1.genericValue.innerKey1", "outerKey1.genericValue.innerKey2", "outerKey1.genericValue.innerKey3", "outerKey1.genericValue.innerKey4"));
+        assertDiagnosingMatcher(input, result, beanMatcher -> beanMatcher.withoutSerializingNulls(), AssertionFailedError.class, thrown -> {
             Assertions.assertEquals("[0][0].outerKey1\n" +
                     "Unexpected: genericValue\n" +
                     " ; [1][0].outerKey1.genericValue[]: Expected 1 values but got 2", thrown.getMessage());
@@ -523,6 +523,55 @@ public class BeanMatcherIgnorePathTest extends AbstractBeanMatcherTest {
                     Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains("string"),
                             "actual side should not contain ignored field name");
                 });
+    }
+
+    @Test
+    void ignoringNullValuedFieldInCollectionElementRemovesEmptyElement() {
+        // Bug repro: a collection element whose ONLY field is the ignored field with a null value
+        // was previously kept because Gson (without serializeNulls) omitted the null field first,
+        // so ignoring() found nothing and returned false — leaving a spurious {} in the array.
+        // With serializeNulls=true (now the default) the null field is present, ignoring() removes
+        // it, the element becomes {} and is then removed from the array.
+        List<SingleField> expected = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d")
+        );
+        List<SingleField> actual = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d"),
+                new SingleField(null)   // extra element whose only field is null
+        );
+
+        assertDiagnosingMatcher(actual, expected, m -> m.ignoring("value").skipClassComparison());
+    }
+
+    @Test
+    void withoutSerializingNullsRestoresLegacyBehaviourForNullFieldInCollection() {
+        // With withoutSerializingNulls() the null field is stripped by Gson before ignoring runs,
+        // so the element is already {} and ignoring() has nothing to remove — the {} stays,
+        // the array keeps 5 elements and the assertion fails.
+        List<SingleField> expected = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d")
+        );
+        List<SingleField> actual = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d"),
+                new SingleField(null)
+        );
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.ignoring("value").withoutSerializingNulls().skipClassComparison(),
+                AssertionFailedError.class,
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("Expected 0 values but got 1"),
+                        "should report that one element was not removed: " + thrown.getMessage()));
+    }
+
+    @SuppressWarnings("unused")
+    private static class SingleField {
+        private final String value;
+        SingleField(String value) { this.value = value; }
     }
 
     @Test

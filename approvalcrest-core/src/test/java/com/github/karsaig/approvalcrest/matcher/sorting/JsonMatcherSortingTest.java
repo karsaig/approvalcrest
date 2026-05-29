@@ -50,6 +50,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e6@e.mail\",\n" +
                         "      \"firstName\": \"FirstName6\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName6\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -75,6 +76,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e7@e.mail\",\n" +
                         "      \"firstName\": \"FirstName7\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName7\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -108,6 +110,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e8@e.mail\",\n" +
                         "      \"firstName\": \"FirstName8\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName8\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -153,6 +156,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "        },\n" +
                         "        \"email\": \"e4@e.mail\",\n" +
                         "        \"firstName\": \"FirstName4\",\n" +
+                        "        \"id\": null,\n" +
                         "        \"lastName\": \"LastName4\",\n" +
                         "        \"previousAddresses\": [\n" +
                         "          {\n" +
@@ -204,11 +208,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "        },\n" +
                         "        \"email\": \"e5@e.mail\",\n" +
                         "        \"firstName\": \"FirstName5\",\n" +
+                        "        \"id\": null,\n" +
                         "        \"lastName\": \"LastName5\",\n" +
                         "        \"previousAddresses\": []\n" +
                         "      }\n" +
                         "    }\n" +
                         "  ],\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"map\": null,\n" +
                         "  \"set\": [\n" +
                         "    {\n" +
                         "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -223,6 +230,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
                         "      \"firstName\": \"FirstName1\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -248,6 +256,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -281,6 +290,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                         "      },\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
+                        "      \"id\": null,\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -338,6 +348,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e7@e.mail\",\n" +
                 "      \"firstName\": \"FirstName7\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName7\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -372,6 +383,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e6@e.mail\",\n" +
                 "      \"firstName\": \"FirstName6\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"country\": \"CANADA\",\n" +
@@ -387,6 +399,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"birthCountry\": \"BELGIUM\",\n" +
                 "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
                 "      \"firstName\": \"FirstName8\",\n" +
+                "      \"id\": null,\n" +
                 "      \"currentAddress\": {\n" +
                 "        \"city\": \"CityName8\",\n" +
                 "        \"postCode\": \"PostCode71\",\n" +
@@ -439,6 +452,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "          \"streetNumber\": 47\n" +
                 "        },\n" +
                 "        \"firstName\": \"FirstName5\",\n" +
+                "        \"id\": null,\n" +
                 "        \"email\": \"e5@e.mail\",\n" +
                 "        \"lastName\": \"LastName5\",\n" +
                 "        \"previousAddresses\": []\n" +
@@ -459,6 +473,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "        \"email\": \"e4@e.mail\",\n" +
                 "        \"lastName\": \"LastName4\",\n" +
                 "        \"firstName\": \"FirstName4\",\n" +
+                "        \"id\": null,\n" +
                 "        \"previousAddresses\": [\n" +
                 "          {\n" +
                 "            \"city\": \"CityName14\",\n" +
@@ -497,6 +512,8 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "    }\n" +
                 "  ],\n" +
                 "  \"dummyString\": \"String1\",\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"map\": null,\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
                 "      \"birthCountry\": \"CANADA\",\n" +
@@ -512,6 +529,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e2@e.mail\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName12\",\n" +
@@ -545,6 +563,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e1@e.mail\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName11\",\n" +
@@ -570,6 +589,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e3@e.mail\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName14\",\n" +
@@ -797,6 +817,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -830,6 +851,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e8@e.mail\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName8\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -871,6 +893,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName6\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -900,6 +923,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -951,11 +975,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ],\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -970,6 +997,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -995,6 +1023,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1028,6 +1057,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1074,6 +1104,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1108,6 +1139,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"country\": \"CANADA\",\n" +
@@ -1123,6 +1155,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"birthCountry\": \"BELGIUM\",\n" +
                     "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"currentAddress\": {\n" +
                     "        \"city\": \"CityName8\",\n" +
                     "        \"postCode\": \"PostCode71\",\n" +
@@ -1175,6 +1208,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "          \"streetNumber\": 47\n" +
                     "        },\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
@@ -1195,6 +1229,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
                     "            \"city\": \"CityName14\",\n" +
@@ -1233,6 +1268,8 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "    }\n" +
                     "  ],\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
@@ -1248,6 +1285,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName12\",\n" +
@@ -1281,6 +1319,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName11\",\n" +
@@ -1306,6 +1345,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName14\",\n" +
@@ -1382,6 +1422,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e7@e.mail\",\n" +
                 "      \"firstName\": \"FirstName7\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName7\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -1416,6 +1457,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e6@e.mail\",\n" +
                 "      \"firstName\": \"FirstName6\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"country\": \"CANADA\",\n" +
@@ -1431,6 +1473,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"birthCountry\": \"BELGIUM\",\n" +
                 "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
                 "      \"firstName\": \"FirstName8\",\n" +
+                "      \"id\": null,\n" +
                 "      \"currentAddress\": {\n" +
                 "        \"city\": \"CityName8\",\n" +
                 "        \"postCode\": \"PostCode71\",\n" +
@@ -1483,6 +1526,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "          \"streetNumber\": 47\n" +
                 "        },\n" +
                 "        \"firstName\": \"FirstName5\",\n" +
+                "        \"id\": null,\n" +
                 "        \"email\": \"e5@e.mail\",\n" +
                 "        \"lastName\": \"LastName5\",\n" +
                 "        \"previousAddresses\": []\n" +
@@ -1503,6 +1547,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "        \"email\": \"e4@e.mail\",\n" +
                 "        \"lastName\": \"LastName4\",\n" +
                 "        \"firstName\": \"FirstName4\",\n" +
+                "        \"id\": null,\n" +
                 "        \"previousAddresses\": [\n" +
                 "          {\n" +
                 "            \"city\": \"CityName14\",\n" +
@@ -1541,6 +1586,8 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "    }\n" +
                 "  ],\n" +
                 "  \"dummyString\": \"String1\",\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"map\": null,\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
                 "      \"birthCountry\": \"CANADA\",\n" +
@@ -1556,6 +1603,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e2@e.mail\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName12\",\n" +
@@ -1589,6 +1637,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e1@e.mail\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName11\",\n" +
@@ -1614,6 +1663,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      \"email\": \"e3@e.mail\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
+                "      \"id\": null,\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
                 "          \"city\": \"CityName14\",\n" +
@@ -1841,6 +1891,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1874,6 +1925,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e8@e.mail\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName8\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1915,6 +1967,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName6\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -1944,6 +1997,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -1995,11 +2049,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ],\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -2014,6 +2071,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2039,6 +2097,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2072,6 +2131,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2118,6 +2178,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2152,6 +2213,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"country\": \"CANADA\",\n" +
@@ -2167,6 +2229,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"birthCountry\": \"BELGIUM\",\n" +
                     "      \"birthDate\": \"2009-04-01T13:42:11\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"currentAddress\": {\n" +
                     "        \"city\": \"CityName8\",\n" +
                     "        \"postCode\": \"PostCode71\",\n" +
@@ -2219,6 +2282,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "          \"streetNumber\": 47\n" +
                     "        },\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
@@ -2239,6 +2303,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
                     "            \"city\": \"CityName14\",\n" +
@@ -2277,6 +2342,8 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "    }\n" +
                     "  ],\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"CANADA\",\n" +
@@ -2292,6 +2359,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName12\",\n" +
@@ -2325,6 +2393,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName11\",\n" +
@@ -2350,6 +2419,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
                     "          \"city\": \"CityName14\",\n" +
@@ -2404,6 +2474,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e6@e.mail\",\n" +
                 "      \"firstName\": \"FirstName6\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName6\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2429,6 +2500,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e7@e.mail\",\n" +
                 "      \"firstName\": \"FirstName7\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName7\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2462,6 +2534,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e8@e.mail\",\n" +
                 "      \"firstName\": \"FirstName8\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName8\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2507,6 +2580,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "        },\n" +
                 "        \"email\": \"e4@e.mail\",\n" +
                 "        \"firstName\": \"FirstName4\",\n" +
+                "        \"id\": null,\n" +
                 "        \"lastName\": \"LastName4\",\n" +
                 "        \"previousAddresses\": [\n" +
                 "          {\n" +
@@ -2558,11 +2632,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "        },\n" +
                 "        \"email\": \"e5@e.mail\",\n" +
                 "        \"firstName\": \"FirstName5\",\n" +
+                "        \"id\": null,\n" +
                 "        \"lastName\": \"LastName5\",\n" +
                 "        \"previousAddresses\": []\n" +
                 "      }\n" +
                 "    }\n" +
                 "  ],\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"map\": null,\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
                 "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -2577,6 +2654,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2602,6 +2680,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2635,6 +2714,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                 "      },\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2785,6 +2865,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2818,6 +2899,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e8@e.mail\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName8\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2859,6 +2941,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName6\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2888,6 +2971,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -2939,11 +3023,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ],\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -2958,6 +3045,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2983,6 +3071,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3016,6 +3105,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3062,6 +3152,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e6@e.mail\",\n" +
                     "      \"firstName\": \"FirstName6\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName6\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3087,6 +3178,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e7@e.mail\",\n" +
                     "      \"firstName\": \"FirstName7\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName7\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3120,6 +3212,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e8@e.mail\",\n" +
                     "      \"firstName\": \"FirstName8\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName8\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3165,6 +3258,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e4@e.mail\",\n" +
                     "        \"firstName\": \"FirstName4\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName4\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -3216,11 +3310,14 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "        },\n" +
                     "        \"email\": \"e5@e.mail\",\n" +
                     "        \"firstName\": \"FirstName5\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName5\",\n" +
                     "        \"previousAddresses\": []\n" +
                     "      }\n" +
                     "    }\n" +
                     "  ],\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -3235,6 +3332,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3260,6 +3358,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -3293,6 +3392,7 @@ public class JsonMatcherSortingTest extends AbstractJsonMatcherIgnoreTest  {
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +

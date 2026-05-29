@@ -19,6 +19,7 @@ public abstract class AbstractJsonMatcherIgnoreTest extends AbstractFileMatcherT
         return new Object[][]{
                 {"Object input", parent().childBean(child().childString("banana"))},
                 {"Json string input", "{\n" +
+                        "  \"parentString\": null,\n" +
                         "  \"childBean\": {\n" +
                         "    \"childString\": \"banana\",\n" +
                         "    \"childInteger\": 0\n" +
@@ -415,6 +416,7 @@ public abstract class AbstractJsonMatcherIgnoreTest extends AbstractFileMatcherT
 
     protected void ignoreEveryFieldInBeanShouldNotLeaveEmpty(String testName, Object input, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
         String approvedFileContent = "{\n" +
+                "  \"parentString\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": []\n" +
                 "}";
@@ -431,10 +433,12 @@ public abstract class AbstractJsonMatcherIgnoreTest extends AbstractFileMatcherT
                     "    \"childString\": \"banana\"\n" +
                     "  },\n" +
                     "  \"childBeanList\": [],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"parentString\": null,\n" +
                     "  \"childBeanList\": [],\n" +
                     "  \"childBeanMap\": []\n" +
                     "}";

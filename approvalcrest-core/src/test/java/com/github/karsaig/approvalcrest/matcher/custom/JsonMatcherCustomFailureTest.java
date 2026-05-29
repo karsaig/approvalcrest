@@ -23,7 +23,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "    \"childString\": \"banana\"\n" +
                         "  },\n" +
                         "  \"childBeanList\": [],\n" +
-                        "  \"childBeanMap\": []\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": null\n" +
                         "}"}
         };
     }
@@ -35,7 +36,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 {"Json string input", "{\n" +
                         "  \"childBean\": null,\n" +
                         "  \"childBeanList\": [],\n" +
-                        "  \"childBeanMap\": []\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": null\n" +
                         "}"}
         };
     }
@@ -52,7 +54,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("kiwi")),
@@ -70,7 +73,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", containsString("xyz")),
@@ -93,7 +97,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childString\": \"banana\"\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childInteger", equalTo(5L)),
@@ -116,8 +121,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("customMatcherInputs")
     public void reportsFirstFailureWhenMultipleMatchersFail(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher
@@ -146,8 +153,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     public void failsWhenActualIsNull() {
         // When actual is null, the custom matcher sees null as the value for the path.
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(null, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")),
@@ -169,11 +178,13 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         String input = "{\n" +
                 "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         String approvedFileContent = "{\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("apple")),
@@ -200,8 +211,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         // When childBeanList is empty there are no values at childBeanList.childString to
         // validate against.  The custom matcher must NOT silently pass (vacuous truth).
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBeanList.childString", equalTo("apple")),
@@ -221,8 +234,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         // Both matchers fail (childString is "banana", not "kiwi"; childInteger is 0, not 99).
         // Only the first failure (HashMap iteration order) should appear in the mismatch section.
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher
@@ -244,8 +259,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("customMatcherInputs")
     public void throwsIllegalArgumentExceptionWhenFieldPathDoesNotExist(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", equalTo("kiwi")),
@@ -263,13 +280,15 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     public void doesNotIncludeParentBeanFromFieldPath() {
         Object input = parent().build(); // childBean is null
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("apple")),
                 thrown -> Assertions.assertTrue(
-                        thrown.getMessage().contains("childBean is null"),
+                        thrown.getMessage().contains("childBean.childString was null"),
                         "Expected parent-null message, was: " + thrown.getMessage()),
                 AssertionError.class);
     }
@@ -282,8 +301,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     @MethodSource("customMatcherInputsWithNullChildBean")
     public void failsWhenNullFieldMatchedWithNotNullMatcher(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean", notNullValue()),
@@ -316,7 +337,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
                 jsonMatcher -> jsonMatcher.with("childBean.childString", equalTo("banana")),
@@ -348,7 +370,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "      \"childString\": \"banana\"\n" +
                         "    }\n" +
                         "  ],\n" +
-                        "  \"childBeanMap\": []\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": null\n" +
                         "}"}
         };
     }
@@ -362,7 +385,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
@@ -386,7 +410,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "      \"childInteger\": 0\n" +
                 "    }\n" +
                 "  ],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("kiwi")),
@@ -405,11 +430,13 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         String input = "{\n" +
                 "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         String approvedFileContent = "{\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childBean"), notNullValue()),
@@ -433,7 +460,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "    \"childInteger\": 0\n" +
                 "  },\n" +
                 "  \"childBeanList\": [],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfig(),
                 jsonMatcher -> jsonMatcher.withMatcher(equalTo("childString"), equalTo("banana")),
@@ -456,8 +484,10 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         .build()},
                 {"Json string input",
                         "{\n" +
+                        "  \"childBean\": null,\n" +
                         "  \"childBeanList\": [null, {\"childString\": \"apple\", \"childInteger\": 0}],\n" +
-                        "  \"childBeanMap\": []\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": null\n" +
                         "}"}
         };
     }
@@ -468,11 +498,13 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         // Fan-out over [null, child("apple")] collects [null, "apple"] for childBeanList.childString.
         // equalTo("apple") fails on null → overall match fails; approved file retains [null, {childInteger:0}].
         String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [\n" +
                 "    null,\n" +
                 "    {\"childInteger\": 0}\n" +
                 "  ],\n" +
-                "  \"childBeanMap\": []\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBeanList.childString", equalTo("apple")),

@@ -13,6 +13,7 @@ import org.opentest4j.AssertionFailedError;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 
 import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives.Builder.beanWithPrimitives;
@@ -30,6 +31,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         return new Object[][]{
                 {"Object input", generatePerson(1L)},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -61,6 +63,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("simpleDiffCases")
     public void assertShouldBeSuccessfulWhenSimplePathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"Different first name\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -105,6 +108,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -130,6 +134,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -161,6 +166,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("simpleDiff2Cases")
     public void assertShouldBeSuccessfulWhenSimplePathWithDifferenceIsIgnoredAndMissingFromExpected(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
                 "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -203,6 +209,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"Different first name\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -228,6 +235,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Should not see this in not approved file\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -270,6 +278,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    \"streetNumber\": 43\n" +
                 "  },\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
+                "  \"id\": null,\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"previousAddresses\": [\n" +
                 "    {\n" +
@@ -294,6 +303,8 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
+                        "  \"firstName\": null,\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
                         "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -324,6 +335,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("simplePathIgnoreWithNullCases")
     public void assertShouldBeSuccessfulWhenSimplePathWithNullDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"NOT NULL\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -350,9 +362,9 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("firstName"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("\n" +
-                "Expected: firstName\n" +
-                "     but none found\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("firstName\n" +
+                "Expected: NOT NULL\n" +
+                "     got: null\n"));
     }
 
 
@@ -365,6 +377,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -407,6 +420,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -440,6 +454,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -491,6 +506,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -533,6 +549,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -566,6 +583,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -625,6 +643,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -667,6 +686,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -700,6 +720,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -751,6 +772,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -793,6 +815,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -826,6 +849,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -884,6 +908,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -926,6 +951,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -936,7 +962,8 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "        \"city\": \"CityName102\",\n" +
                         "        \"streetName\": \"StreetName161\",\n" +
                         "        \"streetNumber\": 144,\n" +
-                        "        \"postCode\": \"PostCode165\"\n" +
+                        "        \"postCode\": \"PostCode165\",\n" +
+                        "        \"since\": null\n" +
                         "      },\n" +
                         "      \"previousAddresses\": [\n" +
                         "        {\n" +
@@ -958,6 +985,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1009,6 +1037,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1051,6 +1080,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -1084,6 +1114,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -1128,9 +1159,9 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("members.currentAddress.since"), null);
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress\n" +
-                "Expected: since\n" +
-                "     but none found\n"));
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), getExcceptionMessageForDummyTestInfo("members[0].currentAddress.since\n" +
+                "Expected: 2019-12-25\n" +
+                "     got: null\n"));
     }
 
     public static Object[][] multiLevelPathInCollectionWithNullDiffCases() {
@@ -1139,6 +1170,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -1181,6 +1213,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -1214,6 +1247,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1265,6 +1299,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1307,6 +1342,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -1339,6 +1375,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -1395,6 +1432,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"Different last name\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1426,6 +1464,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("multipleSimplePathDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1476,6 +1515,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    \"streetNumber\": 43\n" +
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"Different last name\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -1490,6 +1530,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -1527,6 +1568,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"Different first name\",\n" +
                         "  \"lastName\": \"Different last name\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1558,6 +1600,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("multipleSimpleDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleSimplePathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1600,6 +1643,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1631,6 +1675,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("multipleMultiLevelPathWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1681,6 +1726,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
+                    "  \"id\": null,\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"previousAddresses\": [\n" +
                     "    {\n" +
@@ -1695,6 +1741,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "}";
 
             String expected = "{\n" +
+                    "  \"id\": null,\n" +
                     "  \"firstName\": \"FirstName1\",\n" +
                     "  \"lastName\": \"LastName1\",\n" +
                     "  \"email\": \"e1@e.mail\",\n" +
@@ -1732,6 +1779,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p;
                 })},
                 {"Json string input", "{\n" +
+                        "  \"id\": null,\n" +
                         "  \"firstName\": \"FirstName1\",\n" +
                         "  \"lastName\": \"LastName1\",\n" +
                         "  \"email\": \"e1@e.mail\",\n" +
@@ -1763,6 +1811,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("multipleMultiLevelPathSingleIngoreWithDiffCases")
     public void assertShouldBeSuccessfulWhenMultipleMultiLevelPathSingleIgnoreWithDifferenceIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -1808,6 +1857,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"TeamName2\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"LastName13\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -1850,6 +1900,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -1883,6 +1934,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"e103@e.mail\",\n" +
@@ -1934,6 +1986,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "{\n" +
                 "  \"name\": \"TeamName2\",\n" +
                 "  \"lead\": {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
@@ -1976,6 +2029,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  \"members\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
@@ -2009,6 +2063,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
@@ -2079,6 +2134,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2120,6 +2176,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2152,6 +2209,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2187,6 +2245,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
             String expected = "{\n" +
                     "  \"name\": \"TeamName2\",\n" +
                     "  \"lead\": {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
@@ -2229,6 +2288,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  \"members\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
@@ -2261,6 +2321,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      ]\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
@@ -2326,6 +2387,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    },\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
+                "    \"id\": null,\n" +
                 "    \"lastName\": \"LastName13\",\n" +
                 "    \"previousAddresses\": [\n" +
                 "      {\n" +
@@ -2366,6 +2428,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      },\n" +
                 "      \"email\": \"e102@e.mail\",\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2397,6 +2460,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      },\n" +
                 "      \"email\": \"e103@e.mail\",\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -2460,6 +2524,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2501,6 +2566,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2533,6 +2599,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2579,6 +2646,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e13@e.mail\",\n" +
                     "    \"firstName\": \"FirstName13\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName13\",\n" +
                     "    \"previousAddresses\": [\n" +
                     "      {\n" +
@@ -2619,6 +2687,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e102@e.mail\",\n" +
                     "      \"firstName\": \"FirstName102\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName102\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2650,6 +2719,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e103@e.mail\",\n" +
                     "      \"firstName\": \"FirstName103\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName103\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -2703,6 +2773,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "[\n" +
                         "  {\n" +
                         "    \"firstName\": \"Different first name\",\n" +
+                        "    \"id\": null,\n" +
                         "    \"lastName\": \"LastName1\",\n" +
                         "    \"email\": \"e1@e.mail\",\n" +
                         "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -2728,6 +2799,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  {\n" +
                         "    \"firstName\": \"FirstName2\",\n" +
+                        "    \"id\": null,\n" +
                         "    \"lastName\": \"LastName2\",\n" +
                         "    \"email\": \"e2@e.mail\",\n" +
                         "    \"birthDate\": \"2015-04-01T13:42:11\",\n" +
@@ -2761,6 +2833,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  {\n" +
                         "    \"firstName\": \"FirstName3\",\n" +
+                        "    \"id\": null,\n" +
                         "    \"lastName\": \"LastName3\",\n" +
                         "    \"email\": \"e3@e.mail\",\n" +
                         "    \"birthDate\": \"2014-04-01T13:42:11\",\n" +
@@ -2784,6 +2857,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void simpleDifferenceInListTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName1\",\n" +
                 "    \"lastName\": \"LastName1\",\n" +
                 "    \"email\": \"e1@e.mail\",\n" +
@@ -2809,6 +2883,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName2\",\n" +
                 "    \"lastName\": \"LastName2\",\n" +
                 "    \"email\": \"e2@e.mail\",\n" +
@@ -2842,6 +2917,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName3\",\n" +
                 "    \"lastName\": \"LastName3\",\n" +
                 "    \"email\": \"e3@e.mail\",\n" +
@@ -2901,7 +2977,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "Expected: CANADA\n" +
                     "     got: AUSTRIA\n"), thrown.getMessage());
 
-            String actual = "[\n" +
+                    String actual = "[\n" +
                     "  {\n" +
                     "    \"birthCountry\": \"BELGIUM\",\n" +
                     "    \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -2915,6 +2991,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
                     "    \"firstName\": \"Different first name\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName1\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -2930,6 +3007,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName2\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -2945,12 +3023,14 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName3\"\n" +
                     "  }\n" +
                     "]";
 
-            String expected = "[\n" +
+                    String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName1\",\n" +
                     "    \"lastName\": \"LastName1\",\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
@@ -2966,6 +3046,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
                     "    \"lastName\": \"LastName2\",\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
@@ -2981,6 +3062,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
                     "    \"lastName\": \"LastName3\",\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
@@ -3009,6 +3091,8 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         .addToChildBeanList((ChildBean) null)
                         .addToChildBeanList(child().childString("grape"))},
                 {"Json string input", "{\n" +
+                        "  \"parentString\": null,\n" +
+                        "  \"childBean\": null,\n" +
                         "  \"childBeanList\": [\n" +
                         "    {\n" +
                         "      \"childString\": \"banana\",\n" +
@@ -3029,6 +3113,8 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("ignoreInListWithNullBeansCases")
     public void ignoreInListWithNullBeansTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"parentString\": null,\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [\n" +
                 "    {\n" +
                 "      \"childString\": \"kiwi\",\n" +
@@ -3054,6 +3140,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "     got: grape\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"childBean\": null,\n" +
                     "  \"childBeanList\": [\n" +
                     "    {\n" +
                     "      \"childInteger\": 0,\n" +
@@ -3065,10 +3152,13 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      \"childString\": \"grape\"\n" +
                     "    }\n" +
                     "  ],\n" +
-                    "  \"childBeanMap\": []\n" +
+                    "  \"childBeanMap\": [],\n" +
+                    "  \"parentString\": null\n" +
                     "}";
 
             String expected = "{\n" +
+                    "  \"parentString\": null,\n" +
+                    "  \"childBean\": null,\n" +
                     "  \"childBeanList\": [\n" +
                     "    {\n" +
                     "      \"childString\": \"kiwi\",\n" +
@@ -3102,6 +3192,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 }))},
                 {"Json string input", "[\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"Different first name\",\n" +
                         "    \"lastName\": \"LastName1\",\n" +
                         "    \"email\": \"e1@e.mail\",\n" +
@@ -3127,6 +3218,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName2\",\n" +
                         "    \"lastName\": \"LastName2\",\n" +
                         "    \"email\": \"e2@e.mail\",\n" +
@@ -3160,6 +3252,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    ]\n" +
                         "  },\n" +
                         "  {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName3\",\n" +
                         "    \"lastName\": \"LastName3\",\n" +
                         "    \"email\": \"e3@e.mail\",\n" +
@@ -3184,6 +3277,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void simpleDifferenceInSetTest(String testName, Object input) {
         String approvedFileContent = "[\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName1\",\n" +
                 "    \"lastName\": \"LastName1\",\n" +
                 "    \"email\": \"e1@e.mail\",\n" +
@@ -3209,6 +3303,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName2\",\n" +
                 "    \"lastName\": \"LastName2\",\n" +
                 "    \"email\": \"e2@e.mail\",\n" +
@@ -3242,6 +3337,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    ]\n" +
                 "  },\n" +
                 "  {\n" +
+                "    \"id\": null,\n" +
                 "    \"firstName\": \"FirstName3\",\n" +
                 "    \"lastName\": \"LastName3\",\n" +
                 "    \"email\": \"e3@e.mail\",\n" +
@@ -3315,6 +3411,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
                     "    \"firstName\": \"Different first name\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName1\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -3330,6 +3427,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName2\"\n" +
                     "  },\n" +
                     "  {\n" +
@@ -3345,12 +3443,14 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
+                    "    \"id\": null,\n" +
                     "    \"lastName\": \"LastName3\"\n" +
                     "  }\n" +
                     "]";
 
             String expected = "[\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName1\",\n" +
                     "    \"lastName\": \"LastName1\",\n" +
                     "    \"email\": \"e1@e.mail\",\n" +
@@ -3366,6 +3466,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName2\",\n" +
                     "    \"lastName\": \"LastName2\",\n" +
                     "    \"email\": \"e2@e.mail\",\n" +
@@ -3381,6 +3482,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
+                    "    \"id\": null,\n" +
                     "    \"firstName\": \"FirstName3\",\n" +
                     "    \"lastName\": \"LastName3\",\n" +
                     "    \"email\": \"e3@e.mail\",\n" +
@@ -3418,6 +3520,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  \"dummyString\": \"String1\",\n" +
                         "  \"genericValue\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -3443,6 +3546,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -3476,6 +3580,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -3503,6 +3608,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  \"dummyString\": \"String1\",\n" +
                 "  \"genericValue\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -3528,6 +3634,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -3561,6 +3668,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -3613,6 +3721,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 43\n" +
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3627,6 +3736,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 44\n" +
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3641,6 +3751,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 45\n" +
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  ]\n" +
@@ -3650,6 +3761,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  \"dummyString\": \"String1\",\n" +
                     "  \"genericValue\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -3664,6 +3776,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
@@ -3678,6 +3791,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
@@ -3713,9 +3827,14 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     return p3;
                 })))},
                 {"Json string input", "{\n" +
+                        "  \"array\": null,\n" +
                         "  \"dummyString\": \"String1\",\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"map\": null,\n" +
                         "  \"set\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -3741,6 +3860,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -3774,6 +3894,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -3801,6 +3922,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  \"dummyString\": \"String1\",\n" +
                 "  \"set\": [\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -3826,6 +3948,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -3859,6 +3982,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    },\n" +
                 "    {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -3874,7 +3998,11 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      },\n" +
                 "      \"previousAddresses\": []\n" +
                 "    }\n" +
-                "  ]\n" +
+                "  ],\n" +
+                "  \"map\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"array\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("set.firstName", "set.currentAddress.country").ignoring("set.previousAddresses"), null);
@@ -3897,7 +4025,11 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "     got: AUSTRIA\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"map\": null,\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
                     "      \"birthCountry\": \"BELGIUM\",\n" +
@@ -3911,6 +4043,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 43\n" +
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3925,6 +4058,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 44\n" +
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -3939,6 +4073,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"streetNumber\": 45\n" +
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  ]\n" +
@@ -3948,6 +4083,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  \"dummyString\": \"String1\",\n" +
                     "  \"set\": [\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"birthDate\": \"2016-04-01T13:42:11\",\n" +
@@ -3962,6 +4098,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"birthDate\": \"2015-04-01T13:42:11\",\n" +
@@ -3976,6 +4113,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      }\n" +
                     "    },\n" +
                     "    {\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"birthDate\": \"2014-04-01T13:42:11\",\n" +
@@ -3989,7 +4127,11 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        \"since\": \"2017-04-04\"\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"map\": null,\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"array\": null\n" +
                     "}";
 
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "firstName and previousAddresses shouldn't be present");
@@ -4012,6 +4154,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "[\n" +
                         "  {\n" +
                         "    \"p1\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"Different first name\",\n" +
                         "      \"lastName\": \"LastName1\",\n" +
                         "      \"email\": \"e1@e.mail\",\n" +
@@ -4039,6 +4182,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  {\n" +
                         "    \"p2\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName2\",\n" +
                         "      \"lastName\": \"LastName2\",\n" +
                         "      \"email\": \"e2@e.mail\",\n" +
@@ -4074,6 +4218,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  {\n" +
                         "    \"p3\": {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName3\",\n" +
                         "      \"lastName\": \"LastName3\",\n" +
                         "      \"email\": \"e3@e.mail\",\n" +
@@ -4100,6 +4245,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "[\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4127,6 +4273,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4162,6 +4309,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -4237,6 +4385,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
                     "      \"firstName\": \"Different first name\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -4264,6 +4413,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"previousAddresses\": [\n" +
                     "        {\n" +
@@ -4299,6 +4449,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      },\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
+                    "      \"id\": null,\n" +
                     "      \"lastName\": \"LastName3\"\n" +
                     "    }\n" +
                     "  }\n" +
@@ -4307,6 +4458,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
             String expected = "[\n" +
                     "  {\n" +
                     "    \"p1\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName1\",\n" +
                     "      \"lastName\": \"LastName1\",\n" +
                     "      \"email\": \"e1@e.mail\",\n" +
@@ -4334,6 +4486,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  {\n" +
                     "    \"p2\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName2\",\n" +
                     "      \"lastName\": \"LastName2\",\n" +
                     "      \"email\": \"e2@e.mail\",\n" +
@@ -4369,6 +4522,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  },\n" +
                     "  {\n" +
                     "    \"p3\": {\n" +
+                    "      \"id\": null,\n" +
                     "      \"firstName\": \"FirstName3\",\n" +
                     "      \"lastName\": \"LastName3\",\n" +
                     "      \"email\": \"e3@e.mail\",\n" +
@@ -4409,6 +4563,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  \"genericValue\": [\n" +
                         "    {\n" +
                         "      \"p1\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"Different first name\",\n" +
                         "        \"lastName\": \"LastName1\",\n" +
                         "        \"email\": \"e1@e.mail\",\n" +
@@ -4436,6 +4591,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    },\n" +
                         "    {\n" +
                         "      \"p2\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName2\",\n" +
                         "        \"lastName\": \"LastName2\",\n" +
                         "        \"email\": \"e2@e.mail\",\n" +
@@ -4471,6 +4627,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    },\n" +
                         "    {\n" +
                         "      \"p3\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName3\",\n" +
                         "        \"lastName\": \"LastName3\",\n" +
                         "        \"email\": \"e3@e.mail\",\n" +
@@ -4500,6 +4657,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  \"genericValue\": [\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4527,6 +4685,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4562,6 +4721,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -4640,6 +4800,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
                     "        \"firstName\": \"Different first name\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -4667,6 +4828,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -4702,6 +4864,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName3\"\n" +
                     "      }\n" +
                     "    }\n" +
@@ -4713,6 +4876,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  \"genericValue\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName1\",\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
@@ -4740,6 +4904,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
@@ -4775,6 +4940,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
                     "        \"lastName\": \"LastName3\",\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
@@ -4812,9 +4978,11 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 })))},
                 {"Json string input", "{\n" +
                         "  \"dummyString\": \"String1\",\n" +
+                        "  \"set\": null,\n" +
                         "  \"map\": [\n" +
                         "    {\n" +
                         "      \"p1\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"Different first name\",\n" +
                         "        \"lastName\": \"LastName1\",\n" +
                         "        \"email\": \"e1@e.mail\",\n" +
@@ -4842,6 +5010,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    },\n" +
                         "    {\n" +
                         "      \"p2\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName2\",\n" +
                         "        \"lastName\": \"LastName2\",\n" +
                         "        \"email\": \"e2@e.mail\",\n" +
@@ -4877,6 +5046,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "    },\n" +
                         "    {\n" +
                         "      \"p3\": {\n" +
+                        "        \"id\": null,\n" +
                         "        \"firstName\": \"FirstName3\",\n" +
                         "        \"lastName\": \"LastName3\",\n" +
                         "        \"email\": \"e3@e.mail\",\n" +
@@ -4893,7 +5063,10 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "        \"previousAddresses\": []\n" +
                         "      }\n" +
                         "    }\n" +
-                        "  ]\n" +
+                        "  ],\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"hashMap\": null,\n" +
+                        "  \"array\": null\n" +
                         "}"}
         };
     }
@@ -4903,9 +5076,11 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void simpleDifferenceInMapAsPropertyTest(String testName, Object input) {
         String approvedFileContent = "{\n" +
                 "  \"dummyString\": \"String1\",\n" +
+                "  \"set\": null,\n" +
                 "  \"map\": [\n" +
                 "  {\n" +
                 "    \"p1\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName1\",\n" +
                 "      \"lastName\": \"LastName1\",\n" +
                 "      \"email\": \"e1@e.mail\",\n" +
@@ -4933,6 +5108,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p2\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName2\",\n" +
                 "      \"lastName\": \"LastName2\",\n" +
                 "      \"email\": \"e2@e.mail\",\n" +
@@ -4968,6 +5144,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  },\n" +
                 "  {\n" +
                 "    \"p3\": {\n" +
+                "      \"id\": null,\n" +
                 "      \"firstName\": \"FirstName3\",\n" +
                 "      \"lastName\": \"LastName3\",\n" +
                 "      \"email\": \"e3@e.mail\",\n" +
@@ -5009,7 +5186,10 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      ]\n" +
                 "    }\n" +
                 "  }\n" +
-                "]\n" +
+                "],\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"array\": null\n" +
                 "}";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("map.p1.firstName", "map.p2.currentAddress.country").ignoring("map.p3.previousAddresses"), null);
@@ -5030,7 +5210,10 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "     got: AUSTRIA\n"), thrown.getMessage());
 
             String actual = "{\n" +
+                    "  \"array\": null,\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"hashSet\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
@@ -5046,6 +5229,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
                     "        \"firstName\": \"Different first name\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -5073,6 +5257,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"previousAddresses\": [\n" +
                     "          {\n" +
@@ -5108,17 +5293,21 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        },\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
+                    "        \"id\": null,\n" +
                     "        \"lastName\": \"LastName3\"\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"set\": null\n" +
                     "}";
 
             String expected = "{\n" +
                     "  \"dummyString\": \"String1\",\n" +
+                    "  \"set\": null,\n" +
                     "  \"map\": [\n" +
                     "    {\n" +
                     "      \"p1\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName1\",\n" +
                     "        \"lastName\": \"LastName1\",\n" +
                     "        \"email\": \"e1@e.mail\",\n" +
@@ -5146,6 +5335,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p2\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName2\",\n" +
                     "        \"lastName\": \"LastName2\",\n" +
                     "        \"email\": \"e2@e.mail\",\n" +
@@ -5181,6 +5371,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "    },\n" +
                     "    {\n" +
                     "      \"p3\": {\n" +
+                    "        \"id\": null,\n" +
                     "        \"firstName\": \"FirstName3\",\n" +
                     "        \"lastName\": \"LastName3\",\n" +
                     "        \"email\": \"e3@e.mail\",\n" +
@@ -5196,7 +5387,10 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "        }\n" +
                     "      }\n" +
                     "    }\n" +
-                    "  ]\n" +
+                    "  ],\n" +
+                    "  \"hashSet\": null,\n" +
+                    "  \"hashMap\": null,\n" +
+                    "  \"array\": null\n" +
                     "}";
 
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "previousAddresses shouldn't be present");
@@ -5213,19 +5407,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  {\n" +
                         "    \"ONE\": {\n" +
                         "      \"string\": \"value\",\n" +
-                        "      \"integer\": 1\n" +
+                        "      \"integer\": 1,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  },\n" +
                         "  {\n" +
                         "    \"THREE\": {\n" +
                         "      \"string\": \"value3\",\n" +
-                        "      \"integer\": 3\n" +
+                        "      \"integer\": 3,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  },\n" +
                         "  {\n" +
                         "    \"TWO\": {\n" +
                         "      \"string\": \"unexpected value\",\n" +
-                        "      \"integer\": 2\n" +
+                        "      \"integer\": 2,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  }\n" +
                         "]"}
@@ -5239,19 +5448,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  {\n" +
                 "    \"ONE\": {\n" +
                 "      \"string\": \"value\",\n" +
-                "      \"integer\": 1\n" +
+                "      \"integer\": 1,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"THREE\": {\n" +
                 "      \"string\": \"value3\",\n" +
-                "      \"integer\": 3\n" +
+                "      \"integer\": 3,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"TWO\": {\n" +
                 "      \"string\": \"value\",\n" +
-                "      \"integer\": 2\n" +
+                "      \"integer\": 2,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  }\n" +
                 "]";
@@ -5265,19 +5489,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
             String actual = "[\n" +
                     "  {\n" +
                     "    \"ONE\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 1,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"value\"\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"THREE\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 3,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"value3\"\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"TWO\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 2,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"unexpected value\"\n" +
                     "    }\n" +
                     "  }\n" +
@@ -5287,19 +5526,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  {\n" +
                     "    \"ONE\": {\n" +
                     "      \"string\": \"value\",\n" +
-                    "      \"integer\": 1\n" +
+                    "      \"integer\": 1,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"THREE\": {\n" +
                     "      \"string\": \"value3\",\n" +
-                    "      \"integer\": 3\n" +
+                    "      \"integer\": 3,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"TWO\": {\n" +
                     "      \"string\": \"value\",\n" +
-                    "      \"integer\": 2\n" +
+                    "      \"integer\": 2,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  }\n" +
                     "]";
@@ -5318,19 +5572,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  {\n" +
                         "    \"1\": {\n" +
                         "      \"string\": \"value 1\",\n" +
-                        "      \"integer\": 1\n" +
+                        "      \"integer\": 1,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  },\n" +
                         "  {\n" +
                         "    \"2\": {\n" +
                         "      \"string\": \"unexpected value\",\n" +
-                        "      \"integer\": 2\n" +
+                        "      \"integer\": 2,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  },\n" +
                         "  {\n" +
                         "    \"3\": {\n" +
                         "      \"string\": \"value 3\",\n" +
-                        "      \"integer\": 3\n" +
+                        "      \"integer\": 3,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  }\n" +
                         "]"}
@@ -5344,19 +5613,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  {\n" +
                 "    \"1\": {\n" +
                 "      \"string\": \"value 1\",\n" +
-                "      \"integer\": 1\n" +
+                "      \"integer\": 1,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"2\": {\n" +
                 "      \"string\": \"value 2\",\n" +
-                "      \"integer\": 2\n" +
+                "      \"integer\": 2,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"3\": {\n" +
                 "      \"string\": \"value 3\",\n" +
-                "      \"integer\": 3\n" +
+                "      \"integer\": 3,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  }\n" +
                 "]";
@@ -5370,19 +5654,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
             String actual = "[\n" +
                     "  {\n" +
                     "    \"1\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 1,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"value 1\"\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"2\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 2,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"unexpected value\"\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"3\": {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 3,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"value 3\"\n" +
                     "    }\n" +
                     "  }\n" +
@@ -5392,19 +5691,34 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  {\n" +
                     "    \"1\": {\n" +
                     "      \"string\": \"value 1\",\n" +
-                    "      \"integer\": 1\n" +
+                    "      \"integer\": 1,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"2\": {\n" +
                     "      \"string\": \"value 2\",\n" +
-                    "      \"integer\": 2\n" +
+                    "      \"integer\": 2,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  },\n" +
                     "  {\n" +
                     "    \"3\": {\n" +
                     "      \"string\": \"value 3\",\n" +
-                    "      \"integer\": 3\n" +
+                    "      \"integer\": 3,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    }\n" +
                     "  }\n" +
                     "]";
@@ -5422,23 +5736,13 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "[\n" +
                         "  [\n" +
                         "    {\n" +
-                        "      \"integer\": 2\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "      \"beanInteger\": 0,\n" +
-                        "      \"beanByte\": 0,\n" +
-                        "      \"beanChar\": \"\\u0000\",\n" +
-                        "      \"beanShort\": 0,\n" +
-                        "      \"beanLong\": 0,\n" +
-                        "      \"beanFloat\": 0.0,\n" +
-                        "      \"beanDouble\": 2.0,\n" +
-                        "      \"beanBoolean\": false\n" +
-                        "    }\n" +
-                        "  ],\n" +
-                        "  [\n" +
-                        "    {\n" +
                         "      \"string\": \"1\",\n" +
-                        "      \"integer\": 1\n" +
+                        "      \"integer\": 1,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    },\n" +
                         "    {\n" +
                         "      \"beanInteger\": 0,\n" +
@@ -5454,7 +5758,12 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  [\n" +
                         "    {\n" +
                         "      \"string\": \"3\",\n" +
-                        "      \"integer\": 3\n" +
+                        "      \"integer\": 3,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    },\n" +
                         "    {\n" +
                         "      \"beanInteger\": 0,\n" +
@@ -5464,6 +5773,27 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      \"beanLong\": 0,\n" +
                         "      \"beanFloat\": 0.0,\n" +
                         "      \"beanDouble\": 3.0,\n" +
+                        "      \"beanBoolean\": false\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  [\n" +
+                        "    {\n" +
+                        "      \"string\": null,\n" +
+                        "      \"integer\": 2,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"beanInteger\": 0,\n" +
+                        "      \"beanByte\": 0,\n" +
+                        "      \"beanChar\": \"\\u0000\",\n" +
+                        "      \"beanShort\": 0,\n" +
+                        "      \"beanLong\": 0,\n" +
+                        "      \"beanFloat\": 0.0,\n" +
+                        "      \"beanDouble\": 2.0,\n" +
                         "      \"beanBoolean\": false\n" +
                         "    }\n" +
                         "  ]\n" +
@@ -5477,24 +5807,13 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "[\n" +
                 "  [\n" +
                 "    {\n" +
-                "      \"string\": \"2\",\n" +
-                "      \"integer\": 2\n" +
-                "    },\n" +
-                "    {\n" +
-                "      \"beanInteger\": 0,\n" +
-                "      \"beanByte\": 0,\n" +
-                "      \"beanChar\": \"\\u0000\",\n" +
-                "      \"beanShort\": 0,\n" +
-                "      \"beanLong\": 0,\n" +
-                "      \"beanFloat\": 0.0,\n" +
-                "      \"beanDouble\": 2.0,\n" +
-                "      \"beanBoolean\": false\n" +
-                "    }\n" +
-                "  ],\n" +
-                "  [\n" +
-                "    {\n" +
                 "      \"string\": \"1\",\n" +
-                "      \"integer\": 1\n" +
+                "      \"integer\": 1,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"beanInteger\": 0,\n" +
@@ -5510,7 +5829,12 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "  [\n" +
                 "    {\n" +
                 "      \"string\": \"3\",\n" +
-                "      \"integer\": 3\n" +
+                "      \"integer\": 3,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"beanInteger\": 0,\n" +
@@ -5522,34 +5846,45 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "      \"beanDouble\": 3.0,\n" +
                 "      \"beanBoolean\": false\n" +
                 "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"string\": \"2\",\n" +
+                "      \"integer\": 2,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"beanInteger\": 0,\n" +
+                "      \"beanByte\": 0,\n" +
+                "      \"beanChar\": \"\\u0000\",\n" +
+                "      \"beanShort\": 0,\n" +
+                "      \"beanLong\": 0,\n" +
+                "      \"beanFloat\": 0.0,\n" +
+                "      \"beanDouble\": 2.0,\n" +
+                "      \"beanBoolean\": false\n" +
+                "    }\n" +
                 "  ]\n" +
                 "]";
 
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("string"), null);
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), identity(), thrown -> {
-            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[0][0]\n" +
-                    "Expected: string\n" +
-                    "     but none found\n"), thrown.getMessage());
+            Assertions.assertEquals(getExcceptionMessageForDummyTestInfo("[2][0].string\n" +
+                    "Expected: 2\n" +
+                    "     got: null\n"), thrown.getMessage());
 
             String actual = "[\n" +
                     "  [\n" +
                     "    {\n" +
-                    "      \"integer\": 2\n" +
-                    "    },\n" +
-                    "    {\n" +
-                    "      \"beanBoolean\": false,\n" +
-                    "      \"beanByte\": 0,\n" +
-                    "      \"beanChar\": \"\\u0000\",\n" +
-                    "      \"beanDouble\": 2.0,\n" +
-                    "      \"beanFloat\": 0.0,\n" +
-                    "      \"beanInteger\": 0,\n" +
-                    "      \"beanLong\": 0,\n" +
-                    "      \"beanShort\": 0\n" +
-                    "    }\n" +
-                    "  ],\n" +
-                    "  [\n" +
-                    "    {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 1,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"1\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -5565,7 +5900,12 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  ],\n" +
                     "  [\n" +
                     "    {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
                     "      \"integer\": 3,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
                     "      \"string\": \"3\"\n" +
                     "    },\n" +
                     "    {\n" +
@@ -5578,30 +5918,40 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      \"beanLong\": 0,\n" +
                     "      \"beanShort\": 0\n" +
                     "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"array\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"integer\": 2,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"string\": null\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanBoolean\": false,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanDouble\": 2.0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanShort\": 0\n" +
+                    "    }\n" +
                     "  ]\n" +
                     "]";
 
             String expected = "[\n" +
                     "  [\n" +
                     "    {\n" +
-                    "      \"string\": \"2\",\n" +
-                    "      \"integer\": 2\n" +
-                    "    },\n" +
-                    "    {\n" +
-                    "      \"beanInteger\": 0,\n" +
-                    "      \"beanByte\": 0,\n" +
-                    "      \"beanChar\": \"\\u0000\",\n" +
-                    "      \"beanShort\": 0,\n" +
-                    "      \"beanLong\": 0,\n" +
-                    "      \"beanFloat\": 0.0,\n" +
-                    "      \"beanDouble\": 2.0,\n" +
-                    "      \"beanBoolean\": false\n" +
-                    "    }\n" +
-                    "  ],\n" +
-                    "  [\n" +
-                    "    {\n" +
                     "      \"string\": \"1\",\n" +
-                    "      \"integer\": 1\n" +
+                    "      \"integer\": 1,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"beanInteger\": 0,\n" +
@@ -5617,7 +5967,12 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "  [\n" +
                     "    {\n" +
                     "      \"string\": \"3\",\n" +
-                    "      \"integer\": 3\n" +
+                    "      \"integer\": 3,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
                     "    },\n" +
                     "    {\n" +
                     "      \"beanInteger\": 0,\n" +
@@ -5627,6 +5982,27 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                     "      \"beanLong\": 0,\n" +
                     "      \"beanFloat\": 0.0,\n" +
                     "      \"beanDouble\": 3.0,\n" +
+                    "      \"beanBoolean\": false\n" +
+                    "    }\n" +
+                    "  ],\n" +
+                    "  [\n" +
+                    "    {\n" +
+                    "      \"string\": \"2\",\n" +
+                    "      \"integer\": 2,\n" +
+                    "      \"set\": null,\n" +
+                    "      \"map\": null,\n" +
+                    "      \"hashSet\": null,\n" +
+                    "      \"hashMap\": null,\n" +
+                    "      \"array\": null\n" +
+                    "    },\n" +
+                    "    {\n" +
+                    "      \"beanInteger\": 0,\n" +
+                    "      \"beanByte\": 0,\n" +
+                    "      \"beanChar\": \"\\u0000\",\n" +
+                    "      \"beanShort\": 0,\n" +
+                    "      \"beanLong\": 0,\n" +
+                    "      \"beanFloat\": 0.0,\n" +
+                    "      \"beanDouble\": 2.0,\n" +
                     "      \"beanBoolean\": false\n" +
                     "    }\n" +
                     "  ]\n" +
@@ -5650,6 +6026,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Json string input", "{\n" +
                         "  \"name\": \"Should not see this in not approved file!\",\n" +
                         "  \"lead\": {\n" +
+                        "    \"id\": null,\n" +
                         "    \"firstName\": \"FirstName13\",\n" +
                         "    \"lastName\": \"Should not see this in not approved file!\",\n" +
                         "    \"email\": \"e13@e.mail\",\n" +
@@ -5692,6 +6069,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "  },\n" +
                         "  \"members\": [\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName102\",\n" +
                         "      \"lastName\": \"LastName102\",\n" +
                         "      \"email\": \"e102@e.mail\",\n" +
@@ -5725,6 +6103,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         "      ]\n" +
                         "    },\n" +
                         "    {\n" +
+                        "      \"id\": null,\n" +
                         "      \"firstName\": \"FirstName103\",\n" +
                         "      \"lastName\": \"LastName103\",\n" +
                         "      \"email\": \"Should not see this in not approved file!\",\n" +
@@ -5787,6 +6166,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "    },\n" +
                 "    \"email\": \"e13@e.mail\",\n" +
                 "    \"firstName\": \"FirstName13\",\n" +
+                "    \"id\": null,\n" +
                 "    \"previousAddresses\": [\n" +
                 "      {\n" +
                 "        \"city\": \"CityName23\",\n" +
@@ -5825,6 +6205,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "        \"streetNumber\": 144\n" +
                 "      },\n" +
                 "      \"firstName\": \"FirstName102\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName102\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -5855,6 +6236,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 "        \"streetNumber\": 145\n" +
                 "      },\n" +
                 "      \"firstName\": \"FirstName103\",\n" +
+                "      \"id\": null,\n" +
                 "      \"lastName\": \"LastName103\",\n" +
                 "      \"previousAddresses\": [\n" +
                 "        {\n" +
@@ -6006,6 +6388,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Object input", parent().parentString("banana")},
                 {"Json string input", "{\n" +
                         "  \"parentString\": \"banana\",\n" +
+                        "  \"childBean\": null,\n" +
                         "  \"childBeanList\": [],\n" +
                         "  \"childBeanMap\": []\n" +
                         "}"}
@@ -6017,6 +6400,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void assertShouldBeSuccessfulWhenSubpathIsDefinedOnNullObject(String testName, Object input) {
         String approvedFileContent = "{\n" +
                 "  \"parentString\": \"banana\",\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": []\n" +
                 "}";
@@ -6030,11 +6414,12 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void assertShouldBeSuccessfulWhenNullObjectIsIgnored(String testName, Object input) {
         String approvedFileContent = "{\n" +
                 "  \"parentString\": \"banana\",\n" +
+                "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": []\n" +
                 "}";
 
-        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, jsonMatcher -> jsonMatcher.ignoring("childBean"), null);
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, getDefaultFileMatcherConfigWithLenientMatching(), jsonMatcher -> jsonMatcher.ignoring("childBean"), null);
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, identity(), null);
     }
 
@@ -6044,6 +6429,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("subpathWithPrimitives")
     public void assertShouldThrowExceptionWhenSubpathIsSpecifiedOnPrimitiveField(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"parentString\": null,\n" +
                 "  \"childBean\": {\n" +
                 "    \"childString\": \"banana\",\n" +
                 "    \"childInteger\": 0\n" +
@@ -6064,19 +6450,39 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 {"Object input", bean().array(bean().string("value").build(), bean().string("value").hashSet(newHashSet(bean().build())).build()).build()},
                 {"Json string input", "{\n" +
                         "  \"integer\": 0,\n" +
+                        "  \"string\": null,\n" +
+                        "  \"set\": null,\n" +
+                        "  \"map\": null,\n" +
+                        "  \"hashSet\": null,\n" +
+                        "  \"hashMap\": null,\n" +
                         "  \"array\": [\n" +
                         "    {\n" +
                         "      \"string\": \"value\",\n" +
-                        "      \"integer\": 0\n" +
+                        "      \"integer\": 0,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
+                        "      \"hashSet\": null,\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    },\n" +
                         "    {\n" +
                         "      \"string\": \"value\",\n" +
                         "      \"integer\": 0,\n" +
+                        "      \"set\": null,\n" +
+                        "      \"map\": null,\n" +
                         "      \"hashSet\": [\n" +
                         "        {\n" +
-                        "          \"integer\": 0\n" +
+                        "          \"string\": null,\n" +
+                        "          \"integer\": 0,\n" +
+                        "          \"set\": null,\n" +
+                        "          \"map\": null,\n" +
+                        "          \"hashSet\": null,\n" +
+                        "          \"hashMap\": null,\n" +
+                        "          \"array\": null\n" +
                         "        }\n" +
-                        "      ]\n" +
+                        "      ],\n" +
+                        "      \"hashMap\": null,\n" +
+                        "      \"array\": null\n" +
                         "    }\n" +
                         "  ]\n" +
                         "}"}
@@ -6088,19 +6494,39 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     public void ignoresFieldsInArray(String testName, Object input) {
         String approvedFileContent = "{\n" +
                 "  \"integer\": 0,\n" +
+                "  \"string\": null,\n" +
+                "  \"set\": null,\n" +
+                "  \"map\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"hashMap\": null,\n" +
                 "  \"array\": [\n" +
                 "    {\n" +
                 "      \"string\": \"value\",\n" +
-                "      \"integer\": 1\n" +
+                "      \"integer\": 1,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
+                "      \"hashSet\": null,\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    },\n" +
                 "    {\n" +
                 "      \"string\": \"value\",\n" +
                 "      \"integer\": 0,\n" +
+                "      \"set\": null,\n" +
+                "      \"map\": null,\n" +
                 "      \"hashSet\": [\n" +
                 "        {\n" +
-                "          \"integer\": 0\n" +
+                "          \"string\": null,\n" +
+                "          \"integer\": 0,\n" +
+                "          \"set\": null,\n" +
+                "          \"map\": null,\n" +
+                "          \"hashSet\": null,\n" +
+                "          \"hashMap\": null,\n" +
+                "          \"array\": null\n" +
                 "        }\n" +
-                "      ]\n" +
+                "      ],\n" +
+                "      \"hashMap\": null,\n" +
+                "      \"array\": null\n" +
                 "    }\n" +
                 "  ]\n" +
                 "}";
@@ -6119,16 +6545,31 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         String approvedFileContent = "[\n" +
                 "  {\n" +
                 "    \"string\": \"value\",\n" +
-                "    \"integer\": 1\n" +
+                "    \"integer\": 1,\n" +
+                "    \"set\": null,\n" +
+                "    \"map\": null,\n" +
+                "    \"hashSet\": null,\n" +
+                "    \"hashMap\": null,\n" +
+                "    \"array\": null\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"string\": \"value\",\n" +
                 "    \"integer\": 0,\n" +
+                "    \"set\": null,\n" +
+                "    \"map\": null,\n" +
                 "    \"hashSet\": [\n" +
                 "      {\n" +
-                "        \"integer\": 0\n" +
+                "        \"string\": null,\n" +
+                "        \"integer\": 0,\n" +
+                "        \"set\": null,\n" +
+                "        \"map\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"array\": null\n" +
                 "      }\n" +
-                "    ]\n" +
+                "    ],\n" +
+                "    \"hashMap\": null,\n" +
+                "    \"array\": null\n" +
                 "  }\n" +
                 "]";
 
@@ -6217,6 +6658,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @MethodSource("subpathWithPrimitives")
     void strictModeFailsWhenApprovedFileContainsIgnoredField(String testName, Object input) {
         String approvedFileContent = "{\n" +
+                "  \"parentString\": null,\n" +
                 "  \"childBean\": {\n" +
                 "    \"childString\": \"banana\",\n" +
                 "    \"childInteger\": 0\n" +
@@ -6487,6 +6929,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         // Approved file matches actual (firstName = "FirstName1"). Without ignoring: passes.
         // With ignoring("firstName") in strict mode: actual loses firstName, expected keeps it → FAILS.
         String approvedFileContent = "{\n" +
+                "  \"id\": null,\n" +
                 "  \"firstName\": \"FirstName1\",\n" +
                 "  \"lastName\": \"LastName1\",\n" +
                 "  \"email\": \"e1@e.mail\",\n" +
@@ -6518,6 +6961,55 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 thrown -> Assertions.assertTrue(thrown.getMessage().contains("firstName"),
                         "failure message should reference the ignored field still present in approved file"),
                 AssertionFailedError.class);
+    }
+
+    @Test
+    void ignoringNullValuedFieldInCollectionElementRemovesEmptyElement() {
+        // Bug repro: a collection element whose ONLY field is the ignored field with a null value
+        // was previously kept because Gson (without serializeNulls) omitted the null field first,
+        // so ignoring() found nothing and returned false — leaving a spurious {} in the array.
+        // With serializeNulls=true (now the default) the null field is present, ignoring() removes
+        // it, the element becomes {} and is then removed from the array.
+        //
+        // Input list has 5 elements: 4 with value="a"/"b"/"c"/"d" and 1 extra with value=null.
+        // After ignoring "value" all elements become {} and are stripped → matches approved "[]".
+        List<SingleField> actual = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d"),
+                new SingleField(null)   // extra element whose only field is null
+        );
+
+        String approvedFileContent = "[]";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("value"), null);
+    }
+
+    @Test
+    void withoutSerializingNullsRestoresLegacyBehaviourForNullFieldInCollection() {
+        // With withoutSerializingNulls() the null field is stripped by Gson before ignoring runs,
+        // so the element is already {} and ignoring() has nothing to remove — the {} stays in the
+        // array and comparison against "[]" fails.
+        List<SingleField> actual = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d"),
+                new SingleField(null)
+        );
+
+        String approvedFileContent = "[]";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.ignoring("value").withoutSerializingNulls(),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("Expected 0 values but got 1"),
+                        "should report that one element was not removed: " + thrown.getMessage()),
+                AssertionFailedError.class);
+    }
+
+    @SuppressWarnings("unused")
+    private static class SingleField {
+        private final String value;
+        SingleField(String value) { this.value = value; }
     }
 
 }

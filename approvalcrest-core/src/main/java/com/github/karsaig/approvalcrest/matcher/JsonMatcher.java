@@ -315,6 +315,12 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
+    public JsonMatcher<T> withoutSerializingNulls() {
+        matcherConfiguration.setSerializeNulls(false);
+        return this;
+    }
+
+    @Override
     public String toString() {
         if (fileNameWithPath == null) {
             return "JsonMatcher";

@@ -234,12 +234,14 @@ public class JsonMatcherThrowableSupportTest extends AbstractFileMatcherTest {
 
                 {new InvalidKeyException(), "{\n" +
                         "  \"0x1\": {\n" +
+                        "    \"detailMessage\": null,\n" +
                         "    \"suppressedExceptions\": [],\n" +
                         "    \"class\": \"java.security.InvalidKeyException\"\n" +
                         "  }\n" +
                         "}", null},
                 {new ArrayIndexOutOfBoundsException(), "{\n" +
                         "  \"0x1\": {\n" +
+                        "    \"detailMessage\": null,\n" +
                         "    \"suppressedExceptions\": [],\n" +
                         "    \"class\": \"java.lang.ArrayIndexOutOfBoundsException\"\n" +
                         "  }\n" +
@@ -311,6 +313,7 @@ public class JsonMatcherThrowableSupportTest extends AbstractFileMatcherTest {
                                 "      \"detailMessage\": \"Y:\",\n" +
                                 "      \"cause\": {\n" +
                                 "        \"0x1\": {\n" +
+                                "          \"detailMessage\": null,\n" +
                                 "          \"suppressedExceptions\": [],\n" +
                                 "          \"class\": \"java.util.FormatterClosedException\"\n" +
                                 "        }\n" +
