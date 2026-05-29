@@ -8,7 +8,7 @@ Using approvalcrest with JUnit 5 Jupiter (Java).
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-junit-jupiter</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <scope>test</scope>
 </dependency>
 ```
