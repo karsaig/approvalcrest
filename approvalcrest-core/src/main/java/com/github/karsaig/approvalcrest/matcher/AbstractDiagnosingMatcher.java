@@ -24,7 +24,7 @@ import static com.github.karsaig.approvalcrest.BeanFinder.findBeanAt;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.collectValuesByFieldNamePattern;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.findJsonValueAt;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.jsonElementToJavaValue;
-import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperties;
 
 public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> {
 
@@ -35,8 +35,10 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
     private static final Pattern ADD_OPENS_PATTERN =
             Pattern.compile("module (\\S+) does not \"opens (\\S+)\"");
 
+    private static final String MACHINE_READABLE_ALIAS = "fMMReadable";
+
     private boolean comparisonDescriptionNeeded = false;
-    protected boolean machineReadableOutput = getBooleanProperty("fileMatcherMachineReadable");
+    protected boolean machineReadableOutput = getBooleanProperties(null, "fileMatcherMachineReadable", MACHINE_READABLE_ALIAS);
 
     /**
      * Template-method entry point. Subclasses implement their matching logic here.

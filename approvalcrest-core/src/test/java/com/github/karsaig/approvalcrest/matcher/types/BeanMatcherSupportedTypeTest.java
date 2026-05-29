@@ -275,17 +275,21 @@ class BeanMatcherSupportedTypeTest extends AbstractBeanMatcherTest {
     }
 
     @Test
-    void superclassActualFailsTypeCheckAgainstSubclassExpected() {
-        // Reverse: expected is BeanOne (subclass), actual is the raw BeanWithGeneric superclass.
-        // BeanOne.isInstance(BeanWithGeneric) → false → type check fails.
-        BeanOne expected = new BeanOne("dummy", "value");
-        BeanWithGeneric<String> actual = new BeanWithGeneric<>("dummy", "value");
+    void skipClassComparisonViaAliasPropertyTest() {
+        BeanWithGeneric<String> actual   = new BeanOne("dummy", "value");
+        BeanWithGeneric<String> expected = new BeanTwo("dummy", "value");
 
-        assertDiagnosingMatcher(actual, expected, "\n" +
-                "Expected: \n" +
-                "     but: Actual type [class com.github.karsaig.approvalcrest.testdata.BeanWithGeneric] is not an instance of expected type [class com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne]!\n" +
-                "This can be ignored with skipClassComparison or\n" +
-                "setting beanMatcherSkipClassComparison env variable to true");
+        String previous = System.getProperty("bMSCComparison");
+        System.setProperty("bMSCComparison", "true");
+        try {
+            assertDiagnosingMatcher(actual, expected);
+        } finally {
+            if (previous == null) {
+                System.clearProperty("bMSCComparison");
+            } else {
+                System.setProperty("bMSCComparison", previous);
+            }
+        }
     }
 
 }

@@ -238,4 +238,31 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             throw new RuntimeException(e);
         }
     }
+
+    // Alias test — fMMReadable alias should enable machine-readable output
+    @Test
+    public void shouldOutputMachineReadableMessageWhenAliasPropertyEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        System.setProperty("fMMReadable", "true");
+        try {
+            inMemoryUnixFs(imfsi -> {
+                DummyInformation dummyTestInfo = dummyInformation(imfsi);
+                JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+
+                Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+                writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+                AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                        () -> assertThat(actual, underTest));
+
+                String msg = error.getMessage();
+                String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
+                assertTrue(msg.contains("Approved file (expected): " + approvedPath));
+                assertTrue(msg.contains("=== ACTUAL (full) ==="));
+                assertTrue(msg.contains("=== END ACTUAL ==="));
+            });
+        } finally {
+            System.clearProperty("fMMReadable");
+        }
+    }
 }

@@ -16,12 +16,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperties;
 
 
 public class MatcherConfiguration {
 
     private static final String SERIALIZE_NULLS_PROPERTY = "approvalcrestSerializeNulls";
+    private static final String SERIALIZE_NULLS_ALIAS = "aSerNulls";
 
     private final Set<String> pathsToIgnore = new HashSet<>();
     private final Map<String, Matcher<?>> customMatchers = new HashMap<>();
@@ -33,7 +34,7 @@ public class MatcherConfiguration {
     private final List<Class<?>> typesToSort = new ArrayList<>();
     private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
     private AliasMap aliasMap = AliasMap.builder().build();
-    private boolean serializeNulls = getBooleanProperty(SERIALIZE_NULLS_PROPERTY, "true");
+    private boolean serializeNulls = getBooleanProperties("true", SERIALIZE_NULLS_PROPERTY, SERIALIZE_NULLS_ALIAS);
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));

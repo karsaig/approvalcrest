@@ -7006,6 +7006,36 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                 AssertionFailedError.class);
     }
 
+    @Test
+    void aSerNullsAliasDisablesSerializeNulls() {
+        // Setting aSerNulls=false should behave like approvalcrestSerializeNulls=false:
+        // Gson omits null fields, so ignoring() cannot remove the element, leaving a spurious {} in the array.
+        List<SingleField> actual = Lists.newArrayList(
+                new SingleField("a"), new SingleField("b"),
+                new SingleField("c"), new SingleField("d"),
+                new SingleField(null)
+        );
+
+        String approvedFileContent = "[]";
+
+        String previous = System.getProperty("aSerNulls");
+        System.setProperty("aSerNulls", "false");
+        try {
+            assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, getDefaultFileMatcherConfig(),
+                    jsonMatcher -> jsonMatcher.ignoring("value"),
+                    thrown -> Assertions.assertTrue(
+                            thrown.getMessage().contains("Expected 0 values but got 1"),
+                            "should report that one element was not removed: " + thrown.getMessage()),
+                    AssertionFailedError.class);
+        } finally {
+            if (previous == null) {
+                System.clearProperty("aSerNulls");
+            } else {
+                System.setProperty("aSerNulls", previous);
+            }
+        }
+    }
+
     @SuppressWarnings("unused")
     private static class SingleField {
         private final String value;

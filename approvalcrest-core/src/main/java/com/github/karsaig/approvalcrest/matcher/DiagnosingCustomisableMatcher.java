@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import static com.github.karsaig.approvalcrest.CyclicReferenceDetector.getClassesWithCircularReferences;
-import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperty;
+import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperties;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollectionSorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
@@ -40,7 +40,8 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     protected final T expected;
     private GsonConfiguration configuration;
     protected MatcherConfiguration matcherConfiguration = new MatcherConfiguration();
-    private boolean skipClassComparison = getBooleanProperty("beanMatcherSkipClassComparison","false");
+    private static final String SKIP_CLASS_COMPARISON_ALIAS = "bMSCComparison";
+    private boolean skipClassComparison = getBooleanProperties("false", "beanMatcherSkipClassComparison", SKIP_CLASS_COMPARISON_ALIAS);
     private boolean jsonDescription = true;
 
     public DiagnosingCustomisableMatcher(T expected) {
