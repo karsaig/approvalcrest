@@ -4,5 +4,6 @@
     "childInteger": 0
   },
   "childBeanList": [],
-  "childBeanMap": []
+  "childBeanMap": [],
+  "parentString": null
 }

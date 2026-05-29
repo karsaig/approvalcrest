@@ -7,7 +7,7 @@
       "value": "Lorem ipsum dolor sit amet, inani nullam oportere no cum."
     },
     "class": "org.opentest4j.AssertionFailedError",
-    "detailMessage": "Expected file 4e5799/fd51ac-approved.content\nContent does not match!",
+    "detailMessage": "Expected file 4e5799/fd51ac-approved.content\nContent does not match!\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.",
     "expected": {
       "stringRepresentation": "Different content",
       "type": "java.lang.String",

@@ -43,11 +43,21 @@ public class MatcherAssertFailureDiagnosticTest {
         } catch (ComparisonFailure e) {
             checkThat(e,
                     expected(containsString("{\n" +
+                            "  \"array\": null,\n" +
+                            "  \"hashMap\": null,\n" +
+                            "  \"hashSet\": null,\n" +
                             "  \"integer\": 1,\n" +
+                            "  \"map\": null,\n" +
+                            "  \"set\": null,\n" +
                             "  \"string\": \"value1\"\n" +
                             "}")),
                     actual(containsString("{\n" +
+                            "  \"array\": null,\n" +
+                            "  \"hashMap\": null,\n" +
+                            "  \"hashSet\": null,\n" +
                             "  \"integer\": 2,\n" +
+                            "  \"map\": null,\n" +
+                            "  \"set\": null,\n" +
                             "  \"string\": \"value2\"\n" +
                             "}")));
         }
