@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.kotlin.matcher
 
 import com.github.karsaig.approvalcrest.matcher.ContentMatcher
+import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher
 import com.github.karsaig.approvalcrest.matcher.file.ApprovedFileMatcher
 import java.nio.file.Path
 
@@ -32,3 +33,7 @@ fun <T> ContentMatcher<T>.withRelativePathName(pathName: String): ContentMatcher
 @Suppress("UNCHECKED_CAST")
 fun <T> ContentMatcher<T>.withPath(path: Path): ContentMatcher<T> =
     (this as ApprovedFileMatcher<ContentMatcher<T>>).withPath(path)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> ContentMatcher<T>.withMachineReadableOutput(): ContentMatcher<T> =
+    (this as AbstractDiagnosingFileMatcher<T, ContentMatcher<T>>).withMachineReadableOutput()

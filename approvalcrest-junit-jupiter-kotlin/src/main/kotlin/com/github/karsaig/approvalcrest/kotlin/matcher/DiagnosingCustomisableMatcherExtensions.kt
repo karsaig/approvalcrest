@@ -110,3 +110,15 @@ fun <T> DiagnosingCustomisableMatcher<T>.withAlias(value: String, alias: String)
 @Suppress("UNCHECKED_CAST")
 fun <T> DiagnosingCustomisableMatcher<T>.withAlias(fieldName: String, value: String, alias: String): DiagnosingCustomisableMatcher<T> =
     (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withAlias(fieldName, value, alias)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> DiagnosingCustomisableMatcher<T>.sortType(vararg types: Class<*>): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).sortType(*types)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> DiagnosingCustomisableMatcher<T>.withMachineReadableOutput(): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withMachineReadableOutput()
+
+@Suppress("UNCHECKED_CAST")
+fun <T> DiagnosingCustomisableMatcher<T>.withoutSerializingNulls(): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withoutSerializingNulls()

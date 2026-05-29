@@ -112,6 +112,18 @@ fun <T> JsonMatcher<T>.withAlias(value: String, alias: String): JsonMatcher<T> =
 fun <T> JsonMatcher<T>.withAlias(fieldName: String, value: String, alias: String): JsonMatcher<T> =
     (this as CustomisableMatcher<T, JsonMatcher<T>>).withAlias(fieldName, value, alias)
 
+@Suppress("UNCHECKED_CAST")
+fun <T> JsonMatcher<T>.sortType(vararg types: Class<*>): JsonMatcher<T> =
+    (this as CustomisableMatcher<T, JsonMatcher<T>>).sortType(*types)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> JsonMatcher<T>.withMachineReadableOutput(): JsonMatcher<T> =
+    (this as CustomisableMatcher<T, JsonMatcher<T>>).withMachineReadableOutput()
+
+@Suppress("UNCHECKED_CAST")
+fun <T> JsonMatcher<T>.withoutSerializingNulls(): JsonMatcher<T> =
+    (this as CustomisableMatcher<T, JsonMatcher<T>>).withoutSerializingNulls()
+
 // --- ApprovedFileMatcher<JsonMatcher<T>> extensions ---
 
 @Suppress("UNCHECKED_CAST")
