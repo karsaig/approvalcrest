@@ -2,7 +2,7 @@
 {
   "0x1": {
     "class": "org.junit.ComparisonFailure",
-    "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!",
+    "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.",
     "fActual": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
     "fExpected": "Different content",
     "suppressedExceptions": []
