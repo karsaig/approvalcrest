@@ -28,6 +28,7 @@ import org.hamcrest.Matcher;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ClassAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.DateAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.GetterBasedTypeAdapterFactory;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.InstantAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateTimeAdapter;
@@ -36,6 +37,7 @@ import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapt
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ThrowableTypeAdapterFactory;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.UnsafeFieldTypeAdapterFactory;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
@@ -124,6 +126,13 @@ class GsonProvider {
         markSortedFields(gsonBuilder, matcherConfiguration.getTypesToSort());
 
         registerExclusionStrategies(gsonBuilder, matcherConfiguration);
+
+        // Register locked-module type adapters LAST — they are the fallback for types
+        // that no other factory handles. Registered after all specific adapters so that
+        // ThrowableTypeAdapterFactory, DateAdapter, PathAdapter etc. get first pick.
+        // These still come before Gson's built-in ReflectiveTypeAdapterFactory.
+        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory());
     }
 
     private static void additionalConfiguration(GsonConfiguration additionalConfig, GsonBuilder gsonBuilder) {

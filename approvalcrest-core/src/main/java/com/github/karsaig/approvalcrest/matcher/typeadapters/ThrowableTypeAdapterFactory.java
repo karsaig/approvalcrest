@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
+import com.github.karsaig.approvalcrest.InaccessibleFieldException;
+import com.github.karsaig.approvalcrest.ReflectUtil;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -72,14 +74,15 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
             for (Map.Entry<String, JsonElement> entry : jsonPrimitiveRefs) {
                 try {
                     Field field = fieldMap.get(entry.getKey());
-                    field.setAccessible(true);
-                    Object current = field.get(o);
+                    Object current = ReflectUtil.getFieldValue(field, o);
                     String key = entry.getValue().getAsJsonPrimitive().getAsString();
                     result.put(key, current);
                     JsonElement jsonElementForCurrent = originalObject.get(key);
                     if (jsonElementForCurrent != null && jsonElementForCurrent.isJsonObject()) {
                         doBuildSourceObjectMap(result, current, originalObject, jsonElementForCurrent.getAsJsonObject());
                     }
+                } catch (InaccessibleFieldException e) {
+                    // Field in locked module — skip circular reference tracking for this field
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -91,9 +94,10 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
             for (Map.Entry<String, JsonElement> entry : jsonObjectRefs) {
                 try {
                     Field field = fieldMap.get(entry.getKey());
-                    field.setAccessible(true);
-                    Object current = field.get(o);
+                    Object current = ReflectUtil.getFieldValue(field, o);
                     doBuildSourceObjectMap(result, current, originalObject, entry.getValue().getAsJsonObject());
+                } catch (InaccessibleFieldException e) {
+                    // Field in locked module — skip circular reference tracking for this field
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
