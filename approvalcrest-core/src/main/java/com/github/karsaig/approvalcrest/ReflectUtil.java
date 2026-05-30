@@ -198,6 +198,19 @@ public class ReflectUtil {
         IMPL_ADD_OPENS_MH = implAddOpensMh;
         INVOKE_WITH_ARGS = invokeWithArgs;
         OUR_MODULE = ourModule;
+
+        // Proactively open java.lang to our module. This is needed because
+        // Gson's ReflectiveTypeAdapterFactory accesses Throwable fields (detailMessage etc.)
+        // even when the serialized class itself is in an unnamed module (e.g. test framework
+        // exception classes that extend java.lang.Throwable).
+        if (implAddOpensMh != null && invokeWithArgs != null && ourModule != null && getModule != null) {
+            try {
+                Object javaBaseModule = getModule.invoke(String.class);
+                tryOpenModule(javaBaseModule, "java.lang", ourModule);
+            } catch (Exception ignored) {
+                // Best-effort; if it fails, fallback behavior still works
+            }
+        }
     }
 
     /**
