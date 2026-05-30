@@ -18,9 +18,12 @@ Steps performed:
   4. mvn deploy -P sign-release via for-release-pom.xml
      (or mvn verify in --dry-run: signs artifacts but does not upload)
   5. git push --follow-tags  (skipped in --dry-run)
+  6. Bump to next development version and push  (skipped in --dry-run)
+     - X.Y.Z releases become X.Y.(Z+1)-SNAPSHOT
+     - Non-conforming versions become after-<version>-SNAPSHOT
 
-After a real release, bump to next snapshot with:
-  ./nextversion.sh <next-snapshot-version>
+After a real release, the development version is set automatically.
+Use ./nextversion.sh <version> to override it if needed.
 EOF
 }
 
@@ -125,4 +128,36 @@ else
     mvn -f for-release-pom.xml deploy -P sign-release
     git push --follow-tags
     _push_done=true
+
+    # Bump to next development version
+    if [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+        next_dev="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))-SNAPSHOT"
+    else
+        next_dev="after-${version}-SNAPSHOT"
+    fi
+
+    mvn versions:set -DnewVersion="${next_dev}"
+    mvn versions:commit
+    mvn -f for-release-pom.xml versions:set -DnewVersion="${next_dev}"
+    mvn -f for-release-pom.xml versions:commit
+
+    # Update documentation version references to the released version.
+    # Uses context-aware patterns so it works regardless of what version
+    # is currently in the docs (handles stale, manual, or inconsistent values).
+    update_doc_versions() {
+        local new_ver="$1"
+        local file="$2"
+        # Pattern 1: <version>ANY</version> within a <dependency> block containing com.github.karsaig
+        sed -i -E '/groupId.*com\.github\.karsaig/,/<\/dependency>/{s|<version>[^<]+</version>|<version>'"${new_ver}"'</version>|;}' "$file"
+        # Pattern 2: inline artifact coordinates like com.github.karsaig:approvalcrest[-...]:VERSION
+        sed -i -E 's|(com\.github\.karsaig:approvalcrest[a-z-]*):[0-9][0-9a-zA-Z._-]*|\1:'"${new_ver}"'|g' "$file"
+    }
+
+    update_doc_versions "${version}" README.md
+    for f in docs/*.md; do
+        update_doc_versions "${version}" "$f"
+    done
+
+    git commit -a -m "Next development version ${next_dev}"
+    git push
 fi

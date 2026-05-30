@@ -68,22 +68,21 @@ public class BeanFinder {
                 return Either.right(fanout);
             }
             for (Field field : getEveryField(object.getClass())) {
-                field.setAccessible(true);
                 if (headOf(fields).equals(field.getName())) {
                     try {
+                        Object value = ReflectUtil.getFieldValue(field, object);
                         if (fields.size() == 1) {
-                            return Either.right(field.get(object));
+                            return Either.right(value);
                         } else {
-                            Object next = field.get(object);
-                            if (next == null) {
-                                // Capture the name of the field that is null so the error message
-                                // says "childBean is null" rather than the confusing
-                                // "parent bean of childString is null".
+                            if (value == null) {
                                 return Either.left(new PathNullPointerException(field.getName()));
                             }
-                            return findBeanAt(fullPath, fields.subList(1, fields.size()), next);
+                            return findBeanAt(fullPath, fields.subList(1, fields.size()), value);
                         }
-                    } catch (IllegalAccessException ignored) {
+                    } catch (InaccessibleFieldException e) {
+                        return Either.left(new IllegalArgumentException(
+                                "Cannot access field '" + field.getName() + "' in locked module type "
+                                        + field.getDeclaringClass().getName() + " for path: " + fullPath));
                     }
                 }
             }

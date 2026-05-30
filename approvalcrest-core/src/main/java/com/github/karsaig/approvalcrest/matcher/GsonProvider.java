@@ -28,6 +28,7 @@ import org.hamcrest.Matcher;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ClassAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.DateAdapter;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.GetterBasedTypeAdapterFactory;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.InstantAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.LocalDateTimeAdapter;
@@ -36,6 +37,7 @@ import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetDateTimeAdapt
 import com.github.karsaig.approvalcrest.matcher.typeadapters.OffsetTimeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.PathTypeAdapter;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ThrowableTypeAdapterFactory;
+import com.github.karsaig.approvalcrest.matcher.typeadapters.UnsafeFieldTypeAdapterFactory;
 import com.github.karsaig.approvalcrest.matcher.typeadapters.ZonedDateTimeAdapter;
 
 import com.google.common.base.Optional;
@@ -101,6 +103,12 @@ class GsonProvider {
         if (!circularReferenceTypes.isEmpty()) {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
         }
+
+        // Register locked-module fallback factories FIRST. Gson reverses the factory
+        // list internally, so first-registered ends up checked LAST — which is what we
+        // want: these should only handle types that no other factory claims.
+        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory());
 
         gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());

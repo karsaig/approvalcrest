@@ -79,18 +79,18 @@ public class CyclicReferenceDetector {
         }
 
         for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            
             if (!isStatic(field.getModifiers())) {
-                try {
-                    if (!anyMatchesFieldName(field, matcherConfiguration.getPatternsToIgnore())) {
-                        Object fieldValue = field.get(object);
+                if (!anyMatchesFieldName(field, matcherConfiguration.getPatternsToIgnore())) {
+                    try {
+                        Object fieldValue = ReflectUtil.getFieldValue(field, object);
                         if (fieldValue != null) {
                             detectCircularReferenceOnObject(fieldValue, matcherConfiguration);
                         }
+                    } catch (InaccessibleFieldException e) {
+                        // Field is in a locked module and Unsafe is unavailable — skip it.
+                        // If we can't read it, Gson can't serialize it reflectively either;
+                        // the getter-based adapter will handle it during serialization.
                     }
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(e);
                 }
             }
         }

@@ -104,6 +104,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
 | [Dynamic values](docs/dynamic-values.md) | Handling UUIDs, timestamps, and other run-to-run changes |
 | [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
+| [Field access modes](docs/field-access-modes.md) | Safe, force, and fallback modes — JDK module handling |
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
 | [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |
