@@ -256,6 +256,14 @@ public class ReflectUtil {
             if (pkg == null || pkg.isEmpty()) {
                 return false;
             }
+
+            // In fallback mode, treat ALL named-module types as locked regardless of
+            // Module.isOpen(). On JDK 9-15 with --illegal-access=permit (default),
+            // isOpen() returns true even though we want getter-based fallback behavior.
+            if (FALLBACK_MODE) {
+                return true;
+            }
+
             Object ourMod = OUR_MODULE != null ? OUR_MODULE : GET_MODULE.invoke(ReflectUtil.class);
             boolean open = (boolean) IS_OPEN.invoke(module, pkg, ourMod);
             if (open) {
@@ -263,7 +271,7 @@ public class ReflectUtil {
             }
 
             // Module is locked — try to open it programmatically
-            if (!FALLBACK_MODE && tryOpenModule(module, pkg, ourMod)) {
+            if (tryOpenModule(module, pkg, ourMod)) {
                 return false;
             }
 

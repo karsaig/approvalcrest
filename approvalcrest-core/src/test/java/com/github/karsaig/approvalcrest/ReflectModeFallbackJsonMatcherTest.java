@@ -107,9 +107,10 @@ public class ReflectModeFallbackJsonMatcherTest extends AbstractFileMatcherTest 
 
     @Test
     public void throwableMatchesApprovedFile() {
-        // In fallback mode, Throwable is serialized via getters:
-        // getMessage(), getLocalizedMessage(), getCause(), getSuppressed()
-        // ThrowableTypeAdapterFactory removes stackTrace and adds class
+        // ThrowableTypeAdapterFactory removes stackTrace and adds class.
+        // In fallback mode, GetterBasedTypeAdapterFactory handles Throwable when
+        // the module is locked, producing getter-based output with keys:
+        // message, localizedMessage, cause, suppressed, class
         RuntimeException input = new RuntimeException("test error");
         String approvedContent = "{\n" +
                 "  \"cause\": null,\n" +
