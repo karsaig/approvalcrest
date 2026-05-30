@@ -1,6 +1,6 @@
 # kotlin
 
-Using approvalcrest with Kotlin and JUnit 5.
+Using approvalcrest with Kotlin and JUnit 5 & 6.
 
 ## Dependency
 
@@ -69,7 +69,7 @@ assertThat("content", sameContentAsApproved<String>().withUniqueId("myCase"))
 
 ## Parameterized Tests
 
-Same pattern as JUnit 5 Java — add `TestInfo` as a parameter:
+Same pattern as JUnit 5 & 6 Java — add `TestInfo` as a parameter:
 
 ```kotlin
 @ParameterizedTest

@@ -67,7 +67,7 @@ Choose the artifact that matches your test runner.
 </dependency>
 ```
 
-### JUnit 5 Jupiter
+### JUnit 5 & 6 Jupiter
 
 ```xml
 <dependency>
@@ -78,7 +78,7 @@ Choose the artifact that matches your test runner.
 </dependency>
 ```
 
-### Kotlin + JUnit 5
+### Kotlin + JUnit 5 & 6
 
 ```xml
 <dependency>
@@ -120,7 +120,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
 | [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |
-| [JUnit 5 Jupiter](docs/junit5-jupiter.md) | JUnit 5 Jupiter specifics |
+| [JUnit 5 & 6 Jupiter](docs/junit5-jupiter.md) | JUnit 5 & 6 Jupiter specifics |
 | [TestNG](docs/testng.md) | TestNG specifics |
 | [Kotlin](docs/kotlin.md) | Kotlin extension functions and KT-5464 workaround |
 

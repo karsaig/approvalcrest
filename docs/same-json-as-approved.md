@@ -36,9 +36,9 @@ void rawJsonStringMatchesApprovedFile() {
 }
 ```
 
-## Parameterized Tests (JUnit 5)
+## Parameterized Tests (JUnit 5 & 6)
 
-Add `TestInfo` as a test parameter — JUnit 5 injects it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
+Add `TestInfo` as a test parameter — JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
 
 ```java
 @ParameterizedTest
@@ -63,4 +63,4 @@ JUnit 4 requires a `Junit4DesciptionWatcher` rule. See [junit4-vintage](junit4-v
 - [sorting](sorting.md) — stabilise collection order
 - [supported-types](supported-types.md) — how common Java types are serialised
 - [junit4-vintage](junit4-vintage.md) — JUnit 4 / Vintage usage
-- [junit5-jupiter](junit5-jupiter.md) — JUnit 5 Jupiter usage
+- [junit5-jupiter](junit5-jupiter.md) — JUnit 5 & 6 Jupiter usage
