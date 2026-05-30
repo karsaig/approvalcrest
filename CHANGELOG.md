@@ -1,6 +1,12 @@
 Changelog
 ===========
 
+Version 1.2.0 - 2026/05/30
+-----
+
+- Eliminated the `--add-opens` JVM flag requirement. The library now opens modules programmatically at runtime using a three-tier field access strategy: force-open the module → getter-based fallback → direct field reflection. No JVM flags are needed on JDK 9+. See [field-access-modes](docs/field-access-modes.md).
+- Added `approvalcrest-testng` module: TestNG 6+ adapter with full feature parity — `sameBeanAs`, `sameJsonAsApproved`, `sameContentAsApproved`, DataProvider support, and optional `Method` injection (TestNG 6.14.2+). See [testng](docs/testng.md).
+
 Version 1.1.0 - 2026/05/29
 -----
 
