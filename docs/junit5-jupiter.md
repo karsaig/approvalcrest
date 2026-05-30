@@ -1,6 +1,6 @@
 # junit5-jupiter
 
-Using approvalcrest with JUnit 5 Jupiter (Java).
+Using approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-junit-jupiter` artifact works with both JUnit 5 and JUnit 6 (JUnit Platform) without any code changes.
 
 ## Dependency
 
@@ -37,7 +37,7 @@ public void myTest() {
 
 ## Parameterized Tests
 
-Add `TestInfo` as a parameter — JUnit 5 injects it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
+Add `TestInfo` as a parameter — JUnit 5 & 6 inject it automatically. Pass it to `sameJsonAsApproved(testInfo)` so the matcher can resolve the correct test method. Use `.withUniqueId(name)` to create a separate approved file per case:
 
 ```java
 @ParameterizedTest
@@ -76,10 +76,6 @@ Verify that an assertion fails with a specific matcher:
 assertThrows(sameBeanAs(expectedException),
     () -> assertThat(actual, sameBeanAs(wrongExpected)));
 ```
-
-## JUnit 6 Compatibility
-
-The `approvalcrest-junit-jupiter` module is verified against **JUnit Platform 6** (tested on JUnit 6.1.0 with Java 17, 21, and 25). No code changes are needed to run on JUnit 6 — the existing dependency and API work without modification.
 
 ## Related
 

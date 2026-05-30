@@ -7,8 +7,8 @@ Add approvalcrest to your project and write your first assertion in minutes.
 | Test framework | Artifact |
 |---|---|
 | JUnit 4 / JUnit 5 Vintage | `com.github.karsaig:approvalcrest:1.1.0` |
-| JUnit 5 Jupiter (Java) | `com.github.karsaig:approvalcrest-junit-jupiter:1.1.0` |
-| Kotlin + JUnit 5 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.1.0` |
+| JUnit 5 & 6 Jupiter (Java) | `com.github.karsaig:approvalcrest-junit-jupiter:1.1.0` |
+| Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.1.0` |
 | TestNG | `com.github.karsaig:approvalcrest-testng:1.1.0` |
 
 ### JUnit 4 / Vintage (Maven)
@@ -22,7 +22,7 @@ Add approvalcrest to your project and write your first assertion in minutes.
 </dependency>
 ```
 
-### JUnit 5 Jupiter (Maven)
+### JUnit 5 & 6 Jupiter (Maven)
 
 ```xml
 <dependency>
@@ -33,7 +33,7 @@ Add approvalcrest to your project and write your first assertion in minutes.
 </dependency>
 ```
 
-### Kotlin + JUnit 5 (Maven)
+### Kotlin + JUnit 5 & 6 (Maven)
 
 ```xml
 <dependency>

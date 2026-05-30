@@ -29,7 +29,7 @@ void assertContent() {
 3. **Rename** to `*-approved.content`.
 4. **Subsequent runs** compare against the approved file.
 
-## Parameterized Tests (JUnit 5)
+## Parameterized Tests (JUnit 5 & 6)
 
 Pass `TestInfo` and combine with `.withUniqueId()` to create a separate approved file per case:
 
