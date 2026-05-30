@@ -1,0 +1,18 @@
+/*samecontent.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+{
+  "0x1": {
+    "actual": {
+      "stringRepresentation": "Lorem ipsum dolor sit amet, inani nullam oportere no cum.",
+      "type": "java.lang.String",
+      "value": "Lorem ipsum dolor sit amet, inani nullam oportere no cum."
+    },
+    "class": "org.opentest4j.AssertionFailedError",
+    "detailMessage": "Expected file f89d26/fd51ac-approved.content\nContent does not match!\n[AI tip] Re-run with system property fMMReadable\u003dtrue for structured, machine-readable output.",
+    "expected": {
+      "stringRepresentation": "This is different content that should cause a mismatch.\n",
+      "type": "java.lang.String",
+      "value": "This is different content that should cause a mismatch.\n"
+    },
+    "suppressedExceptions": []
+  }
+}
