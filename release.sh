@@ -57,9 +57,6 @@ fi
 
 set -exuo pipefail
 
-# Capture current version shown in documentation (before any modifications)
-doc_version=$(sed -n 's/.*<version>\([0-9][0-9.]*[0-9a-zA-Z.-]*\)<\/version>.*/\1/p' README.md | head -1)
-
 # State tracking for cleanup
 _commit_made=false
 _tag_made=false
@@ -144,13 +141,22 @@ else
     mvn -f for-release-pom.xml versions:set -DnewVersion="${next_dev}"
     mvn -f for-release-pom.xml versions:commit
 
-    # Update documentation version references
-    if [[ -n "$doc_version" && "$doc_version" != "$version" ]]; then
-        sed -i "s/${doc_version}/${version}/g" README.md
-        for f in docs/*.md; do
-            sed -i "s/${doc_version}/${version}/g" "$f"
-        done
-    fi
+    # Update documentation version references to the released version.
+    # Uses context-aware patterns so it works regardless of what version
+    # is currently in the docs (handles stale, manual, or inconsistent values).
+    update_doc_versions() {
+        local new_ver="$1"
+        local file="$2"
+        # Pattern 1: <version>ANY</version> within a <dependency> block containing com.github.karsaig
+        sed -i -E '/groupId.*com\.github\.karsaig/,/<\/dependency>/{s|<version>[^<]+</version>|<version>'"${new_ver}"'</version>|;}' "$file"
+        # Pattern 2: inline artifact coordinates like com.github.karsaig:approvalcrest[-...]:VERSION
+        sed -i -E 's|(com\.github\.karsaig:approvalcrest[a-z-]*):[0-9][0-9a-zA-Z._-]*|\1:'"${new_ver}"'|g' "$file"
+    }
+
+    update_doc_versions "${version}" README.md
+    for f in docs/*.md; do
+        update_doc_versions "${version}" "$f"
+    done
 
     git commit -a -m "Next development version ${next_dev}"
     git push
