@@ -120,7 +120,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>**/ReflectModeFallbackTest.java</exclude>
+                        <exclude>**/ReflectModeFallback*.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -132,7 +132,7 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>**/ReflectModeFallbackTest.java</exclude>
+                                <exclude>**/ReflectModeFallback*.java</exclude>
                             </excludes>
                             <argLine>
                                 -Dfile.encoding=UTF-8
@@ -159,7 +159,7 @@
                             <excludes combine.self="override"/>
                             <argLine>-Dfile.encoding=UTF-8 -DapprovalcrestReflection=fallback</argLine>
                             <includes>
-                                <include>**/ReflectModeFallbackTest.java</include>
+                                <include>**/ReflectModeFallback*.java</include>
                             </includes>
                         </configuration>
                     </execution>

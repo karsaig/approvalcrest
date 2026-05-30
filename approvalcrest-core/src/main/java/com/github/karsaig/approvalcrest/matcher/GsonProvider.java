@@ -104,6 +104,12 @@ class GsonProvider {
             registerCircularReferenceTypes(circularReferenceTypes, gsonBuilder);
         }
 
+        // Register locked-module fallback factories FIRST. Gson reverses the factory
+        // list internally, so first-registered ends up checked LAST — which is what we
+        // want: these should only handle types that no other factory claims.
+        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory());
+
         gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
         gsonBuilder.registerTypeHierarchyAdapter(java.util.Optional.class, new JavaOptionalSerializer<>());
@@ -126,13 +132,6 @@ class GsonProvider {
         markSortedFields(gsonBuilder, matcherConfiguration.getTypesToSort());
 
         registerExclusionStrategies(gsonBuilder, matcherConfiguration);
-
-        // Register locked-module type adapters LAST — they are the fallback for types
-        // that no other factory handles. Registered after all specific adapters so that
-        // ThrowableTypeAdapterFactory, DateAdapter, PathAdapter etc. get first pick.
-        // These still come before Gson's built-in ReflectiveTypeAdapterFactory.
-        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory());
-        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory());
     }
 
     private static void additionalConfiguration(GsonConfiguration additionalConfig, GsonBuilder gsonBuilder) {
