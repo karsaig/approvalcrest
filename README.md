@@ -49,6 +49,7 @@ In this mode, failure messages include absolute paths to approved files, full `=
 |---|---|---|
 | JDK | 8+ | 8, 11, 17, 21, 25 |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
+| TestNG | 6+ | 6.14.3, 7.10.2 |
 | Kotlin | 1.x+ | 2.2.21 |
 
 ## Installation
@@ -88,6 +89,17 @@ Choose the artifact that matches your test runner.
 </dependency>
 ```
 
+### TestNG
+
+```xml
+<dependency>
+  <groupId>com.github.karsaig</groupId>
+  <artifactId>approvalcrest-testng</artifactId>
+  <version>1.1.0</version>
+  <scope>test</scope>
+</dependency>
+```
+
 For Gradle, replace the `<dependency>` blocks with the equivalent `testImplementation` notation.
 
 ## Documentation
@@ -108,5 +120,6 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |
 | [JUnit 5 Jupiter](docs/junit5-jupiter.md) | JUnit 5 Jupiter specifics |
+| [TestNG](docs/testng.md) | TestNG specifics |
 | [Kotlin](docs/kotlin.md) | Kotlin extension functions and KT-5464 workaround |
 

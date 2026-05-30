@@ -9,6 +9,7 @@ Add approvalcrest to your project and write your first assertion in minutes.
 | JUnit 4 / JUnit 5 Vintage | `com.github.karsaig:approvalcrest:1.1.0` |
 | JUnit 5 Jupiter (Java) | `com.github.karsaig:approvalcrest-junit-jupiter:1.1.0` |
 | Kotlin + JUnit 5 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.1.0` |
+| TestNG | `com.github.karsaig:approvalcrest-testng:1.1.0` |
 
 ### JUnit 4 / Vintage (Maven)
 
@@ -38,6 +39,17 @@ Add approvalcrest to your project and write your first assertion in minutes.
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
+    <version>1.1.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+### TestNG (Maven)
+
+```xml
+<dependency>
+    <groupId>com.github.karsaig</groupId>
+    <artifactId>approvalcrest-testng</artifactId>
     <version>1.1.0</version>
     <scope>test</scope>
 </dependency>
