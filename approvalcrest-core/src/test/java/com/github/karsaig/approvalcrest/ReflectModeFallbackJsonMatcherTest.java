@@ -364,6 +364,88 @@ public class ReflectModeFallbackJsonMatcherTest extends AbstractFileMatcherTest 
                         "     got: actual error\n");
     }
 
+    // ---- Locked-module inheritance (getter-based) ----
+    // FileSystemException demonstrates:
+    // - Child-specific getters: getFile(), getOtherFile(), getReason()
+    // - Inherited getters from Throwable: getMessage(), getCause(), getSuppressed()
+    // - Overridden getter: getMessage() returns formatted "/src -> /dst: reason"
+
+    @Test
+    public void lockedTypeInheritanceChildGettersPickedUp() {
+        java.nio.file.FileSystemException input =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "denied");
+        String approvedContent = "{\n" +
+                "  \"cause\": null,\n" +
+                "  \"class\": \"java.nio.file.FileSystemException\",\n" +
+                "  \"file\": \"/src.txt\",\n" +
+                "  \"localizedMessage\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"message\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"otherFile\": \"/dst.txt\",\n" +
+                "  \"reason\": \"denied\",\n" +
+                "  \"suppressed\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedContent, true);
+    }
+
+    @Test
+    public void lockedTypeOverriddenGetterReflectsSubclassBehavior() {
+        // FileSystemException.getMessage() OVERRIDES Throwable.getMessage()
+        // Returns formatted: "/src.txt -> /dst.txt: denied"
+        // If parent's implementation were called, it'd return raw detailMessage
+        java.nio.file.FileSystemException input =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "allowed");
+        String approvedContent = "{\n" +
+                "  \"cause\": null,\n" +
+                "  \"class\": \"java.nio.file.FileSystemException\",\n" +
+                "  \"file\": \"/src.txt\",\n" +
+                "  \"localizedMessage\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"message\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"otherFile\": \"/dst.txt\",\n" +
+                "  \"reason\": \"denied\",\n" +
+                "  \"suppressed\": []\n" +
+                "}";
+        // reason differs → getMessage() override returns different formatted string
+        assertJsonMatcherWithDummyTestInfo(input, approvedContent,
+                "Expected file 4ac405/11b2ef-approved.json\n" +
+                        "localizedMessage\n" +
+                        "Expected: /src.txt -> /dst.txt: denied\n" +
+                        "     got: /src.txt -> /dst.txt: allowed\n" +
+                        " ; message\n" +
+                        "Expected: /src.txt -> /dst.txt: denied\n" +
+                        "     got: /src.txt -> /dst.txt: allowed\n" +
+                        " ; reason\n" +
+                        "Expected: denied\n" +
+                        "     got: allowed\n");
+    }
+
+    @Test
+    public void lockedTypeMismatchOnChildSpecificGetter() {
+        // getFile() is declared in FileSystemException (not inherited from Throwable)
+        java.nio.file.FileSystemException input =
+                new java.nio.file.FileSystemException("/other.txt", "/dst.txt", "denied");
+        String approvedContent = "{\n" +
+                "  \"cause\": null,\n" +
+                "  \"class\": \"java.nio.file.FileSystemException\",\n" +
+                "  \"file\": \"/src.txt\",\n" +
+                "  \"localizedMessage\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"message\": \"/src.txt -\\u003e /dst.txt: denied\",\n" +
+                "  \"otherFile\": \"/dst.txt\",\n" +
+                "  \"reason\": \"denied\",\n" +
+                "  \"suppressed\": []\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedContent,
+                "Expected file 4ac405/11b2ef-approved.json\n" +
+                        "file\n" +
+                        "Expected: /src.txt\n" +
+                        "     got: /other.txt\n" +
+                        " ; localizedMessage\n" +
+                        "Expected: /src.txt -> /dst.txt: denied\n" +
+                        "     got: /other.txt -> /dst.txt: denied\n" +
+                        " ; message\n" +
+                        "Expected: /src.txt -> /dst.txt: denied\n" +
+                        "     got: /other.txt -> /dst.txt: denied\n");
+    }
+
     // ---- Ignoring fields ----
 
     @Test

@@ -357,6 +357,65 @@ public class ReflectModeFallbackTest {
         assertFalse(matcher.matches(actual));
     }
 
+    // ---- Locked-module inheritance (getter-based) ----
+    // FileSystemException is in java.base (locked module) and demonstrates:
+    // - Child-specific getters: getFile(), getOtherFile(), getReason()
+    // - Inherited getters from Throwable: getMessage(), getCause(), getSuppressed()
+    // - Overridden getter: getMessage() returns formatted string, not raw detailMessage
+
+    @Test
+    public void lockedTypeInheritanceChildGettersPickedUp() {
+        // FileSystemException.getFile() and getOtherFile() are child-specific getters
+        java.nio.file.FileSystemException expected =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "denied");
+        java.nio.file.FileSystemException actual =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "denied");
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void lockedTypeInheritanceMismatchOnChildGetter() {
+        // getFile() is declared in FileSystemException (not in Throwable)
+        java.nio.file.FileSystemException expected =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "denied");
+        java.nio.file.FileSystemException actual =
+                new java.nio.file.FileSystemException("/other.txt", "/dst.txt", "denied");
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        assertFalse(matcher.matches(actual));
+    }
+
+    @Test
+    public void lockedTypeOverriddenGetterUsesSubclassImplementation() {
+        // FileSystemException.getMessage() OVERRIDES Throwable.getMessage()
+        // and returns formatted: "/src.txt -> /dst.txt: denied"
+        // If parent's version were used, it would return just the raw detailMessage
+        java.nio.file.FileSystemException expected =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "denied");
+        java.nio.file.FileSystemException actual =
+                new java.nio.file.FileSystemException("/src.txt", "/dst.txt", "allowed");
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        // getMessage() returns different formatted strings because reason differs
+        assertFalse(matcher.matches(actual));
+    }
+
+    @Test
+    public void lockedTypeInheritanceMismatchOnInheritedGetter() {
+        // getCause() is inherited from Throwable (not overridden by FileSystemException)
+        java.nio.file.FileSystemException expected =
+                new java.nio.file.FileSystemException("/src.txt", null, "denied");
+        expected.initCause(new RuntimeException("cause A"));
+        java.nio.file.FileSystemException actual =
+                new java.nio.file.FileSystemException("/src.txt", null, "denied");
+        actual.initCause(new RuntimeException("cause B"));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        assertFalse(matcher.matches(actual));
+    }
+
     // ---- Ignoring fields ----
 
     @Test
