@@ -8,6 +8,7 @@
         <module>approvalcrest-core</module>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
+        <module>approvalcrest-testng</module>
         <module>approvalcrest-junit-jupiter-kotlin</module>
     </modules>
     <packaging>pom</packaging>

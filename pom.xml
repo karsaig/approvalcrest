@@ -9,9 +9,11 @@
         <module>approvalcrest-core</module>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
+        <module>approvalcrest-testng</module>
         <module>approvalcrest-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
+        <module>approvalcrest-testng-integration-tests</module>
         <module>approvalcrest-junit-jupiter-kotlin</module>
         <module>approvalcrest-junit-jupiter-kotlin-integration-tests</module>
     </modules>
