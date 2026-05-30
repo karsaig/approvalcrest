@@ -66,8 +66,15 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
 
         List<GetterInfo> getters = collectGetters(rawType);
         if (getters.isEmpty()) {
-            // No getters — use toString representation
-            return (TypeAdapter<T>) new ToStringAdapter();
+            throw new IllegalStateException(
+                    "approvalcrest cannot serialize type '" + rawType.getName() + "' in the current mode.\n"
+                            + "The type is in a locked module and has no public accessor methods (getX(), isX(), or record-style).\n"
+                            + "\nOptions:\n"
+                            + "  1. Use the default 'safe' mode (no system property needed) which opens modules automatically.\n"
+                            + "  2. Use 'force' mode with --add-opens: -DapprovalcrestReflection=force\n"
+                            + "  3. Add --add-opens JVM flags for the specific module/package.\n"
+                            + "\nSee https://github.com/karsaig/approvalcrest for details."
+            );
         }
 
         return (TypeAdapter<T>) new GetterTypeAdapter(gson, getters);
@@ -97,6 +104,11 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
         return result;
     }
 
+    private static final Set<String> EXCLUDED_METHOD_NAMES = new java.util.HashSet<>(java.util.Arrays.asList(
+            "hashCode", "toString", "clone", "notify", "notifyAll", "wait", "getClass", "finalize",
+            "fillInStackTrace"
+    ));
+
     private boolean isGetter(Method method) {
         if (Modifier.isStatic(method.getModifiers())) {
             return false;
@@ -112,25 +124,35 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
             return false;
         }
         String name = method.getName();
-        return (name.startsWith("get") && name.length() > 3)
-                || (name.startsWith("is") && name.length() > 2
-                && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class));
+        if (EXCLUDED_METHOD_NAMES.contains(name)) {
+            return false;
+        }
+        // Standard JavaBean getters: getX() or isX() for boolean
+        if (name.startsWith("get") && name.length() > 3) {
+            return true;
+        }
+        if (name.startsWith("is") && name.length() > 2
+                && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class)) {
+            return true;
+        }
+        // Record-style and fluent-style accessors: name(), value(), etc.
+        // Any zero-arg non-void public method not in exclusion list
+        return true;
     }
 
     private String derivePropertyName(Method method) {
         String name = method.getName();
-        String property;
-        if (name.startsWith("get")) {
-            property = name.substring(3);
-        } else {
-            // "is" prefix
-            property = name.substring(2);
+        if (name.startsWith("get") && name.length() > 3) {
+            String property = name.substring(3);
+            return Character.toLowerCase(property.charAt(0)) + property.substring(1);
         }
-        if (property.isEmpty()) {
-            return name;
+        if (name.startsWith("is") && name.length() > 2
+                && (method.getReturnType() == boolean.class || method.getReturnType() == Boolean.class)) {
+            String property = name.substring(2);
+            return Character.toLowerCase(property.charAt(0)) + property.substring(1);
         }
-        // Lowercase first character
-        return Character.toLowerCase(property.charAt(0)) + property.substring(1);
+        // Non-prefixed (record-style / fluent-style): use method name as-is
+        return name;
     }
 
     private static class GetterInfo {
@@ -199,19 +221,4 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
         }
     }
 
-    private static class ToStringAdapter extends TypeAdapter<Object> {
-        @Override
-        public void write(JsonWriter out, Object value) throws IOException {
-            if (value == null) {
-                out.nullValue();
-            } else {
-                out.value(value.toString());
-            }
-        }
-
-        @Override
-        public Object read(JsonReader in) throws IOException {
-            return in.nextString();
-        }
-    }
 }
