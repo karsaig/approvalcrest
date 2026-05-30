@@ -1,0 +1,5 @@
+/*samejson.SameJsonDataProviderTest.testDataProviderWorksWithMethodInjection*/
+{
+  "dummyString": "dummy2",
+  "genericValue": "val2"
+}

@@ -9,9 +9,12 @@
         <module>approvalcrest-core</module>
         <module>approvalcrest</module>
         <module>approvalcrest-junit-jupiter</module>
+        <module>approvalcrest-testng</module>
         <module>approvalcrest-integration-tests</module>
         <module>approvalcrest-junit-jupiter-integration-tests</module>
         <module>approvalcrest-junit-vintage-integration-tests</module>
+        <module>approvalcrest-testng-integration-tests</module>
+        <module>approvalcrest-testng-integration-tests-testng6</module>
         <module>approvalcrest-junit-jupiter-kotlin</module>
         <module>approvalcrest-junit-jupiter-kotlin-integration-tests</module>
     </modules>
@@ -21,6 +24,8 @@
     <url>https://github.com/karsaig/approvalcrest</url>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.target.version>8</java.target.version>
         <java.version.to.run>11</java.version.to.run>
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>

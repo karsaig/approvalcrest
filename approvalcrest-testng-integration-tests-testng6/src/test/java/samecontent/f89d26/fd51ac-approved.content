@@ -1,0 +1,2 @@
+/*samecontent.SameContentTest.runWithDefaultConfigShouldFailWithDifferentContentInApprovedFile*/
+This is different content that should cause a mismatch.

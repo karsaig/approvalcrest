@@ -1,0 +1,8 @@
+/*com.github.karsaig.approvalcrest.MatcherAssertExceptionMatchingTests.assertThrowsWithSameJsonAsShouldPassWhenExpectationIsMet*/
+{
+  "0x1": {
+    "class": "java.lang.IllegalStateException",
+    "detailMessage": "Test excpetion message...",
+    "suppressedExceptions": []
+  }
+}
