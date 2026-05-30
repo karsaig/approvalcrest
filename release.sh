@@ -57,6 +57,9 @@ fi
 
 set -exuo pipefail
 
+# Capture current version shown in documentation (before any modifications)
+doc_version=$(sed -n 's/.*<version>\([0-9][0-9.]*[0-9a-zA-Z.-]*\)<\/version>.*/\1/p' README.md | head -1)
+
 # State tracking for cleanup
 _commit_made=false
 _tag_made=false
@@ -140,6 +143,15 @@ else
     mvn versions:commit
     mvn -f for-release-pom.xml versions:set -DnewVersion="${next_dev}"
     mvn -f for-release-pom.xml versions:commit
+
+    # Update documentation version references
+    if [[ -n "$doc_version" && "$doc_version" != "$version" ]]; then
+        sed -i "s/${doc_version}/${version}/g" README.md
+        for f in docs/*.md; do
+            sed -i "s/${doc_version}/${version}/g" "$f"
+        done
+    fi
+
     git commit -a -m "Next development version ${next_dev}"
     git push
 fi
