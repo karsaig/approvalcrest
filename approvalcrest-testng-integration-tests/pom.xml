@@ -12,10 +12,6 @@
     <groupId>com.github.karsaig.integration.tests</groupId>
     <artifactId>approvalcrest-testng-integration-tests</artifactId>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.github.karsaig</groupId>
