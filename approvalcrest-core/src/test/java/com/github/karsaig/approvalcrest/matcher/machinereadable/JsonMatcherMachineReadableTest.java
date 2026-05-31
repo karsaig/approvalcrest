@@ -272,6 +272,33 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         }
     }
 
+    // Alias test — fmAI alias should enable machine-readable output
+    @Test
+    public void shouldOutputMachineReadableMessageWhenFmAIAliasPropertyEnabled() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        System.setProperty("fmAI", "true");
+        try {
+            inMemoryUnixFs(imfsi -> {
+                DummyInformation dummyTestInfo = dummyInformation(imfsi);
+                JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+
+                Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+                writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+                AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                        () -> assertThat(actual, underTest));
+
+                String msg = error.getMessage();
+                JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+                String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
+                assertEquals(approvedPath, json.get("approvedFile").getAsString());
+                assertTrue(json.has("actual"));
+            });
+        } finally {
+            System.clearProperty("fmAI");
+        }
+    }
+
     @Test
     public void shouldTrackIgnoredPathsInJsonMatcherOutput() {
         BeanWithPrimitives actual = getBeanWithPrimitives();

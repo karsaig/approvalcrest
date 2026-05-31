@@ -21,7 +21,7 @@ Setting them to **different values** throws `IllegalStateException` at test star
 | `useApprovedDirectory` | `uADirectory` | `false` | Store approved files in a dedicated `approved/` directory tree instead of alongside test sources. | [file-control](file-control.md) |
 | `sortInputFile` | `sIFile` | `false` | Sort the input before writing it to the approved file. | [sorting](sorting.md) |
 | `fileMatcherStrictFileMatching` | `fMStrictMatching` | `true` | Ignore stripping applies to the actual side only; approved files must not contain the ignored field's value. Disable to restore two-sided ignore behaviour. | [ignoring-fields](ignoring-fields.md) |
-| `fileMatcherMachineReadable` | `fMMReadable` | `false` | Replace human-readable failure messages with structured, machine-actionable output for AI agents and CI pipelines. | [file-control](file-control.md) |
+| `fileMatcherMachineReadable` | `fMMReadable`, `fmAI` | `false` | Replace human-readable failure messages with structured, machine-actionable output for AI agents and CI pipelines. | [file-control](file-control.md) |
 | `beanMatcherSkipClassComparison` | `bMSCComparison` | `false` | Skip the runtime-type check in `sameBeanAs`; allows comparing objects of different but structurally compatible classes. | [same-bean-as](same-bean-as.md) |
 | `approvalcrestSerializeNulls` | `aSerNulls` | `true` | Include null-valued fields in Gson serialization. Disabling reverts to the pre-1.0.2 behaviour where null fields were silently omitted. | [ignoring-fields](ignoring-fields.md) |
 
@@ -35,5 +35,5 @@ mvn test -DfMUInPlace=true
 mvn test -DaSerNulls=false
 
 # Enable machine-readable output for AI agents
-mvn test -DfMMReadable=true
+mvn test -DfmAI=true
 ```

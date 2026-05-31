@@ -39,9 +39,10 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             Pattern.compile("module (\\S+) does not \"opens (\\S+)\"");
 
     private static final String MACHINE_READABLE_ALIAS = "fMMReadable";
+    private static final String MACHINE_READABLE_AI_ALIAS = "fmAI";
 
     private boolean comparisonDescriptionNeeded = false;
-    protected boolean machineReadableOutput = getBooleanProperties(null, "fileMatcherMachineReadable", MACHINE_READABLE_ALIAS);
+    protected boolean machineReadableOutput = getBooleanProperties(null, "fileMatcherMachineReadable", MACHINE_READABLE_ALIAS, MACHINE_READABLE_AI_ALIAS);
 
     /**
      * Template-method entry point. Subclasses implement their matching logic here.

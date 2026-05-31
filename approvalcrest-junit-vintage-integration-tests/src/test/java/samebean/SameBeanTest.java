@@ -28,7 +28,7 @@ public class SameBeanTest {
         BeanWithPrimitives actual = getBeanWithPrimitivesMinValues();
 
         Optional<BeanWithPrimitives> expected = Optional.empty();
-        String expectedMessage = "\nUnexpected: beanBoolean\n ; \nUnexpected: beanByte\n ; \nUnexpected: beanChar\n ; \nUnexpected: beanDouble\n ; \nUnexpected: beanFloat\n ; \nUnexpected: beanInteger\n ; \nUnexpected: beanLong\n ; \nUnexpected: beanShort\n\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.";
+        String expectedMessage = "\nUnexpected: beanBoolean\n ; \nUnexpected: beanByte\n ; \nUnexpected: beanChar\n ; \nUnexpected: beanDouble\n ; \nUnexpected: beanFloat\n ; \nUnexpected: beanInteger\n ; \nUnexpected: beanLong\n ; \nUnexpected: beanShort\n\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.";
         String expectedActualValue = "{\n" +
                 "  \"beanBoolean\": false,\n" +
                 "  \"beanByte\": -128,\n" +

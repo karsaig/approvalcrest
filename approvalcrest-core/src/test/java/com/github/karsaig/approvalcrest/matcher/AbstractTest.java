@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 public abstract class AbstractTest {
 
     protected static final TestAssertImpl TEST_ASSERT_IMPl = new TestAssertImpl();
-    protected static final String AI_TIP_SUFFIX = "\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.";
+    protected static final String AI_TIP_SUFFIX = "\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.";
 
     protected static String removeAiTip(String message) {
         if (message != null && message.endsWith(AI_TIP_SUFFIX)) {

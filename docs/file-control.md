@@ -115,7 +115,8 @@ assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 
 ```bash
 mvn test -DfileMatcherMachineReadable=true
-# or using the alias:
+# or using the short aliases:
+mvn test -DfmAI=true
 mvn test -DfMMReadable=true
 ```
 
@@ -230,7 +231,7 @@ The `sortedFields` array records **which array fields were actually sorted** due
 In the default (non-machine-readable) mode, every failure message ends with:
 
 ```
-[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.
+[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.
 ```
 
 This allows AI agents that encounter a normal test failure to discover the machine-readable mode without any explicit configuration.
