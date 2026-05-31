@@ -121,48 +121,88 @@ mvn test -DfMMReadable=true
 
 ### Message format
 
-**File matcher — content mismatch:**
-```
-FAILURE_TYPE: MISMATCH
-TEST: MyTest#myTestMethod
-Expected file 4ac405/11b2ef-approved.json
-APPROVED_FILE: /abs/path/to/4ac405/11b2ef-approved.json
-ACTION: Set system property fMUInPlace=true and re-run to update the approved file
+All machine-readable messages are valid JSON objects. The exact fields depend on the failure type.
 
-=== ACTUAL (full) ===
-{ ... current serialized value ... }
-=== END ACTUAL ===
+**File matcher — content mismatch:**
+```json
+{
+  "failureType": "MISMATCH",
+  "test": "MyTest#myTestMethod",
+  "approvedFile": "/abs/path/to/4ac405/11b2ef-approved.json",
+  "action": "Set system property fMUInPlace=true and re-run to update the approved file",
+  "expected": "{ ... approved content ... }",
+  "actual": "{ ... current serialized value ... }",
+  "ignoredFields": [
+    { "path": "createdAt", "reason": "IGNORE_PATH" },
+    { "path": "metadata", "reason": "REMOVED_EMPTY", "causes": ["metadata.id", "metadata.secret"] }
+  ],
+  "aliasedFields": [
+    { "path": "userId", "originalValue": "a1b2c3d4-...", "alias": "%%IGNORED-UUID%%" }
+  ]
+}
 ```
 
 **File matcher — no approved file yet:**
-```
-FAILURE_TYPE: NEW_FILE
-TEST: MyTest#myTestMethod
-Not approved file created: '/abs/path/to/4ac405/11b2ef-not-approved.json';
-APPROVE_TO: /abs/path/to/4ac405/11b2ef-approved.json
-ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above
+```json
+{
+  "failureType": "NEW_FILE",
+  "test": "MyTest#myTestMethod",
+  "notApprovedFile": "/abs/path/to/4ac405/11b2ef-not-approved.json",
+  "approvedFile": "/abs/path/to/4ac405/11b2ef-approved.json",
+  "action": "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approvedFile path"
+}
 ```
 
 **Bean matcher — value mismatch:**
-```
-FAILURE_TYPE: MISMATCH
-
-=== EXPECTED (full) ===
-{ ... expected ... }
-=== END EXPECTED ===
-
-=== ACTUAL (full) ===
-{ ... actual ... }
-=== END ACTUAL ===
+```json
+{
+  "failureType": "MISMATCH",
+  "expected": "{ ... expected ... }",
+  "actual": "{ ... actual ... }",
+  "ignoredFields": [],
+  "aliasedFields": []
+}
 ```
 
 **Bean matcher — incompatible types:**
+```json
+{
+  "failureType": "TYPE_MISMATCH",
+  "expectedType": "com.example.Foo",
+  "actualType": "com.example.Bar",
+  "action": "Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true"
+}
 ```
-FAILURE_TYPE: TYPE_MISMATCH
-EXPECTED_TYPE: com.example.Foo
-ACTUAL_TYPE: com.example.Bar
-ACTION: Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true
-```
+
+### ignoredFields tracking
+
+The `ignoredFields` array records **which fields were actually removed** during filtering and **why**. Each entry contains:
+
+| Field | Description |
+|-------|-------------|
+| `path` | The dotted path of the removed field (e.g. `address.zipCode`) |
+| `reason` | One of: `IGNORE_PATH`, `CUSTOM_MATCHER`, `CUSTOM_MATCHER_PATTERN`, `IGNORE_PATTERN`, `REMOVED_EMPTY` |
+| `pattern` | *(only for pattern-based)* The matcher description that matched |
+| `causes` | *(only for `REMOVED_EMPTY`)* Child fields whose removal left this parent empty |
+
+**Reason values:**
+- `IGNORE_PATH` — removed by `.ignoring("fieldPath")`
+- `CUSTOM_MATCHER` — removed by `.with("fieldPath", matcher)` (validated separately)
+- `CUSTOM_MATCHER_PATTERN` — removed by `.withMatcher(patternMatcher, valueMatcher)`
+- `IGNORE_PATTERN` — removed by `.ignoring(Matcher<String>)` applied to the JSON tree
+- `REMOVED_EMPTY` — parent became empty after its children were removed
+
+**Note:** Type-based ignoring (`.ignoring(Class)`) and pattern-based ignoring (`.ignoring(Matcher)`) are applied during Gson serialization via an `ExclusionStrategy`, so individual field removals cannot be tracked. When these are configured, a `"note"` field explains this.
+
+### aliasedFields tracking
+
+The `aliasedFields` array records value replacements made by aliasing. Each entry contains:
+
+| Field | Description |
+|-------|-------------|
+| `path` | The dotted path of the aliased field |
+| `originalValue` | The original value before aliasing |
+| `alias` | The replacement value |
 
 ### Passive AI discovery tip
 
