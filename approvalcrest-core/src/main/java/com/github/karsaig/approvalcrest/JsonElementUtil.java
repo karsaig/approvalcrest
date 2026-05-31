@@ -1,6 +1,8 @@
 package com.github.karsaig.approvalcrest;
 
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -84,13 +86,18 @@ public class JsonElementUtil {
     }
 
     public static void filterByCustomMatcherPatterns(JsonElement json, MatcherConfiguration matcherConfiguration) {
+        filterByCustomMatcherPatterns(json, matcherConfiguration, null);
+    }
+
+    public static void filterByCustomMatcherPatterns(JsonElement json, MatcherConfiguration matcherConfiguration,
+                                                      IgnoredFieldsTracker tracker) {
         List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
         if (!patterns.isEmpty()) {
             List<Matcher<String>> patternKeys = new ArrayList<>();
             for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
                 patternKeys.add(entry.getKey());
             }
-            filterByFieldMatchers(json, patternKeys);
+            filterByFieldMatchers(json, patternKeys, tracker, IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN);
         }
     }
 
@@ -125,27 +132,43 @@ public class JsonElementUtil {
     }
 
     public static void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+        filterByFieldMatchers(jsonElement, matchers, null, null);
+    }
+
+    public static void filterByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers,
+                                              IgnoredFieldsTracker tracker, IgnoredFieldsTracker.Reason reason) {
         if (jsonElement != null && !matchers.isEmpty() && !jsonElement.isJsonNull()) {
-            filterFieldsByFieldMatchers(jsonElement, matchers);
+            filterFieldsByFieldMatchers(jsonElement, matchers, tracker, reason, "");
         }
     }
 
-    private static boolean filterFieldsByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers) {
+    private static boolean filterFieldsByFieldMatchers(JsonElement jsonElement, List<Matcher<String>> matchers,
+                                                        IgnoredFieldsTracker tracker, IgnoredFieldsTracker.Reason reason,
+                                                        String currentPath) {
         if (jsonElement.isJsonObject()) {
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             boolean changes = false;
             Iterator<Map.Entry<String, JsonElement>> iter = jsonObject.entrySet().iterator();
             while (iter.hasNext()) {
                 Map.Entry<String, JsonElement> entry = iter.next();
-                if (anyMatchesFieldName(entry.getKey(), matchers)) {
+                Matcher<String> matchedPattern = findMatchingPattern(entry.getKey(), matchers);
+                if (matchedPattern != null) {
                     iter.remove();
-                    changes |= true;
+                    changes = true;
+                    if (tracker != null && reason != null) {
+                        String childPath = currentPath.isEmpty() ? entry.getKey() : currentPath + "." + entry.getKey();
+                        tracker.recordIgnoredPattern(childPath, reason, matchedPattern.toString());
+                    }
                 } else {
                     JsonElement je = entry.getValue();
-                    boolean changed = filterFieldsByFieldMatchers(je, matchers);
+                    String childPath = tracker != null ? (currentPath.isEmpty() ? entry.getKey() : currentPath + "." + entry.getKey()) : "";
+                    boolean changed = filterFieldsByFieldMatchers(je, matchers, tracker, reason, childPath);
                     if (changed && isEmpty(je)) {
                         iter.remove();
-                        changes |= true;
+                        changes = true;
+                        if (tracker != null) {
+                            tracker.recordRemovedEmpty(childPath, collectChildPaths(tracker, childPath));
+                        }
                     }
                 }
             }
@@ -154,17 +177,42 @@ public class JsonElementUtil {
             JsonArray jsonArray = jsonElement.getAsJsonArray();
             Iterator<JsonElement> iterator = jsonArray.iterator();
             boolean changes = false;
+            int idx = 0;
             while (iterator.hasNext()) {
                 JsonElement je = iterator.next();
-                boolean changed = filterFieldsByFieldMatchers(je, matchers);
+                String elemPath = tracker != null ? currentPath + "[" + idx + "]" : "";
+                boolean changed = filterFieldsByFieldMatchers(je, matchers, tracker, reason, elemPath);
                 if (changed && isEmpty(je)) {
                     iterator.remove();
-                    changes |= true;
+                    changes = true;
+                } else {
+                    idx++;
                 }
             }
             return changes;
         }
         return false;
+    }
+
+    private static Matcher<String> findMatchingPattern(String fieldName, List<Matcher<String>> matchers) {
+        for (Matcher<String> matcher : matchers) {
+            if (matcher.matches(fieldName)) {
+                return matcher;
+            }
+        }
+        return null;
+    }
+
+    private static List<String> collectChildPaths(IgnoredFieldsTracker tracker, String parentPath) {
+        List<String> causes = new ArrayList<>();
+        String prefix = parentPath + ".";
+        for (IgnoredFieldsTracker.IgnoredField field : tracker.getFields()) {
+            if (field.getPath().startsWith(prefix)) {
+                String desc = field.getPath() + " (" + field.getReason() + ")";
+                causes.add(desc);
+            }
+        }
+        return causes;
     }
 
     public static List<JsonElement> collectValuesByFieldNamePattern(JsonElement root, Matcher<String> fieldNamePattern) {
@@ -197,11 +245,15 @@ public class JsonElementUtil {
      * The last registered matching entry in the map wins.
      */
     public static void applyAliases(JsonElement root, AliasMap aliases) {
-        applyAliasesRecursive(root, aliases, "", null);
+        applyAliasesRecursive(root, aliases, "", null, null);
+    }
+
+    public static void applyAliases(JsonElement root, AliasMap aliases, AliasTracker tracker) {
+        applyAliasesRecursive(root, aliases, "", null, tracker);
     }
 
     private static void applyAliasesRecursive(JsonElement element, AliasMap aliases,
-                                               String currentPath, String fieldName) {
+                                               String currentPath, String fieldName, AliasTracker tracker) {
         if (element == null || element.isJsonNull()) {
             return;
         }
@@ -218,10 +270,13 @@ public class JsonElementUtil {
                         Optional<String> alias = aliases.resolve(childPath, childField, coerced);
                         if (alias.isPresent()) {
                             obj.addProperty(childField, alias.get());
+                            if (tracker != null) {
+                                tracker.recordAlias(childPath, coerced, alias.get());
+                            }
                         }
                     }
                 } else {
-                    applyAliasesRecursive(child, aliases, childPath, childField);
+                    applyAliasesRecursive(child, aliases, childPath, childField, tracker);
                 }
             }
         } else if (element.isJsonArray()) {
@@ -232,14 +287,16 @@ public class JsonElementUtil {
                     JsonPrimitive prim = child.getAsJsonPrimitive();
                     if (!prim.isBoolean()) {
                         String coerced = prim.getAsString();
-                        // for array elements, fieldName is the array's own field name
                         Optional<String> alias = aliases.resolve(currentPath, fieldName != null ? fieldName : "", coerced);
                         if (alias.isPresent()) {
                             arr.set(i, new JsonPrimitive(alias.get()));
+                            if (tracker != null) {
+                                tracker.recordAlias(currentPath + "[" + i + "]", coerced, alias.get());
+                            }
                         }
                     }
                 } else {
-                    applyAliasesRecursive(child, aliases, currentPath, fieldName);
+                    applyAliasesRecursive(child, aliases, currentPath, fieldName, tracker);
                 }
             }
         }

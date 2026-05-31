@@ -57,8 +57,10 @@ public class MachineReadableDiffViewTest {
 
         assertNotNull("getExpected() must be non-null for IDE diff view", error.getExpected());
         assertNotNull("getActual() must be non-null for IDE diff view", error.getActual());
-        assertTrue("getMessage() should contain machine-readable expected block",
-                error.getMessage().contains("=== EXPECTED (full) ==="));
+        assertTrue("getMessage() should contain JSON failureType field",
+                error.getMessage().contains("\"failureType\""));
+        assertTrue("getMessage() should contain JSON expected field",
+                error.getMessage().contains("\"expected\""));
         assertFalse("getMessage() should not be polluted by ComparisonCompactor",
                 error.getMessage().contains("expected:<"));
     }

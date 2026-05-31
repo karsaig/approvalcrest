@@ -2,6 +2,8 @@ package com.github.karsaig.approvalcrest.matcher.machinereadable;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.ContentMatcher;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
@@ -33,15 +35,16 @@ public class ContentMatcherMachineReadableTest extends AbstractFileMatcherTest {
                     () -> assertThat(actual, underTest));
 
             String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
             String approvedPath = contentDir.resolve("11b2ef-approved.content").toAbsolutePath().toString();
             assertAll(
-                    () -> assertTrue(msg.contains("FAILURE_TYPE: MISMATCH"), "Should contain failure type header"),
-                    () -> assertTrue(msg.contains("APPROVED_FILE: " + approvedPath), "Should contain approved file path"),
-                    () -> assertTrue(msg.contains("ACTION: Set system property fMUInPlace=true and re-run to update the approved file"), "Should contain update action"),
-                    () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
-                    () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
-                    () -> assertTrue(msg.contains(actual), "Should contain full actual content"),
-                    () -> assertFalse(msg.contains("=== EXPECTED (full) ==="), "Should NOT contain EXPECTED block for file matchers")
+                    () -> assertEquals("MISMATCH", json.get("failureType").getAsString(), "Should contain failureType"),
+                    () -> assertEquals(approvedPath, json.get("approvedFile").getAsString(), "Should contain approved file path"),
+                    () -> assertTrue(json.has("action"), "Should contain action"),
+                    () -> assertTrue(json.has("actual"), "Should contain actual field"),
+                    () -> assertTrue(json.get("actual").getAsString().contains(actual), "Actual should contain the text content"),
+                    () -> assertTrue(json.has("ignoredFields"), "Should contain ignoredFields array"),
+                    () -> assertTrue(json.has("aliasedFields"), "Should contain aliasedFields array")
             );
         });
     }
@@ -62,8 +65,8 @@ public class ContentMatcherMachineReadableTest extends AbstractFileMatcherTest {
 
             String msg = error.getMessage();
             assertAll(
-                    () -> assertFalse(msg.contains("=== ACTUAL (full) ==="), "Should NOT contain machine-readable ACTUAL block"),
-                    () -> assertFalse(msg.contains("APPROVED_FILE:"), "Should NOT contain approved file path label"),
+                    () -> assertFalse(msg.contains("\"failureType\""), "Should NOT contain JSON failureType field"),
+                    () -> assertFalse(msg.contains("\"approvedFile\""), "Should NOT contain JSON approvedFile field"),
                     () -> assertTrue(msg.contains("Content does not match!"), "Should contain diff message")
             );
         });

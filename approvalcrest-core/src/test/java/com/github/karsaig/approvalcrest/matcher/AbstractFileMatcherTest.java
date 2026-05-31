@@ -286,11 +286,13 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     protected String getMachineReadableNotApprovedCreationMessage(Path notApprovedAbsolutePath, Path approvedAbsolutePath) {
-        return "FAILURE_TYPE: NEW_FILE\n"
-                + "TEST: dummyTestClassName#dummyTestMethodName\n"
-                + "Not approved file created: '" + notApprovedAbsolutePath.toAbsolutePath() + "';\n"
-                + "APPROVE_TO: " + approvedAbsolutePath.toAbsolutePath() + "\n"
-                + "ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above";
+        com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+        json.addProperty("failureType", "NEW_FILE");
+        json.addProperty("test", "dummyTestClassName#dummyTestMethodName");
+        json.addProperty("notApprovedFile", notApprovedAbsolutePath.toAbsolutePath().toString());
+        json.addProperty("approveTo", approvedAbsolutePath.toAbsolutePath().toString());
+        json.addProperty("action", "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approveTo path above");
+        return new com.google.gson.GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create().toJson(json);
     }
 
     protected void writeFile(Path path, String content) {

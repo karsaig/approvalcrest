@@ -3,6 +3,8 @@ package com.github.karsaig.approvalcrest.matcher.machinereadable;
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
@@ -35,15 +37,17 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                     () -> assertThat(actual, underTest));
 
             String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
             String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
             assertAll(
-                    () -> assertTrue(msg.contains("FAILURE_TYPE: MISMATCH"), "Should contain failure type header"),
-                    () -> assertTrue(msg.contains("TEST: dummyTestClassName#dummyTestMethodName"), "Should contain test info"),
-                    () -> assertTrue(msg.contains("APPROVED_FILE: " + approvedPath), "Should contain approved file path"),
-                    () -> assertTrue(msg.contains("ACTION: Set system property fMUInPlace=true and re-run to update the approved file"), "Should contain update action"),
-                    () -> assertTrue(msg.contains("=== ACTUAL (full) ==="), "Should contain ACTUAL block start"),
-                    () -> assertTrue(msg.contains("=== END ACTUAL ==="), "Should contain ACTUAL block end"),
-                    () -> assertFalse(msg.contains("=== EXPECTED (full) ==="), "Should NOT contain EXPECTED block for file matchers")
+                    () -> assertEquals("MISMATCH", json.get("failureType").getAsString(), "Should contain failureType"),
+                    () -> assertEquals("dummyTestClassName#dummyTestMethodName", json.get("test").getAsString(), "Should contain test info"),
+                    () -> assertEquals(approvedPath, json.get("approvedFile").getAsString(), "Should contain approved file path"),
+                    () -> assertTrue(json.has("action"), "Should contain action"),
+                    () -> assertTrue(json.has("actual"), "Should contain actual field"),
+                    () -> assertTrue(json.has("ignoredFields"), "Should contain ignoredFields array"),
+                    () -> assertTrue(json.has("aliasedFields"), "Should contain aliasedFields array"),
+                    () -> assertTrue(json.has("sortedFields"), "Should contain sortedFields array")
             );
         });
     }
@@ -65,10 +69,10 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                         () -> assertThat(actual, underTest));
 
                 String msg = error.getMessage();
+                JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
                 String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
-                assertTrue(msg.contains("APPROVED_FILE: " + approvedPath));
-                assertTrue(msg.contains("=== ACTUAL (full) ==="));
-                assertTrue(msg.contains("=== END ACTUAL ==="));
+                assertEquals(approvedPath, json.get("approvedFile").getAsString());
+                assertTrue(json.has("actual"));
             });
         } finally {
             System.clearProperty("fileMatcherMachineReadable");
@@ -91,8 +95,8 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
 
             String msg = error.getMessage();
             assertAll(
-                    () -> assertFalse(msg.contains("=== ACTUAL (full) ==="), "Should NOT contain machine-readable ACTUAL block"),
-                    () -> assertFalse(msg.contains("APPROVED_FILE:"), "Should NOT contain approved file path label")
+                    () -> assertFalse(msg.contains("\"failureType\""), "Should NOT contain JSON failureType field"),
+                    () -> assertFalse(msg.contains("\"approvedFile\""), "Should NOT contain JSON approvedFile field")
             );
         });
     }
@@ -141,14 +145,12 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             FileSystem fs = imfsi.getInMemoryFileSystem();
-            // 5 levels deep: /projects/myapp/module/src/test/java
             Path deepTestPath;
             try {
                 deepTestPath = Files.createDirectories(fs.getPath("/projects/myapp/module/src/test/java"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            // Working dir is in a completely separate part of the filesystem
             Path workingDir = fs.getPath("/home/ci/builds/workspace");
 
             DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
@@ -162,9 +164,11 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             AssertionFailedError error = assertThrows(AssertionFailedError.class,
                     () -> assertThat(actual, underTest));
 
+            String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
             String expectedAbsPath = approvedFile.toAbsolutePath().toString();
-            assertTrue(error.getMessage().contains("APPROVED_FILE: " + expectedAbsPath),
-                    "Absolute path must point to the correct file even when working dir is unrelated. Got: " + error.getMessage());
+            assertEquals(expectedAbsPath, json.get("approvedFile").getAsString(),
+                    "Absolute path must point to the correct file even when working dir is unrelated.");
         });
     }
 
@@ -205,14 +209,12 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {
             FileSystem fs = imfsi.getInMemoryFileSystem();
-            // 5 levels deep test path: /deep/project/src/test/java/classes
             Path deepTestPath;
             try {
                 deepTestPath = Files.createDirectories(fs.getPath("/deep/project/src/test/java/classes"));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            // Working dir is an ancestor of the approved file's location
             Path workingDir = fs.getPath("/deep/project");
 
             DummyInformation dummyTestInfo = new DummyInformation(deepTestPath, imfsi.getResourcePath(), workingDir);
@@ -226,9 +228,11 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             AssertionFailedError error = assertThrows(AssertionFailedError.class,
                     () -> assertThat(actual, underTest));
 
+            String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
             String expectedAbsPath = approvedFile.toAbsolutePath().toString();
-            assertTrue(error.getMessage().contains("APPROVED_FILE: " + expectedAbsPath),
-                    "Absolute path must be correct even when working dir is an ancestor of the file. Got: " + error.getMessage());
+            assertEquals(expectedAbsPath, json.get("approvedFile").getAsString(),
+                    "Absolute path must be correct even when working dir is an ancestor of the file.");
         });
     }
 
@@ -258,13 +262,67 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                         () -> assertThat(actual, underTest));
 
                 String msg = error.getMessage();
+                JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
                 String approvedPath = jsonDir.resolve("11b2ef-approved.json").toAbsolutePath().toString();
-                assertTrue(msg.contains("APPROVED_FILE: " + approvedPath));
-                assertTrue(msg.contains("=== ACTUAL (full) ==="));
-                assertTrue(msg.contains("=== END ACTUAL ==="));
+                assertEquals(approvedPath, json.get("approvedFile").getAsString());
+                assertTrue(json.has("actual"));
             });
         } finally {
             System.clearProperty("fMMReadable");
         }
+    }
+
+    @Test
+    public void shouldTrackIgnoredPathsInJsonMatcherOutput() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.ignoring("beanLong").withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+            com.google.gson.JsonArray ignoredFields = json.getAsJsonArray("ignoredFields");
+            assertTrue(ignoredFields.size() > 0, "ignoredFields should not be empty");
+
+            boolean foundBeanLong = false;
+            for (int i = 0; i < ignoredFields.size(); i++) {
+                JsonObject entry = ignoredFields.get(i).getAsJsonObject();
+                if ("beanLong".equals(entry.get("path").getAsString())
+                        && "IGNORE_PATH".equals(entry.get("reason").getAsString())) {
+                    foundBeanLong = true;
+                    break;
+                }
+            }
+            assertTrue(foundBeanLong, "Should track beanLong as IGNORE_PATH");
+        });
+    }
+
+    @Test
+    public void shouldShowNoteForPatternBasedIgnoringInJsonMatcherOutput() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.ignoring(org.hamcrest.Matchers.startsWith("beanL")).withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+            assertTrue(json.has("note"), "Should have a note about pattern-based ignoring");
+            String note = json.get("note").getAsString();
+            assertTrue(note.contains("Pattern-based ignoring"), "Note should mention pattern-based ignoring, was: " + note);
+        });
     }
 }

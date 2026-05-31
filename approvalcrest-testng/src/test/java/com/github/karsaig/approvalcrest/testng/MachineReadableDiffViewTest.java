@@ -38,8 +38,10 @@ public class MachineReadableDiffViewTest {
         assertTrue(error.isActualDefined(), "Actual must be defined for IDE diff view");
         assertNotNull(error.getExpected().getValue(), "Expected value must be non-null");
         assertNotNull(error.getActual().getValue(), "Actual value must be non-null");
-        assertTrue(error.getMessage().contains("=== EXPECTED (full) ==="),
-                "getMessage() should contain machine-readable expected block");
+        assertTrue(error.getMessage().contains("\"failureType\""),
+                "getMessage() should contain JSON failureType field");
+        assertTrue(error.getMessage().contains("\"expected\""),
+                "getMessage() should contain JSON expected field");
         assertFalse(error.getMessage().contains("expected:<"),
                 "getMessage() should not be polluted by ComparisonCompactor");
     }

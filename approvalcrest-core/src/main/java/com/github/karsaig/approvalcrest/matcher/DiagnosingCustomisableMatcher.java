@@ -12,14 +12,21 @@ package com.github.karsaig.approvalcrest.matcher;
 import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -52,7 +59,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     public void describeTo(Description description) {
         if(jsonDescription){
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
-        description.appendText(filterJson(gson, expected));
+        description.appendText(filterJson(gson, expected, null, null, null));
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
             description.appendText("\nand ")
                     .appendText(fieldPath).appendText(" ")
@@ -66,10 +73,13 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         if (actual != null  && expected != null) {
             if(!skipClassComparison && !expected.getClass().isInstance(actual)){
                 if (machineReadableOutput) {
-                    mismatchDescription.appendText("FAILURE_TYPE: TYPE_MISMATCH\n"
-                            + "EXPECTED_TYPE: " + expected.getClass().getName() + "\n"
-                            + "ACTUAL_TYPE: " + actual.getClass().getName() + "\n"
-                            + "ACTION: Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true");
+                    JsonObject root = new JsonObject();
+                    root.addProperty("failureType", "TYPE_MISMATCH");
+                    root.addProperty("expectedType", expected.getClass().getName());
+                    root.addProperty("actualType", actual.getClass().getName());
+                    root.addProperty("action", "Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true");
+                    Gson outputGson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+                    mismatchDescription.appendText(outputGson.toJson(root));
                 } else {
                     mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
                 }
@@ -87,15 +97,21 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
             return false;
         }
 
-        String expectedJson = filterJson(gson, expected);
+        IgnoredFieldsTracker ignoredTracker = machineReadableOutput ? new IgnoredFieldsTracker() : null;
+        AliasTracker aliasTracker = machineReadableOutput ? new AliasTracker() : null;
+        SortedFieldsTracker sortedTracker = machineReadableOutput ? new SortedFieldsTracker() : null;
+        String untrackedNote = buildUntrackedNote();
+
+        String expectedJson = filterJson(gson, expected, ignoredTracker, aliasTracker, sortedTracker);
 
         if (actual == null) {
-            return appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
+            return appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, "null", "actual was null",
+                    ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
         }
 
-        String actualJson = filterJson(gson, actualAsJsonElement, actual);
+        String actualJson = filterJson(gson, actualAsJsonElement, actual, ignoredTracker, aliasTracker, sortedTracker);
 
-        return assertEquals(expectedJson, actualJson, mismatchDescription);
+        return assertJsonEquals(expectedJson, actualJson, mismatchDescription, ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
     }
 
 
@@ -144,27 +160,52 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
 
-    private boolean assertEquals(String expectedJson, String actualJson, Description mismatchDescription) {
-        return assertJsonEquals(expectedJson, actualJson, mismatchDescription, Throwable::getMessage);
+    private boolean assertJsonEquals(String expectedJson, String actualJson, Description mismatchDescription,
+                                      IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker,
+                                      SortedFieldsTracker sortedTracker, String note) {
+        try {
+            org.skyscreamer.jsonassert.JSONAssert.assertEquals(expectedJson, actualJson, true);
+        } catch (AssertionError | org.json.JSONException e) {
+            return appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, actualJson, e.getMessage(),
+                    ignoredTracker, aliasTracker, sortedTracker, note);
+        }
+        return true;
     }
 
-    private String filterJson(Gson gson, Object object) {
-        return filterJson(gson, gson.toJsonTree(object), object);
+    private String filterJson(Gson gson, Object object, IgnoredFieldsTracker tracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
+        return filterJson(gson, gson.toJsonTree(object), object, tracker, aliasTracker, sortedTracker);
     }
 
-    private String filterJson(Gson gson, JsonElement preComputedJson, Object objectForTypeCheck) {
+    private String filterJson(Gson gson, JsonElement preComputedJson, Object objectForTypeCheck,
+                               IgnoredFieldsTracker tracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
         set.addAll(matcherConfiguration.getCustomMatchers().keySet());
-        JsonElement filteredJson = findPaths(preComputedJson, set);
-        JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
+
+        Map<String, IgnoredFieldsTracker.Reason> reasonMap = null;
+        if (tracker != null) {
+            reasonMap = new HashMap<>();
+            for (String path : matcherConfiguration.getPathsToIgnore()) {
+                reasonMap.put(path, IgnoredFieldsTracker.Reason.IGNORE_PATH);
+            }
+            for (String path : matcherConfiguration.getCustomMatchers().keySet()) {
+                reasonMap.put(path, IgnoredFieldsTracker.Reason.CUSTOM_MATCHER);
+            }
+        }
+
+        JsonElement filteredJson = findPaths(preComputedJson, set, tracker, reasonMap);
+        JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration, tracker);
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
-            JsonElementUtil.applyAliases(filteredJson, aliasMap);
+            JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
-        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true);
-        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort());
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker);
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort(), sortedTracker);
         return removeSetMarker(gson.toJson(filteredJson));
+    }
+
+    private String buildUntrackedNote() {
+        return buildUntrackedNote(matcherConfiguration);
     }
 
     @Override
