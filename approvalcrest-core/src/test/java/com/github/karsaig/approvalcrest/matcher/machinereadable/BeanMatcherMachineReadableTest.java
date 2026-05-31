@@ -5,12 +5,14 @@ import com.github.karsaig.approvalcrest.matcher.AbstractTest;
 import com.github.karsaig.approvalcrest.matcher.DiagnosingCustomisableMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMatcherFactory;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
 import static com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives.Builder.beanWithPrimitives;
+import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BeanMatcherMachineReadableTest extends AbstractTest {
@@ -37,6 +39,7 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
                 () -> assertTrue(json.has("actual"), "Should contain actual field"),
                 () -> assertTrue(json.has("ignoredFields"), "Should contain ignoredFields array"),
                 () -> assertTrue(json.has("aliasedFields"), "Should contain aliasedFields array"),
+                () -> assertTrue(json.has("sortedFields"), "Should contain sortedFields array"),
                 () -> assertFalse(json.has("approvedFile"), "Should NOT contain approvedFile for bean matchers"),
                 () -> assertTrue(error.isExpectedDefined(), "Expected must be defined for IDE diff view"),
                 () -> assertTrue(error.isActualDefined(), "Actual must be defined for IDE diff view"),
@@ -184,5 +187,90 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
         assertTrue(json.has("note"), "Should contain note when type-based ignoring is configured");
         assertTrue(json.get("note").getAsString().contains("Type-based ignoring"),
                 "Note should mention type-based ignoring");
+    }
+
+    @Test
+    public void shouldTrackSortedFieldsByPathInMachineReadableOutput() {
+        ParentBean expected = parent().parentString("expected").addToChildBeanList("b", 2).addToChildBeanList("a", 1).build();
+        ParentBean actual = parent().parentString("actual").addToChildBeanList("a", 1).addToChildBeanList("b", 2).build();
+
+        DiagnosingCustomisableMatcher<ParentBean> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .sortField("childBeanList")
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+        com.google.gson.JsonArray sortedFields = json.getAsJsonArray("sortedFields");
+        assertTrue(sortedFields.size() > 0, "sortedFields should not be empty when sorting is applied");
+
+        JsonObject firstSorted = sortedFields.get(0).getAsJsonObject();
+        assertEquals("childBeanList", firstSorted.get("path").getAsString());
+        assertEquals("SORT_PATH", firstSorted.get("reason").getAsString());
+    }
+
+    @Test
+    public void shouldTrackSortedFieldsByPatternInMachineReadableOutput() {
+        ParentBean expected = parent().parentString("expected").addToChildBeanList("b", 2).addToChildBeanList("a", 1).build();
+        ParentBean actual = parent().parentString("actual").addToChildBeanList("a", 1).addToChildBeanList("b", 2).build();
+
+        DiagnosingCustomisableMatcher<ParentBean> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .sortField(org.hamcrest.Matchers.containsString("childBean"))
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+        com.google.gson.JsonArray sortedFields = json.getAsJsonArray("sortedFields");
+        assertTrue(sortedFields.size() > 0, "sortedFields should not be empty when pattern sort is applied");
+
+        JsonObject firstSorted = sortedFields.get(0).getAsJsonObject();
+        assertEquals("childBeanList", firstSorted.get("path").getAsString());
+        assertEquals("SORT_PATTERN", firstSorted.get("reason").getAsString());
+        assertTrue(firstSorted.has("pattern"), "Should include pattern description");
+    }
+
+    @Test
+    public void shouldShowEmptySortedFieldsWhenNoSortingConfigured() {
+        BeanWithPrimitives expected = beanWithPrimitives().beanBoolean(false).build();
+        BeanWithPrimitives actual = beanWithPrimitives().beanBoolean(true).build();
+
+        DiagnosingCustomisableMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+        assertTrue(json.has("sortedFields"), "Should always contain sortedFields array");
+        assertEquals(0, json.getAsJsonArray("sortedFields").size(), "sortedFields should be empty when no sorting configured");
+    }
+
+    @Test
+    public void shouldIncludeNoteWhenTypeSortingConfigured() {
+        BeanWithPrimitives expected = beanWithPrimitives().beanBoolean(false).build();
+        BeanWithPrimitives actual = beanWithPrimitives().beanBoolean(true).build();
+
+        DiagnosingCustomisableMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .sortType(String.class)
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+        assertTrue(json.has("note"), "Should contain note when type-based sorting is configured");
+        assertTrue(json.get("note").getAsString().contains("Type-based sorting"),
+                "Note should mention type-based sorting");
     }
 }

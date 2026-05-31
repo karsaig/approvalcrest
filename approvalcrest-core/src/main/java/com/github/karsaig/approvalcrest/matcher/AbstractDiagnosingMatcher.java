@@ -7,6 +7,7 @@ import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.PathNullPointerException;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.hamcrest.Description;
@@ -113,12 +114,13 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
 
     protected boolean assertJsonEquals(String expectedJson, String actualJson, Description mismatchDescription,
                                         Function<Throwable, String> messageExtractor,
-                                        IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker, String note) {
+                                        IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker,
+                                        SortedFieldsTracker sortedTracker, String note) {
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, true);
         } catch (AssertionError | JSONException e) {
             return appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, actualJson, messageExtractor.apply(e),
-                    ignoredTracker, aliasTracker, note);
+                    ignoredTracker, aliasTracker, sortedTracker, note);
         }
         return true;
     }
@@ -131,13 +133,14 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                                                  String message, IgnoredFieldsTracker ignoredFieldsTracker,
                                                  AliasTracker aliasTracker, boolean typesIgnoredConfigured) {
         return appendMismatchDescriptionWithNote(mismatchDescription, expected, actual, message,
-                ignoredFieldsTracker, aliasTracker,
+                ignoredFieldsTracker, aliasTracker, null,
                 typesIgnoredConfigured ? "Type-based ignoring is configured but field-level tracking is not available for it." : null);
     }
 
     protected boolean appendMismatchDescriptionWithNote(Description mismatchDescription, String expected, String actual,
                                                          String message, IgnoredFieldsTracker ignoredFieldsTracker,
-                                                         AliasTracker aliasTracker, String note) {
+                                                         AliasTracker aliasTracker, SortedFieldsTracker sortedFieldsTracker,
+                                                         String note) {
         if (comparisonDescriptionNeeded && ComparisonDescription.class.isInstance(mismatchDescription)) {
             ComparisonDescription shazamMismatchDescription = (ComparisonDescription) mismatchDescription;
             shazamMismatchDescription.setComparisonFailure(true);
@@ -147,6 +150,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             shazamMismatchDescription.setMachineReadable(machineReadableOutput);
             shazamMismatchDescription.setIgnoredFieldsTracker(ignoredFieldsTracker);
             shazamMismatchDescription.setAliasTracker(aliasTracker);
+            shazamMismatchDescription.setSortedFieldsTracker(sortedFieldsTracker);
             if (note != null) {
                 shazamMismatchDescription.setNote(note);
             }
@@ -167,16 +171,32 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
         if (!machineReadableOutput) {
             return null;
         }
-        boolean hasTypes = !config.getTypesToIgnore().isEmpty();
+        boolean hasTypesToIgnore = !config.getTypesToIgnore().isEmpty();
         boolean hasPatterns = !config.getPatternsToIgnore().isEmpty();
-        if (hasTypes && hasPatterns) {
-            return "Type-based and pattern-based ignoring are configured but field-level tracking is not available for them.";
-        } else if (hasTypes) {
-            return "Type-based ignoring is configured but field-level tracking is not available for it.";
-        } else if (hasPatterns) {
-            return "Pattern-based ignoring is configured but field-level tracking is not available for it.";
+        boolean hasTypesToSort = !config.getTypesToSort().isEmpty();
+
+        boolean hasIgnoreNote = hasTypesToIgnore || hasPatterns;
+        boolean hasSortNote = hasTypesToSort;
+
+        if (!hasIgnoreNote && !hasSortNote) {
+            return null;
         }
-        return null;
+
+        StringBuilder sb = new StringBuilder();
+        if (hasTypesToIgnore && hasPatterns) {
+            sb.append("Type-based and pattern-based ignoring are configured but field-level tracking is not available for them.");
+        } else if (hasTypesToIgnore) {
+            sb.append("Type-based ignoring is configured but field-level tracking is not available for it.");
+        } else if (hasPatterns) {
+            sb.append("Pattern-based ignoring is configured but field-level tracking is not available for it.");
+        }
+        if (hasSortNote) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append("Type-based sorting is configured but field-level tracking is not available for it.");
+        }
+        return sb.toString();
     }
 
     protected boolean areCustomMatchersMatchingBeanOrJson(Object actual, JsonElement actualAsJsonElement, Description mismatchDescription, Gson gson, MatcherConfiguration matcherConfiguration) {

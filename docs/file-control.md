@@ -138,6 +138,10 @@ All machine-readable messages are valid JSON objects. The exact fields depend on
   ],
   "aliasedFields": [
     { "path": "userId", "originalValue": "a1b2c3d4-...", "alias": "%%IGNORED-UUID%%" }
+  ],
+  "sortedFields": [
+    { "path": "items", "reason": "SORT_PATH" },
+    { "path": "tags", "reason": "SORT_PATTERN", "pattern": "a string containing \"tag\"" }
   ]
 }
 ```
@@ -160,7 +164,8 @@ All machine-readable messages are valid JSON objects. The exact fields depend on
   "expected": "{ ... expected ... }",
   "actual": "{ ... actual ... }",
   "ignoredFields": [],
-  "aliasedFields": []
+  "aliasedFields": [],
+  "sortedFields": []
 }
 ```
 
@@ -203,6 +208,22 @@ The `aliasedFields` array records value replacements made by aliasing. Each entr
 | `path` | The dotted path of the aliased field |
 | `originalValue` | The original value before aliasing |
 | `alias` | The replacement value |
+
+### sortedFields tracking
+
+The `sortedFields` array records **which array fields were actually sorted** due to user-configured sorting. Each entry contains:
+
+| Field | Description |
+|-------|-------------|
+| `path` | The dotted path of the field whose array was sorted (e.g. `items`, `order.lineItems`) |
+| `reason` | One of: `SORT_PATH`, `SORT_PATTERN` |
+| `pattern` | *(only for `SORT_PATTERN`)* The matcher description that matched |
+
+**Reason values:**
+- `SORT_PATH` — sorted by `.sortField("fieldPath")` or `.sortFieldPath(SortField.of("path"))`
+- `SORT_PATTERN` — sorted by `.sortField(Matcher<String>)` or `.sortFieldMatcher(SortField.of(matcher))`
+
+**Note:** Type-based sorting (`.sortType(Class)`) is applied during Gson serialization (via a field-name marker), so individual field sorts cannot be tracked. When this is configured, the `"note"` field explains this limitation.
 
 ### Passive AI discovery tip
 

@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -36,6 +37,7 @@ public class ComparisonDescription extends StringDescription {
 	private String testInfo;
 	private IgnoredFieldsTracker ignoredFieldsTracker;
 	private AliasTracker aliasTracker;
+	private SortedFieldsTracker sortedFieldsTracker;
 	private String note;
 
 	public String getActual() {
@@ -94,6 +96,10 @@ public class ComparisonDescription extends StringDescription {
 		this.aliasTracker = tracker;
 	}
 
+	public void setSortedFieldsTracker(SortedFieldsTracker tracker) {
+		this.sortedFieldsTracker = tracker;
+	}
+
 	public void setTypesIgnoredConfigured(boolean typesIgnoredConfigured) {
 		// Legacy compatibility — builds the note string
 		if (typesIgnoredConfigured) {
@@ -131,6 +137,7 @@ public class ComparisonDescription extends StringDescription {
 		}
 		root.add("ignoredFields", buildIgnoredFieldsArray());
 		root.add("aliasedFields", buildAliasedFieldsArray());
+		root.add("sortedFields", buildSortedFieldsArray());
 		if (note != null) {
 			root.addProperty("note", note);
 		}
@@ -168,6 +175,22 @@ public class ComparisonDescription extends StringDescription {
 				entry.addProperty("path", field.getPath());
 				entry.addProperty("originalValue", field.getOriginalValue());
 				entry.addProperty("alias", field.getAlias());
+				arr.add(entry);
+			}
+		}
+		return arr;
+	}
+
+	private JsonArray buildSortedFieldsArray() {
+		JsonArray arr = new JsonArray();
+		if (sortedFieldsTracker != null && !sortedFieldsTracker.isEmpty()) {
+			for (SortedFieldsTracker.SortedField field : sortedFieldsTracker.getFields()) {
+				JsonObject entry = new JsonObject();
+				entry.addProperty("path", field.getPath());
+				entry.addProperty("reason", field.getReason().name());
+				if (field.getPattern() != null) {
+					entry.addProperty("pattern", field.getPattern());
+				}
 				arr.add(entry);
 			}
 		}

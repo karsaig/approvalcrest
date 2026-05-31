@@ -20,6 +20,7 @@ import com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 
 import org.hamcrest.Description;
 
@@ -164,9 +165,10 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     @Override
     protected boolean appendMismatchDescriptionWithNote(Description mismatchDescription, String expected, String actual,
                                                          String message, IgnoredFieldsTracker ignoredFieldsTracker,
-                                                         AliasTracker aliasTracker, String note) {
+                                                         AliasTracker aliasTracker, SortedFieldsTracker sortedFieldsTracker,
+                                                         String note) {
         boolean result = super.appendMismatchDescriptionWithNote(mismatchDescription, expected, actual, message,
-                ignoredFieldsTracker, aliasTracker, note);
+                ignoredFieldsTracker, aliasTracker, sortedFieldsTracker, note);
         setFileInfoOnDescription(mismatchDescription);
         return result;
     }

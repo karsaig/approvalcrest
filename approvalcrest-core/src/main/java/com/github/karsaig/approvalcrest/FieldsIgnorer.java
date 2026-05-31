@@ -10,6 +10,7 @@
 package com.github.karsaig.approvalcrest;
 
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.*;
 import org.hamcrest.Matcher;
@@ -34,19 +35,27 @@ public class FieldsIgnorer {
     }
 
     public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
-        applyRootCollectionSorting(filteredJson, objectForTypeCheck, fieldMatchersToSort, pathsToSort, Collections.<Class<?>>emptyList());
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, fieldMatchersToSort, pathsToSort, Collections.<Class<?>>emptyList(), null);
     }
 
     public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort, Collection<Class<?>> typesToSort) {
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, fieldMatchersToSort, pathsToSort, typesToSort, null);
+    }
+
+    public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort, Collection<Class<?>> typesToSort, SortedFieldsTracker tracker) {
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
-            // Sets and Maps are always sorted by their root representation (no meaningful order)
+            // Sets and Maps are always sorted by their root representation (no meaningful order) — NOT tracked
             sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
         } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
                 sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+                if (tracker != null) {
+                    recordSortMatches(tracker, "", rootSortFields, fieldMatchersToSort);
+                }
             } else if (!typesToSort.isEmpty() && collectionElementMatchesTypesToSort((Collection<?>) objectForTypeCheck, typesToSort)) {
+                // Type-based sorting — NOT tracked (same as type-based ignoring)
                 sortJsonArray(filteredJson.getAsJsonArray(), emptyList(), fieldMatchersToSort);
             }
         }
@@ -193,14 +202,19 @@ public class FieldsIgnorer {
     }
 
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
+        applySorting(jsonElement, pathsToSort, fieldMatchersToSort, sortFile, null);
+    }
+
+    public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker) {
         if (jsonElement == null || jsonElement.isJsonNull()) return;
         Map<String, PathLevel> pathMap = pathsToSort.isEmpty() ? Collections.emptyMap() : getPathsMap(pathsToSort);
-        applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile);
+        applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, "");
     }
 
     private static void applySortingInternal(JsonElement jsonElement, Map<String, PathLevel> pathMap,
             Map<String, List<SortField<String>>> pathsToSort,
-            List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
+            List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile,
+            SortedFieldsTracker tracker, String currentPath) {
         if (jsonElement != null && !jsonElement.isJsonNull()) {
             if (jsonElement.isJsonObject()) {
                 JsonObject jsonObject = jsonElement.getAsJsonObject();
@@ -222,12 +236,16 @@ public class FieldsIgnorer {
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
                     Map<String, PathLevel> nextPathMap = pathLevel.nextLevel.isEmpty()
                             ? Collections.emptyMap() : getPathsMap(pathLevel.nextLevel);
-                    applySortingInternal(actualValue, nextPathMap, pathLevel.nextLevel, fieldMatchersToSort, sortFile);
+                    String childPath = currentPath.isEmpty() ? fieldNamePair.newKey : currentPath + "." + fieldNamePair.newKey;
+                    applySortingInternal(actualValue, nextPathMap, pathLevel.nextLevel, fieldMatchersToSort, sortFile, tracker, childPath);
                     if (actualValue.isJsonArray()) {
                         List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, sortFile);
                         List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile);
                         if (fieldNamePair.shouldSortDueToType() || !matchingPathMatchers.isEmpty() || !matchingFieldMatchers.isEmpty()) {
                             sortJsonArray(actualValue.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
+                            if (tracker != null) {
+                                recordSortMatches(tracker, childPath, matchingPathMatchers, matchingFieldMatchers);
+                            }
                         }
                     }
                 }
@@ -256,7 +274,7 @@ public class FieldsIgnorer {
                     if (current.isJsonNull() || current.isJsonPrimitive()) {
                         continue;
                     }
-                    applySortingInternal(current, innerPathMap, innerPathsToSort, fieldMatchersToSort, sortFile);
+                    applySortingInternal(current, innerPathMap, innerPathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath);
                 }
                 // Sort the array itself last (root), so the sort key reflects the
                 // already-sorted state of nested elements.
@@ -264,8 +282,22 @@ public class FieldsIgnorer {
                 List<SortField<Matcher<String>>> rootFieldMatchers = anyFieldMatcherMatches("", fieldMatchersToSort, sortFile);
                 if (!rootSortFields.isEmpty() || !rootFieldMatchers.isEmpty()) {
                     sortJsonArray(jsonElement.getAsJsonArray(), rootSortFields, rootFieldMatchers);
+                    if (tracker != null) {
+                        recordSortMatches(tracker, currentPath, rootSortFields, rootFieldMatchers);
+                    }
                 }
             }
+        }
+    }
+
+    private static void recordSortMatches(SortedFieldsTracker tracker, String path,
+            List<SortField<String>> matchingPathMatchers,
+            List<SortField<Matcher<String>>> matchingFieldMatchers) {
+        if (!matchingPathMatchers.isEmpty()) {
+            tracker.recordSortedByPath(path);
+        }
+        for (SortField<Matcher<String>> fm : matchingFieldMatchers) {
+            tracker.recordSortedByPattern(path, fm.getSortFieldSelector().toString());
         }
     }
 

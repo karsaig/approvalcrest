@@ -46,7 +46,8 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
                     () -> assertTrue(json.has("action"), "Should contain action"),
                     () -> assertTrue(json.has("actual"), "Should contain actual field"),
                     () -> assertTrue(json.has("ignoredFields"), "Should contain ignoredFields array"),
-                    () -> assertTrue(json.has("aliasedFields"), "Should contain aliasedFields array")
+                    () -> assertTrue(json.has("aliasedFields"), "Should contain aliasedFields array"),
+                    () -> assertTrue(json.has("sortedFields"), "Should contain sortedFields array")
             );
         });
     }

@@ -41,7 +41,7 @@ assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 mvn test -DfileMatcherMachineReadable=true
 ```
 
-In this mode, failure messages are structured JSON containing the expected/actual content, the approved file path, an `ignoredFields` array showing which fields were removed and why, and an `aliasedFields` array showing value replacements. See [file-control.md](docs/file-control.md) for details.
+In this mode, failure messages are structured JSON containing the expected/actual content, the approved file path, an `ignoredFields` array showing which fields were removed and why, an `aliasedFields` array showing value replacements, and a `sortedFields` array showing which arrays were sorted. See [file-control.md](docs/file-control.md) for details.
 
 ## Version support
 
