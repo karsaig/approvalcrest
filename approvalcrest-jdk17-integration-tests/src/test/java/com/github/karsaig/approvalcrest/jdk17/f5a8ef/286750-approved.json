@@ -1,0 +1,5 @@
+/*com.github.karsaig.approvalcrest.jdk17.RecordSerializationTest.simpleRecordMatchesApprovedJson*/
+{
+  "age": 30,
+  "name": "Alice"
+}

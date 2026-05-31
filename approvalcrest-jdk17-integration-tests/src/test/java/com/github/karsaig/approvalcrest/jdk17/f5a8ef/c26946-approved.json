@@ -1,0 +1,5 @@
+/*com.github.karsaig.approvalcrest.jdk17.RecordSerializationTest.genericRecordMatchesApprovedJson*/
+{
+  "description": "a string value",
+  "value": "hello"
+}
