@@ -3,6 +3,8 @@ package com.github.karsaig.approvalcrest.jdk17;
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameJsonAsApproved;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -132,5 +134,46 @@ public class SealedClassSerializationTest {
     public void containerWithSealedRecordMatchesApprovedJson() {
         ShapeContainer actual = new ShapeContainer("my circle", new Circle(2.5));
         assertThat(actual, sameJsonAsApproved());
+    }
+
+    // ---- Negative cases: mismatch detection ----
+
+    @Test
+    public void sealedRecordMismatchDetected() {
+        Shape actual = new Circle(5.0);
+        Shape expected = new Circle(10.0);
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, sameBeanAs(expected)));
+        assertTrue(error.getMessage().contains("radius"), "Should report radius mismatch");
+    }
+
+    @Test
+    public void sealedClassMismatchDetected() {
+        Vehicle actual = new Car("Toyota", 2023, 4);
+        Vehicle expected = new Car("Honda", 2024, 2);
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, sameBeanAs(expected)));
+        assertTrue(error.getMessage().contains("make"), "Should report make mismatch");
+        assertTrue(error.getMessage().contains("year"), "Should report year mismatch");
+        assertTrue(error.getMessage().contains("doors"), "Should report doors mismatch");
+    }
+
+    @Test
+    public void differentSealedSubtypesMismatchDetected() {
+        Shape actual = new Circle(5.0);
+        Shape expected = new Rectangle(3.0, 4.0);
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, sameBeanAs(expected)));
+        assertTrue(error.getMessage().contains("is not an instance of expected type"),
+                "Should report type mismatch between different sealed subtypes");
+    }
+
+    @Test
+    public void containerWithDifferentSealedContentMismatchDetected() {
+        ShapeContainer actual = new ShapeContainer("shape1", new Circle(5.0));
+        ShapeContainer expected = new ShapeContainer("shape1", new Circle(10.0));
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, sameBeanAs(expected)));
+        assertTrue(error.getMessage().contains("radius"), "Should report nested radius mismatch");
     }
 }
