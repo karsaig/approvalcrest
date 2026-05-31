@@ -18,16 +18,22 @@ import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher;
 import com.github.karsaig.approvalcrest.matcher.TestMetaInformation;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 
 import org.hamcrest.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Supplier;
 import com.google.common.hash.Hashing;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnosingFileMatcher<T, U>> extends AbstractDiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
 
+    private static final Gson JSON_OUTPUT_GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
     public static final int NUM_OF_HASH_CHARS = 6;
     protected final FileStoreMatcherUtils fileStoreMatcherUtils;
     protected final FileMatcherConfig fileMatcherConfig;
@@ -151,13 +157,27 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     @Override
     protected boolean appendMismatchDescription(Description mismatchDescription, String expected, String actual, String message) {
         boolean result = super.appendMismatchDescription(mismatchDescription, expected, actual, message);
+        setFileInfoOnDescription(mismatchDescription);
+        return result;
+    }
+
+    @Override
+    protected boolean appendMismatchDescriptionWithNote(Description mismatchDescription, String expected, String actual,
+                                                         String message, IgnoredFieldsTracker ignoredFieldsTracker,
+                                                         AliasTracker aliasTracker, String note) {
+        boolean result = super.appendMismatchDescriptionWithNote(mismatchDescription, expected, actual, message,
+                ignoredFieldsTracker, aliasTracker, note);
+        setFileInfoOnDescription(mismatchDescription);
+        return result;
+    }
+
+    private void setFileInfoOnDescription(Description mismatchDescription) {
         if (machineReadableOutput && mismatchDescription instanceof ComparisonDescription && fileNameWithPath != null) {
             ComparisonDescription comparisonDescription = (ComparisonDescription) mismatchDescription;
             Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath).getFileName();
             comparisonDescription.setApprovedFilePath(approvedFile.toAbsolutePath().toString());
             comparisonDescription.setTestInfo(testClassName + "#" + testMethodName);
         }
-        return result;
     }
 
     @SuppressWarnings("deprecation")
@@ -196,11 +216,13 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
                 String message;
                 if (machineReadableOutput) {
-                    message = "FAILURE_TYPE: NEW_FILE\n"
-                            + "TEST: " + testClassName + "#" + testMethodName + "\n"
-                            + "Not approved file created: '" + createdFileAndInfo.getFileName().toAbsolutePath() + "';\n"
-                            + "APPROVE_TO: " + approvedFileAndInfo.getFileName().toAbsolutePath() + "\n"
-                            + "ACTION: Set system property fMUInPlace=true and re-run, or copy the not-approved file to APPROVE_TO path above";
+                    JsonObject json = new JsonObject();
+                    json.addProperty("failureType", "NEW_FILE");
+                    json.addProperty("test", testClassName + "#" + testMethodName);
+                    json.addProperty("notApprovedFile", createdFileAndInfo.getFileName().toAbsolutePath().toString());
+                    json.addProperty("approveTo", approvedFileAndInfo.getFileName().toAbsolutePath().toString());
+                    json.addProperty("action", "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approveTo path above");
+                    message = JSON_OUTPUT_GSON.toJson(json);
                 } else {
                     message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
                             + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";

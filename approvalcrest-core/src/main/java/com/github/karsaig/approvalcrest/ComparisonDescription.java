@@ -11,12 +11,22 @@ package com.github.karsaig.approvalcrest;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.List;
+
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import org.hamcrest.StringDescription;
 
 /**
  * {@link StringDescription} which holds the mismatch message along with the actual and expected Json representation.
  */
 public class ComparisonDescription extends StringDescription {
+	private static final Gson OUTPUT_GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
 	private String actual;
 	private String expected;
 	private String differencesMessage;
@@ -24,6 +34,9 @@ public class ComparisonDescription extends StringDescription {
 	private boolean machineReadable;
 	private String approvedFilePath;
 	private String testInfo;
+	private IgnoredFieldsTracker ignoredFieldsTracker;
+	private AliasTracker aliasTracker;
+	private String note;
 
 	public String getActual() {
 		return actual;
@@ -73,6 +86,25 @@ public class ComparisonDescription extends StringDescription {
 		this.testInfo = testInfo;
 	}
 
+	public void setIgnoredFieldsTracker(IgnoredFieldsTracker tracker) {
+		this.ignoredFieldsTracker = tracker;
+	}
+
+	public void setAliasTracker(AliasTracker tracker) {
+		this.aliasTracker = tracker;
+	}
+
+	public void setTypesIgnoredConfigured(boolean typesIgnoredConfigured) {
+		// Legacy compatibility — builds the note string
+		if (typesIgnoredConfigured) {
+			setNote("Type-based ignoring is configured but field-level tracking is not available for it.");
+		}
+	}
+
+	public void setNote(String note) {
+		this.note = note;
+	}
+
 	public String toFailureMessage(String reason) {
 		if (machineReadable) {
 			return buildMachineReadableMessage(reason);
@@ -82,24 +114,63 @@ public class ComparisonDescription extends StringDescription {
 	}
 
 	private String buildMachineReadableMessage(String reason) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("FAILURE_TYPE: MISMATCH\n");
+		JsonObject root = new JsonObject();
+		root.addProperty("failureType", "MISMATCH");
 		if (testInfo != null) {
-			sb.append("TEST: ").append(testInfo).append("\n");
-		}
-		if (isNotBlank(reason)) {
-			sb.append(reason).append("\n");
+			root.addProperty("test", testInfo);
 		}
 		if (approvedFilePath != null) {
-			sb.append("APPROVED_FILE: ").append(approvedFilePath).append("\n");
-			sb.append("ACTION: Set system property fMUInPlace=true and re-run to update the approved file\n");
-		} else if (expected != null) {
-			sb.append("=== EXPECTED (full) ===\n").append(expected).append("\n=== END EXPECTED ===\n");
+			root.addProperty("approvedFile", approvedFilePath);
+			root.addProperty("action", "Set system property fMUInPlace=true and re-run to update the approved file");
 		}
-		sb.append("\n");
+		if (expected != null) {
+			root.addProperty("expected", expected);
+		}
 		if (actual != null) {
-			sb.append("=== ACTUAL (full) ===\n").append(actual).append("\n=== END ACTUAL ===");
+			root.addProperty("actual", actual);
 		}
-		return sb.toString();
+		root.add("ignoredFields", buildIgnoredFieldsArray());
+		root.add("aliasedFields", buildAliasedFieldsArray());
+		if (note != null) {
+			root.addProperty("note", note);
+		}
+		return OUTPUT_GSON.toJson(root);
+	}
+
+	private JsonArray buildIgnoredFieldsArray() {
+		JsonArray arr = new JsonArray();
+		if (ignoredFieldsTracker != null && !ignoredFieldsTracker.isEmpty()) {
+			for (IgnoredFieldsTracker.IgnoredField field : ignoredFieldsTracker.getFields()) {
+				JsonObject entry = new JsonObject();
+				entry.addProperty("path", field.getPath());
+				entry.addProperty("reason", field.getReason().name());
+				if (field.getPattern() != null) {
+					entry.addProperty("pattern", field.getPattern());
+				}
+				if (field.getCauses() != null && !field.getCauses().isEmpty()) {
+					JsonArray causes = new JsonArray();
+					for (String cause : field.getCauses()) {
+						causes.add(cause);
+					}
+					entry.add("causes", causes);
+				}
+				arr.add(entry);
+			}
+		}
+		return arr;
+	}
+
+	private JsonArray buildAliasedFieldsArray() {
+		JsonArray arr = new JsonArray();
+		if (aliasTracker != null && !aliasTracker.isEmpty()) {
+			for (AliasTracker.AliasedField field : aliasTracker.getFields()) {
+				JsonObject entry = new JsonObject();
+				entry.addProperty("path", field.getPath());
+				entry.addProperty("originalValue", field.getOriginalValue());
+				entry.addProperty("alias", field.getAlias());
+				arr.add(entry);
+			}
+		}
+		return arr;
 	}
 }

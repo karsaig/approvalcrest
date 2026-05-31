@@ -6,6 +6,9 @@ import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.file.AbstractDiagnosingFileMatcher;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker.Reason;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.*;
 import org.hamcrest.Description;
@@ -60,7 +63,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
         if (expected.isParsedJson()) {
-            description.appendText(filterJson(gson, expected.getParsedContent(), true, false, false));
+            description.appendText(filterJson(gson, expected.getParsedContent(), true, false, false, null, null));
         } else {
             description.appendText(expected.getOriginalContent());
         }
@@ -130,17 +133,23 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
         if (areCustomMatchersMatchingBeanOrJson(actual, actualJsonElement, mismatchDescription, gson, matcherConfiguration)) {
 
+            IgnoredFieldsTracker ignoredTracker = machineReadableOutput ? new IgnoredFieldsTracker() : null;
+            AliasTracker aliasTracker = machineReadableOutput ? new AliasTracker() : null;
+            String untrackedNote = buildUntrackedNote();
+
             String expectedJson = expected.getOriginalContent();
             if (expected.isParsedJson()) {
-                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictFileMatching(), fileMatcherConfig.isStrictFileMatching());
+                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictFileMatching(), fileMatcherConfig.isStrictFileMatching(), ignoredTracker, aliasTracker);
             }
 
             if (actual == null) {
-                matches = appendMismatchDescription(mismatchDescription, expectedJson, "null", "actual was null");
+                matches = appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, "null", "actual was null",
+                        ignoredTracker, aliasTracker, untrackedNote);
             } else {
-                String actualJson = filterJson(gson, actualJsonElement, true, false, false);
+                String actualJson = filterJson(gson, actualJsonElement, true, false, false, ignoredTracker, aliasTracker);
 
-                matches = assertJsonEquals(expectedJson, actualJson, mismatchDescription, e -> getAssertMessage(fileStoreMatcherUtils, e));
+                matches = assertJsonEquals(expectedJson, actualJson, mismatchDescription, e -> getAssertMessage(fileStoreMatcherUtils, e),
+                        ignoredTracker, aliasTracker, untrackedNote);
                 if (!matches) {
                     matches = handleInPlaceOverwrite(actual, gson);
                 }
@@ -191,21 +200,37 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         });
     }
 
-    private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings) {
+    private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings,
+                              IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker) {
         Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
-        JsonElement filteredJson = findPaths(jsonElement, set);
-        JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore());
+        Map<String, Reason> reasonMap = new HashMap<>();
         if (!skipIgnores) {
-            JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration);
+            for (String p : matcherConfiguration.getPathsToIgnore()) {
+                reasonMap.put(p, Reason.IGNORE_PATH);
+            }
+            for (String p : matcherConfiguration.getCustomMatchers().keySet()) {
+                reasonMap.put(p, Reason.CUSTOM_MATCHER);
+                set.add(p);
+            }
+        }
+
+        JsonElement filteredJson = findPaths(jsonElement, set, ignoredTracker, reasonMap);
+        JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore(), ignoredTracker, Reason.IGNORE_PATTERN);
+        if (!skipIgnores) {
+            JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration, ignoredTracker);
         }
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {
-            JsonElementUtil.applyAliases(filteredJson, aliasMap);
+            JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile);
 
         return removeSetMarker(gson.toJson(filteredJson));
+    }
+
+    private String buildUntrackedNote() {
+        return buildUntrackedNote(matcherConfiguration);
     }
 
     private boolean createNotApprovedFileIfNotExists(Object toApprove, Gson gson) {
@@ -218,7 +243,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
-        return filterJson(gson, actualJsonElement, true, false, false);
+        return filterJson(gson, actualJsonElement, true, false, false, null, null);
     }
 
     @Override

@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest;
 
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.gson.*;
 import org.hamcrest.Matcher;
@@ -87,6 +88,16 @@ public class FieldsIgnorer {
     }
 
     public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind) {
+        return findPaths(jsonElement, pathsToFind, null, null);
+    }
+
+    /**
+     * Tracked version of findPaths. When tracker is non-null, records which fields were actually
+     * removed and why. The reasonMap maps each path to its reason (IGNORE_PATH or CUSTOM_MATCHER).
+     */
+    public static JsonElement findPaths(JsonElement jsonElement, Set<String> pathsToFind,
+                                         IgnoredFieldsTracker tracker,
+                                         Map<String, IgnoredFieldsTracker.Reason> reasonMap) {
         if (jsonElement == null || jsonElement.isJsonNull() || pathsToFind.isEmpty()) {
             return jsonElement;
         }
@@ -94,11 +105,15 @@ public class FieldsIgnorer {
         String pathToFind = headOf(pathsToFind);
         List<String> pathSegments = asList(pathToFind.split(PATH_SEPARATOR_PATTERN));
         try {
-            findPath(jsonElement, pathToFind, pathSegments);
+            boolean removed = findPath(jsonElement, pathToFind, pathSegments);
+            if (removed && tracker != null && reasonMap != null) {
+                IgnoredFieldsTracker.Reason reason = reasonMap.getOrDefault(pathToFind, IgnoredFieldsTracker.Reason.IGNORE_PATH);
+                tracker.recordIgnored(pathToFind, reason);
+            }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(pathToFind + " does not exist", e);
         }
-        return findPaths(jsonElement, removePathFromSet(pathsToFind, pathToFind));
+        return findPaths(jsonElement, removePathFromSet(pathsToFind, pathToFind), tracker, reasonMap);
     }
 
     private static Set<String> removePathFromSet(Set<String> setToRemoveFrom, String stringToRemove) {
