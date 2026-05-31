@@ -1,0 +1,7 @@
+/*com.github.karsaig.approvalcrest.jdk17.RecordSerializationTest.recordWithOptionalPresentMatchesApprovedJson*/
+{
+  "id": "id1",
+  "nickname": {
+    "value": "Nick"
+  }
+}

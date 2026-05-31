@@ -1,0 +1,6 @@
+/*com.github.karsaig.approvalcrest.jdk17.SealedClassSerializationTest.sealedClassCarMatchesApprovedJson*/
+{
+  "doors": 4,
+  "make": "Toyota",
+  "year": 2023
+}

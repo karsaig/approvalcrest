@@ -1,0 +1,7 @@
+/*com.github.karsaig.approvalcrest.jdk17.SealedClassSerializationTest.containerWithSealedRecordMatchesApprovedJson*/
+{
+  "name": "my circle",
+  "shape": {
+    "radius": 2.5
+  }
+}

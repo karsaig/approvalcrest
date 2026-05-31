@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hamcrest.Matcher;
@@ -346,6 +348,7 @@ class GsonProvider {
      */
     static class LenientTypeAdapterFactory implements TypeAdapterFactory {
         private static final Logger LOGGER = Logger.getLogger(LenientTypeAdapterFactory.class.getName());
+        private static final Set<String> WARNED_KEYS = ConcurrentHashMap.newKeySet();
 
         private final TypeAdapterFactory delegate;
 
@@ -358,15 +361,22 @@ class GsonProvider {
             try {
                 return delegate.create(gson, type);
             } catch (IllegalStateException e) {
-                LOGGER.warning("TypeAdapterFactory '" + delegate.getClass().getName()
-                        + "' threw IllegalStateException for type " + type
-                        + ". Falling back to reflective serialization. "
-                        + "This usually means the factory received a raw type without generic parameters. "
-                        + "Possible causes: (1) a field is declared with a raw type "
-                        + "(e.g., MyType instead of MyType<String>), or "
-                        + "(2) a custom JsonSerializer calls context.serialize(value) without passing "
-                        + "the declared Type — use context.serialize(value, declaredType) instead. "
-                        + "Details: " + e.getMessage());
+                String key = delegate.getClass().getName() + ":" + type;
+                if (WARNED_KEYS.add(key)) {
+                    LOGGER.log(Level.WARNING, "TypeAdapterFactory '" + delegate.getClass().getName()
+                            + "' threw IllegalStateException for type " + type
+                            + ". Falling back to reflective serialization. "
+                            + "This usually means the factory received a raw type without generic parameters. "
+                            + "Possible causes: (1) a field is declared with a raw type "
+                            + "(e.g., MyType instead of MyType<String>), or "
+                            + "(2) a custom JsonSerializer calls context.serialize(value) without passing "
+                            + "the declared Type — use context.serialize(value, declaredType) instead. "
+                            + "Subsequent occurrences for this factory and type combination will only be logged at FINE level.", e);
+                } else if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.log(Level.FINE, "TypeAdapterFactory '" + delegate.getClass().getName()
+                            + "' threw IllegalStateException for type " + type
+                            + ". Falling back to reflective serialization (see previous WARNING for details).", e);
+                }
                 return null;
             }
         }
