@@ -37,7 +37,7 @@ When a test fails, enable machine-readable output so that AI agents and CI tooli
 assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 ```
 ```
-# Or via system property:
+# Or via system property (short alias fmAI also works):
 mvn test -DfileMatcherMachineReadable=true
 ```
 

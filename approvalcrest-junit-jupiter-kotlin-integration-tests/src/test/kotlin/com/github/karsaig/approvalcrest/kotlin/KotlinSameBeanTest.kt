@@ -39,7 +39,7 @@ class KotlinSameBeanTest {
                 "Unexpected: beanLong\n" +
                 " ; \n" +
                 "Unexpected: beanShort\n" +
-                "\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output."
+                "\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output."
         val expectedActualValue = "{\n" +
                 "  \"beanBoolean\": false,\n" +
                 "  \"beanByte\": -128,\n" +

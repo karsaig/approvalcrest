@@ -116,7 +116,7 @@ public class ComparisonDescription extends StringDescription {
 			return buildMachineReadableMessage(reason);
 		}
 		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage()
-				+ "\n[AI tip] Re-run with system property fMMReadable=true for structured, machine-readable output.";
+				+ "\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.";
 	}
 
 	private String buildMachineReadableMessage(String reason) {

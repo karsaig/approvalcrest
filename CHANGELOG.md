@@ -1,6 +1,15 @@
 Changelog
 ===========
 
+Version 1.3.0 - 2026/06/01
+-----
+
+- Machine-readable output is now structured JSON. Failure messages emitted with `-DfileMatcherMachineReadable=true` (or `withMachineReadableOutput()`) are valid JSON objects containing `failureType`, `test`, `approvedFile`/`approveTo`, `expected`, `actual`, plus metadata arrays `ignoredFields`, `aliasedFields`, and `sortedFields` that document what transformations were applied. See [file-control](docs/file-control.md).
+- Added `fmAI` as an additional short alias for the machine-readable output system property (`-DfmAI=true`). The passive AI discovery tip appended to non-machine-readable failures now references `fmAI` for brevity. The original alias `fMMReadable` remains valid. See [system-properties](docs/system-properties.md).
+- Added JDK 17+ integration tests for records and sealed classes (`approvalcrest-jdk17-integration-tests` module).
+- Fixed generic type serialization bug with Immutables `@Gson.TypeAdapters`: types registered via `GsonBuilder.registerTypeAdapterFactory` no longer cause `IllegalStateException` during recursive adapter resolution.
+- `LenientTypeAdapterFactory` now logs the full exception (including stack trace) when catching `IllegalStateException`, and deduplicates repeated warnings for the same type to reduce log noise.
+
 Version 1.2.0 - 2026/05/30
 -----
 
