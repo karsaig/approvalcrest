@@ -144,4 +144,37 @@ public class RecordSerializationTest {
                 () -> assertThat(actual, sameBeanAs(expected)));
         assertTrue(error.getMessage().contains("nickname"), "Should report nickname mismatch");
     }
+
+    // --- Record inside Optional ---
+
+    record Address(String street, String city, int zip) {}
+
+    record PersonWithOptionalAddress(String name, Optional<Address> address) {}
+
+    @Test
+    public void recordInsideOptionalMatchesIdenticalInstance() {
+        PersonWithOptionalAddress actual = new PersonWithOptionalAddress("Alice",
+                Optional.of(new Address("123 Main St", "Springfield", 62704)));
+        PersonWithOptionalAddress expected = new PersonWithOptionalAddress("Alice",
+                Optional.of(new Address("123 Main St", "Springfield", 62704)));
+        assertThat(actual, sameBeanAs(expected));
+    }
+
+    @Test
+    public void recordInsideOptionalEmptyMatchesIdenticalInstance() {
+        PersonWithOptionalAddress actual = new PersonWithOptionalAddress("Bob", Optional.empty());
+        PersonWithOptionalAddress expected = new PersonWithOptionalAddress("Bob", Optional.empty());
+        assertThat(actual, sameBeanAs(expected));
+    }
+
+    @Test
+    public void recordInsideOptionalMismatchDetected() {
+        PersonWithOptionalAddress actual = new PersonWithOptionalAddress("Alice",
+                Optional.of(new Address("123 Main St", "Springfield", 62704)));
+        PersonWithOptionalAddress expected = new PersonWithOptionalAddress("Alice",
+                Optional.of(new Address("456 Oak Ave", "Shelbyville", 62705)));
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, sameBeanAs(expected)));
+        assertTrue(error.getMessage().contains("street"), "Should report street mismatch");
+    }
 }

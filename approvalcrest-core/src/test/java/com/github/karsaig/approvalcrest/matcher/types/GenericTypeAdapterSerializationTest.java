@@ -208,4 +208,114 @@ class GenericTypeAdapterSerializationTest extends AbstractFileMatcherTest {
         assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent,
                 jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
     }
+
+    // --- Tests for Optional<Interface> and Optional<AbstractClass> bug ---
+
+    public interface UrlDto {
+        String getUrl();
+        String getLabel();
+    }
+
+    public static class UrlDtoImpl implements UrlDto {
+        private final String url;
+        private final String label;
+
+        public UrlDtoImpl(String url, String label) {
+            this.url = url;
+            this.label = label;
+        }
+
+        @Override
+        public String getUrl() {
+            return url;
+        }
+
+        @Override
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    public static abstract class AbstractTeamDTO {
+        public abstract String getTeamName();
+        public abstract int getMemberCount();
+    }
+
+    public static class ConcreteTeamDTO extends AbstractTeamDTO {
+        private final String teamName;
+        private final int memberCount;
+
+        public ConcreteTeamDTO(String teamName, int memberCount) {
+            this.teamName = teamName;
+            this.memberCount = memberCount;
+        }
+
+        @Override
+        public String getTeamName() {
+            return teamName;
+        }
+
+        @Override
+        public int getMemberCount() {
+            return memberCount;
+        }
+    }
+
+    public static class BeanWithOptionalInterface {
+        private Optional<UrlDto> link;
+
+        public BeanWithOptionalInterface(UrlDto link) {
+            this.link = Optional.ofNullable(link);
+        }
+
+        public Optional<UrlDto> getLink() {
+            return link;
+        }
+    }
+
+    public static class BeanWithOptionalAbstract {
+        private Optional<AbstractTeamDTO> team;
+
+        public BeanWithOptionalAbstract(AbstractTeamDTO team) {
+            this.team = Optional.ofNullable(team);
+        }
+
+        public Optional<AbstractTeamDTO> getTeam() {
+            return team;
+        }
+    }
+
+    @Test
+    void shouldSerializeOptionalOfInterfaceTypeUsingRuntimeType() {
+        BeanWithOptionalInterface actual = new BeanWithOptionalInterface(
+                new UrlDtoImpl("https://example.com", "Example"));
+
+        String approvedFileContent = "{\n" +
+                "  \"link\": {\n" +
+                "    \"value\": {\n" +
+                "      \"url\": \"https://example.com\",\n" +
+                "      \"label\": \"Example\"\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalOfAbstractTypeUsingRuntimeType() {
+        BeanWithOptionalAbstract actual = new BeanWithOptionalAbstract(
+                new ConcreteTeamDTO("Engineering", 42));
+
+        String approvedFileContent = "{\n" +
+                "  \"team\": {\n" +
+                "    \"value\": {\n" +
+                "      \"teamName\": \"Engineering\",\n" +
+                "      \"memberCount\": 42\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
 }

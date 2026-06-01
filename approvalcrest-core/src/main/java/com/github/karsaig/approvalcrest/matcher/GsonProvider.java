@@ -307,7 +307,7 @@ class GsonProvider {
             }
             JsonObject result = new JsonObject();
             Type valueType = getOptionalValueType(typeOfSrc);
-            if (valueType != null) {
+            if (valueType != null && isConcrete(valueType)) {
                 result.add("value", context.serialize(src.get(), valueType));
             } else {
                 result.add("value", context.serialize(src.get()));
@@ -323,6 +323,18 @@ class GsonProvider {
                 }
             }
             return null;
+        }
+
+        private boolean isConcrete(Type type) {
+            if (type instanceof Class<?>) {
+                Class<?> clazz = (Class<?>) type;
+                return !clazz.isInterface() && !java.lang.reflect.Modifier.isAbstract(clazz.getModifiers());
+            }
+            if (type instanceof ParameterizedType) {
+                Type rawType = ((ParameterizedType) type).getRawType();
+                return isConcrete(rawType);
+            }
+            return false;
         }
     }
 

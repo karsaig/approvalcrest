@@ -70,16 +70,17 @@ public class UnsafeFieldTypeAdapterFactory implements TypeAdapterFactory {
     }
 
     private boolean shouldSkip(Class<?> type) {
-        // Arrays, primitives, enums, and fundamental types that Gson handles natively
         if (type.isArray()) return true;
         if (type.isPrimitive()) return true;
         if (type.isEnum()) return true;
         if (type == String.class) return true;
         if (Number.class.isAssignableFrom(type)) return true;
-        if (type == Boolean.class) return true;
-        if (type == Character.class) return true;
+        if (Boolean.class == type) return true;
+        if (Character.class == type) return true;
         if (Iterable.class.isAssignableFrom(type)) return true;
         if (java.util.Map.class.isAssignableFrom(type)) return true;
+        if (java.util.Optional.class.isAssignableFrom(type)) return true;
+        if (com.google.common.base.Optional.class.isAssignableFrom(type)) return true;
         return false;
     }
 

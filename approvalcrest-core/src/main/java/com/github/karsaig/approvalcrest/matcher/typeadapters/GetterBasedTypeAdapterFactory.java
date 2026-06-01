@@ -90,6 +90,8 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
         if (Character.class == type) return true;
         if (Iterable.class.isAssignableFrom(type)) return true;
         if (java.util.Map.class.isAssignableFrom(type)) return true;
+        if (java.util.Optional.class.isAssignableFrom(type)) return true;
+        if (com.google.common.base.Optional.class.isAssignableFrom(type)) return true;
         return false;
     }
 
