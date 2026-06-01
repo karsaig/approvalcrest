@@ -147,6 +147,33 @@ Keep approved files alongside the test source files in the same package director
 
 See [file-control](file-control.md) for options to customise file naming and paths when needed for specific scenarios.
 
+## IDE Run Templates
+
+Add `fileMatcherPassOnCreate` and `fileMatcherUpdateInPlace` to your IDE's JUnit run template with value `false`. This makes the properties **visible and easy to toggle** — when you need to create or update approved files, just flip `false` to `true` in the run configuration without having to remember the property names.
+
+**IntelliJ IDEA:**
+
+1. Open **Run → Edit Configurations → Edit Configuration Templates → JUnit**
+2. In the **VM options** field, add:
+
+```
+-DfMPOnCreate=false -DfMUInPlace=false
+```
+
+Or using the full property names:
+
+```
+-DfileMatcherPassOnCreate=false -DfileMatcherUpdateInPlace=false
+```
+
+When you need to create or update approved files, change the values to `true` in the run configuration:
+- **`fileMatcherPassOnCreate` / `fMPOnCreate`** — set to `true` to pass the test when no approved file exists yet (instead of failing with "Not approved file created"). The not-approved file is still written so you can review it.
+- **`fileMatcherUpdateInPlace` / `fMUInPlace`** — set to `true` to overwrite existing approved files with the current actual output.
+
+This enables fast iteration: flip the flag to `true`, run the test, inspect the generated approved file, flip back to `false`, and commit. No need to remember property names or type them from scratch.
+
+**Tip:** review `git diff` before committing to verify that overwritten approved files contain the expected changes. Always flip back to `false` after updating — running with `true` permanently masks real test failures.
+
 ## Multiple Assertions in One Test
 
 Each file-based matcher call derives its filename from the test class and method name. If a test makes more than one assertion with `sameJsonAsApproved()` or `sameContentAsApproved()`, all calls would resolve to the same filename and collide. Use `.withUniqueId(String id)` on every call to give each one a distinct filename:
