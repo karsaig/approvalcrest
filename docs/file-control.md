@@ -89,6 +89,41 @@ assertThat(actual, sameJsonAsApproved()
 
 **Migration from pre-1.0.1:** previously `withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/`. Move existing approved files to `{workingDir}/snapshots/<classHash>/`.
 
+## Migration from pre-1.0.0 Without Moving Files
+
+In pre-1.0.0, `withPathName(str)` resolved relative to the **working directory**. Since 1.0.0, it resolves relative to **testClassPath**. If your tests used `withPathName` with a path from the project root, the approved files would now be looked up under the wrong directory.
+
+To keep approved files in place **without moving them**, split the old `withPathName` call into `withRelativePathName` (base from working directory) + `withPathName` (subdirectory):
+
+**Before (pre-1.0.0):**
+
+```java
+// Resolved from working directory → src/test/jsons/<file>
+assertThat(actual, sameJsonAsApproved()
+    .withPathName("src/test/jsons")
+    .withFileName("my-snapshot"));
+```
+
+**After (1.0.0+):**
+
+```java
+// withRelativePathName resolves from workingDir, withPathName adds subdirectory
+assertThat(actual, sameJsonAsApproved()
+    .withRelativePathName("src/test")
+    .withPathName("jsons")
+    .withFileName("my-snapshot"));
+```
+
+Both produce the same absolute path: `{projectRoot}/src/test/jsons/my-snapshot-approved.json`. The approved file stays in place — no rename or move needed.
+
+**Resolution logic when both are set:**
+
+```
+fileNameWithPath = workingDirectory() / relativePathName / pathName / fileName
+```
+
+Since `workingDirectory()` is the project root, this is equivalent to the old `withPathName` behaviour that resolved directly from the working directory.
+
 ## In-Place Update
 
 Re-running tests with `-DfileMatcherUpdateInPlace=true` overwrites approved files with the current actual output:
