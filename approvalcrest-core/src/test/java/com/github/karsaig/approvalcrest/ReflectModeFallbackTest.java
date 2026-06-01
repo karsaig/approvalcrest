@@ -887,4 +887,81 @@ public class ReflectModeFallbackTest {
         DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
         assertFalse(matcher.matches(actual));
     }
+
+    // ---- Primitive Optional tests in fallback mode ----
+
+    public static class BeanWithOptionalInt {
+        private java.util.OptionalInt count;
+
+        public BeanWithOptionalInt(java.util.OptionalInt count) {
+            this.count = count;
+        }
+
+        public java.util.OptionalInt getCount() { return count; }
+    }
+
+    public static class BeanWithOptionalLong {
+        private java.util.OptionalLong bigCount;
+
+        public BeanWithOptionalLong(java.util.OptionalLong bigCount) {
+            this.bigCount = bigCount;
+        }
+
+        public java.util.OptionalLong getBigCount() { return bigCount; }
+    }
+
+    public static class BeanWithOptionalDouble {
+        private java.util.OptionalDouble score;
+
+        public BeanWithOptionalDouble(java.util.OptionalDouble score) {
+            this.score = score;
+        }
+
+        public java.util.OptionalDouble getScore() { return score; }
+    }
+
+    @Test
+    public void optionalIntPresentMatchesInFallbackMode() {
+        BeanWithOptionalInt actual = new BeanWithOptionalInt(java.util.OptionalInt.of(42));
+        BeanWithOptionalInt expected = new BeanWithOptionalInt(java.util.OptionalInt.of(42));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalIntEmptyMatchesInFallbackMode() {
+        BeanWithOptionalInt actual = new BeanWithOptionalInt(java.util.OptionalInt.empty());
+        BeanWithOptionalInt expected = new BeanWithOptionalInt(java.util.OptionalInt.empty());
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalLongPresentMatchesInFallbackMode() {
+        BeanWithOptionalLong actual = new BeanWithOptionalLong(java.util.OptionalLong.of(99999L));
+        BeanWithOptionalLong expected = new BeanWithOptionalLong(java.util.OptionalLong.of(99999L));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalDoublePresentMatchesInFallbackMode() {
+        BeanWithOptionalDouble actual = new BeanWithOptionalDouble(java.util.OptionalDouble.of(2.718));
+        BeanWithOptionalDouble expected = new BeanWithOptionalDouble(java.util.OptionalDouble.of(2.718));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalIntMismatchDetectedInFallbackMode() {
+        BeanWithOptionalInt actual = new BeanWithOptionalInt(java.util.OptionalInt.of(42));
+        BeanWithOptionalInt expected = new BeanWithOptionalInt(java.util.OptionalInt.of(99));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        assertFalse(matcher.matches(actual));
+    }
 }

@@ -119,6 +119,9 @@ class GsonProvider {
         gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
         gsonBuilder.registerTypeHierarchyAdapter(java.util.Optional.class, new JavaOptionalSerializer<>());
+        gsonBuilder.registerTypeHierarchyAdapter(java.util.OptionalInt.class, new JavaOptionalIntSerializer());
+        gsonBuilder.registerTypeHierarchyAdapter(java.util.OptionalLong.class, new JavaOptionalLongSerializer());
+        gsonBuilder.registerTypeHierarchyAdapter(java.util.OptionalDouble.class, new JavaOptionalDoubleSerializer());
         gsonBuilder.registerTypeAdapterFactory(DateAdapter.FACTORY);
         gsonBuilder.registerTypeAdapterFactory(ClassAdapter.FACTORY);
         gsonBuilder.registerTypeAdapter(InstantAdapter.INSTANT_TYPE, new InstantAdapter());
@@ -349,6 +352,39 @@ class GsonProvider {
                 return false;
             }
             return rawDeclared != null && rawDeclared != value.getClass();
+        }
+    }
+
+    private static class JavaOptionalIntSerializer implements JsonSerializer<java.util.OptionalInt> {
+        @Override
+        public JsonElement serialize(java.util.OptionalInt src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject result = new JsonObject();
+            if (src.isPresent()) {
+                result.addProperty("value", src.getAsInt());
+            }
+            return result;
+        }
+    }
+
+    private static class JavaOptionalLongSerializer implements JsonSerializer<java.util.OptionalLong> {
+        @Override
+        public JsonElement serialize(java.util.OptionalLong src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject result = new JsonObject();
+            if (src.isPresent()) {
+                result.addProperty("value", src.getAsLong());
+            }
+            return result;
+        }
+    }
+
+    private static class JavaOptionalDoubleSerializer implements JsonSerializer<java.util.OptionalDouble> {
+        @Override
+        public JsonElement serialize(java.util.OptionalDouble src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject result = new JsonObject();
+            if (src.isPresent()) {
+                result.addProperty("value", src.getAsDouble());
+            }
+            return result;
         }
     }
 

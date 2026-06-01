@@ -457,4 +457,108 @@ class GenericTypeAdapterSerializationTest extends AbstractFileMatcherTest {
         assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent,
                 jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
     }
+
+    // ---- Primitive Optional tests ----
+
+    public static class BeanWithOptionalInt {
+        private java.util.OptionalInt count;
+
+        public BeanWithOptionalInt(java.util.OptionalInt count) {
+            this.count = count;
+        }
+
+        public java.util.OptionalInt getCount() { return count; }
+    }
+
+    public static class BeanWithOptionalLong {
+        private java.util.OptionalLong bigCount;
+
+        public BeanWithOptionalLong(java.util.OptionalLong bigCount) {
+            this.bigCount = bigCount;
+        }
+
+        public java.util.OptionalLong getBigCount() { return bigCount; }
+    }
+
+    public static class BeanWithOptionalDouble {
+        private java.util.OptionalDouble score;
+
+        public BeanWithOptionalDouble(java.util.OptionalDouble score) {
+            this.score = score;
+        }
+
+        public java.util.OptionalDouble getScore() { return score; }
+    }
+
+    @Test
+    void shouldSerializeOptionalIntPresent() {
+        BeanWithOptionalInt actual = new BeanWithOptionalInt(java.util.OptionalInt.of(42));
+
+        String approvedFileContent = "{\n" +
+                "  \"count\": {\n" +
+                "    \"value\": 42\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalIntEmpty() {
+        BeanWithOptionalInt actual = new BeanWithOptionalInt(java.util.OptionalInt.empty());
+
+        String approvedFileContent = "{\n" +
+                "  \"count\": {}\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalLongPresent() {
+        BeanWithOptionalLong actual = new BeanWithOptionalLong(java.util.OptionalLong.of(123456789L));
+
+        String approvedFileContent = "{\n" +
+                "  \"bigCount\": {\n" +
+                "    \"value\": 123456789\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalLongEmpty() {
+        BeanWithOptionalLong actual = new BeanWithOptionalLong(java.util.OptionalLong.empty());
+
+        String approvedFileContent = "{\n" +
+                "  \"bigCount\": {}\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalDoublePresent() {
+        BeanWithOptionalDouble actual = new BeanWithOptionalDouble(java.util.OptionalDouble.of(3.14));
+
+        String approvedFileContent = "{\n" +
+                "  \"score\": {\n" +
+                "    \"value\": 3.14\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalDoubleEmpty() {
+        BeanWithOptionalDouble actual = new BeanWithOptionalDouble(java.util.OptionalDouble.empty());
+
+        String approvedFileContent = "{\n" +
+                "  \"score\": {}\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
 }

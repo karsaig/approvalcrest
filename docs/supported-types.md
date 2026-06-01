@@ -36,6 +36,12 @@ All serialised as ISO-8601 UTC strings.
 |---|---|
 | `java.util.Optional.empty()` | `{}` |
 | `java.util.Optional.of(13L)` | `{"value": 13}` |
+| `java.util.OptionalInt.empty()` | `{}` |
+| `java.util.OptionalInt.of(42)` | `{"value": 42}` |
+| `java.util.OptionalLong.empty()` | `{}` |
+| `java.util.OptionalLong.of(99L)` | `{"value": 99}` |
+| `java.util.OptionalDouble.empty()` | `{}` |
+| `java.util.OptionalDouble.of(3.14)` | `{"value": 3.14}` |
 | `com.google.common.base.Optional.absent()` | `{}` |
 | `com.google.common.base.Optional.of(13L)` | `{"reference": 13}` |
 
