@@ -39,6 +39,16 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
     private static final ThreadLocal<Set<Object>> VISITED = ThreadLocal.withInitial(
             () -> newSetFromMap(new IdentityHashMap<>()));
 
+    private final Set<Class<?>> additionalSkipTypes;
+
+    public GetterBasedTypeAdapterFactory() {
+        this(java.util.Collections.emptySet());
+    }
+
+    public GetterBasedTypeAdapterFactory(Set<Class<?>> additionalSkipTypes) {
+        this.additionalSkipTypes = additionalSkipTypes;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
@@ -92,6 +102,9 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
         if (java.util.Map.class.isAssignableFrom(type)) return true;
         if (java.util.Optional.class.isAssignableFrom(type)) return true;
         if (com.google.common.base.Optional.class.isAssignableFrom(type)) return true;
+        for (Class<?> skip : additionalSkipTypes) {
+            if (skip.isAssignableFrom(type)) return true;
+        }
         return false;
     }
 

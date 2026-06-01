@@ -39,6 +39,33 @@ All serialised as ISO-8601 UTC strings.
 | `com.google.common.base.Optional.absent()` | `{}` |
 | `com.google.common.base.Optional.of(13L)` | `{"reference": 13}` |
 
+### Interface, abstract and polymorphic types inside Optional
+
+When the declared type parameter of an `Optional` is an interface, abstract class, or a concrete base class, the serializer uses the **runtime type** of the contained value. This ensures all fields of the actual implementation are included:
+
+```java
+Optional<Drawable> opt = Optional.of(new Circle("red", 5.0));
+// Serialises all Circle fields (color, radius), not just Drawable methods
+```
+
+Specifically:
+- `Optional<SomeInterface>` — runtime type of the value is used
+- `Optional<AbstractBase>` — runtime type of the value is used
+- `Optional<ConcreteBase>` holding a subclass — runtime type (subclass) is used, preserving subclass-specific fields
+- `Optional<ConcreteBase>` holding an exact match — declared type is used (no difference in practice)
+
+### Configuring additional types to skip in fallback factories
+
+If you register a custom `TypeAdapter` or `TypeAdapterFactory` for a library type (e.g. Vavr's `Option`, `Either`, `List`), you may need to tell approvalcrest's internal fallback factories not to claim that type. Use `addTypeToSkipInFallbackFactories`:
+
+```java
+GsonConfiguration config = new GsonConfiguration();
+config.addTypeToSkipInFallbackFactories(io.vavr.control.Option.class);
+config.addTypeAdapterFactory(myVavrOptionFactory);
+```
+
+This prevents the `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` from handling the specified type, allowing your custom adapter to take precedence.
+
 ## `java.nio.file.Path`
 
 Serialised as a string:

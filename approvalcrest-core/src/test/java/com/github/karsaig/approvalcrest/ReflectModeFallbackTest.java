@@ -735,4 +735,156 @@ public class ReflectModeFallbackTest {
         public int value() { return value; }
         public boolean active() { return active; }
     }
+
+    // ---- Optional edge cases ----
+
+    public interface Drawable {
+        String getShape();
+        String getColor();
+    }
+
+    public static class Circle implements Drawable {
+        private final String color;
+        private final double radius;
+
+        public Circle(String color, double radius) {
+            this.color = color;
+            this.radius = radius;
+        }
+
+        @Override
+        public String getShape() { return "circle"; }
+        @Override
+        public String getColor() { return color; }
+        public double getRadius() { return radius; }
+    }
+
+    public static abstract class Vehicle {
+        private final String make;
+
+        protected Vehicle(String make) {
+            this.make = make;
+        }
+
+        public String getMake() { return make; }
+        public abstract int getWheels();
+    }
+
+    public static class Car extends Vehicle {
+        private final String model;
+
+        public Car(String make, String model) {
+            super(make);
+            this.model = model;
+        }
+
+        @Override
+        public int getWheels() { return 4; }
+        public String getModel() { return model; }
+    }
+
+    public static class Animal {
+        private final String species;
+
+        public Animal(String species) {
+            this.species = species;
+        }
+
+        public String getSpecies() { return species; }
+    }
+
+    public static class Dog extends Animal {
+        private final String breed;
+
+        public Dog(String species, String breed) {
+            super(species);
+            this.breed = breed;
+        }
+
+        public String getBreed() { return breed; }
+    }
+
+    public static class BeanWithOptionalInterface {
+        private java.util.Optional<Drawable> shape;
+
+        public BeanWithOptionalInterface(Drawable shape) {
+            this.shape = java.util.Optional.ofNullable(shape);
+        }
+
+        public java.util.Optional<Drawable> getShape() { return shape; }
+    }
+
+    public static class BeanWithOptionalAbstract {
+        private java.util.Optional<Vehicle> vehicle;
+
+        public BeanWithOptionalAbstract(Vehicle vehicle) {
+            this.vehicle = java.util.Optional.ofNullable(vehicle);
+        }
+
+        public java.util.Optional<Vehicle> getVehicle() { return vehicle; }
+    }
+
+    public static class BeanWithOptionalConcrete {
+        private java.util.Optional<Animal> pet;
+
+        public BeanWithOptionalConcrete(Animal pet) {
+            this.pet = java.util.Optional.ofNullable(pet);
+        }
+
+        public java.util.Optional<Animal> getPet() { return pet; }
+    }
+
+    @Test
+    public void optionalOfInterfaceSerializesRuntimeType() {
+        BeanWithOptionalInterface actual = new BeanWithOptionalInterface(new Circle("red", 5.0));
+        BeanWithOptionalInterface expected = new BeanWithOptionalInterface(new Circle("red", 5.0));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalOfAbstractSerializesRuntimeType() {
+        BeanWithOptionalAbstract actual = new BeanWithOptionalAbstract(new Car("Toyota", "Camry"));
+        BeanWithOptionalAbstract expected = new BeanWithOptionalAbstract(new Car("Toyota", "Camry"));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalOfConcreteWithSubclassSerializesRuntimeType() {
+        BeanWithOptionalConcrete actual = new BeanWithOptionalConcrete(new Dog("Canine", "Labrador"));
+        BeanWithOptionalConcrete expected = new BeanWithOptionalConcrete(new Dog("Canine", "Labrador"));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalOfConcreteWithExactTypeSerializes() {
+        BeanWithOptionalConcrete actual = new BeanWithOptionalConcrete(new Animal("Feline"));
+        BeanWithOptionalConcrete expected = new BeanWithOptionalConcrete(new Animal("Feline"));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalEmptyMatchesInFallbackMode() {
+        BeanWithOptionalInterface actual = new BeanWithOptionalInterface(null);
+        BeanWithOptionalInterface expected = new BeanWithOptionalInterface(null);
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        MatcherAssert.assertThat(actual, matcher);
+    }
+
+    @Test
+    public void optionalOfConcreteWithSubclassMismatchDetected() {
+        BeanWithOptionalConcrete actual = new BeanWithOptionalConcrete(new Dog("Canine", "Labrador"));
+        BeanWithOptionalConcrete expected = new BeanWithOptionalConcrete(new Dog("Canine", "Poodle"));
+
+        DiagnosingCustomisableMatcher<Object> matcher = MATCHER_FACTORY.beanMatcher(expected);
+        assertFalse(matcher.matches(actual));
+    }
 }

@@ -782,4 +782,58 @@ public class ReflectModeFallbackJsonMatcherTest extends AbstractFileMatcherTest 
         public int value() { return value; }
         public boolean active() { return active; }
     }
+
+    // ---- Optional edge cases in fallback mode (JsonMatcher) ----
+
+    public interface Drawable {
+        String getShape();
+    }
+
+    public static class Square implements Drawable {
+        private final int side;
+
+        public Square(int side) {
+            this.side = side;
+        }
+
+        @Override
+        public String getShape() { return "square"; }
+        public int getSide() { return side; }
+    }
+
+    public static class BeanWithOptionalDrawable {
+        private java.util.Optional<Drawable> figure;
+
+        public BeanWithOptionalDrawable(Drawable figure) {
+            this.figure = java.util.Optional.ofNullable(figure);
+        }
+
+        public java.util.Optional<Drawable> getFigure() { return figure; }
+    }
+
+    @Test
+    public void optionalOfInterfaceMatchesApprovedFileInFallbackMode() {
+        BeanWithOptionalDrawable actual = new BeanWithOptionalDrawable(new Square(10));
+
+        String approvedFileContent = "{\n" +
+                "  \"figure\": {\n" +
+                "    \"value\": {\n" +
+                "      \"side\": 10\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    public void optionalEmptyMatchesApprovedFileInFallbackMode() {
+        BeanWithOptionalDrawable actual = new BeanWithOptionalDrawable(null);
+
+        String approvedFileContent = "{\n" +
+                "  \"figure\": {}\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
 }

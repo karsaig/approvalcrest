@@ -91,7 +91,8 @@ class GsonProvider {
     public static Gson gson(MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes, GsonConfiguration additionalConfig) {
         GsonBuilder gsonBuilder = initGson();
 
-        defaultGsonConfiguration(gsonBuilder, matcherConfiguration, circularReferenceTypes);
+        Set<Class<?>> skipTypes = additionalConfig != null ? additionalConfig.getTypesToSkipInFallbackFactories() : java.util.Collections.emptySet();
+        defaultGsonConfiguration(gsonBuilder, matcherConfiguration, circularReferenceTypes, skipTypes);
         if (additionalConfig != null) {
             additionalConfiguration(additionalConfig, gsonBuilder);
         }
@@ -99,7 +100,7 @@ class GsonProvider {
         return gsonBuilder.create();
     }
 
-    private static void defaultGsonConfiguration(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes) {
+    private static void defaultGsonConfiguration(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration, Set<Class<?>> circularReferenceTypes, Set<Class<?>> additionalSkipTypes) {
 
         if (matcherConfiguration.isSerializeNulls()) {
             gsonBuilder.serializeNulls();
@@ -112,8 +113,8 @@ class GsonProvider {
         // Register locked-module fallback factories FIRST. Gson reverses the factory
         // list internally, so first-registered ends up checked LAST — which is what we
         // want: these should only handle types that no other factory claims.
-        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory());
-        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new UnsafeFieldTypeAdapterFactory(additionalSkipTypes));
+        gsonBuilder.registerTypeAdapterFactory(new GetterBasedTypeAdapterFactory(additionalSkipTypes));
 
         gsonBuilder.registerTypeAdapterFactory(new ThrowableTypeAdapterFactory());
         gsonBuilder.registerTypeAdapter(Optional.class, new OptionalSerializer());
@@ -307,7 +308,7 @@ class GsonProvider {
             }
             JsonObject result = new JsonObject();
             Type valueType = getOptionalValueType(typeOfSrc);
-            if (valueType != null && isConcrete(valueType)) {
+            if (valueType != null && isConcrete(valueType) && !isPolymorphic(valueType, src.get())) {
                 result.add("value", context.serialize(src.get(), valueType));
             } else {
                 result.add("value", context.serialize(src.get()));
@@ -335,6 +336,19 @@ class GsonProvider {
                 return isConcrete(rawType);
             }
             return false;
+        }
+
+        private boolean isPolymorphic(Type declaredType, Object value) {
+            Class<?> rawDeclared;
+            if (declaredType instanceof Class<?>) {
+                rawDeclared = (Class<?>) declaredType;
+            } else if (declaredType instanceof ParameterizedType) {
+                Type raw = ((ParameterizedType) declaredType).getRawType();
+                rawDeclared = (raw instanceof Class<?>) ? (Class<?>) raw : null;
+            } else {
+                return false;
+            }
+            return rawDeclared != null && rawDeclared != value.getClass();
         }
     }
 

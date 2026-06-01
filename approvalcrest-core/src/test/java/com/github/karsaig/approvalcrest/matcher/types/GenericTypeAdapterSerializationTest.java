@@ -318,4 +318,143 @@ class GenericTypeAdapterSerializationTest extends AbstractFileMatcherTest {
 
         assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
     }
+
+    // --- Tests for polymorphic base class ---
+
+    public static class Animal {
+        private final String name;
+        private final int legs;
+
+        public Animal(String name, int legs) {
+            this.name = name;
+            this.legs = legs;
+        }
+
+        public String getName() { return name; }
+        public int getLegs() { return legs; }
+    }
+
+    public static class Dog extends Animal {
+        private final String breed;
+
+        public Dog(String name, int legs, String breed) {
+            super(name, legs);
+            this.breed = breed;
+        }
+
+        public String getBreed() { return breed; }
+    }
+
+    public static class BeanWithOptionalAnimal {
+        private Optional<Animal> pet;
+
+        public BeanWithOptionalAnimal(Animal pet) {
+            this.pet = Optional.ofNullable(pet);
+        }
+
+        public Optional<Animal> getPet() { return pet; }
+    }
+
+    @Test
+    void shouldSerializeOptionalOfConcreteBaseClassUsingRuntimeTypeWhenSubclassPresent() {
+        BeanWithOptionalAnimal actual = new BeanWithOptionalAnimal(
+                new Dog("Rex", 4, "Labrador"));
+
+        String approvedFileContent = "{\n" +
+                "  \"pet\": {\n" +
+                "    \"value\": {\n" +
+                "      \"breed\": \"Labrador\",\n" +
+                "      \"name\": \"Rex\",\n" +
+                "      \"legs\": 4\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    @Test
+    void shouldSerializeOptionalOfConcreteClassWhenExactTypeMatches() {
+        BeanWithOptionalAnimal actual = new BeanWithOptionalAnimal(
+                new Animal("Cat", 4));
+
+        String approvedFileContent = "{\n" +
+                "  \"pet\": {\n" +
+                "    \"value\": {\n" +
+                "      \"name\": \"Cat\",\n" +
+                "      \"legs\": 4\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    // --- Test for Optional<List<T>> (interface type parameter) ---
+
+    public static class BeanWithOptionalList {
+        private Optional<List<String>> tags;
+
+        public BeanWithOptionalList(List<String> tags) {
+            this.tags = Optional.ofNullable(tags);
+        }
+
+        public Optional<List<String>> getTags() { return tags; }
+    }
+
+    @Test
+    void shouldSerializeOptionalOfListInterface() {
+        BeanWithOptionalList actual = new BeanWithOptionalList(
+                java.util.Arrays.asList("java", "testing"));
+
+        String approvedFileContent = "{\n" +
+                "  \"tags\": {\n" +
+                "    \"value\": [\n" +
+                "      \"java\",\n" +
+                "      \"testing\"\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent, null);
+    }
+
+    // --- Test for configurable skip types ---
+
+    public static class CustomLibraryType {
+        private final String data;
+
+        public CustomLibraryType(String data) {
+            this.data = data;
+        }
+
+        public String getData() { return data; }
+    }
+
+    public static class BeanWithCustomType {
+        private CustomLibraryType payload;
+
+        public BeanWithCustomType(CustomLibraryType payload) {
+            this.payload = payload;
+        }
+
+        public CustomLibraryType getPayload() { return payload; }
+    }
+
+    @Test
+    void shouldRespectConfigurableSkipTypesInFallbackFactories() {
+        BeanWithCustomType actual = new BeanWithCustomType(new CustomLibraryType("hello"));
+
+        String approvedFileContent = "{\n" +
+                "  \"payload\": {\n" +
+                "    \"data\": \"hello\"\n" +
+                "  }\n" +
+                "}";
+
+        GsonConfiguration config = new GsonConfiguration();
+        config.addTypeToSkipInFallbackFactories(CustomLibraryType.class);
+
+        assertJsonMatcherWithDummyTestInfo(actual, approvedFileContent,
+                jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
+    }
 }
