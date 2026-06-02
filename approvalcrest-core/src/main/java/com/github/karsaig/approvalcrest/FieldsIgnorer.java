@@ -179,6 +179,18 @@ public class FieldsIgnorer {
                     if (child == null) {
                         child = jo.get(MARKER + field);
                         if (child == null) {
+                            // Try descending through GraphAdapter envelope keys
+                            for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
+                                if (isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
+                                    boolean changed = findPath(entry.getValue(), pathToFind, pathSegments);
+                                    if (changed) {
+                                        if (JsonElementUtil.isEmpty(entry.getValue())) {
+                                            jo.remove(entry.getKey());
+                                        }
+                                        return true;
+                                    }
+                                }
+                            }
                             return false;
                         }
                         List<String> tail = pathSegments.subList(1, pathSegments.size());
@@ -233,6 +245,11 @@ public class FieldsIgnorer {
                         continue;
                     }
                     FieldNamePair fieldNamePair = convertToKeyPair(actual.getKey());
+                    if (isGraphAdapterKey(fieldNamePair.newKey)) {
+                        // Transparent: descend with same pathMap, don't consume a level
+                        applySortingInternal(actualValue, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath);
+                        continue;
+                    }
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
                     Map<String, PathLevel> nextPathMap = pathLevel.nextLevel.isEmpty()
                             ? Collections.emptyMap() : getPathsMap(pathLevel.nextLevel);
@@ -452,6 +469,12 @@ public class FieldsIgnorer {
                 String actualKey = actual.getKey();
                 FieldNamePair fieldNamePair = convertToKeyPair(actualKey);
 
+                if (isGraphAdapterKey(fieldNamePair.newKey)) {
+                    // Transparent: recurse with same pathMatchers/fieldMatchers
+                    jsonForSort.add(actualKey, getFilteredStringForSorting(actualValue, pathMatchers, fieldMatchers));
+                    continue;
+                }
+
                 PathLevel matchingPath = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
 
                 List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchers, true);
@@ -495,6 +518,15 @@ public class FieldsIgnorer {
             }
         }
         return false;
+    }
+
+    static boolean isGraphAdapterKey(String key) {
+        if (key == null || !key.startsWith("0x") || key.length() <= 2) return false;
+        for (int i = 2; i < key.length(); i++) {
+            char c = key.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return false;
+        }
+        return true;
     }
 
 
@@ -615,8 +647,21 @@ public class FieldsIgnorer {
             if (!jsonElement.isJsonObject()) {
                 throw new IllegalArgumentException();
             }
-            boolean removedElement = jsonElement.getAsJsonObject().remove(getLastSegmentOf(pathToIgnore)) != null;
-            removedElement |= jsonElement.getAsJsonObject().remove(MARKER + getLastSegmentOf(pathToIgnore)) != null;
+            JsonObject jo = jsonElement.getAsJsonObject();
+            String lastSegment = getLastSegmentOf(pathToIgnore);
+            boolean removedElement = jo.remove(lastSegment) != null;
+            removedElement |= jo.remove(MARKER + lastSegment) != null;
+            if (!removedElement) {
+                // Try descending through GraphAdapter envelope keys
+                for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
+                    if (isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
+                        JsonObject inner = entry.getValue().getAsJsonObject();
+                        boolean innerRemoved = inner.remove(lastSegment) != null;
+                        innerRemoved |= inner.remove(MARKER + lastSegment) != null;
+                        removedElement |= innerRemoved;
+                    }
+                }
+            }
             return removedElement;
         }
         return false;

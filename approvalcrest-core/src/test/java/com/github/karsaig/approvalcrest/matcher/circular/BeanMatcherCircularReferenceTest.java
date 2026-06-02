@@ -12,6 +12,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.Element;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Four;
 import com.github.karsaig.approvalcrest.testdata.cyclic.One;
 import com.github.karsaig.approvalcrest.testdata.cyclic.Two;
+import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -31,6 +32,7 @@ import java.sql.SQLException;
 import java.util.function.Function;
 
 import static com.github.karsaig.approvalcrest.testdata.cyclic.CircularReferenceBean.Builder.circularReferenceBean;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
@@ -217,5 +219,41 @@ public class BeanMatcherCircularReferenceTest extends AbstractBeanMatcherTest {
             return new JsonPrimitive("customSerializedOneCircle");
         }
 
+    }
+
+    @Test
+    public void ignoringFieldInsideCircularReferenceWorks() {
+        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
+        CircularReferenceBean expected = circularReferenceBean("parent", "childX", "childY").build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.ignoring("parent.children.childAttribute"));
+    }
+
+    @Test
+    public void customMatcherOnFieldInsideCircularReferenceWorks() {
+        CircularReferenceBean actual = circularReferenceBean("parent", "child1", "child2").build();
+        CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.with("parent.parentAttribute", equalTo("parent")));
+    }
+
+    @Test
+    public void sortFieldInsideCircularReferenceWorks() {
+        CircularReferenceBean actual = circularReferenceBean("parent", "child2", "child1").build();
+        CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.sortFieldPath(SortField.of("parent.children")));
+    }
+
+    @Test
+    public void sortFieldWithIgnoredFieldInsideCircularReferenceWorks() {
+        CircularReferenceBean actual = circularReferenceBean("parent", "child2", "child1").build();
+        CircularReferenceBean expected = circularReferenceBean("parent", "child1", "child2").build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.sortFieldPath(SortField.of("parent.children", "parent")));
     }
 }
