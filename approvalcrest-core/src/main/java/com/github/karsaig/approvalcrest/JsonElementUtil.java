@@ -56,6 +56,13 @@ public class JsonElementUtil {
         JsonObject obj = current.getAsJsonObject();
         String segment = segments[segIdx];
         if (!obj.has(segment)) {
+            // Try transparent descent through graph-adapter envelope keys
+            for (java.util.Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                if (FieldsIgnorer.isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
+                    Either<RuntimeException, Object> result = findJsonValueAt(path, segments, segIdx, entry.getValue());
+                    if (result.isRight()) return result;
+                }
+            }
             return Either.left(new IllegalArgumentException(path + " not found"));
         }
         return findJsonValueAt(path, segments, segIdx + 1, obj.get(segment));
