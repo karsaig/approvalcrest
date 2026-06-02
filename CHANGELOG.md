@@ -1,7 +1,7 @@
 Changelog
 ===========
 
-Version 1.3.2 - 2026/06/02
+Version 1.3.2 - 2026/06/03
 -----
 
 - Machine-readable JSON output is now emitted in compact form (no pretty-printing) to minimise token usage for AI consumers. The `expected` and `actual` field values, as well as the outer JSON wrapper, are all serialised without whitespace across all failure types (`MISMATCH`, `NEW_FILE`, `TYPE_MISMATCH`).
