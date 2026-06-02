@@ -1,6 +1,11 @@
 Changelog
 ===========
 
+Version 1.3.2 - 2026/06/02
+-----
+
+- Fixed path-based operations (`.ignoring("path")`, `.with("path", matcher)`, `.sortField("path")`, `SortField.ignoring("path")`) failing when the path traverses through a type detected as having a circular reference. `GraphAdapterBuilder` wraps such types with synthetic `0xN` envelope keys, which broke path resolution. These envelope keys are now transparently skipped during path navigation — the user-specified path works identically whether the target type has circular references or not.
+
 Version 1.3.1 - 2026/06/01
 -----
 
