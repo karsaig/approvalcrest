@@ -28,8 +28,7 @@ import org.hamcrest.StringDescription;
  * {@link StringDescription} which holds the mismatch message along with the actual and expected Json representation.
  */
 public class ComparisonDescription extends StringDescription {
-	private static final Gson OUTPUT_GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
-	private static final Gson COMPACT_GSON = new GsonBuilder().disableHtmlEscaping().create();
+	private static final Gson OUTPUT_GSON = new GsonBuilder().disableHtmlEscaping().create();
 
 	private String actual;
 	private String expected;
@@ -202,7 +201,7 @@ public class ComparisonDescription extends StringDescription {
 
 	private String compactJson(String json) {
 		try {
-			return COMPACT_GSON.toJson(JsonParser.parseString(json));
+			return OUTPUT_GSON.toJson(JsonParser.parseString(json));
 		} catch (JsonParseException e) {
 			return json;
 		}

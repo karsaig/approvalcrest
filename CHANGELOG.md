@@ -4,6 +4,7 @@ Changelog
 Version 1.3.2 - 2026/06/02
 -----
 
+- Machine-readable JSON output is now emitted in compact form (no pretty-printing) to minimise token usage for AI consumers. The `expected` and `actual` field values, as well as the outer JSON wrapper, are all serialised without whitespace across all failure types (`MISMATCH`, `NEW_FILE`, `TYPE_MISMATCH`).
 - Fixed path-based operations (`.ignoring("path")`, `.with("path", matcher)`, `.sortField("path")`, `SortField.ignoring("path")`) failing when the path traverses through a type detected as having a circular reference. `GraphAdapterBuilder` wraps such types with synthetic `0xN` envelope keys, which broke path resolution. These envelope keys are now transparently skipped during path navigation — the user-specified path works identically whether the target type has circular references or not.
 
 Version 1.3.1 - 2026/06/01

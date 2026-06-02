@@ -78,7 +78,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
                     root.addProperty("expectedType", expected.getClass().getName());
                     root.addProperty("actualType", actual.getClass().getName());
                     root.addProperty("action", "Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true");
-                    Gson outputGson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+                    Gson outputGson = new GsonBuilder().disableHtmlEscaping().create();
                     mismatchDescription.appendText(outputGson.toJson(root));
                 } else {
                     mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
