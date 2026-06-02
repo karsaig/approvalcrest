@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnosingFileMatcher<T, U>> extends AbstractDiagnosingMatcher<T> implements ApprovedFileMatcher<U> {
 
-    private static final Gson JSON_OUTPUT_GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private static final Gson JSON_OUTPUT_GSON = new GsonBuilder().disableHtmlEscaping().create();
     public static final int NUM_OF_HASH_CHARS = 6;
     protected final FileStoreMatcherUtils fileStoreMatcherUtils;
     protected final FileMatcherConfig fileMatcherConfig;

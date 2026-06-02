@@ -157,62 +157,26 @@ mvn test -DfMMReadable=true
 
 ### Message format
 
-All machine-readable messages are valid JSON objects. The exact fields depend on the failure type.
+All machine-readable messages are valid JSON objects emitted in compact form (no whitespace) to minimise token usage for AI consumers. The exact fields depend on the failure type.
 
 **File matcher — content mismatch:**
-```json
-{
-  "failureType": "MISMATCH",
-  "test": "MyTest#myTestMethod",
-  "approvedFile": "/abs/path/to/4ac405/11b2ef-approved.json",
-  "action": "Set system property fMUInPlace=true and re-run to update the approved file",
-  "expected": "{ ... approved content ... }",
-  "actual": "{ ... current serialized value ... }",
-  "ignoredFields": [
-    { "path": "createdAt", "reason": "IGNORE_PATH" },
-    { "path": "metadata", "reason": "REMOVED_EMPTY", "causes": ["metadata.id", "metadata.secret"] }
-  ],
-  "aliasedFields": [
-    { "path": "userId", "originalValue": "a1b2c3d4-...", "alias": "%%IGNORED-UUID%%" }
-  ],
-  "sortedFields": [
-    { "path": "items", "reason": "SORT_PATH" },
-    { "path": "tags", "reason": "SORT_PATTERN", "pattern": "a string containing \"tag\"" }
-  ]
-}
+```
+{"failureType":"MISMATCH","test":"MyTest#myTestMethod","approvedFile":"/abs/path/to/4ac405/11b2ef-approved.json","action":"Set system property fMUInPlace=true and re-run to update the approved file","expected":"{...approved content...}","actual":"{...current serialized value...}","ignoredFields":[{"path":"createdAt","reason":"IGNORE_PATH"},{"path":"metadata","reason":"REMOVED_EMPTY","causes":["metadata.id","metadata.secret"]}],"aliasedFields":[{"path":"userId","originalValue":"a1b2c3d4-...","alias":"%%IGNORED-UUID%%"}],"sortedFields":[{"path":"items","reason":"SORT_PATH"},{"path":"tags","reason":"SORT_PATTERN","pattern":"a string containing \"tag\""}]}
 ```
 
 **File matcher — no approved file yet:**
-```json
-{
-  "failureType": "NEW_FILE",
-  "test": "MyTest#myTestMethod",
-  "notApprovedFile": "/abs/path/to/4ac405/11b2ef-not-approved.json",
-  "approvedFile": "/abs/path/to/4ac405/11b2ef-approved.json",
-  "action": "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approvedFile path"
-}
+```
+{"failureType":"NEW_FILE","test":"MyTest#myTestMethod","notApprovedFile":"/abs/path/to/4ac405/11b2ef-not-approved.json","approvedFile":"/abs/path/to/4ac405/11b2ef-approved.json","action":"Set system property fMUInPlace=true and re-run, or copy the not-approved file to approvedFile path"}
 ```
 
 **Bean matcher — value mismatch:**
-```json
-{
-  "failureType": "MISMATCH",
-  "expected": "{ ... expected ... }",
-  "actual": "{ ... actual ... }",
-  "ignoredFields": [],
-  "aliasedFields": [],
-  "sortedFields": []
-}
+```
+{"failureType":"MISMATCH","expected":"{...expected...}","actual":"{...actual...}","ignoredFields":[],"aliasedFields":[],"sortedFields":[]}
 ```
 
 **Bean matcher — incompatible types:**
-```json
-{
-  "failureType": "TYPE_MISMATCH",
-  "expectedType": "com.example.Foo",
-  "actualType": "com.example.Bar",
-  "action": "Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true"
-}
+```
+{"failureType":"TYPE_MISMATCH","expectedType":"com.example.Foo","actualType":"com.example.Bar","action":"Add .skipClassComparison() to the matcher, or set system property bMSCComparison=true"}
 ```
 
 ### ignoredFields tracking

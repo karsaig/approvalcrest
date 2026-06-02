@@ -292,7 +292,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         json.addProperty("notApprovedFile", notApprovedAbsolutePath.toAbsolutePath().toString());
         json.addProperty("approveTo", approvedAbsolutePath.toAbsolutePath().toString());
         json.addProperty("action", "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approveTo path above");
-        return new com.google.gson.GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create().toJson(json);
+        return new com.google.gson.GsonBuilder().disableHtmlEscaping().create().toJson(json);
     }
 
     protected void writeFile(Path path, String content) {
