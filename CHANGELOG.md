@@ -4,11 +4,11 @@ Changelog
 Version 1.3.1 - 2026/06/01
 -----
 
-- Fixed `JavaOptionalSerializer` for `Optional<Interface>` and `Optional<AbstractClass>`: when the declared type parameter is an interface or abstract class, the serializer now falls back to runtime-type serialization instead of producing an empty `{}`. Previously, Gson's `ReflectiveTypeAdapterFactory` would find zero fields on the declared type and silently serialize nothing.
-- Fixed polymorphic base class handling in `Optional`: `Optional<Animal>` holding a `Dog` instance now serializes all `Dog`-specific fields. A new `isPolymorphic()` check detects when the runtime type differs from the declared type and uses the runtime type.
-- Added custom serializers for `OptionalInt`, `OptionalLong`, and `OptionalDouble`. These primitive-specialized Optional types are now serialized with the same `{"value": N}` / `{}` format as `java.util.Optional`, instead of falling through to reflection on locked `java.util` internals.
-- Added `GsonConfiguration.addTypeToSkipInFallbackFactories(Class<?>)`: allows users to prevent `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` from claiming specific types, so that custom `TypeAdapter`/`TypeAdapterFactory` registrations (e.g. for Vavr's `Option`, `Either`) take precedence.
-- Added documentation: migration guide for path handling and IDE run template best practices (`docs/file-control.md`, `docs/best-practices.md`).
+- Fixed `JavaOptionalSerializer` for `Optional<Interface>` and `Optional<AbstractClass>`: when the declared type parameter is an interface or abstract class, the serializer now falls back to runtime-type serialization instead of producing an empty `{}`. Previously, Gson's `ReflectiveTypeAdapterFactory` would find zero fields on the declared type and silently serialize nothing. See [supported-types](docs/supported-types.md).
+- Fixed polymorphic base class handling in `Optional`: `Optional<Animal>` holding a `Dog` instance now serializes all `Dog`-specific fields. A new `isPolymorphic()` check detects when the runtime type differs from the declared type and uses the runtime type. See [supported-types](docs/supported-types.md).
+- Added custom serializers for `OptionalInt`, `OptionalLong`, and `OptionalDouble`. These primitive-specialized Optional types are now serialized with the same `{"value": N}` / `{}` format as `java.util.Optional`, instead of falling through to reflection on locked `java.util` internals. See [supported-types](docs/supported-types.md).
+- Added `GsonConfiguration.addTypeToSkipInFallbackFactories(Class<?>)`: allows users to prevent `UnsafeFieldTypeAdapterFactory` and `GetterBasedTypeAdapterFactory` from claiming specific types, so that custom `TypeAdapter`/`TypeAdapterFactory` registrations (e.g. for Vavr's `Option`, `Either`) take precedence. See [supported-types](docs/supported-types.md).
+- Added documentation: migration guide for path handling ([file-control](docs/file-control.md)) and IDE run template best practices ([best-practices](docs/best-practices.md)).
 
 Version 1.3.0 - 2026/06/01
 -----
