@@ -352,4 +352,27 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             assertTrue(note.contains("Pattern-based ignoring"), "Note should mention pattern-based ignoring, was: " + note);
         });
     }
+
+    @Test
+    public void shouldOutputCompactExpectedAndActualInMachineReadableJson() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi);
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            String msg = error.getMessage();
+            JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+            String expectedValue = json.get("expected").getAsString();
+            String actualValue = json.get("actual").getAsString();
+            assertFalse(expectedValue.contains("\n"), "expected JSON value in machine-readable output must be compact (no newlines)");
+            assertFalse(actualValue.contains("\n"), "actual JSON value in machine-readable output must be compact (no newlines)");
+        });
+    }
 }

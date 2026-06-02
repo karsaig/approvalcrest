@@ -273,4 +273,24 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
         assertTrue(json.get("note").getAsString().contains("Type-based sorting"),
                 "Note should mention type-based sorting");
     }
+
+    @Test
+    public void shouldOutputCompactExpectedAndActualInMachineReadableJson() {
+        BeanWithPrimitives expected = beanWithPrimitives().beanBoolean(false).beanInt(99).build();
+        BeanWithPrimitives actual = beanWithPrimitives().beanBoolean(true).beanInt(42).build();
+
+        DiagnosingCustomisableMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg).getAsJsonObject();
+        String expectedValue = json.get("expected").getAsString();
+        String actualValue = json.get("actual").getAsString();
+        assertFalse(expectedValue.contains("\n"), "expected JSON value in machine-readable output must be compact (no newlines)");
+        assertFalse(actualValue.contains("\n"), "actual JSON value in machine-readable output must be compact (no newlines)");
+    }
 }
