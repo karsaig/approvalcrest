@@ -20,6 +20,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonParseException;
 import org.hamcrest.StringDescription;
 
 /**
@@ -27,6 +29,7 @@ import org.hamcrest.StringDescription;
  */
 public class ComparisonDescription extends StringDescription {
 	private static final Gson OUTPUT_GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+	private static final Gson COMPACT_GSON = new GsonBuilder().disableHtmlEscaping().create();
 
 	private String actual;
 	private String expected;
@@ -130,10 +133,10 @@ public class ComparisonDescription extends StringDescription {
 			root.addProperty("action", "Set system property fMUInPlace=true and re-run to update the approved file");
 		}
 		if (expected != null) {
-			root.addProperty("expected", expected);
+			root.addProperty("expected", compactJson(expected));
 		}
 		if (actual != null) {
-			root.addProperty("actual", actual);
+			root.addProperty("actual", compactJson(actual));
 		}
 		root.add("ignoredFields", buildIgnoredFieldsArray());
 		root.add("aliasedFields", buildAliasedFieldsArray());
@@ -195,5 +198,13 @@ public class ComparisonDescription extends StringDescription {
 			}
 		}
 		return arr;
+	}
+
+	private String compactJson(String json) {
+		try {
+			return COMPACT_GSON.toJson(JsonParser.parseString(json));
+		} catch (JsonParseException e) {
+			return json;
+		}
 	}
 }
