@@ -5,6 +5,10 @@ name: CI build
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '*.sh'
     branches: [ master ]
   pull_request:
     branches: [ master ]
