@@ -2,20 +2,25 @@
 
 show_help() {
     cat <<'EOF'
-Usage: release.sh <version> [--dry-run] [--jdk <version>]
+Usage: release.sh <version> [--dry-run] [--resume] [--jdk <version>]
 
 Arguments:
   <version>          Release version to set (e.g. 0.63.0)
   --dry-run          Test mode: runs all steps locally without pushing
                      to git remote or publishing to Maven Central.
                      Local git changes are undone at the end.
+  --resume           Resume mode: skips all steps up to and including
+                     the Maven deploy (steps 1-4) and runs only the
+                     post-publish steps (5-6). Use when the script was
+                     interrupted after a successful deploy. Cannot be
+                     combined with --dry-run.
   --jdk <version>    JDK version to use for testing (default: 8)
 
 Steps performed:
-  1. Bump version in pom.xml and for-release-pom.xml
-  2. git commit + annotated tag v<version>
-  3. mvn clean install  (JDK <version>)
-  4. mvn deploy -P sign-release via for-release-pom.xml
+  1. Bump version in pom.xml and for-release-pom.xml         [skipped in --resume]
+  2. git commit + annotated tag v<version>                   [skipped in --resume]
+  3. mvn clean install  (JDK <version>)                      [skipped in --resume]
+  4. mvn deploy -P sign-release via for-release-pom.xml      [skipped in --resume]
      (or mvn verify in --dry-run: signs artifacts but does not upload)
   5. git push --follow-tags  (skipped in --dry-run)
   6. Bump to next development version and push  (skipped in --dry-run)
@@ -29,6 +34,7 @@ EOF
 
 version=""
 dry_run=false
+resume=false
 jvtr=8
 
 while [[ $# -gt 0 ]]; do
@@ -37,6 +43,8 @@ while [[ $# -gt 0 ]]; do
             show_help; exit 0 ;;
         --dry-run)
             dry_run=true; shift ;;
+        --resume)
+            resume=true; shift ;;
         --jdk)
             jvtr="$2"; shift 2 ;;
         --jdk=*)
@@ -53,6 +61,11 @@ done
 
 if [[ -z "$version" ]]; then
     show_help; exit 1
+fi
+
+if [[ "$dry_run" == "true" && "$resume" == "true" ]]; then
+    echo "ERROR: --dry-run and --resume are mutually exclusive." >&2
+    exit 1
 fi
 
 set -exuo pipefail
@@ -81,16 +94,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Pre-flight: check if the tag already exists
-if git tag -l "v${version}" | grep -q "v${version}"; then
-    if git ls-remote --tags origin "refs/tags/v${version}" 2>/dev/null | grep -q "v${version}"; then
-        echo "ERROR: tag 'v${version}' already exists and has been pushed to remote." >&2
-        echo "       Use a different version number." >&2
-    else
-        echo "ERROR: tag 'v${version}' already exists locally (not yet pushed)." >&2
-        echo "       To remove it and retry: git tag -d 'v${version}'" >&2
+# Pre-flight: check tag existence
+if [[ "$resume" == "true" ]]; then
+    # In resume mode the tag should already exist — warn if it doesn't
+    if ! git tag -l "v${version}" | grep -q "v${version}"; then
+        echo "WARNING: tag 'v${version}' not found locally. Proceeding anyway." >&2
     fi
-    exit 1
+else
+    if git tag -l "v${version}" | grep -q "v${version}"; then
+        if git ls-remote --tags origin "refs/tags/v${version}" 2>/dev/null | grep -q "v${version}"; then
+            echo "ERROR: tag 'v${version}' already exists and has been pushed to remote." >&2
+            echo "       Use a different version number." >&2
+        else
+            echo "ERROR: tag 'v${version}' already exists locally (not yet pushed)." >&2
+            echo "       To remove it and retry: git tag -d 'v${version}'" >&2
+        fi
+        exit 1
+    fi
 fi
 
 if [[ "$dry_run" == "true" ]]; then
@@ -103,18 +123,28 @@ if [[ "$dry_run" == "true" ]]; then
     echo "========================================"
 fi
 
-mvn versions:set -DnewVersion="${version}"
-mvn versions:commit
+if [[ "$resume" == "true" ]]; then
+    echo "========================================"
+    echo "  RESUME MODE"
+    echo "  Skipping steps 1-4 (version bump, build, deploy)."
+    echo "  Running post-publish steps only."
+    echo "========================================"
+fi
 
-mvn -f for-release-pom.xml versions:set -DnewVersion="${version}"
-mvn -f for-release-pom.xml versions:commit
+if [[ "$resume" == "false" ]]; then
+    mvn versions:set -DnewVersion="${version}"
+    mvn versions:commit
 
-git commit -a -m "Release version ${version}"
-_commit_made=true
-git tag -a "v${version}" -m "Release ${version}"
-_tag_made=true
+    mvn -f for-release-pom.xml versions:set -DnewVersion="${version}"
+    mvn -f for-release-pom.xml versions:commit
 
-mvn clean install -Djava.version.to.run="${jvtr}"
+    git commit -a -m "Release version ${version}"
+    _commit_made=true
+    git tag -a "v${version}" -m "Release ${version}"
+    _tag_made=true
+
+    mvn clean install -Djava.version.to.run="${jvtr}"
+fi
 
 if [[ "$dry_run" == "true" ]]; then
     mvn clean verify -f for-release-pom.xml -P sign-release
@@ -124,8 +154,10 @@ if [[ "$dry_run" == "true" ]]; then
     echo "  Local state restored to pre-release."
     echo "========================================"
 else
-    mvn clean -f for-release-pom.xml
-    mvn -f for-release-pom.xml deploy -P sign-release
+    if [[ "$resume" == "false" ]]; then
+        mvn clean -f for-release-pom.xml
+        mvn -f for-release-pom.xml deploy -P sign-release
+    fi
     git push --follow-tags
     _push_done=true
 
