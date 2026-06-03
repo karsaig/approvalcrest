@@ -8,7 +8,7 @@ Using approvalcrest with JUnit 4 and JUnit 5 Vintage.
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
     <scope>test</scope>
 </dependency>
 ```
