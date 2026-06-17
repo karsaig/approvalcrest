@@ -85,8 +85,30 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
         AssertionError error = assertThrows(AssertionError.class,
                 () -> assertThat(actual, underTest));
 
-        assertTrue(error.getMessage().endsWith(AI_TIP_SUFFIX),
+        assertTrue(error.getMessage().endsWith("\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output."),
                 "Type mismatch failure must end with the AI tip. Got: " + error.getMessage());
+    }
+
+    @Test
+    public void shouldOutputMachineReadableJsonForTypeMismatchWhenMachineReadableEnabled() {
+        Object actual = new com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne("x", "y");
+        Object expected = new com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo("x", "y");
+
+        DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher(expected)
+                .withMachineReadableOutput();
+
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, underTest));
+
+        String msg = error.getMessage();
+        JsonObject json = JsonParser.parseString(msg.substring(msg.indexOf("{"))).getAsJsonObject();
+        assertAll(
+                () -> assertEquals("TYPE_MISMATCH", json.get("failureType").getAsString()),
+                () -> assertEquals("com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo", json.get("expectedType").getAsString()),
+                () -> assertEquals("com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne", json.get("actualType").getAsString()),
+                () -> assertTrue(json.has("action")),
+                () -> assertFalse(msg.contains("[AI tip]"), "Machine-readable type mismatch output must NOT contain AI tip")
+        );
     }
 
     @Test
