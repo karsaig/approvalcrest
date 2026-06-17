@@ -5,6 +5,7 @@ Version 1.3.3 - WIP
 -----
 
 - Fixed `withAlias` / `withAliasMap` being applied to the approved-file content in strict mode (`fileMatcherStrictFileMatching=true`, the default). All other transformations — `.ignoring()`, `.with()`, pattern-based sorting — were already correctly skipped on the approved side in strict mode; aliases were the only exception. After this fix, aliases are applied to the actual side only in strict mode, consistent with the strict-mode contract that the approved file is used as-is. An approved file that still contains the raw (non-aliased) value is now correctly detected as stale and causes the assertion to fail, prompting regeneration. Approved files that already contain the aliased form (the normal case) are unaffected — no re-generation needed.
+- Fixed `JsonMatcher.describeTo()` applying transformations (aliases, ignored-field removal, custom sorting) to the approved-file content in strict mode, inconsistently with `doMatches()`. In strict mode the approved file is used as-is on the expected side of the comparison, but `describeTo()` was silently aliasing/stripping the same content, causing the "Expected:" section of the Hamcrest failure message to show different values than the diff. For normal (up-to-date) approved files this was a no-op difference; for stale approved files the failure message was contradictory. Fixed by extracting a shared `filterExpectedJson()` helper used by both `describeTo()` and `doMatches()`, so the two call sites cannot diverge in the future.
 
 Version 1.3.2 - 2026/06/03
 -----

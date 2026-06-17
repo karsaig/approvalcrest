@@ -63,11 +63,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
-        if (expected.isParsedJson()) {
-            description.appendText(filterJson(gson, expected.getParsedContent(), true, false, false, null, null, null));
-        } else {
-            description.appendText(expected.getOriginalContent());
-        }
+        description.appendText(filterExpectedJson(gson, true, null, null, null));
         for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
             description.appendText("\nand ").appendText(fieldPath).appendText(" ")
                     .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
@@ -139,10 +135,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             SortedFieldsTracker sortedTracker = machineReadableOutput ? new SortedFieldsTracker() : null;
             String untrackedNote = buildUntrackedNote();
 
-            String expectedJson = expected.getOriginalContent();
-            if (expected.isParsedJson()) {
-                expectedJson = filterJson(gson, expected.getParsedContent(), fileMatcherConfig.isSortInputFile(), fileMatcherConfig.isStrictFileMatching(), fileMatcherConfig.isStrictFileMatching(), ignoredTracker, aliasTracker, sortedTracker);
-            }
+            String expectedJson = filterExpectedJson(gson, fileMatcherConfig.isSortInputFile(), ignoredTracker, aliasTracker, sortedTracker);
 
             if (actual == null) {
                 matches = appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, "null", "actual was null",
@@ -246,6 +239,18 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
         return filterJson(gson, actualJsonElement, true, false, false, null, null, null);
+    }
+
+    private String filterExpectedJson(Gson gson, boolean sortFile,
+            IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
+        if (!expected.isParsedJson()) {
+            return expected.getOriginalContent();
+        }
+        return filterJson(gson, expected.getParsedContent(),
+                sortFile,
+                fileMatcherConfig.isStrictFileMatching(),
+                fileMatcherConfig.isStrictFileMatching(),
+                ignoredTracker, aliasTracker, sortedTracker);
     }
 
     @Override
