@@ -223,7 +223,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration, ignoredTracker);
         }
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
-        if (!aliasMap.isEmpty()) {
+        if (!aliasMap.isEmpty() && !skipIgnores) {
             JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker);
