@@ -1,7 +1,7 @@
 Changelog
 ===========
 
-Version 1.3.3 - WIP
+Version 1.3.3 - 2026/06/17
 -----
 
 - Fixed `withAlias` / `withAliasMap` being applied to the approved-file content in strict mode (`fileMatcherStrictFileMatching=true`, the default). All other transformations — `.ignoring()`, `.with()`, pattern-based sorting — were already correctly skipped on the approved side in strict mode; aliases were the only exception. After this fix, aliases are applied to the actual side only in strict mode, consistent with the strict-mode contract that the approved file is used as-is. An approved file that still contains the raw (non-aliased) value is now correctly detected as stale and causes the assertion to fail, prompting regeneration. Approved files that already contain the aliased form (the normal case) are unaffected — no re-generation needed.
