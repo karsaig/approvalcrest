@@ -282,6 +282,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         builder.append("';\n please verify its contents and rename it to '");
         builder.append(renameTo);
         builder.append("'.");
+        builder.append("\n[AI tip] Re-run with fmAI=true for the absolute path of the file that needs to be renamed.");
         return builder.toString();
     }
 
@@ -291,7 +292,7 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         json.addProperty("test", "dummyTestClassName#dummyTestMethodName");
         json.addProperty("notApprovedFile", notApprovedAbsolutePath.toAbsolutePath().toString());
         json.addProperty("approveTo", approvedAbsolutePath.toAbsolutePath().toString());
-        json.addProperty("action", "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approveTo path above");
+        json.addProperty("action", "Rename (or copy) the notApprovedFile to the approveTo path above");
         return new com.google.gson.GsonBuilder().disableHtmlEscaping().create().toJson(json);
     }
 

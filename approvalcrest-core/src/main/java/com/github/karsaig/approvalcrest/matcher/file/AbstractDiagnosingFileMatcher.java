@@ -223,11 +223,12 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                     json.addProperty("test", testClassName + "#" + testMethodName);
                     json.addProperty("notApprovedFile", createdFileAndInfo.getFileName().toAbsolutePath().toString());
                     json.addProperty("approveTo", approvedFileAndInfo.getFileName().toAbsolutePath().toString());
-                    json.addProperty("action", "Set system property fMUInPlace=true and re-run, or copy the not-approved file to approveTo path above");
+                    json.addProperty("action", "Rename (or copy) the notApprovedFile to the approveTo path above");
                     message = JSON_OUTPUT_GSON.toJson(json);
                 } else {
                     message = "Not approved file created: '" + createdFileAndInfo.getFileNameWithRelativePath()
-                            + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'.";
+                            + "';\n please verify its contents and rename it to '" + approvedFileAndInfo.getFileName().getFileName() + "'."
+                            + "\n[AI tip] Re-run with fmAI=true for the absolute path of the file that needs to be renamed.";
                 }
                 if (!fileMatcherConfig.isPassOnCreateEnabled()) {
                     fail(message);

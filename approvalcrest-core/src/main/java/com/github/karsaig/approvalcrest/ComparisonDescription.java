@@ -28,6 +28,7 @@ import org.hamcrest.StringDescription;
  * {@link StringDescription} which holds the mismatch message along with the actual and expected Json representation.
  */
 public class ComparisonDescription extends StringDescription {
+	public static final String AI_TIP = "\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.";
 	private static final Gson OUTPUT_GSON = new GsonBuilder().disableHtmlEscaping().create();
 
 	private String actual;
@@ -117,8 +118,7 @@ public class ComparisonDescription extends StringDescription {
 		if (machineReadable) {
 			return buildMachineReadableMessage(reason);
 		}
-		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage()
-				+ "\n[AI tip] Re-run with system property fmAI=true for structured, machine-readable output.";
+		return (isNotBlank(reason) ? reason + "\n" : "") + getDifferencesMessage() + AI_TIP;
 	}
 
 	private String buildMachineReadableMessage(String reason) {

@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import com.github.karsaig.approvalcrest.ComparisonDescription;
 import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
@@ -81,7 +82,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
                     Gson outputGson = new GsonBuilder().disableHtmlEscaping().create();
                     mismatchDescription.appendText(outputGson.toJson(root));
                 } else {
-                    mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true");
+                    mismatchDescription.appendText("Actual type ["+actual.getClass()+"] is not an instance of expected type ["+expected.getClass()+"]!\nThis can be ignored with skipClassComparison or\nsetting beanMatcherSkipClassComparison env variable to true" + ComparisonDescription.AI_TIP);
                 }
                 jsonDescription = false;
                 return false;

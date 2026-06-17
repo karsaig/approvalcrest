@@ -76,6 +76,20 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
     }
 
     @Test
+    public void shouldAppendAiTipToTypeMismatchMessageWhenMachineReadableDisabled() {
+        Object actual = new com.github.karsaig.approvalcrest.testdata.classdiff.BeanOne("x", "y");
+        Object expected = new com.github.karsaig.approvalcrest.testdata.classdiff.BeanTwo("x", "y");
+
+        DiagnosingCustomisableMatcher<Object> underTest = MATCHER_FACTORY.beanMatcher(expected);
+
+        AssertionError error = assertThrows(AssertionError.class,
+                () -> assertThat(actual, underTest));
+
+        assertTrue(error.getMessage().endsWith(AI_TIP_SUFFIX),
+                "Type mismatch failure must end with the AI tip. Got: " + error.getMessage());
+    }
+
+    @Test
     public void shouldTrackIgnoredPathsInMachineReadableOutput() {
         BeanWithPrimitives expected = beanWithPrimitives().beanBoolean(false).beanInt(99).beanLong(5L).build();
         BeanWithPrimitives actual = beanWithPrimitives().beanBoolean(true).beanInt(42).beanLong(5L).build();
