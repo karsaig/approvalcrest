@@ -8,7 +8,7 @@ Using approvalcrest with TestNG.
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-testng</artifactId>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
     <scope>test</scope>
 </dependency>
 ```

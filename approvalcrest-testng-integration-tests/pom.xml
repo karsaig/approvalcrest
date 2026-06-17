@@ -5,7 +5,7 @@
     <parent>
         <artifactId>approvalcrest-parent</artifactId>
         <groupId>com.github.karsaig</groupId>
-        <version>1.3.3</version>
+        <version>1.3.4-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,7 +16,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>approvalcrest-testng</artifactId>
-            <version>1.3.3</version>
+            <version>1.3.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -34,7 +34,7 @@
         <dependency>
             <groupId>com.github.karsaig</groupId>
             <artifactId>testing-common</artifactId>
-            <version>1.3.3</version>
+            <version>1.3.4-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
