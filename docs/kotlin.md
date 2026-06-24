@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=bf2ead15-ef93-47bf-bbfb-32d354a9f801" />
+
 # kotlin
 
 Using approvalcrest with Kotlin and JUnit 5 & 6.
