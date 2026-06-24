@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=83b36737-54e7-41bf-a2f6-44170b3048f1" />
+
 # supported-types
 
 How approvalcrest serialises common Java types to JSON.
