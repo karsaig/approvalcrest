@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=61ed9090-b10b-49a1-8e28-7950aacf9ddd" />
+
 Approvalcrest
 ===========
 [![Java CI with Maven](https://github.com/karsaig/approvalcrest/actions/workflows/maven.yml/badge.svg)](https://github.com/karsaig/approvalcrest/actions/workflows/maven.yml)
