@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=31251b12-91b4-47c8-aa8c-d7a3cf292eae" />
+
 # junit4-vintage
 
 Using approvalcrest with JUnit 4 and JUnit 5 Vintage.
