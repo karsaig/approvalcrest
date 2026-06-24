@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=8fd3772b-2ddb-4042-9243-eae0fb17b66c" />
+
 # dynamic-values
 
 How to handle values that change between test runs.
