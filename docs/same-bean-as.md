@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=7ef7a133-8641-4190-a106-d60f524f3722" />
+
 # same-bean-as
 
 Compare two Java beans with a deep structural comparison of the full object graph.
