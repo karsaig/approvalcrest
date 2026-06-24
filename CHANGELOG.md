@@ -1,7 +1,9 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=308d73c7-f1a0-403c-8df9-56ae120707f0" />
+
 Changelog
 ===========
 
-Version 1.3.4 - TBD
+Version 1.3.4 - 2026/06/24
 -----
 
 - Fixed path-based custom matchers (`.with("fieldPath", matcher)`) failing with `IllegalArgumentException: <field> does not exist` when the actual input is a `Map<String, Object>` or a JSON string — both of which Gson serialises as an array of single-entry objects. The JSON-path retry in `findJsonValueAt` was fanning out through the array and returning a failure as soon as any element lacked the field, which is the normal case for the map-as-array structure where only one element holds each key. Changed the array traversal to collect values from elements that have the field and only report failure when no element has it. The same lenient fanout was applied to `BeanFinder.findBeanAt`'s Collection traversal so that heterogeneous collections (where some elements have the field and some don't) are handled consistently. Also covers `List<Map<String,Object>>` inputs via the same mechanism.
