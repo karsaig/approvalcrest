@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=f4abc3d0-c0e5-40bc-bcd0-8fdfaaa1e2f0" />
+
 # same-json-as-approved
 
 Assert that a Java object or JSON string matches a stored approved file.
