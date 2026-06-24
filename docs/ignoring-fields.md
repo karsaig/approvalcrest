@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=d3ba28e7-0e56-403b-934a-aa06f4b8c47c" />
+
 # ignoring-fields
 
 Exclude specific fields from comparison using path, Hamcrest matcher, or type.
