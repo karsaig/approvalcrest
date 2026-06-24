@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=4629c939-407c-461a-bbee-8b42aefcef3a" />
+
 # aliasing
 
 Replace volatile runtime values with stable aliases in approved files.
