@@ -40,15 +40,21 @@ public class JsonElementUtil {
         if (current.isJsonArray()) {
             // Transparent array traversal: fan out into each element, mirroring
             // FieldsIgnorer's array-traversal behaviour and BeanFinder's collection fanout.
+            // Lenient: collect from elements that have the field; fail only if none do.
+            // This handles Map-as-array-of-single-entry-objects where only one element
+            // holds any given key (e.g. Gson's Map serialisation).
             BeanFinder.FanoutResult fanout = new BeanFinder.FanoutResult();
+            Either<RuntimeException, Object> lastError = null;
             for (JsonElement elem : current.getAsJsonArray()) {
                 Either<RuntimeException, Object> r = findJsonValueAt(path, segments, segIdx, elem);
                 if (r.isLeft()) {
-                    return r;
+                    lastError = r;
+                } else {
+                    fanout.add(r.getRight());
                 }
-                fanout.add(r.getRight());
             }
-            return Either.right(fanout);
+            // lastError == null: empty array or all succeeded — preserve right(emptyFanout) for empty arrays
+            return (!fanout.isEmpty() || lastError == null) ? Either.right(fanout) : lastError;
         }
         if (!current.isJsonObject()) {
             return Either.left(new IllegalArgumentException(segments[segIdx] + " not navigable"));

@@ -54,6 +54,7 @@ public class BeanFinder {
             if (object instanceof Collection) {
                 Collection<?> coll = (Collection<?>) object;
                 FanoutResult fanout = new FanoutResult();
+                Either<RuntimeException, Object> lastError = null;
                 for (Object element : coll) {
                     if (element == null) {
                         fanout.add(null);
@@ -61,11 +62,12 @@ public class BeanFinder {
                     }
                     Either<RuntimeException, Object> r = findBeanAt(fullPath, fields, element);
                     if (r.isLeft()) {
-                        return r;
+                        lastError = r;
+                    } else {
+                        fanout.add(r.getRight());
                     }
-                    fanout.add(r.getRight());
                 }
-                return Either.right(fanout);
+                return (!fanout.isEmpty() || lastError == null) ? Either.right(fanout) : lastError;
             }
             for (Field field : getEveryField(object.getClass())) {
                 if (headOf(fields).equals(field.getName())) {
