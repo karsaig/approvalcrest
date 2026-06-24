@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=932587be-8781-4843-af47-fa58cbfd05d1" />
+
 # Field Access Modes
 
 Approvalcrest serializes Java objects to JSON for comparison using Gson. On JDK 9+, the module system restricts reflective access to internal fields of platform classes (`java.time.*`, `java.lang.*`, `java.math.*`, etc.). Historically this required adding `--add-opens` JVM flags to your test configuration.
