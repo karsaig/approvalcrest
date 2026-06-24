@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=aa4f2c40-565a-40c3-a884-4f86efb2581f" />
+
 # TestNG
 
 Using approvalcrest with TestNG.
