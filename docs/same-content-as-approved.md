@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=b01fdd26-9e71-41c4-9255-0f11b90de210" />
+
 # same-content-as-approved
 
 Assert that arbitrary text content matches a stored approved file.
