@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=0726f4f4-27ae-4491-99ae-1553b09dad73" />
+
 # junit5-jupiter
 
 Using approvalcrest with JUnit 5 & 6 Jupiter (Java). The `approvalcrest-junit-jupiter` artifact works with both JUnit 5 and JUnit 6 (JUnit Platform) without any code changes.
