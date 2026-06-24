@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=4e9babdf-6a30-4e7b-a09d-f12bf35f3a1f" />
+
 # custom-matching
 
 Replace field-level comparison with a custom Hamcrest matcher.
