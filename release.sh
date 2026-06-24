@@ -2,7 +2,7 @@
 
 show_help() {
     cat <<'EOF'
-Usage: release.sh <version> [--dry-run] [--resume] [--jdk <version>]
+Usage: release.sh <version> [--dry-run] [--resume] [--jdk <version>] [--verbose]
 
 Arguments:
   <version>          Release version to set (e.g. 0.63.0)
@@ -15,6 +15,7 @@ Arguments:
                      interrupted after a successful deploy. Cannot be
                      combined with --dry-run.
   --jdk <version>    JDK version to use for testing (default: 8)
+  --verbose | -v     Echo every command as it runs (set -x)
 
 Steps performed:
   1. Bump version in pom.xml and for-release-pom.xml         [skipped in --resume]
@@ -35,6 +36,7 @@ EOF
 version=""
 dry_run=false
 resume=false
+verbose=false
 jvtr=8
 
 while [[ $# -gt 0 ]]; do
@@ -45,6 +47,8 @@ while [[ $# -gt 0 ]]; do
             dry_run=true; shift ;;
         --resume)
             resume=true; shift ;;
+        --verbose|-v)
+            verbose=true; shift ;;
         --jdk)
             jvtr="$2"; shift 2 ;;
         --jdk=*)
@@ -68,7 +72,8 @@ if [[ "$dry_run" == "true" && "$resume" == "true" ]]; then
     exit 1
 fi
 
-set -exuo pipefail
+set -euo pipefail
+[[ "$verbose" == "true" ]] && set -x
 
 # State tracking for cleanup
 _commit_made=false
@@ -193,3 +198,5 @@ else
     git commit -a -m "Next development version ${next_dev}"
     git push
 fi
+
+printf '\033[92m========================================\n  Release %s completed successfully!\n========================================\033[0m\n' "${version}"
