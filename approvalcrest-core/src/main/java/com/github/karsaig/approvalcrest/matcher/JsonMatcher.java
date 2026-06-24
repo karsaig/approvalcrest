@@ -150,7 +150,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 }
             }
         } else {
-            matches = handleInPlaceOverwrite(actual, gson);
+            matches = false;
         }
         return matches;
     }

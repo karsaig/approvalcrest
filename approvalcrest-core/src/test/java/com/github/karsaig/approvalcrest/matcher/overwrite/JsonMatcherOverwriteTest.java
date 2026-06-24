@@ -263,6 +263,35 @@ public class JsonMatcherOverwriteTest extends AbstractFileMatcherTest {
     }
 
     @Test
+    public void shouldNotOverwriteApprovedFileAndFailWhenOverwriteInPlaceEnabledAndCustomMatcherFails() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            DummyInformation dummyTestInfo = dummyInformation(imfsi, "JsonMatcherOverwriteTest", "shouldNotOverwriteApprovedFileAndFailWhenOverwriteInPlaceEnabledAndCustomMatcherFails");
+            JsonMatcher<Object> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, enableInPlaceOverwrite())
+                    .with("beanInteger", Matchers.equalTo(999));
+
+            String originalContent = "/*JsonMatcherOverwriteTest.shouldNotOverwriteApprovedFileAndFailWhenOverwriteInPlaceEnabledAndCustomMatcherFails*/\n" +
+                    "{\n" +
+                    "  \"beanBoolean\": true,\n" +
+                    "  \"beanByte\": 2,\n" +
+                    "  \"beanChar\": \"c\",\n" +
+                    "  \"beanDouble\": 5.0,\n" +
+                    "  \"beanFloat\": 3.0,\n" +
+                    "  \"beanLong\": 6,\n" +
+                    "  \"beanShort\": 1\n" +
+                    "}";
+            writeFile(imfsi.getTestPath().resolve("11ee79").resolve("d21961-approved.json"), originalContent);
+
+            assertThrows(AssertionError.class, () -> MatcherAssert.assertThat(actual, underTest));
+
+            List<InMemoryFiles> actualFiles = getFiles(imfsi);
+            InMemoryFiles expected = new InMemoryFiles("11ee79/d21961-approved.json", originalContent);
+
+            assertIterableEquals(singletonList(expected), actualFiles);
+        });
+    }
+
+    @Test
     public void shouldOverwriteApprovedFileWhenOverwriteInPlaceEnabledAndApprovedFileExistsButContainingIgnoredFieldsAndStrictMatchingIsOn() {
         BeanWithPrimitives actual = getBeanWithPrimitives();
         inMemoryUnixFs(imfsi -> {

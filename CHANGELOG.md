@@ -3,6 +3,11 @@
 Changelog
 ===========
 
+Version 1.3.5 - unreleased
+-----
+
+- Fixed `JsonMatcher` silently passing in update-in-place mode when a custom matcher (`.with(fieldPath, matcher)`) fails. Previously the failed custom matcher branch fell through to `handleInPlaceOverwrite`, which rewrote the approved file and returned `true`, masking the failure. On the next normal run the same custom matcher would fail again, apparently out of nowhere. The approved file is now left untouched and the assertion correctly fails.
+
 Version 1.3.4 - 2026/06/24
 -----
 
