@@ -60,6 +60,14 @@ public class JsonMatcherMixedTest extends AbstractFileMatcherTest {
 
     private static final String LIST_OF_MAPS_AS_JSON_CASE = "[ " + MAP_AS_JSON_CASE + " ]";
 
+    static class TokenBean {
+        final Object claims;
+        TokenBean(Object claims) { this.claims = claims; }
+    }
+
+    private static final Object BEAN_WITH_MAP_CASE = new TokenBean(MAP_CASE);
+    private static final Object BEAN_WITH_LIST_OF_MAPS_CASE = new TokenBean(LIST_OF_MAPS_CASE);
+
     private static Object[][] mapCases() {
         return new Object[][]{
                 {"Object input", MAP_CASE},
@@ -232,6 +240,89 @@ public class JsonMatcherMixedTest extends AbstractFileMatcherTest {
             Assertions.assertEquals(actual, thrown.getActual().getStringRepresentation(), "should show full list contents");
             Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "should show filtered list contents");
         }, AssertionFailedError.class);
+    }
+
+    private static Object[][] beanCases() {
+        String beanWithMapApproved = "{\n" +
+                "  \"claims\": [\n" +
+                "    {\n" +
+                "      \"aud\": [\n" +
+                "        \"afca9c84-787d-44d6-a537-6560f1712d0f\"\n" +
+                "      ]\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"auth_time\": 1760351400\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"azp\": \"afca9c84-787d-44d6-a537-6560f1712d0f\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"exp\": \"2025-10-13T11:00:00.000Z\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"iat\": \"2025-10-13T10:30:00.000Z\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"iss\": \"https://t.oauth2.x.com\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        String beanWithListOfMapsApproved = "{\n" +
+                "  \"claims\": [\n" +
+                "    [\n" +
+                "      {\n" +
+                "        \"aud\": [\n" +
+                "          \"afca9c84-787d-44d6-a537-6560f1712d0f\"\n" +
+                "        ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"auth_time\": 1760351400\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"azp\": \"afca9c84-787d-44d6-a537-6560f1712d0f\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"exp\": \"2025-10-13T11:00:00.000Z\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"iat\": \"2025-10-13T10:30:00.000Z\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"iss\": \"https://t.oauth2.x.com\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  ]\n" +
+                "}";
+        return new Object[][]{
+                {"Bean with Map field", BEAN_WITH_MAP_CASE, beanWithMapApproved},
+                {"Bean with List<Map> field", BEAN_WITH_LIST_OF_MAPS_CASE, beanWithListOfMapsApproved}
+        };
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("beanCases")
+    void mixedFeaturesBeanTest(String testName, Object input, String approvedContent) {
+        beanTestImpl(testName, input, approvedContent, jsonMatcher -> jsonMatcher
+                .with("claims.fhirUser", matchesPattern("Patient/[a-z0-9-]+"))
+                .ignoring("claims.jti")
+                .with("claims.person_public_id", matchesPattern("[a-z0-9-]+"))
+                .with("claims.sub", matchesPattern("[a-z0-9-]+"))
+        );
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("beanCases")
+    void mixedFeaturesBeanTwoTest(String testName, Object input, String approvedContent) {
+        beanTestImpl(testName, input, approvedContent, jsonMatcher -> jsonMatcher
+                .withMatcher(equalTo("fhirUser"), matchesPattern("Patient/[a-z0-9-]+"))
+                .ignoring(equalTo("jti"))
+                .withMatcher(equalTo("person_public_id"), Matchers.matchesPattern("[a-z0-9-]+"))
+                .withMatcher(equalTo("sub"), Matchers.matchesPattern("[a-z0-9-]+"))
+        );
+    }
+
+    private void beanTestImpl(String testName, Object input, String approvedContent, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
+        assertJsonMatcherWithDummyTestInfo(input, approvedContent, getDefaultFileMatcherConfig(), configurator, null);
     }
 
     private void mixedTestImpl(String testName, Object input, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
