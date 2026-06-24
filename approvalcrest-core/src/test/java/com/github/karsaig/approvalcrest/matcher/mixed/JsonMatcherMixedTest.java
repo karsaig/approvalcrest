@@ -74,6 +74,15 @@ public class JsonMatcherMixedTest extends AbstractFileMatcherTest {
         };
     }
 
+    private static Object[][] allCases() {
+        return new Object[][]{
+                {"Object input", MAP_CASE},
+                {"Json string input", MAP_AS_JSON_CASE},
+                {"List<Map> Object input", LIST_OF_MAPS_CASE},
+                {"List<Map> Json string input", LIST_OF_MAPS_AS_JSON_CASE}
+        };
+    }
+
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("mapCases")
     void mixedFeaturesTest(String testName, Object input) {
@@ -116,6 +125,15 @@ public class JsonMatcherMixedTest extends AbstractFileMatcherTest {
                 .withMatcher(equalTo("person_public_id"), Matchers.matchesPattern("[a-z0-9-]+"))
                 .withMatcher(equalTo("sub"), Matchers.matchesPattern("[a-z0-9-]+"))
         );
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("allCases")
+    void pathAbsentFromAllElementsThrowsException(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, "null", getDefaultFileMatcherConfig(),
+                jsonMatcher -> jsonMatcher.with("nonExistentField", equalTo("anything")),
+                thrown -> Assertions.assertEquals("nonExistentField does not exist", thrown.getMessage()),
+                IllegalArgumentException.class);
     }
 
     private void listTestImpl(String testName, Object input, Function<JsonMatcher<Object>, JsonMatcher<Object>> configurator) {
