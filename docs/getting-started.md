@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=283a15c6-bb2b-48c5-86bc-78dae2cf24c9" />
+
 # Getting Started
 
 Add approvalcrest to your project and write your first assertion in minutes.
