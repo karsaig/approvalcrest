@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=c4c692b7-64c6-4a83-be80-f1fbb22b9e65" />
+
 # sorting
 
 Control collection ordering to get stable comparisons regardless of iteration order.
