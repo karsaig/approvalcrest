@@ -1,3 +1,5 @@
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=3f8eb663-fce0-4df5-9f6f-1b6508693937" />
+
 # best-practices
 
 Guidelines for effective use of approvalcrest in real projects.
