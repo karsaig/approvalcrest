@@ -311,39 +311,39 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfig() {
-        return new FileMatcherConfig(false, false, false, false, false, true);
+        return new FileMatcherConfig(false, false, false, false, true);
     }
 
     public static FileMatcherConfig getDefaultFileMatcherConfigWithLenientMatching() {
-        return new FileMatcherConfig(false, false, false, false, false, false);
+        return new FileMatcherConfig(false, false, false, false, false);
     }
 
     public static FileMatcherConfig enableInPlaceOverwrite() {
-        return new FileMatcherConfig(true, false, false, false, false, true);
+        return new FileMatcherConfig(true, false, false, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteNonStrict() {
-        return new FileMatcherConfig(true, false, false, false, false, false);
+        return new FileMatcherConfig(true, false, false, false, false);
     }
 
     public static FileMatcherConfig enablePassOnCreate() {
-        return new FileMatcherConfig(false, true, false, false, false, true);
+        return new FileMatcherConfig(false, true, false, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false, false, true);
+        return new FileMatcherConfig(true, true, false, false, true);
     }
 
     public static FileMatcherConfig enableInPlaceOverwriteNonStrictAndPassOnCreate() {
-        return new FileMatcherConfig(true, true, false, false, false, false);
+        return new FileMatcherConfig(true, true, false, false, false);
     }
 
     public static FileMatcherConfig enableExpectedFileSorting() {
-        return new FileMatcherConfig(false, false, false, false, true, true);
+        return new FileMatcherConfig(false, false, false, true, true);
     }
 
     public static FileMatcherConfig enableExpectedFileSortingWithLenientMatching() {
-        return new FileMatcherConfig(false, false, false, false, true, false);
+        return new FileMatcherConfig(false, false, false, true, false);
     }
 
     protected static <T> T modifyObject(T input, Function<T, T> modifier) {

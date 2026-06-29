@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -211,11 +212,27 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
      * @return true if the not-approved file was created, false otherwise.
      */
     protected boolean createNotApprovedFileIfNotExists(Object toApprove, Supplier<String> content) {
-        FileStoreMatcherUtils.CreatedFile approvedFileAndInfo = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath);
+        FileStoreMatcherUtils.CreatedFile approvedFileAndInfo = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath);
 
         if (Files.notExists(approvedFileAndInfo.getFileName())) {
             try {
-                FileStoreMatcherUtils.CreatedFile createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
+                String contentStr = content.get();
+                FileStoreMatcherUtils.CreatedFile createdFileAndInfo;
+                if (fileMatcherConfig.isSharedEnabled()) {
+                    Optional<String> canonicalPath = fileStoreMatcherUtils.findMatchingCanonical(
+                            contentStr, testMetaInformation.workingDirectory(),
+                            fileMatcherConfig.getSharedApprovalDirectory(), fileMatcherConfig.getSharedBucketDepth());
+                    if (canonicalPath.isPresent()) {
+                        createdFileAndInfo = fileStoreMatcherUtils.createNotApprovedPointer(
+                                fileNameWithPath, filenameWithRelativePath, getCommentLine(), canonicalPath.get());
+                    } else {
+                        createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(
+                                fileNameWithPath, filenameWithRelativePath, contentStr, getCommentLine());
+                    }
+                } else {
+                    createdFileAndInfo = fileStoreMatcherUtils.createNotApproved(
+                            fileNameWithPath, filenameWithRelativePath, contentStr, getCommentLine());
+                }
                 String message;
                 if (machineReadableOutput) {
                     JsonObject json = new JsonObject();
@@ -249,10 +266,26 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     }
 
     protected void overwriteApprovedFile(Object actual, Supplier<String> content) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileName();
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath).getFileName();
         if (Files.exists(approvedFile)) {
             try {
-                fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath,filenameWithRelativePath, content.get(), getCommentLine());
+                String contentStr = content.get();
+                if (fileMatcherConfig.isSharedEnabled()) {
+                    Optional<String> canonicalPath = fileStoreMatcherUtils.findMatchingCanonical(
+                            contentStr, testMetaInformation.workingDirectory(),
+                            fileMatcherConfig.getSharedApprovalDirectory(), fileMatcherConfig.getSharedBucketDepth());
+                    if (canonicalPath.isPresent()) {
+                        fileStoreMatcherUtils.writePointerFile(approvedFile, getCommentLine(), canonicalPath.get());
+                    } else {
+                        if (fileStoreMatcherUtils.isPointerFile(approvedFile)) {
+                            System.out.println("[approvalcrest] Test " + testClassName + "." + testMethodName
+                                    + " detached from shared canonical: no matching canonical found for new content.");
+                        }
+                        fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, filenameWithRelativePath, contentStr, getCommentLine());
+                    }
+                } else {
+                    fileStoreMatcherUtils.overwriteApprovedFile(fileNameWithPath, filenameWithRelativePath, contentStr, getCommentLine());
+                }
             } catch (IOException e) {
                 throw new IllegalStateException(
                         String.format("Exception while overwriting approved file %s", actual.toString()), e);
@@ -263,9 +296,19 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
     }
 
     protected <V> V getExpectedFromFile(Function<String, V> processorAfterRead) {
-        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath,filenameWithRelativePath).getFileName();
+        Path approvedFile = fileStoreMatcherUtils.getApproved(fileNameWithPath, filenameWithRelativePath).getFileName();
         try {
-            String fileContent = fileStoreMatcherUtils.readFile(approvedFile);
+            Path workingDirectory = testMetaInformation.workingDirectory();
+            Optional<String> staleTarget = fileStoreMatcherUtils.findStalePointerTarget(
+                    approvedFile, workingDirectory, fileMatcherConfig.getSharedApprovalDirectory());
+            if (staleTarget.isPresent() && fileMatcherConfig.isStrictFileMatching()) {
+                fail(getAssertMessage(fileStoreMatcherUtils, "Stale pointer: target '" + staleTarget.get()
+                        + "' is outside the configured shared directory '"
+                        + fileMatcherConfig.getSharedApprovalDirectory() + "'. "
+                        + "Run 'mvn approvalcrest:reinstate' then 'mvn approvalcrest:dedup' to fix, "
+                        + "or set fMStrictMatching=false to follow stale pointers."));
+            }
+            String fileContent = fileStoreMatcherUtils.readFile(approvedFile, workingDirectory);
             return processorAfterRead.apply(fileContent);
         } catch (IOException e) {
             throw new IllegalStateException(

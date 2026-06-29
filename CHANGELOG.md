@@ -6,6 +6,8 @@ Changelog
 Version 1.3.5 - unreleased
 -----
 
+- Added pointer-file support for approved files and a new `approvalcrest-dedup` module. An approved file whose post-header content is `/*pointer:relative/path*/` is transparently followed at read time with no configuration required; the test comment header is preserved. In-place updates (`-DfMUInPlace=true`) on a pointer file detach the test from the shared canonical rather than modifying it. Enabling `-DfmSharedEnabled=true` activates write-side integration: new files whose content matches an existing canonical get a pointer `-not-approved` for the developer to approve, and in-place updates re-point to a matching canonical when one exists. The configurable shared directory (`-DfmSharedDir=`, default `src/test/java/shared-approvals`) is the authoritative location for canonical files. The `approvalcrest-dedup` module provides `mvn approvalcrest:dedup` (group duplicates → create canonicals → write pointers, GC orphans) and `mvn approvalcrest:reinstate` (replace all pointers with standalone approved files and clear the shared directory). See [shared-approvals](docs/shared-approvals.md).
+- Removed the previously declared but unused `buildIndex` / `bFIndex` flags from `FileMatcherConfig`.
 - Fixed `JsonMatcher` silently passing in update-in-place mode when a custom matcher (`.with(fieldPath, matcher)`) fails. Previously the failed custom matcher branch fell through to `handleInPlaceOverwrite`, which rewrote the approved file and returned `true`, masking the failure. On the next normal run the same custom matcher would fail again, apparently out of nowhere. The approved file is now left untouched and the assertion correctly fails.
 
 Version 1.3.4 - 2026/06/24

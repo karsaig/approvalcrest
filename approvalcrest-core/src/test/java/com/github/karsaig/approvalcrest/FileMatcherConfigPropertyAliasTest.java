@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -22,14 +23,18 @@ public class FileMatcherConfigPropertyAliasTest {
         System.clearProperty("fMUInPlace");
         System.clearProperty("fileMatcherPassOnCreate");
         System.clearProperty("fMPOnCreate");
-        System.clearProperty("buildFileIndex");
-        System.clearProperty("bFIndex");
         System.clearProperty("useApprovedDirectory");
         System.clearProperty("uADirectory");
         System.clearProperty("sortInputFile");
         System.clearProperty("sIFile");
         System.clearProperty("fileMatcherStrictFileMatching");
         System.clearProperty("fMStrictMatching");
+        System.clearProperty("fileMatcherSharedDir");
+        System.clearProperty("fmSharedDir");
+        System.clearProperty("fileMatcherSharedEnabled");
+        System.clearProperty("fmSharedEnabled");
+        System.clearProperty("fileMatcherSharedDirBucketDepth");
+        System.clearProperty("fmSharedDirBucketDepth");
     }
 
     @AfterEach
@@ -50,12 +55,6 @@ public class FileMatcherConfigPropertyAliasTest {
     }
 
     @Test
-    public void bFIndexAliasEnablesBuildIndex() {
-        System.setProperty("bFIndex", "true");
-        assertTrue(new FileMatcherConfig().isBuildIndex());
-    }
-
-    @Test
     public void uADirectoryAliasEnablesApprovedDirectory() {
         System.setProperty("uADirectory", "true");
         assertTrue(new FileMatcherConfig().isApprovedDirectory());
@@ -71,6 +70,52 @@ public class FileMatcherConfigPropertyAliasTest {
     public void fMStrictMatchingAliasConfiguresStrictFileMatching() {
         System.setProperty("fMStrictMatching", "false");
         assertFalse(new FileMatcherConfig().isStrictFileMatching());
+    }
+
+    @Test
+    public void fmSharedDirAliasConfiguresSharedApprovalDirectory() {
+        System.setProperty("fmSharedDir", "custom/shared/dir");
+        assertEquals("custom/shared/dir", new FileMatcherConfig().getSharedApprovalDirectory());
+    }
+
+    @Test
+    public void fileMatcherSharedDirCanonicalNameConfiguresSharedApprovalDirectory() {
+        System.setProperty("fileMatcherSharedDir", "another/path");
+        assertEquals("another/path", new FileMatcherConfig().getSharedApprovalDirectory());
+    }
+
+    @Test
+    public void sharedApprovalDirectoryDefaultsToStandardPath() {
+        assertEquals("src/test/java/shared-approvals", new FileMatcherConfig().getSharedApprovalDirectory());
+    }
+
+    @Test
+    public void fmSharedEnabledAliasEnablesShared() {
+        System.setProperty("fmSharedEnabled", "true");
+        assertTrue(new FileMatcherConfig().isSharedEnabled());
+    }
+
+    @Test
+    public void sharedEnabledDefaultsFalse() {
+        assertFalse(new FileMatcherConfig().isSharedEnabled());
+    }
+
+    @Test
+    public void fmSharedDirBucketDepthAliasConfiguresBucketDepth() {
+        System.setProperty("fmSharedDirBucketDepth", "3");
+        assertEquals(3, new FileMatcherConfig().getSharedBucketDepth());
+    }
+
+    @Test
+    public void sharedBucketDepthDefaultsToTwo() {
+        assertEquals(2, new FileMatcherConfig().getSharedBucketDepth());
+    }
+
+    @Test
+    public void conflictingSharedDirThrowsIllegalStateException() {
+        System.setProperty("fileMatcherSharedDir", "path/one");
+        System.setProperty("fmSharedDir", "path/two");
+        assertThrows(IllegalStateException.class, FileMatcherConfig::new);
     }
 
     @Test

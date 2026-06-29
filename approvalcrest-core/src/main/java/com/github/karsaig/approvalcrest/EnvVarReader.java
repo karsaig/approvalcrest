@@ -43,6 +43,47 @@ public class EnvVarReader {
         return result != null ? result : parseBoolean(defaultValue);
     }
 
+    public static String getStringProperties(String defaultValue, String... keys) {
+        String result = null;
+        for (String key : keys) {
+            String value = System.getProperty(key);
+            if (value != null) {
+                if (result == null) {
+                    result = value;
+                } else if (!result.equals(value)) {
+                    throw new IllegalStateException(
+                            "Ambiguous configuration: conflicting values set for properties: "
+                                    + Arrays.toString(keys));
+                }
+            }
+        }
+        return result != null ? result : defaultValue;
+    }
+
+    public static int getIntProperties(int defaultValue, String... keys) {
+        Integer result = null;
+        for (String key : keys) {
+            String value = System.getProperty(key);
+            if (value != null) {
+                int parsed;
+                try {
+                    parsed = Integer.parseInt(value);
+                } catch (NumberFormatException e) {
+                    throw new IllegalStateException(
+                            "Invalid integer value for property " + key + ": " + value);
+                }
+                if (result == null) {
+                    result = parsed;
+                } else if (result != parsed) {
+                    throw new IllegalStateException(
+                            "Ambiguous configuration: conflicting values set for properties: "
+                                    + Arrays.toString(keys));
+                }
+            }
+        }
+        return result != null ? result : defaultValue;
+    }
+
     static boolean parseBoolean(String value) {
         return "true".equalsIgnoreCase(value) || "t".equalsIgnoreCase(value) || "1".equals(value) || "yes".equalsIgnoreCase(value) || "y".equalsIgnoreCase(value);
     }

@@ -237,7 +237,26 @@ In the default (non-machine-readable) mode, every failure message ends with:
 
 This allows AI agents that encounter a normal test failure to discover the machine-readable mode without any explicit configuration.
 
+## Pointer Files and Shared Approvals
+
+An approved file may contain a _pointer reference_ instead of content. The library follows the pointer transparently so tests require no code changes:
+
+```
+/*com.example.MyTest.myTestMethod*/
+/*pointer:src/test/java/shared-approvals/a1/a1b2c3d4e5f6-4827-approved.json*/
+```
+
+**In-place update on a pointer file** (`-DfileMatcherUpdateInPlace=true`):
+
+- With `-DfmSharedEnabled=false` (default): detaches the pointer and replaces it with a standalone approved file. The canonical is untouched.
+- With `-DfmSharedEnabled=true`: writes a new pointer if a matching canonical exists; otherwise detaches as above.
+
+Run `mvn approvalcrest:dedup` after tests to re-consolidate detached files back into shared canonicals.
+
+See [shared-approvals](shared-approvals.md) for the full deduplication workflow.
+
 ## Related
 
 - [best-practices](best-practices.md)
 - [same-json-as-approved](same-json-as-approved.md)
+- [shared-approvals](shared-approvals.md)
