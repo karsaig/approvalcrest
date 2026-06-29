@@ -3,7 +3,7 @@
 Changelog
 ===========
 
-Version 1.3.5 - unreleased
+Version 1.4.0 - 2026/06/29
 -----
 
 - Added pointer-file support for approved files and a new `approvalcrest-dedup` module. An approved file whose post-header content is `/*pointer:relative/path*/` is transparently followed at read time with no configuration required; the test comment header is preserved. In-place updates (`-DfMUInPlace=true`) on a pointer file detach the test from the shared canonical rather than modifying it. Enabling `-DfmSharedEnabled=true` activates write-side integration: new files whose content matches an existing canonical get a pointer `-not-approved` for the developer to approve, and in-place updates re-point to a matching canonical when one exists. The configurable shared directory (`-DfmSharedDir=`, default `src/test/java/shared-approvals`) is the authoritative location for canonical files. The `approvalcrest-dedup` module provides `mvn approvalcrest:dedup` (group duplicates → create canonicals → write pointers, GC orphans) and `mvn approvalcrest:reinstate` (replace all pointers with standalone approved files and clear the shared directory). See [shared-approvals](docs/shared-approvals.md).
