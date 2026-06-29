@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.dedup;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -27,6 +28,10 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
 public class DedupCli {
 
     public static void main(String[] args) throws IOException {
+        run(args, Paths.get("").toAbsolutePath(), System.out);
+    }
+
+    static void run(String[] args, Path workingDirectory, PrintStream out) throws IOException {
         String dir = null;
         String sharedDir = null;
         Integer bucketDepth = null;
@@ -48,7 +53,6 @@ public class DedupCli {
             }
         }
 
-        // Fall back to FileMatcherConfig defaults (which also read system properties)
         FileMatcherConfig config = new FileMatcherConfig();
         if (sharedDir == null) {
             sharedDir = config.getSharedApprovalDirectory();
@@ -57,18 +61,17 @@ public class DedupCli {
             bucketDepth = config.getSharedBucketDepth();
         }
 
-        Path workingDirectory = Paths.get("").toAbsolutePath();
         Path scanDirPath = dir != null ? workingDirectory.resolve(dir) : workingDirectory.resolve("src/test/java");
 
         if (reinstate) {
             ApprovalReinstate reinstater = new ApprovalReinstate(workingDirectory, scanDirPath, sharedDir);
             ApprovalReinstate.ReinstateResult result = reinstater.reinstate();
-            System.out.println(result);
+            out.println(result);
         } else {
             ApprovalDeduplicator deduplicator = new ApprovalDeduplicator(
                     workingDirectory, scanDirPath, sharedDir, bucketDepth, dryRun);
             ApprovalDeduplicator.DeduplicatorResult result = deduplicator.deduplicate();
-            System.out.println(result);
+            out.println(result);
         }
     }
 }

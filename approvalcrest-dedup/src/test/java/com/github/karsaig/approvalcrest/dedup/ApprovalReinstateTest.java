@@ -1,5 +1,8 @@
 package com.github.karsaig.approvalcrest.dedup;
 
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DEFAULT_JIMFS_PERMISSIONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.DIRECTORY_CREATE_PERMISSONS;
+import static com.github.karsaig.approvalcrest.util.InMemoryFsUtil.FILE_CREATE_PERMISSONS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -9,10 +12,14 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
-import com.google.common.jimfs.Configuration;
+import com.github.karsaig.approvalcrest.util.InMemoryFsUtil;
+import com.github.karsaig.approvalcrest.util.InMemoryPermissions;
 import com.google.common.jimfs.Jimfs;
 
 import org.junit.jupiter.api.Test;
@@ -22,13 +29,11 @@ public class ApprovalReinstateTest {
     private static final String SHARED_DIR = "src/test/java/shared-approvals";
 
     private FileSystem newFs() {
-        return Jimfs.newFileSystem(Configuration.unix());
+        return Jimfs.newFileSystem(InMemoryFsUtil.JIMFS_UNIX_CONFIG);
     }
 
-    private Path workingDir(FileSystem fs) throws IOException {
-        Path work = fs.getPath("work");
-        Files.createDirectories(work);
-        return work;
+    private Path workingDir(FileSystem fs) {
+        return fs.getPath("/work");
     }
 
     private String readFile(Path file) throws IOException {
@@ -48,13 +53,25 @@ public class ApprovalReinstateTest {
         return file;
     }
 
+    private String computeKey(String content, String extension) {
+        FileStoreMatcherUtils utils = new FileStoreMatcherUtils(extension,
+                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, 2));
+        return utils.computeContentKey(content);
+    }
+
+    private static String ap(Path workDir, String rel) {
+        return workDir.resolve(rel).toAbsolutePath().toString();
+    }
+
     @Test
     public void pointerFilesAreReplacedWithStandaloneContent() throws IOException {
         try (FileSystem fs = newFs()) {
             Path workDir = workingDir(fs);
             String content = "{\"reinstated\":true}";
 
+            // writeCanonical creates all intermediate dirs with DIRECTORY_CREATE
             String canonicalRelative = writeCanonicalAndGetRelative(workDir, content, "json");
+            // writePointerFile (raw Files.write) creates src/test/java/a with DEFAULT
             Path pointer = writePointerFile(workDir, "src/test/java/a/test-approved.json", "a.test", canonicalRelative);
 
             ApprovalReinstate reinstate = new ApprovalReinstate(
@@ -66,6 +83,16 @@ public class ApprovalReinstateTest {
             assertFalse(fileContent.contains("/*pointer:"), "Reinstated file must not contain pointer");
             assertTrue(fileContent.contains(content), "Reinstated file must contain the canonical content");
             assertTrue(fileContent.startsWith("/*a.test*/"), "Reinstated file must preserve original comment");
+
+            // After reinstate: canonical deleted, empty dirs removed, pointer reinstated to FILE_CREATE
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a/test-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 
@@ -87,6 +114,15 @@ public class ApprovalReinstateTest {
 
             assertEquals(1, result.getCanonicalsDeleted());
             assertFalse(Files.exists(canonical), "Canonical must be deleted after reinstate");
+
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a/test-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 
@@ -107,6 +143,15 @@ public class ApprovalReinstateTest {
             reinstate.reinstate();
 
             assertFalse(Files.exists(sharedDirPath), "Shared dir should be deleted when empty after reinstate");
+
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a/test-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 
@@ -117,6 +162,7 @@ public class ApprovalReinstateTest {
             String content1 = "{\"a\":1}";
             String content2 = "{\"b\":2}";
 
+            // Both writeCanonical calls create intermediate dirs; second call skips existing ones.
             String canonical1 = writeCanonicalAndGetRelative(workDir, content1, "json");
             String canonical2 = writeCanonicalAndGetRelative(workDir, content2, "json");
 
@@ -134,6 +180,20 @@ public class ApprovalReinstateTest {
             assertTrue(readFile(ptr1).contains(content1));
             assertTrue(readFile(ptr2).contains(content1));
             assertTrue(readFile(ptr3).contains(content2));
+
+            // All shared dirs are deleted after reinstate (both canonicals gone, deleteEmptyDirs cleans up).
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a/test1-approved.json"), FILE_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/b"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/b/test2-approved.json"), FILE_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/c"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/c/test3-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 
@@ -144,8 +204,10 @@ public class ApprovalReinstateTest {
             String standaloneContent = "{\"standalone\":true}";
             String pointerContent = "{\"pointed\":true}";
 
+            // writeCanonical creates all intermediate dirs with DIRECTORY_CREATE
             String canonicalRelative = writeCanonicalAndGetRelative(workDir, pointerContent, "json");
 
+            // Raw Files.write creates standalone and its parent with DEFAULT
             Path standalone = workDir.resolve("src/test/java/a/standalone-approved.json");
             Files.createDirectories(standalone.getParent());
             Files.write(standalone, ("/*a.standalone*/\n" + standaloneContent).getBytes(UTF_8));
@@ -159,6 +221,17 @@ public class ApprovalReinstateTest {
 
             assertEquals(1, result.getPointersReinstated(), "Only pointer files should be counted");
             assertEquals(originalStandalone, readFile(standalone), "Standalone file must be unchanged");
+
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DIRECTORY_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/a/standalone-approved.json"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/b"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/b/pointed-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 
@@ -168,22 +241,23 @@ public class ApprovalReinstateTest {
             Path workDir = workingDir(fs);
             String content = "{\"key\":\"value\",\"nested\":{\"a\":1}}";
 
-            // Simulate: original file → dedup creates canonical + pointer → reinstate
+            // Raw Files.write creates dirs and files with DEFAULT
             Path originalFile = workDir.resolve("src/test/java/x/original-approved.json");
             Files.createDirectories(originalFile.getParent());
             Files.write(originalFile, ("/*x.original*/\n" + content).getBytes(UTF_8));
 
-            // Dedup
             Path anotherFile = workDir.resolve("src/test/java/y/another-approved.json");
             Files.createDirectories(anotherFile.getParent());
             Files.write(anotherFile, ("/*y.another*/\n" + content).getBytes(UTF_8));
+
+            // Dedup: creates shared-approvals dirs with DIRECTORY_CREATE; overwrites both files to FILE_CREATE
             ApprovalDeduplicator dedup = new ApprovalDeduplicator(
                     workDir, workDir.resolve("src/test/java"), SHARED_DIR, 2, false);
             dedup.deduplicate();
 
             assertTrue(readFile(originalFile).contains("/*pointer:"), "Should be pointer after dedup");
 
-            // Reinstate
+            // Reinstate: rewrites both files with FILE_CREATE; deletes canonical; deletes empty shared dirs
             ApprovalReinstate reinstate = new ApprovalReinstate(
                     workDir, workDir.resolve("src/test/java"), SHARED_DIR);
             reinstate.reinstate();
@@ -191,6 +265,17 @@ public class ApprovalReinstateTest {
             String restoredContent = readFile(originalFile);
             assertFalse(restoredContent.contains("/*pointer:"), "Should not be pointer after reinstate");
             assertTrue(restoredContent.contains(content), "Content must match original after reinstate");
+
+            Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
+                    new InMemoryPermissions(ap(workDir, "src"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/x"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/x/original-approved.json"), FILE_CREATE_PERMISSONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/y"), DEFAULT_JIMFS_PERMISSIONS),
+                    new InMemoryPermissions(ap(workDir, "src/test/java/y/another-approved.json"), FILE_CREATE_PERMISSONS)
+            ));
+            assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
         }
     }
 }
