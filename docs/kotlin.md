@@ -10,7 +10,7 @@ Using approvalcrest with Kotlin and JUnit 5 & 6.
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-    <version>1.3.4</version>
+    <version>1.4.0</version>
     <scope>test</scope>
 </dependency>
 ```

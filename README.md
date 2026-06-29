@@ -64,7 +64,7 @@ Choose the artifact that matches your test runner.
 <dependency>
   <groupId>com.github.karsaig</groupId>
   <artifactId>approvalcrest</artifactId>
-  <version>1.3.4</version>
+  <version>1.4.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -75,7 +75,7 @@ Choose the artifact that matches your test runner.
 <dependency>
   <groupId>com.github.karsaig</groupId>
   <artifactId>approvalcrest-junit-jupiter</artifactId>
-  <version>1.3.4</version>
+  <version>1.4.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -86,7 +86,7 @@ Choose the artifact that matches your test runner.
 <dependency>
   <groupId>com.github.karsaig</groupId>
   <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-  <version>1.3.4</version>
+  <version>1.4.0</version>
   <scope>test</scope>
 </dependency>
 ```
@@ -97,7 +97,7 @@ Choose the artifact that matches your test runner.
 <dependency>
   <groupId>com.github.karsaig</groupId>
   <artifactId>approvalcrest-testng</artifactId>
-  <version>1.3.4</version>
+  <version>1.4.0</version>
   <scope>test</scope>
 </dependency>
 ```
