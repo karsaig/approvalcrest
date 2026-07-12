@@ -2,6 +2,8 @@ package com.github.karsaig.approvalcrest;
 
 import com.github.karsaig.approvalcrest.BeanFinder.FanoutResult;
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -264,6 +266,98 @@ public class JsonElementUtilTest {
         assertThat(JsonElementUtil.anyMatchesFieldName("secret", patterns), is(true));
         assertThat(JsonElementUtil.anyMatchesFieldName("keep", patterns), is(false));
         assertThat(JsonElementUtil.anyMatchesFieldName("x", Collections.<Matcher<String>>emptyList()), is(false));
+    }
+
+    // -------------------------------------------------------------------------
+    // filterByFieldMatchers with an IgnoredFieldsTracker (machine-readable output)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void trackerRecordsIgnoredPatternWhenFieldRemoved() {
+        JsonElement json = parse("{\"keep\":\"a\",\"secret\":\"b\"}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        JsonElementUtil.filterByFieldMatchers(json, matchers(equalTo("secret")), tracker,
+                IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN);
+
+        assertThat(tracker.isEmpty(), is(false));
+        IgnoredFieldsTracker.IgnoredField field = tracker.getFields().get(0);
+        assertThat(field.getPath(), is("secret"));
+        assertThat(field.getReason(), is(IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN));
+    }
+
+    @Test
+    void trackerRecordsRemovedEmptyParentWithCauses() {
+        JsonElement json = parse("{\"outer\":{\"secret\":\"b\"}}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        JsonElementUtil.filterByFieldMatchers(json, matchers(equalTo("secret")), tracker,
+                IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN);
+
+        boolean removedEmptyRecorded = tracker.getFields().stream()
+                .anyMatch(f -> f.getReason() == IgnoredFieldsTracker.Reason.REMOVED_EMPTY
+                        && "outer".equals(f.getPath())
+                        && f.getCauses() != null && !f.getCauses().isEmpty());
+        assertThat(removedEmptyRecorded, is(true));
+    }
+
+    // -------------------------------------------------------------------------
+    // applyAliases with an AliasTracker
+    // -------------------------------------------------------------------------
+
+    @Test
+    void aliasTrackerRecordsObjectAlias() {
+        JsonElement json = parse("{\"id\":\"abc\"}");
+        AliasTracker tracker = new AliasTracker();
+
+        JsonElementUtil.applyAliases(json, AliasMap.builder().add("abc", "<id>").build(), tracker);
+
+        assertThat(tracker.isEmpty(), is(false));
+        AliasTracker.AliasedField field = tracker.getFields().get(0);
+        assertThat(field.getPath(), is("id"));
+        assertThat(field.getOriginalValue(), is("abc"));
+        assertThat(field.getAlias(), is("<id>"));
+    }
+
+    @Test
+    void aliasTrackerRecordsArrayElementAliasWithIndex() {
+        JsonElement json = parse("{\"ids\":[\"abc\"]}");
+        AliasTracker tracker = new AliasTracker();
+
+        JsonElementUtil.applyAliases(json, AliasMap.builder().add("abc", "<id>").build(), tracker);
+
+        assertThat(tracker.getFields().get(0).getPath(), is("ids[0]"));
+        assertThat(tracker.getFields().get(0).getAlias(), is("<id>"));
+    }
+
+    @Test
+    void filterByFieldMatchersRemovesFieldsInsideArrayElements() {
+        JsonElement json = parse("[{\"secret\":1,\"keep\":2},{\"secret\":3,\"keep\":4}]");
+
+        JsonElementUtil.filterByFieldMatchers(json, matchers(equalTo("secret")));
+
+        for (JsonElement el : json.getAsJsonArray()) {
+            assertThat(el.getAsJsonObject().has("secret"), is(false));
+            assertThat(el.getAsJsonObject().has("keep"), is(true));
+        }
+    }
+
+    @Test
+    void collectValuesRecursesThroughArrays() {
+        JsonElement json = parse("{\"list\":[{\"id\":1},{\"id\":2}],\"other\":{\"id\":3}}");
+
+        List<JsonElement> values = JsonElementUtil.collectValuesByFieldNamePattern(json, equalTo("id"));
+
+        assertThat(values, hasSize(3));
+    }
+
+    @Test
+    void findJsonValueThroughNullMidPathReturnsNull() {
+        Either<RuntimeException, Object> result =
+                JsonElementUtil.findJsonValueAt("a.b", parse("{\"a\":null}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is((Object) null));
     }
 
     private static List<Matcher<String>> matchers(Matcher<String> matcher) {

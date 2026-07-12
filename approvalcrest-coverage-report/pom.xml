@@ -128,6 +128,35 @@
                         <goals>
                             <goal>report-aggregate</goal>
                         </goals>
+                        <configuration>
+                            <!-- Exclude code that is not our product logic or is unreachable in
+                                 this build, so the coverage figure reflects testable code:
+                                 - vendored Gson GraphAdapterBuilder (upstream, not maintained here)
+                                 - the UnsafeFieldTypeAdapter inner classes, which only run on a JDK
+                                   where runtime module-opening fails (unreachable when it succeeds);
+                                   the enclosing factory's shouldSkip logic stays measured
+                                 - Maven mojo entry points that merely delegate to tested classes
+                                 - the MatcherFile DTO (getters/setters) -->
+                            <excludes>
+                                <exclude>com/google/gson/graph/**</exclude>
+                                <exclude>**/UnsafeFieldTypeAdapterFactory$UnsafeFieldTypeAdapter*</exclude>
+                                <exclude>**/UnsafeFieldTypeAdapterFactory$FieldInfo*</exclude>
+                                <exclude>**/dedup/DedupMojo*</exclude>
+                                <exclude>**/dedup/ReinstateMojo*</exclude>
+                                <exclude>**/matcher/file/MatcherFile*</exclude>
+                                <!-- Kotlin extension file-facade classes. These are exercised by
+                                     the Kotlin integration tests (KotlinExtensionFunctionTest), but
+                                     JaCoCo cannot attribute that coverage: the integration module
+                                     loads them from the kotlin module's SHADED jar (maven-shade
+                                     minimizeJar rewrites the bytecode), whose class id no longer
+                                     matches the original target/classes analysed by report-aggregate.
+                                     The result is a spurious 0% for tested code, so they are excluded
+                                     as a measurement artifact rather than a real coverage gap. -->
+                                <exclude>**/kotlin/matcher/JsonMatcherExtensionsKt*</exclude>
+                                <exclude>**/kotlin/matcher/DiagnosingCustomisableMatcherExtensionsKt*</exclude>
+                                <exclude>**/kotlin/matcher/ContentMatcherExtensionsKt*</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

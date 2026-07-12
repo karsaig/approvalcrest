@@ -228,6 +228,69 @@ public class FieldsIgnorerTest {
     // -------------------------------------------------------------------------
 
     @Test
+    void ignoresNestedPathDescendingThroughEnvelopeKey() {
+        // "a" only exists under the 0x1 envelope; ignoring "a.b" must descend into it.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":\"drop\",\"keep\":\"c\"}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        JsonObject a = json.getAsJsonObject("0x1").getAsJsonObject("a");
+        assertThat(a.has("b"), is(false));
+        assertThat(a.has("keep"), is(true));
+    }
+
+    @Test
+    void ignoresLeafPathWhereFieldLivesUnderEnvelopeKey() {
+        // Last-segment removal falls back to descending envelope keys.
+        JsonObject json = parseObject("{\"a\":{\"0x1\":{\"b\":\"drop\"}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.getAsJsonObject("a").getAsJsonObject("0x1").has("b"), is(false));
+    }
+
+    @Test
+    void ignoresPathUnderMarkedFieldEmptyingIt() {
+        // The ignored path is resolved against a field queued for sorting (MARKER prefix);
+        // its leaf is removed, leaving the marked object empty.
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MARKER + "a\":{\"b\":\"drop\"}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").has("b"), is(false));
+        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").size(), is(0));
+    }
+
+    @Test
+    void removesElementsByMatcherRule() {
+        JsonObject json = parseObject(
+                "{\"tags\":[{\"n\":5},{\"n\":50},{\"n\":500}]}");
+        List<ElementIgnoreRule> rules =
+                Arrays.asList(ElementIgnoreRule.of("tags.n", org.hamcrest.Matchers.greaterThan(10L)));
+
+        FieldsIgnorer.removeMatchingElements(json, rules, null);
+
+        // only n=5 survives (50 and 500 are > 10)
+        JsonArray tags = json.getAsJsonArray("tags");
+        assertThat(tags.size(), is(1));
+        assertThat(tags.get(0).getAsJsonObject().get("n").getAsInt(), is(5));
+    }
+
+    @Test
+    void elementRuleKeepsNonObjectArrayElements() {
+        // Primitive array elements are never matched/removed by an element rule.
+        JsonObject json = parseObject("{\"tags\":[\"plain\",{\"system\":\"drop\"}]}");
+        List<ElementIgnoreRule> rules =
+                Arrays.asList(ElementIgnoreRule.ofValue("tags.system", "drop"));
+
+        FieldsIgnorer.removeMatchingElements(json, rules, null);
+
+        JsonArray tags = json.getAsJsonArray("tags");
+        assertThat(tags.size(), is(1));
+        assertThat(tags.get(0).getAsString(), is("plain"));
+    }
+
+    @Test
     void recognisesGraphAdapterKeys() {
         assertThat(FieldsIgnorer.isGraphAdapterKey("0x1"), is(true));
         assertThat(FieldsIgnorer.isGraphAdapterKey("0xabc123"), is(true));

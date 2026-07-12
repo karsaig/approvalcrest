@@ -432,5 +432,42 @@ public class AliasMapTest {
         // "name" field: exact entry doesn't match (field is "id"), wildcard does
         assertThat(map.resolve("x", "name", "target"), is(Optional.of("<from-wildcard>")));
     }
+
+    // -------------------------------------------------------------------------
+    // Function-resolver builder overloads (dynamic aliases)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void valueOnlyWithFunctionResolver() {
+        AliasMap map = AliasMap.builder()
+                .add("abc-123", v -> "<len:" + v.length() + ">")
+                .build();
+
+        assertThat(map.resolve("x.id", "id", "abc-123"), is(Optional.of("<len:7>")));
+        assertThat(map.resolve("x.id", "id", "other"), is(Optional.empty()));
+    }
+
+    @Test
+    void fieldAndValueWithFunctionResolver() {
+        AliasMap map = AliasMap.builder()
+                .add("id", "abc", v -> "<" + v.toUpperCase() + ">")
+                .build();
+
+        assertThat(map.resolve("user.id", "id", "abc"), is(Optional.of("<ABC>")));
+        // wrong field → no match
+        assertThat(map.resolve("user.name", "name", "abc"), is(Optional.empty()));
+    }
+
+    @Test
+    void patternFieldAndValueWithFunctionResolver() {
+        AliasMap map = AliasMap.builder()
+                .addByPattern(Pattern.compile(".*[Ii]d$"), Pattern.compile("\\d+"),
+                        v -> "<num:" + v + ">")
+                .build();
+
+        assertThat(map.resolve("user.userId", "userId", "42"), is(Optional.of("<num:42>")));
+        // value doesn't match the value pattern → no match
+        assertThat(map.resolve("user.userId", "userId", "notdigits"), is(Optional.empty()));
+    }
 }
 
