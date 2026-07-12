@@ -53,6 +53,14 @@ fun <T, V> DiagnosingCustomisableMatcher<T>.withMatcher(fieldNamePattern: Matche
     (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withMatcher(fieldNamePattern, matcher)
 
 @Suppress("UNCHECKED_CAST")
+fun <T> DiagnosingCustomisableMatcher<T>.ignoringElementsWhere(elementFieldPath: String, valueMatcher: Matcher<*>): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).ignoringElementsWhere(elementFieldPath, valueMatcher)
+
+@Suppress("UNCHECKED_CAST")
+fun <T> DiagnosingCustomisableMatcher<T>.ignoringElementsWhere(elementFieldPath: String, value: String): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).ignoringElementsWhere(elementFieldPath, value)
+
+@Suppress("UNCHECKED_CAST")
 fun <T> DiagnosingCustomisableMatcher<T>.withGsonConfiguration(configuration: GsonConfiguration): DiagnosingCustomisableMatcher<T> =
     (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withGsonConfiguration(configuration)
 

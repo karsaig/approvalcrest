@@ -3,6 +3,11 @@
 Changelog
 ===========
 
+Version 1.4.1 - 2026/07/12
+-----
+
+- Added `ignoringElementsWhere` to remove array elements from the comparison based on the value of a nested field. The path points at a field within each element; the innermost array on the path is filtered, and every element whose leaf field value satisfies the given matcher (or equals the given String) is removed before comparison. Intermediate collections are traversed transparently, so a path such as `entry.resource.meta.tag.system` filters the `tag` array of every `entry`. Works with `sameBeanAs` and `sameJsonAsApproved`. See [ignoring-fields](docs/ignoring-fields.md).
+
 Version 1.4.0 - 2026/06/29
 -----
 

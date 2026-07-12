@@ -36,6 +36,7 @@ import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperties
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applySorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollectionSorting;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeMatchingElements;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeSetMarker;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
@@ -155,6 +156,18 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
+    public DiagnosingCustomisableMatcher<T> ignoringElementsWhere(String elementFieldPath, Matcher<?> valueMatcher) {
+        matcherConfiguration.addElementIgnoreRule(elementFieldPath, valueMatcher);
+        return this;
+    }
+
+    @Override
+    public DiagnosingCustomisableMatcher<T> ignoringElementsWhere(String elementFieldPath, String value) {
+        matcherConfiguration.addElementIgnoreRule(elementFieldPath, value);
+        return this;
+    }
+
+    @Override
     public DiagnosingCustomisableMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
         this.configuration = configuration;
         return this;
@@ -195,6 +208,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         }
 
         JsonElement filteredJson = findPaths(preComputedJson, set, tracker, reasonMap);
+        removeMatchingElements(filteredJson, matcherConfiguration.getElementIgnoreRules(), tracker);
         JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration, tracker);
         AliasMap aliasMap = matcherConfiguration.getAliasMap();
         if (!aliasMap.isEmpty()) {

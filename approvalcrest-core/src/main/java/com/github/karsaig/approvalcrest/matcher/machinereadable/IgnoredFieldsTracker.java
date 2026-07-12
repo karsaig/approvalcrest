@@ -15,6 +15,7 @@ public class IgnoredFieldsTracker {
         IGNORE_PATTERN,
         CUSTOM_MATCHER,
         CUSTOM_MATCHER_PATTERN,
+        IGNORE_ELEMENT_MATCH,
         REMOVED_EMPTY
     }
 

@@ -112,7 +112,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [sameBeanAs](docs/same-bean-as.md) | Bean-to-bean comparison |
 | [sameJsonAsApproved](docs/same-json-as-approved.md) | JSON approval workflow and file naming |
 | [sameContentAsApproved](docs/same-content-as-approved.md) | Raw-text approval workflow |
-| [Ignoring fields](docs/ignoring-fields.md) | `.ignoring()` by path, Hamcrest matcher, or type |
+| [Ignoring fields](docs/ignoring-fields.md) | `.ignoring()` by path, Hamcrest matcher, or type; `.ignoringElementsWhere()` to drop array elements by value |
 | [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` for field-level assertions |
 | [Sorting](docs/sorting.md) | Stable collection ordering |
 | [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
