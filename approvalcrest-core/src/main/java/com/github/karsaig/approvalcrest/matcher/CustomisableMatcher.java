@@ -89,6 +89,35 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     <V> U withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher);
 
     /**
+     * Remove array elements from the comparison based on the value of a nested field. The path
+     * points at a field <em>within each element</em> of an array; the innermost array on the path
+     * is the one filtered. Every element whose leaf field value satisfies {@code valueMatcher} is
+     * removed before comparison. Intermediate collections are traversed transparently (fan-out),
+     * so a path such as {@code entry.resource.meta.tag.system} filters the {@code tag} array of
+     * every {@code entry}. Missing, empty or non-array paths are a silent no-op.
+     * Example:
+     * <pre>sameJsonAsApproved().ignoringElementsWhere("meta.tag.system", equalTo(FLOW_ID_TAG_SYSTEM))</pre>
+     *
+     * @param elementFieldPath the dot-separated path to the field within each array element.
+     * @param valueMatcher     the Hamcrest matcher applied to that field's value to select elements
+     *                         for removal.
+     * @return the instance of the matcher
+     */
+    U ignoringElementsWhere(String elementFieldPath, Matcher<?> valueMatcher);
+
+    /**
+     * Convenience form of {@link #ignoringElementsWhere(String, Matcher)} that removes elements
+     * whose leaf field, coerced to a String, equals {@code value}.
+     * Example:
+     * <pre>sameJsonAsApproved().ignoringElementsWhere("meta.tag.system", FLOW_ID_TAG_SYSTEM)</pre>
+     *
+     * @param elementFieldPath the dot-separated path to the field within each array element.
+     * @param value            the value to compare the field's coerced String value against.
+     * @return the instance of the matcher
+     */
+    U ignoringElementsWhere(String elementFieldPath, String value);
+
+    /**
      * Specify a custom configuration for the Gson, for example, providing additional TypeAdapters.
      *
      * @param configuration {@link GsonConfiguration} object, containing TypeAdapterFactories, TypeAdapters and

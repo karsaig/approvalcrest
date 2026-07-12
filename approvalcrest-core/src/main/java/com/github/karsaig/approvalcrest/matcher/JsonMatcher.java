@@ -110,6 +110,18 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     @Override
+    public JsonMatcher<T> ignoringElementsWhere(String elementFieldPath, Matcher<?> valueMatcher) {
+        matcherConfiguration.addElementIgnoreRule(elementFieldPath, valueMatcher);
+        return this;
+    }
+
+    @Override
+    public JsonMatcher<T> ignoringElementsWhere(String elementFieldPath, String value) {
+        matcherConfiguration.addElementIgnoreRule(elementFieldPath, value);
+        return this;
+    }
+
+    @Override
     public JsonMatcher<T> withGsonConfiguration(GsonConfiguration configuration) {
         this.configuration = configuration;
         return this;
@@ -213,6 +225,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         JsonElement filteredJson = findPaths(jsonElement, set, ignoredTracker, reasonMap);
         JsonElementUtil.filterByFieldMatchers(filteredJson, skipIgnores ? emptyList() : matcherConfiguration.getPatternsToIgnore(), ignoredTracker, Reason.IGNORE_PATTERN);
         if (!skipIgnores) {
+            removeMatchingElements(filteredJson, matcherConfiguration.getElementIgnoreRules(), ignoredTracker);
             JsonElementUtil.filterByCustomMatcherPatterns(filteredJson, matcherConfiguration, ignoredTracker);
         }
         AliasMap aliasMap = matcherConfiguration.getAliasMap();

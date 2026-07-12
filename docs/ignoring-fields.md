@@ -2,7 +2,7 @@
 
 # ignoring-fields
 
-Exclude specific fields from comparison using path, Hamcrest matcher, or type.
+Exclude specific fields from comparison using path, Hamcrest matcher, or type — or remove whole array elements by value with `ignoringElementsWhere`.
 
 Works with `sameBeanAs` and `sameJsonAsApproved`. Multiple `.ignoring()` calls can be chained.
 
@@ -59,6 +59,42 @@ assertThat(actual, sameJsonAsApproved()
 ```
 
 This works identically whether the type is `List`, `Set`, any `Collection` subtype, or a JSON array. Paths through empty collections do nothing silently.
+
+## Removing Array Elements by Value
+
+`.ignoring()` removes *fields*; it cannot drop an individual array element based on what that element contains. `.ignoringElementsWhere()` fills that gap: it removes the array elements whose nested field has a given value.
+
+The path points at a field **within each element**. The **innermost array on the path** is the one filtered — every element whose leaf field value satisfies the matcher is removed:
+
+```java
+import static org.hamcrest.Matchers.equalTo;
+
+// meta.tag is an array of { system, code, ... }; remove the elements
+// whose system is the tracking system, keeping the rest of the array.
+assertThat(actual, sameJsonAsApproved()
+    .ignoringElementsWhere("meta.tag.system", equalTo(FLOW_ID_TAG_SYSTEM)));
+```
+
+Any `Matcher` works (`startsWith`, `greaterThan`, `not(...)`, …). A convenience overload takes a plain `String`, matching the field's value coerced to a String:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .ignoringElementsWhere("meta.tag.system", FLOW_ID_TAG_SYSTEM));
+```
+
+Like the other ignore styles, the path fans out through intermediate collections, so it works for nested structures such as a FHIR `Bundle` — this removes matching `tag` elements from every entry's resource, not the entries themselves:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .ignoringElementsWhere("entry.resource.meta.tag.system", equalTo(FLOW_ID_TAG_SYSTEM)));
+```
+
+Behaviour:
+
+- Matching happens against the **serialized JSON** field names. When the input is a JSON string (or a value that serializes with those names) the path is written exactly as it appears in the JSON. Objects that serialize under different internal names (for example raw library model objects with a custom Gson `TypeAdapter`) must expose the JSON-level names for the path to match.
+- If **all** elements match, the array is left empty (`[]`) rather than removed — the approved file is expected to contain the empty array after regeneration.
+- An element without the leaf field, or that is not a JSON object, is kept. A missing, empty or non-array path is a silent no-op.
+- In strict file matching (the default), elements are removed from the **actual** side only, so the approved file must be regenerated to drop them — identical to how `.ignoring()` behaves.
 
 ## By Hamcrest Matcher on Field Name
 

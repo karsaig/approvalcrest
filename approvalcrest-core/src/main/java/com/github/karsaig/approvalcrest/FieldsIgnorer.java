@@ -213,6 +213,87 @@ public class FieldsIgnorer {
         }
     }
 
+    /**
+     * Remove array elements matching the given rules. Each rule's path points at a field within
+     * an array's elements; the innermost array on the path is filtered. Intermediate arrays are
+     * traversed transparently (fan-out), so a path such as {@code entry.resource.meta.tag.system}
+     * filters the {@code tag} array of every {@code entry}. Missing, empty or non-array paths are
+     * a silent no-op; an element without the leaf field, or that is not a JSON object, is kept.
+     */
+    public static void removeMatchingElements(JsonElement root, List<ElementIgnoreRule> rules, IgnoredFieldsTracker tracker) {
+        if (root == null || root.isJsonNull() || rules == null || rules.isEmpty()) {
+            return;
+        }
+        for (ElementIgnoreRule rule : rules) {
+            List<String> segments = asList(rule.getPath().split(PATH_SEPARATOR_PATTERN));
+            if (segments.isEmpty()) {
+                continue;
+            }
+            String leafField = segments.get(segments.size() - 1);
+            List<String> prefix = segments.subList(0, segments.size() - 1);
+            removeMatchingElements(root, prefix, leafField, rule, tracker, "");
+        }
+    }
+
+    private static void removeMatchingElements(JsonElement element, List<String> prefix, String leafField,
+                                               ElementIgnoreRule rule, IgnoredFieldsTracker tracker, String currentPath) {
+        if (element == null || element.isJsonNull()) {
+            return;
+        }
+        if (element.isJsonArray()) {
+            if (prefix.isEmpty()) {
+                filterArray(element.getAsJsonArray(), leafField, rule, tracker, currentPath);
+            } else {
+                for (JsonElement child : element.getAsJsonArray()) {
+                    removeMatchingElements(child, prefix, leafField, rule, tracker, currentPath);
+                }
+            }
+            return;
+        }
+        if (prefix.isEmpty() || !element.isJsonObject()) {
+            return;
+        }
+        JsonObject jo = element.getAsJsonObject();
+        String field = headOf(prefix);
+        List<String> tail = prefix.subList(1, prefix.size());
+        String childPath = currentPath.isEmpty() ? field : currentPath + "." + field;
+        JsonElement child = getChild(jo, field);
+        if (child != null) {
+            removeMatchingElements(child, tail, leafField, rule, tracker, childPath);
+        } else {
+            // Descend through GraphAdapter envelope keys transparently.
+            for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
+                if (isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
+                    removeMatchingElements(entry.getValue(), prefix, leafField, rule, tracker, currentPath);
+                }
+            }
+        }
+    }
+
+    private static void filterArray(JsonArray array, String leafField, ElementIgnoreRule rule,
+                                    IgnoredFieldsTracker tracker, String arrayPath) {
+        Iterator<JsonElement> iterator = array.iterator();
+        int idx = 0;
+        while (iterator.hasNext()) {
+            JsonElement arrayElement = iterator.next();
+            if (arrayElement.isJsonObject() && rule.matches(getChild(arrayElement.getAsJsonObject(), leafField))) {
+                iterator.remove();
+                if (tracker != null) {
+                    tracker.recordIgnored(arrayPath + "[" + idx + "]", IgnoredFieldsTracker.Reason.IGNORE_ELEMENT_MATCH);
+                }
+            }
+            idx++;
+        }
+    }
+
+    private static JsonElement getChild(JsonObject jo, String field) {
+        JsonElement child = jo.get(field);
+        if (child == null) {
+            child = jo.get(MARKER + field);
+        }
+        return child;
+    }
+
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
         applySorting(jsonElement, pathsToSort, fieldMatchersToSort, sortFile, null);
     }

@@ -33,6 +33,7 @@ public class MatcherConfiguration {
     private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
     private final List<Class<?>> typesToSort = new ArrayList<>();
     private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
+    private final List<ElementIgnoreRule> elementIgnoreRules = new ArrayList<>();
     private AliasMap aliasMap = AliasMap.builder().build();
     private boolean serializeNulls = getBooleanProperties("true", SERIALIZE_NULLS_PROPERTY, SERIALIZE_NULLS_ALIAS);
 
@@ -74,6 +75,20 @@ public class MatcherConfiguration {
 
     public List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> getCustomMatcherPatterns() {
         return customMatcherPatterns;
+    }
+
+    public List<ElementIgnoreRule> getElementIgnoreRules() {
+        return elementIgnoreRules;
+    }
+
+    public MatcherConfiguration addElementIgnoreRule(String path, Matcher<?> valueMatcher) {
+        elementIgnoreRules.add(ElementIgnoreRule.of(path, valueMatcher));
+        return this;
+    }
+
+    public MatcherConfiguration addElementIgnoreRule(String path, String value) {
+        elementIgnoreRules.add(ElementIgnoreRule.ofValue(path, value));
+        return this;
     }
 
     public MatcherConfiguration addPathToIgnore(String path) {

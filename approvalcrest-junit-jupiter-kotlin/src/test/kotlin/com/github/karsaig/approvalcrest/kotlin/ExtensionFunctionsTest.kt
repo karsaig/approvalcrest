@@ -2,9 +2,11 @@ package com.github.karsaig.approvalcrest.kotlin
 
 import com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers
+import com.github.karsaig.approvalcrest.kotlin.matcher.ignoringElementsWhere
 import com.github.karsaig.approvalcrest.kotlin.matcher.sortType
 import com.github.karsaig.approvalcrest.kotlin.matcher.withMachineReadableOutput
 import com.github.karsaig.approvalcrest.kotlin.matcher.withoutSerializingNulls
+import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
@@ -82,6 +84,26 @@ class ExtensionFunctionsTest {
         val matcher = Matchers.sameJsonAsApproved<TestBean>().sortType(String::class.java)
         assertNotNull(matcher)
     }
+
+    @Test
+    fun ignoringElementsWhereCanBeChainedOnBeanMatcher() {
+        val actual = MetaBean(listOf(Tag("tracking", "flow-1"), Tag("real", "keep")))
+        val expected = MetaBean(listOf(Tag("real", "keep")))
+        val matcher = Matchers.sameBeanAs(expected)
+            .ignoringElementsWhere("tag.system", equalTo("tracking"))
+        assertNotNull(matcher)
+        assertThat(actual, matcher)
+    }
+
+    @Test
+    fun ignoringElementsWhereStringFormCanBeChainedOnJsonMatcher() {
+        val matcher = Matchers.sameJsonAsApproved<MetaBean>()
+            .ignoringElementsWhere("tag.system", "tracking")
+        assertNotNull(matcher)
+    }
+
+    private data class Tag(val system: String, val code: String)
+    private data class MetaBean(val tag: List<Tag>)
 
     @Test
     fun withMachineReadableOutputCanBeChainedOnContentMatcher() {
