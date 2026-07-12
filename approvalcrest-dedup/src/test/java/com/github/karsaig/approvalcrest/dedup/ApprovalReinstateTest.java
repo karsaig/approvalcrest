@@ -236,6 +236,37 @@ public class ApprovalReinstateTest {
     }
 
     @Test
+    public void reinstateHandlesContentPointersAndSkipsNonApprovedFiles() throws IOException {
+        try (FileSystem fs = newFs()) {
+            Path workDir = workingDir(fs);
+            String content = "plain text body";
+
+            // A .content pointer → exercises getExtension("content") and utilsFor("content").
+            String canonicalRelative = writeCanonicalAndGetRelative(workDir, content, "content");
+            Path contentPointer = writePointerFile(workDir,
+                    "src/test/java/a/test-approved.content", "a.test", canonicalRelative);
+
+            // A -not-approved file and a non-approved file must both be ignored by isApprovedFileName.
+            Path notApproved = workDir.resolve("src/test/java/a/test-not-approved.json");
+            Files.write(notApproved, "ignore me".getBytes(UTF_8));
+            Path random = workDir.resolve("src/test/java/a/README.txt");
+            Files.write(random, "readme".getBytes(UTF_8));
+
+            ApprovalReinstate reinstate = new ApprovalReinstate(
+                    workDir, workDir.resolve("src/test/java"), SHARED_DIR);
+            ApprovalReinstate.ReinstateResult result = reinstate.reinstate();
+
+            assertEquals(1, result.getPointersReinstated(), "Only the .content pointer is reinstated");
+            String reinstated = readFile(contentPointer);
+            assertFalse(reinstated.contains("/*pointer:"));
+            assertTrue(reinstated.contains(content));
+            // Non-approved files are untouched.
+            assertEquals("ignore me", readFile(notApproved));
+            assertEquals("readme", readFile(random));
+        }
+    }
+
+    @Test
     public void reinstateRoundtripMatchesOriginalContent() throws IOException {
         try (FileSystem fs = newFs()) {
             Path workDir = workingDir(fs);
