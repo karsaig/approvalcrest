@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>approvalcrest-parent</artifactId>
+        <groupId>com.github.karsaig</groupId>
+        <version>1.4.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>approvalcrest-coverage-report</artifactId>
+    <packaging>pom</packaging>
+    <name>Approvalcrest-coverage-report</name>
+    <description>Aggregated JaCoCo coverage report across all modules. Never published to Maven Central;
+        only built under the 'coverage' profile.</description>
+
+    <!--
+        This module produces a single aggregated coverage report via jacoco:report-aggregate. JaCoCo reads
+        execution data (target/jacoco.exec) and analysed classes/sources from every module listed below:
+          - the library modules contribute their production classes + sources, and
+          - the *-integration-tests modules contribute the execution data that actually exercises them
+            (their tests run in the integration-test phase, reached by 'mvn verify').
+        testing-common is intentionally omitted so test-support code does not dilute the coverage figure.
+    -->
+    <dependencies>
+        <!-- Library modules: production classes + sources to analyse. -->
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-dedup</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-jupiter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-testng</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Integration-test modules: execution data covering the library modules above. -->
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-junit-jupiter-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-vintage-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-testng-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-testng-integration-tests-testng6</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-junit-jupiter-kotlin-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- These integration-test modules only exist under the junit6* profiles (JDK >= 17). The coverage
+             build always runs on JDK 25 (java.version.to.run=25), so they are present in the reactor. -->
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-junit-jupiter-integration-tests-junit6</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-vintage-integration-tests-junit6</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-jdk17-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Report-only aggregation module: disable convergence enforcement, which the wide mix of
+                 junit/testng/kotlin transitive dependencies pulled in here would otherwise fail. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>report-aggregate</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
