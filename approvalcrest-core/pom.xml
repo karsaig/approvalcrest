@@ -135,6 +135,7 @@
                                 <exclude>**/ReflectModeFallback*.java</exclude>
                             </excludes>
                             <argLine>
+                                @{argLine}
                                 -Dfile.encoding=UTF-8
                                 -DapprovalcrestReflection=force
                                 --add-opens java.base/java.lang=ALL-UNNAMED
@@ -157,7 +158,7 @@
                         </goals>
                         <configuration>
                             <excludes combine.self="override"/>
-                            <argLine>-Dfile.encoding=UTF-8 -DapprovalcrestReflection=fallback</argLine>
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 -DapprovalcrestReflection=fallback</argLine>
                             <includes>
                                 <include>**/ReflectModeFallback*.java</include>
                             </includes>

@@ -40,6 +40,10 @@
         <maven.versions.plugin.version>2.21.0</maven.versions.plugin.version>
         <maven.enforcer.plugin.version>3.6.3</maven.enforcer.plugin.version>
         <mockito.jupiter.version>5.23.0</mockito.jupiter.version>
+        <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
+        <!-- Empty default so surefire's @{argLine} resolves cleanly when the coverage profile is inactive.
+             The coverage profile's jacoco:prepare-agent overrides this with the agent argument. -->
+        <argLine></argLine>
     </properties>
 
     <licenses>
@@ -160,7 +164,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven.surefire.plugin.version}</version>
                     <configuration>
-                        <argLine>-Dfile.encoding=UTF-8</argLine>
+                        <argLine>@{argLine} -Dfile.encoding=UTF-8</argLine>
                     </configuration>
                 </plugin>
             </plugins>
@@ -168,6 +172,29 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>coverage</id>
+            <modules>
+                <module>approvalcrest-coverage-report</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>sign-release</id>
             <build>
