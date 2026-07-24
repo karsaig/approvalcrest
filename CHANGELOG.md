@@ -3,6 +3,11 @@
 Changelog
 ===========
 
+Version 1.4.2 - Unreleased
+-----
+
+- Added the `fileMatcherSourceRoot` property (alias `fmSourceRoot`) to configure the test source directory approved files are stored in. Defaults to `src/test/java`; set it to e.g. `src/it/java` or `src/test/kotlin` when tests live outside the standard directory.
+
 Version 1.4.1 - 2026/07/12
 -----
 

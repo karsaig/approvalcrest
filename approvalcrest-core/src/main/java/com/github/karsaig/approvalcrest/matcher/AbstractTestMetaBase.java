@@ -8,9 +8,13 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.github.karsaig.approvalcrest.EnvVarReader;
+
 public abstract class AbstractTestMetaBase implements TestMetaInformation {
 
     protected static final String SRC_TEST_JAVA_PATH = "src" + File.separator + "test" + File.separator + "java" + File.separator;
+    private static final String SOURCE_ROOT_NAME = "fileMatcherSourceRoot";
+    private static final String SOURCE_ROOT_ALIAS = "fmSourceRoot";
     protected static final Pattern DOT_LITERAL_PATTERN = Pattern.compile(".", Pattern.LITERAL);
     protected static final Path APPROVED_DIRECTORY = Paths.get("src" + File.separator + "test" + File.separator + "resources" + File.separator + "approvalcrest");
 
@@ -53,7 +57,16 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
     }
 
     protected static String getSourceRoutePathString() {
-        return SRC_TEST_JAVA_PATH;
+        String configured = EnvVarReader.getStringProperties(SRC_TEST_JAVA_PATH, SOURCE_ROOT_NAME, SOURCE_ROOT_ALIAS);
+        return normalizeSourceRoot(configured);
+    }
+
+    private static String normalizeSourceRoot(String sourceRoot) {
+        String normalized = sourceRoot.replace('/', File.separatorChar).replace('\\', File.separatorChar);
+        if (!normalized.endsWith(File.separator)) {
+            normalized = normalized + File.separator;
+        }
+        return normalized;
     }
 
     protected static StackTraceElement findTestStackTraceElement(StackTraceElement[] stackTrace, Predicate<StackTraceElement> isTestMethod) {
