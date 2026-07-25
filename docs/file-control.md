@@ -91,6 +91,20 @@ assertThat(actual, sameJsonAsApproved()
 
 **Migration from pre-1.0.1:** previously `withRelativePathName("snapshots")` wrote to `{testClassPath}/snapshots/`. Move existing approved files to `{workingDir}/snapshots/<classHash>/`.
 
+## Configuring the test source root
+
+By default approved files are stored alongside the test class under `src/test/java`. When your tests live in a different source directory — integration tests under `src/it/java`, or Kotlin/Groovy tests under `src/test/kotlin` — point approvalcrest at that directory with the `fileMatcherSourceRoot` property (alias `fmSourceRoot`):
+
+```bash
+# Integration tests under src/it/java
+mvn verify -DfileMatcherSourceRoot=src/it/java
+
+# Kotlin tests under src/test/kotlin (short alias)
+mvn test -DfmSourceRoot=src/test/kotlin
+```
+
+The value is a path relative to the project root and defaults to `src/test/java`. It sets the base directory the test class's package path is appended to when resolving approved files, so `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. Per-matcher overrides (`.withPath`, `.withPathName`, `.withRelativePathName`) still take precedence when set.
+
 ## Migration from pre-1.0.0 Without Moving Files
 
 In pre-1.0.0, `withPathName(str)` resolved relative to the **working directory**. Since 1.0.0, it resolves relative to **testClassPath**. If your tests used `withPathName` with a path from the project root, the approved files would now be looked up under the wrong directory.
