@@ -165,14 +165,11 @@ public class CoreBugReproTest {
     }
 
     /**
-     * Finding 2.2 - the approved-file header is written with a hardcoded LF but parsed with a
-     * literal indexOf("*&#47;\n"). A CRLF file (Windows checkout with core.autocrlf=true, and the
-     * repo ships no .gitattributes) fails to parse, so the comment header is never stripped.
-     *
-     * <p>Correct behaviour: the header is stripped regardless of line ending.
+     * The header is written with a LF but must parse regardless of line ending, because a Windows
+     * checkout with core.autocrlf=true turns it into a CRLF.
      */
     @Test
-    public void crlfHeaderIsNotStrippedOnRead() throws IOException {
+    public void headerIsStrippedForBothLfAndCrlfFiles() throws IOException {
         try (FileSystem fs = Jimfs.newFileSystem(InMemoryFsUtil.JIMFS_UNIX_CONFIG)) {
             Path workDir = fs.getPath("/work");
             Files.createDirectories(workDir);
@@ -186,17 +183,16 @@ public class CoreBugReproTest {
             Path crlf = workDir.resolve("crlf-approved.json");
             Files.write(crlf, "/*comment*/\r\n{\"v\":1}".getBytes(StandardCharsets.UTF_8));
 
-            // BUG: header not stripped, caller gets the raw file including the comment.
-            assertEquals("/*comment*/\r\n{\"v\":1}", utils.readFile(crlf, workDir),
-                    "BUG 2.2: CRLF file returned with its comment header still attached");
+            assertEquals("{\"v\":1}", utils.readFile(crlf, workDir),
+                    "CRLF file: header must be stripped too");
         }
     }
 
     /**
-     * Finding 2.2, consequence - a CRLF pointer file is not recognised as a pointer at all.
+     * A CRLF pointer file must be recognised as a pointer.
      */
     @Test
-    public void crlfPointerFileIsNotRecognisedAsAPointer() throws IOException {
+    public void pointerFileIsRecognisedForBothLfAndCrlf() throws IOException {
         try (FileSystem fs = Jimfs.newFileSystem(InMemoryFsUtil.JIMFS_UNIX_CONFIG)) {
             Path workDir = fs.getPath("/work");
             Files.createDirectories(workDir);
@@ -210,9 +206,9 @@ public class CoreBugReproTest {
             Path crlf = workDir.resolve("crlf-approved.json");
             Files.write(crlf, "/*c*/\r\n/*pointer:shared/ab/x-approved.json*/".getBytes(StandardCharsets.UTF_8));
 
-            // BUG: identical pointer with CRLF is invisible to the pointer machinery.
-            assertFalse(utils.isPointerFile(crlf),
-                    "BUG 2.2: CRLF pointer file not recognised - dedup and reinstate silently skip it");
+            assertTrue(utils.isPointerFile(crlf), "CRLF pointer must be detected too");
+            assertEquals("shared/ab/x-approved.json", utils.readPointerTarget(crlf).orElse(null),
+                    "CRLF pointer target must parse without a trailing carriage return");
         }
     }
 }

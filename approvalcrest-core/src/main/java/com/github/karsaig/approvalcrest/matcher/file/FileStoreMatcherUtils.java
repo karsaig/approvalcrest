@@ -131,6 +131,36 @@ public class FileStoreMatcherUtils {
         return file;
     }
 
+    /**
+     * Returns the file content with its {@code /*comment*}{@code /} header and the newline that
+     * terminates it removed, or {@code null} if the content has no parseable header.
+     *
+     * <p>Headers are always written with a LF, but an approved file checked out on Windows with
+     * {@code core.autocrlf=true} arrives with a CRLF, so both are accepted. Matching the old
+     * behaviour, a {@code *}{@code /} that is not followed by a newline does not terminate the
+     * header and the search continues.
+     */
+    private static String contentAfterHeader(String fileContent) {
+        if (!fileContent.startsWith("/*")) {
+            return null;
+        }
+        int from = 2;
+        while (true) {
+            int terminator = fileContent.indexOf("*/", from);
+            if (terminator < 0) {
+                return null;
+            }
+            int afterTerminator = terminator + 2;
+            if (fileContent.startsWith("\r\n", afterTerminator)) {
+                return fileContent.substring(afterTerminator + 2);
+            }
+            if (fileContent.startsWith("\n", afterTerminator)) {
+                return fileContent.substring(afterTerminator + 1);
+            }
+            from = afterTerminator;
+        }
+    }
+
     public String readFile(Path file) throws IOException {
         return readFile(file, null);
     }
@@ -144,37 +174,27 @@ public class FileStoreMatcherUtils {
             throw new IllegalStateException("Pointer chain depth exceeded " + MAX_POINTER_DEPTH + " hops, possible cycle at: " + file);
         }
         String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                if (content.startsWith(POINTER_PREFIX)) {
-                    String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
-                    if (workingDirectory == null) {
-                        throw new IllegalStateException("Cannot follow pointer in file " + file + ": working directory is required to resolve relative path '" + target + "'");
-                    }
-                    Path targetPath = workingDirectory.resolve(target);
-                    return readFile(targetPath, workingDirectory, depth + 1);
-                }
-                return content;
-            }
+        String content = contentAfterHeader(fileContent);
+        if (content == null) {
+            return fileContent;
         }
-        return fileContent;
+        if (content.startsWith(POINTER_PREFIX)) {
+            String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
+            if (workingDirectory == null) {
+                throw new IllegalStateException("Cannot follow pointer in file " + file + ": working directory is required to resolve relative path '" + target + "'");
+            }
+            Path targetPath = workingDirectory.resolve(target);
+            return readFile(targetPath, workingDirectory, depth + 1);
+        }
+        return content;
     }
 
     /**
      * Returns true if the file contains a pointer reference (after stripping the comment header).
      */
     public boolean isPointerFile(Path file) throws IOException {
-        String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                return content.startsWith(POINTER_PREFIX);
-            }
-        }
-        return false;
+        String content = contentAfterHeader(new String(Files.readAllBytes(file), UTF_8));
+        return content != null && content.startsWith(POINTER_PREFIX);
     }
 
     /**
@@ -196,16 +216,9 @@ public class FileStoreMatcherUtils {
      * Returns the relative target path embedded in a pointer file, or empty if not a pointer.
      */
     public Optional<String> readPointerTarget(Path file) throws IOException {
-        String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                if (content.startsWith(POINTER_PREFIX)) {
-                    String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
-                    return Optional.of(target);
-                }
-            }
+        String content = contentAfterHeader(new String(Files.readAllBytes(file), UTF_8));
+        if (content != null && content.startsWith(POINTER_PREFIX)) {
+            return Optional.of(content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim());
         }
         return Optional.empty();
     }
