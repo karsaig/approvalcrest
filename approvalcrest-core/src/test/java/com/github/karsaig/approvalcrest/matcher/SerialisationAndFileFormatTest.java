@@ -30,12 +30,10 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
 
 /**
- * Reproducing tests for the review findings in approvalcrest-core.
- *
- * <p>Each test asserts the CURRENT behaviour. Where that behaviour is the bug, the assertion
- * message says so, and the test flips to red when the bug is fixed.
+ * Covers serialisation and approved-file format behaviours that are easy to get subtly wrong and
+ * whose failure mode is silent: a comparison that cannot fail rather than one that fails loudly.
  */
-public class CoreBugReproTest {
+public class SerialisationAndFileFormatTest {
 
     private static final Set<Class<?>> NO_CIRCULAR = Collections.emptySet();
 
@@ -53,13 +51,12 @@ public class CoreBugReproTest {
     }
 
     /**
-     * Finding 1.1 - Set serialisation uses a TreeSet keyed on the JSON representation, so two
-     * elements that are not equals() but serialise identically collapse into one.
-     *
-     * <p>Correct behaviour: a 2-element Set must serialise as a 2-element JSON array.
+     * A Set is sorted by JSON representation to keep the output stable, but sorting must not
+     * deduplicate: elements that are not equals() yet serialise identically are still distinct
+     * members and all of them belong in the output.
      */
     @Test
-    public void setSerialisationCollapsesDistinctElements() {
+    public void setSerialisationKeepsElementsThatSerialiseIdentically() {
         Set<NoEquals> set = new LinkedHashSet<>();
         set.add(new NoEquals("same"));
         set.add(new NoEquals("same"));
@@ -67,18 +64,15 @@ public class CoreBugReproTest {
 
         JsonArray json = JsonParser.parseString(gson().toJson(set)).getAsJsonArray();
 
-        // BUG: serialises as a single-element array, silently losing one member.
-        assertEquals(1, json.size(),
-                "BUG 1.1: 2-element Set serialised to a " + json.size()
-                        + "-element array - cardinality lost");
+        assertEquals(2, json.size(), "both members must be serialised");
     }
 
     /**
-     * Finding 1.1, consequence - because the Set collapses, a 2-element actual and a 1-element
-     * expected produce identical JSON, so a real difference cannot be detected.
+     * The point of the above: if the duplicate were dropped, a set that lost or gained an element
+     * would serialise identically to one that did not, so the difference could never fail a test.
      */
     @Test
-    public void twoElementSetAndOneElementSetProduceIdenticalJson() {
+    public void setsOfDifferentSizesDoNotSerialiseIdentically() {
         Set<NoEquals> actual = new LinkedHashSet<>();
         actual.add(new NoEquals("same"));
         actual.add(new NoEquals("same"));
@@ -86,34 +80,66 @@ public class CoreBugReproTest {
         Set<NoEquals> expected = new LinkedHashSet<>();
         expected.add(new NoEquals("same"));
 
-        assertNotEquals(actual.size(), expected.size(), "setup: the sets genuinely differ in size");
+        assertNotEquals(gson().toJson(expected), gson().toJson(actual),
+                "a set of 2 must be distinguishable from a set of 1");
+    }
 
-        // BUG: the difference is invisible after serialisation.
-        assertEquals(gson().toJson(expected), gson().toJson(actual),
-                "BUG 1.1: sets of different sizes serialise identically - a real diff cannot fail a test");
+    /** Ordering is still deterministic regardless of the set's own iteration order. */
+    @Test
+    public void setSerialisationIsOrderedDeterministically() {
+        Set<NoEquals> forwards = new LinkedHashSet<>();
+        forwards.add(new NoEquals("b"));
+        forwards.add(new NoEquals("a"));
+        forwards.add(new NoEquals("c"));
+
+        Set<NoEquals> backwards = new LinkedHashSet<>();
+        backwards.add(new NoEquals("c"));
+        backwards.add(new NoEquals("a"));
+        backwards.add(new NoEquals("b"));
+
+        assertEquals(gson().toJson(forwards), gson().toJson(backwards),
+                "insertion order must not affect the serialised form");
+        assertEquals("[{\"v\":\"a\"},{\"v\":\"b\"},{\"v\":\"c\"}]",
+                gson().toJson(forwards).replaceAll("\\s+", ""),
+                "elements must be ordered by their JSON representation");
     }
 
     /**
-     * Finding 2.5 - OffsetDateTime is normalised to UTC before formatting, so the offset is lost
-     * and two values with different offsets but the same instant serialise identically.
-     *
-     * <p>Correct behaviour: the offset is part of the value and must survive serialisation.
+     * The old collapsing behaviour remains available as a migration escape hatch for codebases
+     * with a large approved-file corpus to re-approve.
      */
     @Test
-    public void offsetDateTimeLosesItsOffset() {
+    public void legacySetCollapseOptOutRestoresTheOldBehaviour() {
+        Set<NoEquals> set = new LinkedHashSet<>();
+        set.add(new NoEquals("same"));
+        set.add(new NoEquals("same"));
+
+        MatcherConfiguration legacy = new MatcherConfiguration().setLegacySetCollapse(true);
+        JsonArray json = JsonParser.parseString(
+                GsonProvider.gson(legacy, NO_CIRCULAR).toJson(set)).getAsJsonArray();
+
+        assertEquals(1, json.size(), "the opt-out collapses identically-serialising elements again");
+    }
+
+    /**
+     * Documents current behaviour: OffsetDateTime is normalised to UTC before formatting, so two
+     * values at the same instant with different offsets serialise identically and an offset-only
+     * difference cannot fail a test. See docs/supported-types.md.
+     */
+    @Test
+    public void offsetDateTimeIsNormalisedToUtc() {
         OffsetDateTime plusFive = OffsetDateTime.of(2024, 1, 1, 12, 0, 0, 0, ZoneOffset.ofHours(5));
         OffsetDateTime utc = OffsetDateTime.of(2024, 1, 1, 7, 0, 0, 0, ZoneOffset.UTC);
         assertNotEquals(plusFive, utc, "setup: the two values are different OffsetDateTimes");
         assertEquals(plusFive.toInstant(), utc.toInstant(), "setup: but they are the same instant");
 
-        // BUG: both serialise to the same UTC string, so the offset difference cannot fail a test.
         assertEquals(gson().toJson(utc), gson().toJson(plusFive),
-                "BUG 2.5: OffsetDateTime values with different offsets serialise identically");
+                "documented: OffsetDateTime values with different offsets serialise identically");
     }
 
     /**
-     * Finding 2.5, the inconsistency - OffsetTime does NOT apply the UTC override, so it keeps
-     * its offset. The two adapters disagree about whether offset is significant.
+     * Documents current behaviour: unlike OffsetDateTime, OffsetTime does not apply the UTC
+     * override, so it keeps its offset. The two adapters disagree about whether offset matters.
      */
     @Test
     public void offsetTimeKeepsItsOffsetUnlikeOffsetDateTime() {

@@ -27,6 +27,7 @@ Setting them to **different values** throws `IllegalStateException` at test star
 | `fileMatcherMachineReadable` | `fMMReadable`, `fmAI` | `false` | Replace human-readable failure messages with structured, machine-actionable output for AI agents and CI pipelines. | [file-control](file-control.md) |
 | `beanMatcherSkipClassComparison` | `bMSCComparison` | `false` | Skip the runtime-type check in `sameBeanAs`; allows comparing objects of different but structurally compatible classes. | [same-bean-as](same-bean-as.md) |
 | `approvalcrestSerializeNulls` | `aSerNulls` | `true` | Include null-valued fields in Gson serialization. Disabling reverts to the pre-1.0.2 behaviour where null fields were silently omitted. | [ignoring-fields](ignoring-fields.md) |
+| `approvalcrestLegacySetCollapse` | `aLSCollapse` | `false` | Restore the pre-1.4.3 behaviour where `Set` elements that serialise to the same JSON were collapsed into one. Only useful as a temporary escape hatch while re-approving affected files: while it is on, a set that loses or gains a duplicate element cannot fail a test. | [supported-types](supported-types.md) |
 
 ## Example usage
 

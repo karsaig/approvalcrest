@@ -16,6 +16,8 @@ import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -134,7 +136,7 @@ class GsonProvider {
 
         gsonBuilder.registerTypeAdapterFactory(PathTypeAdapter.FACTORY);
 
-        registerSetSerialisation(gsonBuilder);
+        registerSetSerialisation(gsonBuilder, matcherConfiguration);
 
         registerMapSerialisation(gsonBuilder);
 
@@ -218,11 +220,12 @@ class GsonProvider {
         });
     }
 
-    private static void registerSetSerialisation(GsonBuilder gsonBuilder) {
+    private static void registerSetSerialisation(GsonBuilder gsonBuilder, MatcherConfiguration matcherConfiguration) {
+        boolean legacySetCollapse = matcherConfiguration.isLegacySetCollapse();
         gsonBuilder.registerTypeHierarchyAdapter(Set.class, (JsonSerializer<Set>) (set, type, context) -> {
             Gson gson = gsonBuilder.create();
 
-            Set<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson);
+            List<Object> orderedSet = orderSetByElementsJsonRepresentation(set, gson, legacySetCollapse);
             return arrayOfObjectsOrderedByTheirJsonRepresentation(gson, orderedSet);
         });
     }
@@ -235,10 +238,35 @@ class GsonProvider {
         graphAdapterBuilder.registerOn(gsonBuilder);
     }
 
+    /**
+     * Returns the set's elements ordered by their JSON representation, so that the unordered
+     * iteration order of a {@code Set} cannot make the output unstable.
+     *
+     * <p>Sorting is done on a list rather than a {@code TreeSet}: a sorted set treats
+     * "comparator returned 0" as "duplicate", so elements that are not {@code equals()} but happen
+     * to serialise identically - two instances of a class with no {@code equals()} override and
+     * the same field values, for example - were silently dropped. A set that lost or gained such
+     * an element then serialised identically either way, so the difference could not fail a test.
+     *
+     * <p>Each element is serialised once up front rather than inside the comparator, which also
+     * avoids re-serialising on every comparison.
+     */
     @SuppressWarnings("unchecked")
-    private static Set<Object> orderSetByElementsJsonRepresentation(Set set, Gson gson) {
-        Set<Object> objects = newTreeSet(Comparator.comparing(gson::toJson));
-        objects.addAll(set);
+    private static List<Object> orderSetByElementsJsonRepresentation(Set set, Gson gson, boolean legacySetCollapse) {
+        if (legacySetCollapse) {
+            Set<Object> collapsed = newTreeSet(Comparator.comparing(gson::toJson));
+            collapsed.addAll(set);
+            return new ArrayList<>(collapsed);
+        }
+        List<Map.Entry<String, Object>> decorated = new ArrayList<>(set.size());
+        for (Object element : (Set<Object>) set) {
+            decorated.add(new AbstractMap.SimpleEntry<>(gson.toJson(element), element));
+        }
+        decorated.sort(Map.Entry.comparingByKey());
+        List<Object> objects = new ArrayList<>(decorated.size());
+        for (Map.Entry<String, Object> entry : decorated) {
+            objects.add(entry.getValue());
+        }
         return objects;
     }
 
@@ -251,7 +279,7 @@ class GsonProvider {
         return objects;
     }
 
-    private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, Set<Object> objects) {
+    private static JsonArray arrayOfObjectsOrderedByTheirJsonRepresentation(Gson gson, List<Object> objects) {
         JsonArray array = new JsonArray();
         for (Object object : objects) {
             array.add(gson.toJsonTree(object));
