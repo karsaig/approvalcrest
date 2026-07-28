@@ -7,6 +7,7 @@ Version 1.4.3 - 2026/07/28
 -----
 
 - Fixed object-graph reference tracking for `Throwable` graphs containing more than nine objects. Reference ids are generated in hexadecimal, so from the tenth object onwards they contain the letters `a`-`f`; these were not recognised and the affected references were silently dropped from the comparison.
+- Tests declared with package-private methods are now supported. JUnit Jupiter and TestNG both allow non-public test methods, but approvalcrest looked the running test up among public methods only, so such a test failed with "Cannot determine test method" instead of resolving its approved file. A test method that shares its name with an overload is now also identified reliably.
 - Approved files are now read correctly when their comment header ends with a CRLF rather than a LF. Headers are written with a LF, so a Windows checkout with `core.autocrlf=true` previously failed to strip the header (the comment ended up compared as part of the content) and pointer files were not recognised as pointers at all.
 - `fileMatcherSharedDirBucketDepth` (alias `fmSharedDirBucketDepth`) is now validated against its documented 1–6 range and reports a configuration error naming the property. Out-of-range values previously failed with an unrelated `StringIndexOutOfBoundsException` from inside the matcher. See [shared-approvals](docs/shared-approvals.md).
 

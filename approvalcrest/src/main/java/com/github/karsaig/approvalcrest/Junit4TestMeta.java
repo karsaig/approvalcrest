@@ -1,6 +1,5 @@
 package com.github.karsaig.approvalcrest;
 
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -27,8 +26,8 @@ public class Junit4TestMeta extends Junit4TestMetaBase {
     private static boolean isTestMethod(StackTraceElement element) {
         try {
             Class<?> clazz = Class.forName(element.getClassName());
-            Method method = findMethod(clazz, element.getMethodName());
-            return method != null && method.isAnnotationPresent(Test.class);
+            return findMethods(clazz, element.getMethodName()).stream()
+                    .anyMatch(method -> method.isAnnotationPresent(Test.class));
         } catch (Throwable e) {
             return false;
         }

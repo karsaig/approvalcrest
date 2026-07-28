@@ -43,8 +43,8 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
     private static boolean isTestMethod(StackTraceElement element) {
         try {
             Class<?> clazz = Class.forName(element.getClassName());
-            Method method = findMethod(clazz, element.getMethodName());
-            return method != null && hasTestMethodAnnotation(method);
+            return findMethods(clazz, element.getMethodName()).stream()
+                    .anyMatch(JunitJupiterTestMeta::hasTestMethodAnnotation);
         } catch (Throwable e) {
             return false;
         }

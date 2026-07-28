@@ -4,6 +4,8 @@ import java.io.File;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,14 +80,26 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
         return null;
     }
 
-    protected static Method findMethod(Class<?> clazz, String methodName) {
-        Method[] methods = clazz.getMethods();
-        for (Method method : methods) {
-            if (method.getName().equals(methodName)) {
-                return method;
+    /**
+     * Returns every method with the given name declared on the class or any of its superclasses.
+     *
+     * <p>Declared methods are used rather than {@link Class#getMethods()} because that returns only
+     * public members, while JUnit Jupiter and TestNG both allow package-private test methods.
+     *
+     * <p>All matches are returned rather than the first one because a test method can share its
+     * name with an overload, and the reflection order is unspecified — so callers must be able to
+     * check every candidate for the test annotation instead of guessing which one is the test.
+     */
+    protected static List<Method> findMethods(Class<?> clazz, String methodName) {
+        List<Method> result = new ArrayList<>();
+        for (Class<?> current = clazz; current != null && current != Object.class; current = current.getSuperclass()) {
+            for (Method method : current.getDeclaredMethods()) {
+                if (method.getName().equals(methodName)) {
+                    result.add(method);
+                }
             }
         }
-        return null;
+        return result;
     }
 
     @Override
