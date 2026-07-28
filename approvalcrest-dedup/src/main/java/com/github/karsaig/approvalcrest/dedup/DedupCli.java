@@ -18,7 +18,7 @@ import com.github.karsaig.approvalcrest.FileMatcherConfig;
  *     --dir &lt;path&gt;          Scan directory (default: src/test/java)
  *     --shared-dir &lt;path&gt;   Shared approvals directory (default: src/test/java/shared-approvals)
  *     --bucket-depth &lt;n&gt;    Bucket prefix depth 1-6 (default: 2)
- *     --dry-run             Print what would be done without writing files
+ *     --dry-run             Print what would be done without writing files (applies to --reinstate too)
  *     --reinstate           Replace all pointers with standalone content and clear the shared dir
  * </pre>
  *
@@ -64,7 +64,7 @@ public class DedupCli {
         Path scanDirPath = dir != null ? workingDirectory.resolve(dir) : workingDirectory.resolve("src/test/java");
 
         if (reinstate) {
-            ApprovalReinstate reinstater = new ApprovalReinstate(workingDirectory, scanDirPath, sharedDir);
+            ApprovalReinstate reinstater = new ApprovalReinstate(workingDirectory, scanDirPath, sharedDir, dryRun);
             ApprovalReinstate.ReinstateResult result = reinstater.reinstate();
             out.println(result);
         } else {

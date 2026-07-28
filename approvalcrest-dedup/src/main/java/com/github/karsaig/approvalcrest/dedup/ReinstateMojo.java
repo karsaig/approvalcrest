@@ -32,12 +32,16 @@ public class ReinstateMojo extends AbstractMojo {
     @Parameter(defaultValue = "src/test/java")
     private String dir;
 
+    /** When true, print what would be done without writing or deleting any files. */
+    @Parameter(defaultValue = "false")
+    private boolean dryRun;
+
     @Override
     public void execute() throws MojoExecutionException {
         Path workingDirectory = projectBaseDir.toPath();
         Path scanDirPath = workingDirectory.resolve(dir);
         try {
-            ApprovalReinstate reinstater = new ApprovalReinstate(workingDirectory, scanDirPath, sharedDir);
+            ApprovalReinstate reinstater = new ApprovalReinstate(workingDirectory, scanDirPath, sharedDir, dryRun);
             ApprovalReinstate.ReinstateResult result = reinstater.reinstate();
             getLog().info(result.toString());
         } catch (IOException e) {

@@ -276,6 +276,20 @@ public class FileStoreMatcherUtils {
     }
 
     /**
+     * Returns the project-relative path the canonical for this content would occupy, without
+     * creating anything. Tooling that previews its actions must use this rather than assembling
+     * the path itself, so that a preview cannot describe a different file from the one a real run
+     * would touch.
+     */
+    public String canonicalRelativePath(String content, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) {
+        String key = computeContentKey(content);
+        String bucket = bucketOf(key, bucketDepth);
+        Path canonicalPath = workingDirectory.resolve(sharedApprovalDirectory).resolve(bucket)
+                .resolve(key + SEPARATOR + APPROVED_NAME_PART + fileExtension);
+        return workingDirectory.relativize(canonicalPath).toString().replace('\\', '/');
+    }
+
+    /**
      * Writes a new canonical file to the shared directory for the given content.
      * Returns the relative path from workingDirectory to the newly created canonical.
      */
@@ -293,7 +307,7 @@ public class FileStoreMatcherUtils {
         if (!Files.exists(canonicalPath)) {
             writeToFile(canonicalPath, content, comment);
         }
-        return workingDirectory.relativize(canonicalPath).toString().replace('\\', '/');
+        return canonicalRelativePath(content, workingDirectory, sharedApprovalDirectory, bucketDepth);
     }
 
     /**

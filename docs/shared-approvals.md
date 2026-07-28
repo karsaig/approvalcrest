@@ -61,6 +61,12 @@ java -jar approvalcrest-dedup-VERSION-standalone.jar
 
 Every run is **idempotent** — running it again on an already-deduped tree is a no-op.
 
+**Scan directory vs. reference lookup.** `--dir` controls which files are *converted* into pointers. It does not control which canonicals are considered *in use*: that is looked up across the whole project, because a pointer outside the scanned subtree needs its canonical just as much as one inside it. This matters when you narrow `--dir`, or run the goal per module against a shared directory covering several modules — the canonicals belonging to the modules you did not scan are left alone.
+
+If the shared directory is outside the project directory, the pointers referencing it cannot be found, so garbage collection is skipped entirely and the summary says so.
+
+**Overlapping directories are refused.** If the shared approvals directory contains the scan directory, every approved file in the scan tree would be treated as a canonical. Both goals refuse to start in that case rather than delete them.
+
 ### Subsequent test runs
 
 Normal test runs work without any configuration. After a code change that affects the output, the library detects a mismatch as usual. In-place update behaviour depends on the `fmSharedEnabled` setting:
@@ -81,6 +87,15 @@ mvn approvalcrest:reinstate
 
 # or with the standalone JAR
 java -jar approvalcrest-dedup-VERSION-standalone.jar --reinstate
+```
+
+Reinstate replaces the pointers under `--dir` with their content, then deletes the canonicals that nothing references any more. As with dedup, the reference lookup spans the whole project, so reinstating one module does not strip the canonicals another module still points at.
+
+Pass `--dry-run` (or `-DdryRun=true` for the Maven goal) to print what would happen without writing or deleting anything:
+
+```bash
+mvn approvalcrest:reinstate -DdryRun=true
+java -jar approvalcrest-dedup-VERSION-standalone.jar --reinstate --dry-run
 ```
 
 Use reinstate when:
