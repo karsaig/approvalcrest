@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
+import com.github.karsaig.approvalcrest.FieldsIgnorer;
 import com.github.karsaig.approvalcrest.InaccessibleFieldException;
 import com.github.karsaig.approvalcrest.ReflectUtil;
 import com.google.gson.JsonElement;
@@ -12,14 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
 public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Throwable> {
 
     private static final String STACK_TRACE_NAME = "stackTrace";
-    private static final Pattern OBJECT_REFERENCE_PATTERN = Pattern.compile("0x(?:\\d)+");
 
     public ThrowableTypeAdapterFactory() {
         super(Throwable.class);
@@ -53,7 +52,7 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
     }
 
     private Map<String, Object> buildSourceObjectMap(Throwable source, JsonObject jsonObject) {
-        Optional<String> firstRef = jsonObject.keySet().stream().filter(OBJECT_REFERENCE_PATTERN.asPredicate()).findFirst();
+        Optional<String> firstRef = jsonObject.keySet().stream().filter(FieldsIgnorer::isGraphAdapterKey).findFirst();
         if (!firstRef.isPresent()) {
             return Collections.emptyMap();
         }
@@ -67,7 +66,7 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
 
     private void doBuildSourceObjectMap(Map<String, Object> result, Object o, JsonObject originalObject, JsonObject currentObject) {
         List<Map.Entry<String, JsonElement>> jsonPrimitiveRefs = currentObject.entrySet().stream()
-                .filter(e -> e.getValue().isJsonPrimitive()).filter(e -> OBJECT_REFERENCE_PATTERN.asPredicate().test(e.getValue().getAsJsonPrimitive().getAsString()))
+                .filter(e -> e.getValue().isJsonPrimitive()).filter(e -> FieldsIgnorer.isGraphAdapterKey(e.getValue().getAsJsonPrimitive().getAsString()))
                 .collect(Collectors.toList());
         Map<String, Field> fieldMap = getEveryField(o);
         if (!jsonPrimitiveRefs.isEmpty()) {

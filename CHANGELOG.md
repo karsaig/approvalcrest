@@ -3,6 +3,11 @@
 Changelog
 ===========
 
+Version 1.4.3 - 2026/07/28
+-----
+
+- Fixed object-graph reference tracking for `Throwable` graphs containing more than nine objects. Reference ids are generated in hexadecimal, so from the tenth object onwards they contain the letters `a`-`f`; these were not recognised and the affected references were silently dropped from the comparison.
+
 Version 1.4.2 - 2026/07/28
 -----
 
