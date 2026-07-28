@@ -125,13 +125,11 @@ public class CoreBugReproTest {
     }
 
     /**
-     * Finding 2.4 - bucketDepth comes straight from a system property with no validation and is
-     * used as substring(0, bucketDepth) on the content key.
-     *
-     * <p>Correct behaviour: reject out-of-range values with a clear configuration error.
+     * An out-of-range bucket depth must surface as a configuration error naming the property,
+     * not as an opaque StringIndexOutOfBoundsException from inside substring().
      */
     @Test
-    public void unvalidatedBucketDepthThrowsStringIndexOutOfBounds() throws IOException {
+    public void outOfRangeBucketDepthIsRejectedWithAConfigurationError() throws IOException {
         try (FileSystem fs = Jimfs.newFileSystem(InMemoryFsUtil.JIMFS_UNIX_CONFIG)) {
             Path workDir = fs.getPath("/work");
             Files.createDirectories(workDir);
@@ -140,15 +138,30 @@ public class CoreBugReproTest {
             FileStoreMatcherUtils utils = new FileStoreMatcherUtils("json",
                     new FileMatcherConfig(false, false, false, false, true, shared, true, 2));
 
-            StringIndexOutOfBoundsException negative = assertThrows(StringIndexOutOfBoundsException.class,
-                    () -> utils.writeCanonical("{}", "c", workDir, shared, -1),
-                    "BUG 2.4: negative bucketDepth escapes as StringIndexOutOfBoundsException");
-            assertTrue(negative.getMessage() != null, "exception carries no configuration context");
+            for (int invalid : new int[]{-1, 0, 7, 99}) {
+                IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                        () -> utils.writeCanonical("{}", "c", workDir, shared, invalid),
+                        "bucket depth " + invalid + " must be rejected");
+                assertTrue(e.getMessage().contains("fileMatcherSharedDirBucketDepth"),
+                        "the error must name the property, was: " + e.getMessage());
+            }
 
-            assertThrows(StringIndexOutOfBoundsException.class,
-                    () -> utils.writeCanonical("{}", "c", workDir, shared, 99),
-                    "BUG 2.4: oversized bucketDepth escapes as StringIndexOutOfBoundsException");
+            for (int valid : new int[]{1, 2, 6}) {
+                utils.writeCanonical("{\"v\":" + valid + "}", "c", workDir, shared, valid);
+            }
         }
+    }
+
+    /**
+     * The same range is enforced at configuration time, so a bad -D value fails fast rather than
+     * at the first shared-directory write.
+     */
+    @Test
+    public void outOfRangeBucketDepthIsRejectedByTheConfig() {
+        assertThrows(IllegalStateException.class,
+                () -> new FileMatcherConfig(false, false, false, false, true, "shared", true, 0));
+        assertThrows(IllegalStateException.class,
+                () -> new FileMatcherConfig(false, false, false, false, true, "shared", true, 7));
     }
 
     /**

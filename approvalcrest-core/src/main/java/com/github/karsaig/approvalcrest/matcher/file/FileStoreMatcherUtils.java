@@ -230,6 +230,21 @@ public class FileStoreMatcherUtils {
     }
 
     /**
+     * Derives the bucket directory name from a content key. Guards the depth explicitly so a
+     * misconfigured value surfaces as a configuration error naming the property, rather than as an
+     * opaque {@link StringIndexOutOfBoundsException} from deep inside the matcher.
+     */
+    private static String bucketOf(String key, int bucketDepth) {
+        if (bucketDepth < FileMatcherConfig.MIN_SHARED_BUCKET_DEPTH || bucketDepth > FileMatcherConfig.MAX_SHARED_BUCKET_DEPTH) {
+            throw new IllegalArgumentException("Invalid shared directory bucket depth: " + bucketDepth
+                    + ". Must be between " + FileMatcherConfig.MIN_SHARED_BUCKET_DEPTH
+                    + " and " + FileMatcherConfig.MAX_SHARED_BUCKET_DEPTH
+                    + " (see the fileMatcherSharedDirBucketDepth property).");
+        }
+        return key.substring(0, bucketDepth);
+    }
+
+    /**
      * Looks up a canonical file in the shared directory whose content matches the given string.
      * Uses a direct filename lookup based on SHA-256 hash prefix and content size (no directory scan).
      *
@@ -237,7 +252,7 @@ public class FileStoreMatcherUtils {
      */
     public Optional<String> findMatchingCanonical(String content, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) {
         String key = computeContentKey(content);
-        String bucket = key.substring(0, bucketDepth);
+        String bucket = bucketOf(key, bucketDepth);
         Path sharedDir = workingDirectory.resolve(sharedApprovalDirectory);
         Path canonicalPath = sharedDir.resolve(bucket).resolve(key + SEPARATOR + APPROVED_NAME_PART + fileExtension);
         if (Files.exists(canonicalPath)) {
@@ -253,7 +268,7 @@ public class FileStoreMatcherUtils {
      */
     public String writeCanonical(String content, String comment, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) throws IOException {
         String key = computeContentKey(content);
-        String bucket = key.substring(0, bucketDepth);
+        String bucket = bucketOf(key, bucketDepth);
         Path sharedDir = workingDirectory.resolve(sharedApprovalDirectory);
         Path bucketDir = sharedDir.resolve(bucket);
         if (isPosixCompatible(bucketDir)) {

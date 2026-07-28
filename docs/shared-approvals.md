@@ -32,7 +32,9 @@ For example:
 src/test/java/shared-approvals/a1/a1b2c3d4e5f6-4827-approved.json
 ```
 
-The `{bucket}` directory is the first N characters of the hash (default N=2, giving 256 buckets). Using both the hash prefix and the byte size effectively prevents hash collisions for practical file sizes.
+The `{bucket}` directory is the first N characters of the hash (default N=2, giving 256 buckets). Using both the hash prefix and the byte size effectively prevents hash collisions for practical file sizes. A value outside the supported range of 1–6 is rejected with a configuration error naming the property.
+
+> **Changing the bucket depth relocates every canonical.** The depth is part of the path a pointer resolves to, so after changing it the existing canonicals are no longer found and duplicate content is silently written again under the new layout. To migrate, run `mvn approvalcrest:reinstate` with the old depth first, then `mvn approvalcrest:dedup` with the new one.
 
 ## Deduplication workflow
 

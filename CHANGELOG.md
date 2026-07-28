@@ -7,6 +7,7 @@ Version 1.4.3 - 2026/07/28
 -----
 
 - Fixed object-graph reference tracking for `Throwable` graphs containing more than nine objects. Reference ids are generated in hexadecimal, so from the tenth object onwards they contain the letters `a`-`f`; these were not recognised and the affected references were silently dropped from the comparison.
+- `fileMatcherSharedDirBucketDepth` (alias `fmSharedDirBucketDepth`) is now validated against its documented 1–6 range and reports a configuration error naming the property. Out-of-range values previously failed with an unrelated `StringIndexOutOfBoundsException` from inside the matcher. See [shared-approvals](docs/shared-approvals.md).
 
 Version 1.4.2 - 2026/07/28
 -----
