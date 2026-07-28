@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>{@code force} — uses setAccessible(true) directly (requires --add-opens on Java 9+)</li>
  *   <li>{@code fallback} — skips Unsafe entirely, uses getter-based (for testing/future-proofing)</li>
  * </ul>
- * </p>
  * <p>
  * IMPORTANT: All access to sun.misc.Unsafe, java.lang.Module, and MethodHandles.Lookup is
  * done via reflection. There is NO import of any of these. When Unsafe is removed from a
