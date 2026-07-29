@@ -1,0 +1,5 @@
+/*features.TestTemplateFeatureTest.testTemplateResolvesTheSameFileFromBothRoutes*/
+{
+  "dummyString": "dummy-case2",
+  "genericValue": "value-case2"
+}
