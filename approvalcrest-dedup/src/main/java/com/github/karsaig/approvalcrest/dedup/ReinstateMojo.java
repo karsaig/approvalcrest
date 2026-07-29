@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.dedup;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;

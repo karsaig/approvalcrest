@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 
 /**

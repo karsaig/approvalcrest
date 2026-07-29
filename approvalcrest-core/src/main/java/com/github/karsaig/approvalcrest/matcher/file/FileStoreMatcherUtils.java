@@ -22,6 +22,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 
@@ -48,6 +49,14 @@ public class FileStoreMatcherUtils {
         this.fileType = fileType;
         this.fileExtension = "." + fileType;
         this.fileMatcherConfig = fileMatcherConfig;
+    }
+
+    /**
+     * @return the kind of approved file this instance reads and writes, or null for a type
+     *         approvalcrest does not know about
+     */
+    public ApprovedFileType getApprovedFileType() {
+        return ApprovedFileType.fromExtension(fileType);
     }
 
     /**

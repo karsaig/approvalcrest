@@ -218,7 +218,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
             try {
                 String contentStr = content.get();
                 FileStoreMatcherUtils.CreatedFile createdFileAndInfo;
-                if (fileMatcherConfig.isSharedEnabled()) {
+                if (fileMatcherConfig.isSharedEnabledFor(fileStoreMatcherUtils.getApprovedFileType())) {
                     Optional<String> canonicalPath = fileStoreMatcherUtils.findMatchingCanonical(
                             contentStr, testMetaInformation.workingDirectory(),
                             fileMatcherConfig.getSharedApprovalDirectory(), fileMatcherConfig.getSharedBucketDepth());
@@ -270,7 +270,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
         if (Files.exists(approvedFile)) {
             try {
                 String contentStr = content.get();
-                if (fileMatcherConfig.isSharedEnabled()) {
+                if (fileMatcherConfig.isSharedEnabledFor(fileStoreMatcherUtils.getApprovedFileType())) {
                     Optional<String> canonicalPath = fileStoreMatcherUtils.findMatchingCanonical(
                             contentStr, testMetaInformation.workingDirectory(),
                             fileMatcherConfig.getSharedApprovalDirectory(), fileMatcherConfig.getSharedBucketDepth());

@@ -126,6 +126,40 @@ public class JsonMatcherSharedApprovalTest extends AbstractFileMatcherTest {
         });
     }
 
+    /**
+     * Selecting a single type through the property must actually enable it for that type. Written
+     * against the property rather than the enum so it compiles before the change too: previously
+     * "json" was read as a boolean, came out false, and nothing was shared at all.
+     */
+    @Test
+    public void sharedEnabledSetToJsonPointerisesJsonFiles() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        System.setProperty("fileMatcherSharedEnabled", "json");
+        try {
+            inMemoryUnixFs(imfsi -> {
+                DummyInformation dummyTestInfo = dummyInformation(imfsi);
+                FileMatcherConfig config = new FileMatcherConfig();
+                JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY.jsonMatcher(dummyTestInfo, config);
+
+                String beanJson = getBeanWithPrimitivesAsJsonString();
+                Path canonical = canonicalPathFor(imfsi, beanJson, DEFAULT_SHARED_DIR);
+                writeFile(canonical, "/*shared*/\n" + beanJson);
+
+                assertThrows(AssertionError.class, () -> MatcherAssert.assertThat(actual, underTest));
+
+                String created = getFiles(imfsi).stream()
+                        .filter(f -> f.getPath().contains("-not-approved.json"))
+                        .findFirst()
+                        .map(f -> f.getContent())
+                        .orElseThrow(() -> new AssertionError("not-approved file not found"));
+                assertTrue(created.contains("/*pointer:"),
+                        "json must be pointerised when the property selects json, was: " + created);
+            });
+        } finally {
+            System.clearProperty("fileMatcherSharedEnabled");
+        }
+    }
+
     @Test
     public void inPlaceOverwriteWithSharedEnabledAndMatchingCanonicalWritesPointer() {
         BeanWithPrimitives actual = getBeanWithPrimitives();

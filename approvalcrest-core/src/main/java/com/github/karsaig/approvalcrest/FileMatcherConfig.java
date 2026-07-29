@@ -4,6 +4,8 @@ import static com.github.karsaig.approvalcrest.EnvVarReader.getBooleanProperties
 import static com.github.karsaig.approvalcrest.EnvVarReader.getIntProperties;
 import static com.github.karsaig.approvalcrest.EnvVarReader.getStringProperties;
 
+import java.util.Set;
+
 public class FileMatcherConfig {
 
     private static final String UPDATE_IN_PLACE_OLD_NAME = "jsonMatcherUpdateInPlace";
@@ -42,7 +44,7 @@ public class FileMatcherConfig {
     private final boolean sortInputFile;
     private final boolean strictFileMatching;
     private final String sharedApprovalDirectory;
-    private final boolean sharedEnabled;
+    private final Set<ApprovedFileType> sharedTypes;
     private final int sharedBucketDepth;
 
     public FileMatcherConfig() {
@@ -52,7 +54,7 @@ public class FileMatcherConfig {
         sortInputFile = getBooleanProperties(null, SORT_INPUT_FILE, SORT_INPUT_FILE_ALIAS);
         strictFileMatching = getBooleanProperties("true", STRICT_FILE_MATCHING, STRICT_FILE_MATCHING_ALIAS);
         sharedApprovalDirectory = getStringProperties(DEFAULT_SHARED_DIR, SHARED_DIR_NAME, SHARED_DIR_ALIAS);
-        sharedEnabled = getBooleanProperties(null, SHARED_ENABLED_NAME, SHARED_ENABLED_ALIAS);
+        sharedTypes = ApprovedFileType.parse(getStringProperties("none", SHARED_ENABLED_NAME, SHARED_ENABLED_ALIAS));
         sharedBucketDepth = validateBucketDepth(getIntProperties(DEFAULT_SHARED_BUCKET_DEPTH, SHARED_BUCKET_DEPTH_NAME, SHARED_BUCKET_DEPTH_ALIAS));
     }
 
@@ -69,6 +71,11 @@ public class FileMatcherConfig {
         this(overwriteInPlaceEnabled, passOnCreateEnabled, approvedDirectory, sortInputFile, strictMatching, DEFAULT_SHARED_DIR, false, DEFAULT_SHARED_BUCKET_DEPTH);
     }
 
+    /**
+     * @param sharedEnabled true enables the shared-approval integration for every file type; use
+     *                      {@link #FileMatcherConfig(boolean, boolean, boolean, boolean, boolean, String, Set, int)}
+     *                      to enable it for a subset
+     */
     public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, boolean sharedEnabled, int sharedBucketDepth) {
         this.overwriteInPlaceEnabled = overwriteInPlaceEnabled;
         this.passOnCreateEnabled = passOnCreateEnabled;
@@ -76,7 +83,21 @@ public class FileMatcherConfig {
         this.sortInputFile = sortInputFile;
         this.strictFileMatching = strictMatching;
         this.sharedApprovalDirectory = sharedApprovalDirectory;
-        this.sharedEnabled = sharedEnabled;
+        this.sharedTypes = sharedEnabled ? ApprovedFileType.all() : ApprovedFileType.none();
+        this.sharedBucketDepth = validateBucketDepth(sharedBucketDepth);
+    }
+
+    /**
+     * @param sharedTypes the file types the shared-approval integration applies to; empty disables it
+     */
+    public FileMatcherConfig(boolean overwriteInPlaceEnabled, boolean passOnCreateEnabled, boolean approvedDirectory, boolean sortInputFile, boolean strictMatching, String sharedApprovalDirectory, Set<ApprovedFileType> sharedTypes, int sharedBucketDepth) {
+        this.overwriteInPlaceEnabled = overwriteInPlaceEnabled;
+        this.passOnCreateEnabled = passOnCreateEnabled;
+        this.approvedDirectory = approvedDirectory;
+        this.sortInputFile = sortInputFile;
+        this.strictFileMatching = strictMatching;
+        this.sharedApprovalDirectory = sharedApprovalDirectory;
+        this.sharedTypes = sharedTypes;
         this.sharedBucketDepth = validateBucketDepth(sharedBucketDepth);
     }
 
@@ -104,8 +125,29 @@ public class FileMatcherConfig {
         return sharedApprovalDirectory;
     }
 
+    /**
+     * @return true when the shared-approval integration is active for at least one file type
+     */
     public boolean isSharedEnabled() {
-        return sharedEnabled;
+        return !sharedTypes.isEmpty();
+    }
+
+    /**
+     * Whether new and updated approved files of this type should point at a matching canonical
+     * instead of carrying their own copy of the content.
+     *
+     * @param type the approved file type the matcher writes
+     * @return true when the shared-approval integration is active for that type
+     */
+    public boolean isSharedEnabledFor(ApprovedFileType type) {
+        return sharedTypes.contains(type);
+    }
+
+    /**
+     * @return the file types the shared-approval integration is active for
+     */
+    public Set<ApprovedFileType> getSharedTypes() {
+        return sharedTypes;
     }
 
     public int getSharedBucketDepth() {

@@ -116,7 +116,7 @@ Use reinstate when:
 | Property | Alias | Default | Description |
 |---|---|---|---|
 | `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | Path to the shared directory for canonical files, relative to the project root |
-| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals |
+| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals. `true`/`all` for both types, `json` or `content` for one, `false`/`none` for neither |
 | `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | Number of leading hash characters used as the bucket subdirectory name (1–6) |
 | `fileMatcherSharedTypes` | — | `all` | Which approved file types `approvalcrest:dedup` and `approvalcrest:reinstate` process: `json`, `content`, `json,content` or `all`. Tool-only; it has no effect on the matchers at test time. |
 
@@ -135,6 +135,18 @@ mvn test -DfileMatcherUpdateInPlace=true -DfmSharedEnabled=true
 ```
 
 With `fmSharedEnabled=false` (the default), the library still **reads** pointer files correctly — it just does not create new ones automatically during test runs. Deduplication itself is always done via the CLI/plugin tool.
+
+**Restricting to one file type.** The property takes a type as well as a boolean, so the write-side can be limited to the same type the tool was run for:
+
+```bash
+# Only JSON approvals point at canonicals; .content files keep their own copy
+mvn test -DfmSharedEnabled=json
+
+# Both, which is what true means
+mvn test -DfmSharedEnabled=true
+```
+
+Accepted values are `true` and `all` (both types), `json`, `content`, a comma-separated list, and `false` or `none`. This pairs with the tool's `--types` / `-DfileMatcherSharedTypes`: dedup with `--types json` to create only JSON canonicals, then run tests with `-DfmSharedEnabled=json` so new `.content` files are not pointerised against canonicals that were never created for them.
 
 ## Stale pointers
 

@@ -1,5 +1,7 @@
 package com.github.karsaig.approvalcrest.dedup;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

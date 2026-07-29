@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 
 /**
