@@ -1,0 +1,5 @@
+/*features.ExtensionModelFeatureTest.anExtensionInjectedParameterDoesNotMoveTheFile*/
+{
+  "dummyString": "injected",
+  "genericValue": "byExtension"
+}
