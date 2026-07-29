@@ -93,7 +93,7 @@ public class DedupSafetyTest {
     }
 
     private com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils scannerUtils(Path workDir) {
-        return new ApprovedFileScanner(SHARED_DIR, BUCKET_DEPTH).utilsFor("json");
+        return new ApprovedFileScanner(SHARED_DIR, BUCKET_DEPTH, ApprovedFileType.all()).utilsFor(ApprovedFileType.JSON);
     }
 
     /** A canonical nothing points at any more is still collected. */

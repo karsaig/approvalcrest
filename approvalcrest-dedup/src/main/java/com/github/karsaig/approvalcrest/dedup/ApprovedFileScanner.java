@@ -6,8 +6,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -32,14 +34,32 @@ class ApprovedFileScanner {
             Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
                     ".git", ".hg", ".svn", "target", "build", "out", "node_modules", ".gradle", ".idea")));
 
-    private final FileStoreMatcherUtils jsonUtils;
-    private final FileStoreMatcherUtils contentUtils;
+    private final Map<ApprovedFileType, FileStoreMatcherUtils> utilsByType = new EnumMap<>(ApprovedFileType.class);
+    private final Set<ApprovedFileType> selectedTypes;
 
-    ApprovedFileScanner(String sharedApprovalDir, int bucketDepth) {
+    ApprovedFileScanner(String sharedApprovalDir, int bucketDepth, Set<ApprovedFileType> selectedTypes) {
         FileMatcherConfig config =
                 new FileMatcherConfig(false, false, false, false, true, sharedApprovalDir, true, bucketDepth);
-        this.jsonUtils = new FileStoreMatcherUtils("json", config);
-        this.contentUtils = new FileStoreMatcherUtils("content", config);
+        for (ApprovedFileType type : ApprovedFileType.values()) {
+            utilsByType.put(type, new FileStoreMatcherUtils(type.extension(), config));
+        }
+        this.selectedTypes = selectedTypes;
+    }
+
+    /**
+     * Whether this file is one of the types the caller asked to process.
+     *
+     * <p>Deliberately a separate check rather than something folded into {@link #isApprovedFileName}:
+     * the reference lookup must see pointers of <em>every</em> type, or garbage collection would
+     * treat the unselected type's canonicals as unreferenced and delete them. Only conversion and
+     * deletion filter; callers say so explicitly by calling this.
+     *
+     * @param file an approved file
+     * @return true when its type was selected
+     */
+    boolean isSelectedType(Path file) {
+        ApprovedFileType type = getType(file);
+        return type != null && selectedTypes.contains(type);
     }
 
     /**
@@ -100,22 +120,20 @@ class ApprovedFileScanner {
     }
 
     /**
-     * Returns the approved file's extension, or null if it is neither json nor content.
+     * Returns the approved file's type, or null if it is neither json nor content.
+     *
+     * @param file the file to classify
+     * @return the type, or null
      */
-    String getExtension(Path file) {
-        String name = file.getFileName().toString();
-        if (name.endsWith(".json")) {
-            return "json";
-        } else if (name.endsWith(".content")) {
-            return "content";
-        }
-        return null;
+    ApprovedFileType getType(Path file) {
+        return ApprovedFileType.fromFileName(file.getFileName().toString());
     }
 
-    FileStoreMatcherUtils utilsFor(String extension) {
-        if ("content".equals(extension)) {
-            return contentUtils;
-        }
-        return jsonUtils;
+    /**
+     * @param type the approved file type
+     * @return the reader/writer configured for that type's extension
+     */
+    FileStoreMatcherUtils utilsFor(ApprovedFileType type) {
+        return utilsByType.get(type);
     }
 }

@@ -78,7 +78,11 @@ final class DedupPaths {
             if (file.normalize().startsWith(sharedDirPath)) {
                 continue;
             }
-            String ext = scanner.getExtension(file);
+            // Deliberately NOT filtered by selected type: a canonical of an unselected type is
+            // still kept alive by its pointer, and missing that would delete a live file. The
+            // callers also skip unselected canonicals when choosing deletion candidates, so the two
+            // guards are redundant on purpose - either alone is sufficient.
+            ApprovedFileType ext = scanner.getType(file);
             if (ext == null) {
                 continue;
             }

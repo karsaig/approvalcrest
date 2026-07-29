@@ -65,6 +65,15 @@ Every run is **idempotent** — running it again on an already-deduped tree is a
 
 If the shared directory is outside the project directory, the pointers referencing it cannot be found, so garbage collection is skipped entirely and the summary says so.
 
+**Restricting to one file type.** Both goals accept a type selection, so a project can consolidate its JSON approvals without touching its `.content` ones, or the reverse:
+
+```bash
+mvn approvalcrest:dedup -DfileMatcherSharedTypes=json
+java -jar approvalcrest-dedup-VERSION-standalone.jar --types content
+```
+
+Only conversion and canonical deletion are restricted. Whether a canonical is still referenced is always decided across every type, because both types share the same bucket directories — so a single-type run can never strand the other type's pointers.
+
 **Overlapping directories are refused.** If the shared approvals directory contains the scan directory, every approved file in the scan tree would be treated as a canonical. Both goals refuse to start in that case rather than delete them.
 
 ### Subsequent test runs
@@ -109,6 +118,7 @@ Use reinstate when:
 | `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | Path to the shared directory for canonical files, relative to the project root |
 | `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals |
 | `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | Number of leading hash characters used as the bucket subdirectory name (1–6) |
+| `fileMatcherSharedTypes` | — | `all` | Which approved file types `approvalcrest:dedup` and `approvalcrest:reinstate` process: `json`, `content`, `json,content` or `all`. Tool-only; it has no effect on the matchers at test time. |
 
 > **Warning:** Changing `fileMatcherSharedDirBucketDepth` after pointer files have been committed invalidates all existing pointers (the canonical paths are different). Use `mvn approvalcrest:reinstate` with the old depth, then `mvn approvalcrest:dedup` with the new depth.
 
@@ -145,6 +155,8 @@ java -jar approvalcrest-dedup-VERSION-standalone.jar [options]
   --dir <path>          Scan directory (default: src/test/java)
   --shared-dir <path>   Shared approvals directory (default: src/test/java/shared-approvals)
   --bucket-depth <n>    Bucket prefix depth 1-6 (default: 2)
+  --types <list>        Approved file types to process: json, content, json,content or all
+                        (default: all)
   --dry-run             Print what would happen without writing files
   --reinstate           Replace all pointers with standalone content and clear shared dir
 ```

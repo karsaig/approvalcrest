@@ -29,13 +29,25 @@ public class ApprovalReinstate {
         this(workingDirectory, scanDir, sharedApprovalDir, false);
     }
 
+    /**
+     * Reinstates every approved file type.
+     */
     public ApprovalReinstate(Path workingDirectory, Path scanDir, String sharedApprovalDir, boolean dryRun) {
+        this(workingDirectory, scanDir, sharedApprovalDir, dryRun, ApprovedFileType.all());
+    }
+
+    /**
+     * @param selectedTypes which approved file types to reinstate. Pointers of any other type are
+     *                      left in place, and so are their canonicals.
+     */
+    ApprovalReinstate(Path workingDirectory, Path scanDir, String sharedApprovalDir, boolean dryRun,
+                      Set<ApprovedFileType> selectedTypes) {
         DedupPaths.requireSharedDirDoesNotContainScanDir(workingDirectory, scanDir, sharedApprovalDir);
         this.workingDirectory = workingDirectory;
         this.scanDir = scanDir;
         this.sharedApprovalDir = sharedApprovalDir;
         this.dryRun = dryRun;
-        this.scanner = new ApprovedFileScanner(sharedApprovalDir, 2);
+        this.scanner = new ApprovedFileScanner(sharedApprovalDir, 2, selectedTypes);
     }
 
     /**
@@ -53,8 +65,8 @@ public class ApprovalReinstate {
 
         int pointersReinstated = 0;
         for (Path file : allApprovedFiles) {
-            String ext = scanner.getExtension(file);
-            if (ext == null) {
+            ApprovedFileType ext = scanner.getType(file);
+            if (ext == null || !scanner.isSelectedType(file)) {
                 continue;
             }
             FileStoreMatcherUtils utils = scanner.utilsFor(ext);
@@ -89,6 +101,11 @@ public class ApprovalReinstate {
 
         int canonicalsDeleted = 0;
         for (Path canonical : scanner.collectApprovedFiles(sharedDirPath, null)) {
+            // Only canonicals of the selected types are candidates, so reinstating one type cannot
+            // strand the other type's pointers.
+            if (!scanner.isSelectedType(canonical)) {
+                continue;
+            }
             if (!referenced.contains(DedupPaths.relativize(workingDirectory, canonical))) {
                 if (!dryRun) {
                     Files.delete(canonical);

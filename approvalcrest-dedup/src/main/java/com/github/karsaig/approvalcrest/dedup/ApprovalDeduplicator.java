@@ -33,14 +33,26 @@ public class ApprovalDeduplicator {
     private final boolean dryRun;
     private final ApprovedFileScanner scanner;
 
+    /**
+     * Processes every approved file type.
+     */
     public ApprovalDeduplicator(Path workingDirectory, Path scanDir, String sharedApprovalDir, int bucketDepth, boolean dryRun) {
+        this(workingDirectory, scanDir, sharedApprovalDir, bucketDepth, dryRun, ApprovedFileType.all());
+    }
+
+    /**
+     * @param selectedTypes which approved file types to convert. Files of any other type are left
+     *                      alone, and so are their canonicals.
+     */
+    ApprovalDeduplicator(Path workingDirectory, Path scanDir, String sharedApprovalDir, int bucketDepth, boolean dryRun,
+                         Set<ApprovedFileType> selectedTypes) {
         DedupPaths.requireSharedDirDoesNotContainScanDir(workingDirectory, scanDir, sharedApprovalDir);
         this.workingDirectory = workingDirectory;
         this.scanDir = scanDir;
         this.sharedApprovalDir = sharedApprovalDir;
         this.bucketDepth = bucketDepth;
         this.dryRun = dryRun;
-        this.scanner = new ApprovedFileScanner(sharedApprovalDir, bucketDepth);
+        this.scanner = new ApprovedFileScanner(sharedApprovalDir, bucketDepth, selectedTypes);
     }
 
     /**
@@ -60,8 +72,8 @@ public class ApprovalDeduplicator {
 
         Map<String, List<ApprovedFileEntry>> contentGroups = new LinkedHashMap<>();
         for (Path file : allApprovedFiles) {
-            String ext = scanner.getExtension(file);
-            if (ext == null) {
+            ApprovedFileType ext = scanner.getType(file);
+            if (ext == null || !scanner.isSelectedType(file)) {
                 continue;
             }
             FileStoreMatcherUtils utils = scanner.utilsFor(ext);
@@ -71,7 +83,7 @@ public class ApprovalDeduplicator {
             String content = utils.readFile(file, workingDirectory);
             String key = utils.computeContentKey(content);
             String comment = utils.readComment(file);
-            contentGroups.computeIfAbsent(key + "." + ext, k -> new ArrayList<>())
+            contentGroups.computeIfAbsent(key + "." + ext.extension(), k -> new ArrayList<>())
                     .add(new ApprovedFileEntry(file, key, content, comment, ext));
         }
 
@@ -137,6 +149,14 @@ public class ApprovalDeduplicator {
 
         int orphansRemoved = 0;
         for (Path canonical : scanner.collectApprovedFiles(sharedDirPath, null)) {
+            // Only canonicals of the selected types are candidates; a json-only run must leave
+            // content canonicals alone even when nothing currently points at them. This and the
+            // unfiltered reference lookup in DedupPaths are independently sufficient - verified by
+            // mutation: removing either alone still protects the other type, removing both deletes
+            // it. DedupTypeSelectionTest.jsonOnlyRunDoesNotCollectContentCanonicals covers that.
+            if (!scanner.isSelectedType(canonical)) {
+                continue;
+            }
             if (!referenced.contains(DedupPaths.relativize(workingDirectory, canonical))) {
                 if (!dryRun) {
                     Files.delete(canonical);
@@ -161,9 +181,9 @@ public class ApprovalDeduplicator {
         final String key;
         final String content;
         final String comment;
-        final String extension;
+        final ApprovedFileType extension;
 
-        ApprovedFileEntry(Path path, String key, String content, String comment, String extension) {
+        ApprovedFileEntry(Path path, String key, String content, String comment, ApprovedFileType extension) {
             this.path = path;
             this.key = key;
             this.content = content;
