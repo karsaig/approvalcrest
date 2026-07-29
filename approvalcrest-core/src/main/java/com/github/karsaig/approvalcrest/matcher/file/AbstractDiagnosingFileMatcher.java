@@ -288,7 +288,7 @@ public abstract class AbstractDiagnosingFileMatcher<T, U extends AbstractDiagnos
                 }
             } catch (IOException e) {
                 throw new IllegalStateException(
-                        String.format("Exception while overwriting approved file %s", actual.toString()), e);
+                        String.format("Exception while overwriting approved file %s", fileNameWithPath), e);
             }
         } else {
             throw new IllegalStateException("Approved file " + fileNameWithPath + " must exist in order to overwrite it! ");

@@ -334,7 +334,7 @@ public class ReflectUtil {
                 field.setAccessible(true);
                 return field.get(obj);
             } catch (Exception e) {
-                throw new InaccessibleFieldException(field);
+                throw new InaccessibleFieldException(field, e);
             }
         }
 
@@ -390,7 +390,7 @@ public class ReflectUtil {
             if (type == double.class) return GET_DOUBLE.invoke(UNSAFE, obj, offset);
             return GET_OBJECT.invoke(UNSAFE, obj, offset);
         } catch (Exception e) {
-            throw new InaccessibleFieldException(field);
+            throw new InaccessibleFieldException(field, e);
         }
     }
 

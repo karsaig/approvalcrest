@@ -35,6 +35,33 @@ public class ReflectUtilTest {
         return AllTypes.class.getDeclaredField(name);
     }
 
+    @SuppressWarnings("unused")
+    static class WithStaticField {
+        private static String staticField = "value";
+    }
+
+    /**
+     * The underlying reflection failure has to survive. Without it an IllegalAccessException, an
+     * InvocationTargetException and a bad-offset IllegalArgumentException all collapse into the
+     * same "Cannot access field" message, which is what the eventual --add-opens guidance is built
+     * from - leaving no way to tell whether that advice even applies.
+     *
+     * <p>A static field is used as the trigger because Unsafe.objectFieldOffset rejects it
+     * outright, which exercises the failure path without any memory-unsafe access.
+     */
+    @Test
+    void inaccessibleFieldExceptionKeepsTheUnderlyingCause() throws Exception {
+        assumeTrue(ReflectUtil.isUnsafeAvailable(), "requires Unsafe");
+        Field staticField = WithStaticField.class.getDeclaredField("staticField");
+
+        InaccessibleFieldException thrown = org.junit.jupiter.api.Assertions.assertThrows(
+                InaccessibleFieldException.class,
+                () -> ReflectUtil.getFieldValueViaUnsafe(staticField, new WithStaticField()));
+
+        assertThat("the reflection failure must be preserved", thrown.getCause(), is(notNullValue()));
+        assertThat(thrown.getField(), is(staticField));
+    }
+
     // --- mode detection ---
 
     @Test
