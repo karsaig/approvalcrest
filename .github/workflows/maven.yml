@@ -33,7 +33,7 @@ jobs:
       run: |
         set | grep JAVA
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+      run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
   build-JDK_17:
     name: Java ${{ matrix.java }} build on JDK 17
     runs-on: ubuntu-latest
@@ -53,7 +53,7 @@ jobs:
         run: |
           set | grep JAVA
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+        run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
   build-JDK_21:
     name: Java ${{ matrix.java }} build on JDK 21
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
         run: |
           set | grep JAVA
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+        run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
@@ -113,4 +113,4 @@ jobs:
         run: |
           set | grep JAVA
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -Djava.version.to.run="${{ matrix.java }}"
+        run: mvn -B verify --file pom.xml -Djava.version.to.run="${{ matrix.java }}"

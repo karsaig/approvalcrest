@@ -1,0 +1,5 @@
+/*samejson.SameJsonParameterizedTest.testPrivateParameterizedWorksWithBothRoutes*/
+{
+  "dummyString": "dummy2",
+  "genericValue": "val2"
+}

@@ -1,8 +1,6 @@
 package samecontent;
 
 import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat;
-import static com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThrows;
-import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameBeanAs;
 import static com.github.karsaig.approvalcrest.jupiter.matcher.Matchers.sameContentAsApproved;
 
 import java.util.stream.Stream;
@@ -43,19 +41,23 @@ public class SameContentParameterizedTest {
         assertThat(value, sameContentAsApproved(testInfo).withUniqueId(name));
     }
 
-    public static Stream<Arguments> testPrivateParameterizedThrows() {
+    public static Stream<Arguments> testPrivateParameterizedWorksWithBothRoutes() {
         return Stream.of(
                 Arguments.of("case1", "value1"),
                 Arguments.of("case2", "value2")
         );
     }
 
+    /**
+     * The stack-trace route and the TestInfo route must agree, so a package-private test
+     * asserting both ways resolves the same approved file. If they diverged, the second
+     * assertion would look for a file that does not exist.
+     */
     @ParameterizedTest
     @MethodSource
-    void testPrivateParameterizedThrows(String name, String value) {
-        NullPointerException expected = new NullPointerException("Cannot determine test method for JunitJupiterTestMeta, do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed.");
-
-        assertThrows(sameBeanAs(expected), () -> assertThat(value, sameContentAsApproved().withUniqueId(name)));
+    void testPrivateParameterizedWorksWithBothRoutes(String name, String value, TestInfo testInfo) {
+        assertThat(value, sameContentAsApproved().withUniqueId(name));
+        assertThat(value, sameContentAsApproved(testInfo).withUniqueId(name));
     }
 
     //f2c9f1
