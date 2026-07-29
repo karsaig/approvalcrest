@@ -3,7 +3,7 @@
 Changelog
 ===========
 
-Version 1.4.3 - 2026/07/28
+Version 1.5.0 - 2026/07/29
 -----
 
 - `SortField.ignoring(...)` now returns a new `SortField` instead of mutating the receiver. Deriving two configurations from one base previously produced a single object carrying both sets of ignores, so a `SortField` held in shared configuration accumulated every caller's paths, order-dependently, and was unsafe under parallel execution. Chaining (`SortField.of("x").ignoring("a").ignoring("b")`) is unaffected; code that called `ignoring(...)` for its side effect and discarded the result must now use the returned instance.
