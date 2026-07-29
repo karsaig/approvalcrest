@@ -6,6 +6,7 @@ Changelog
 Version 1.4.3 - 2026/07/28
 -----
 
+- `assertThrows` no longer treats a skipped test or a JVM-level error as the exception under test. An assumption failure (`TestAbortedException`, `AssumptionViolatedException`, TestNG's `SkipException`) is now rethrown so the test is reported as skipped rather than compared against the expected exception, and a `VirtualMachineError` is rethrown as-is instead of being matched or wrapped. Asserting that a matcher fails still works: `AssertionError` is deliberately still matched.
 - The error reported when an in-place approved-file overwrite fails now names the file it could not write. It previously interpolated the object under comparison instead, so the message identified no file and put the whole serialised content into the exception, the log and the CI output.
 - `ignoringElementsWhere` now rejects a null value or matcher where the rule is declared, naming the path, instead of failing with an unattributed `NullPointerException` later during comparison.
 - Reflection failures now keep their underlying cause. An `IllegalAccessException`, `InvocationTargetException` or `SecurityException` previously collapsed into the same "Cannot access field" message, which made the accompanying `--add-opens` guidance impossible to check.
