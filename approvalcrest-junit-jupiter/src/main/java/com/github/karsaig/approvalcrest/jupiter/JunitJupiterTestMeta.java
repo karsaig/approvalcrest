@@ -14,6 +14,7 @@ import org.junit.jupiter.api.TestTemplate;
 public class JunitJupiterTestMeta extends Junit5TestMetaBase {
 
     private static final String CANNOT_DETERMINE_TEST_METHOD_ERROR = "Cannot determine test method for JunitJupiterTestMeta, do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed.";
+    private static final String INHERITED_TEST_METHOD_FIX = "Do either of the following to solve it:\n1. Pass org.junit.jupiter.api.TestInfo in as constructor parameter to matcher, if you add it as a parameter to the test method, junit will provide it; it knows the concrete test class\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed.";
 
     public JunitJupiterTestMeta() {
         this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
@@ -24,11 +25,17 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
     }
 
     private JunitJupiterTestMeta(String sourceRoutePathString, StackTraceElement testStackTraceElement) {
-        super(testStackTraceElement.getClassName(), testStackTraceElement.getMethodName(), sourceRoutePathString);
+        super(concreteClassName(testStackTraceElement), testStackTraceElement.getMethodName(), sourceRoutePathString);
     }
 
     private JunitJupiterTestMeta(StackTraceElement testStackTraceElement) {
-        super(testStackTraceElement.getClassName(), testStackTraceElement.getMethodName());
+        super(concreteClassName(testStackTraceElement), testStackTraceElement.getMethodName());
+    }
+
+    private static String concreteClassName(StackTraceElement testStackTraceElement) {
+        String className = testStackTraceElement.getClassName();
+        requireConcreteTestClass(className, INHERITED_TEST_METHOD_FIX);
+        return className;
     }
 
     public JunitJupiterTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {

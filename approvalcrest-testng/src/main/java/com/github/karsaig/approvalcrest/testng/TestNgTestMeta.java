@@ -9,6 +9,7 @@ import org.testng.annotations.Test;
 
 public class TestNgTestMeta extends AbstractTestMetaBase {
 
+    static final String INHERITED_TEST_METHOD_FIX = "Do either of the following to solve it:\n1. Provide a custom implementation of TestMetaInformation that supplies the concrete test class\n2. Give each subclass its own test method rather than inheriting one.";
     private static final String CANNOT_DETERMINE_TEST_METHOD_ERROR = "Cannot determine test method for TestNgTestMeta, do either of the following to solve it:\n1. Pass java.lang.reflect.Method as constructor parameter to matcher (TestNG injects it into test methods)\n2. Provide a custom implementation of TestMetaInformation, this is rarely needed.";
 
     public TestNgTestMeta() {
@@ -16,7 +17,13 @@ public class TestNgTestMeta extends AbstractTestMetaBase {
     }
 
     private TestNgTestMeta(StackTraceElement testStackTraceElement) {
-        super(testStackTraceElement.getClassName(), testStackTraceElement.getMethodName());
+        super(concreteClassName(testStackTraceElement), testStackTraceElement.getMethodName());
+    }
+
+    private static String concreteClassName(StackTraceElement testStackTraceElement) {
+        String className = testStackTraceElement.getClassName();
+        requireConcreteTestClass(className, INHERITED_TEST_METHOD_FIX);
+        return className;
     }
 
     public TestNgTestMeta(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {

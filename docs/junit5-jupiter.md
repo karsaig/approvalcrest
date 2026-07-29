@@ -79,6 +79,28 @@ assertThrows(sameBeanAs(expectedException),
     () -> assertThat(actual, sameBeanAs(wrongExpected)));
 ```
 
+## Inherited test methods
+
+A test method declared in an abstract base class and run by several subclasses cannot be resolved by
+the default stack-trace detection: a stack frame names the class a method is *declared* in, not the
+subclass running it, so every subclass would resolve to the same approved file and overwrite the
+others. Approvalcrest fails with a clear error rather than doing that.
+
+Pass `TestInfo` to get one approved file per subclass — JUnit provides it, and it knows the concrete
+class:
+
+```java
+public abstract class AbstractContractTest {
+    @Test
+    void sharedTest(TestInfo testInfo) {
+        assertThat(actual, sameJsonAsApproved(testInfo));
+    }
+}
+```
+
+A **concrete** base class with subclasses has the same ambiguity but is indistinguishable from an
+ordinary test class, so it cannot be detected — pass `TestInfo` there too.
+
 ## Related
 
 - [same-json-as-approved](same-json-as-approved.md)

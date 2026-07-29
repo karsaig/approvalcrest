@@ -2,6 +2,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -100,6 +101,38 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
             }
         }
         return result;
+    }
+
+    /**
+     * Rejects a test class name that cannot possibly be the class being run.
+     *
+     * <p>A test method inherited from a base class reports the <em>declaring</em> class, not the
+     * subclass actually running it, because that is what a stack frame and
+     * {@code Method#getDeclaringClass()} both describe. Every subclass therefore resolves to one
+     * approved file and they silently share a golden master.
+     *
+     * <p>The running subclass cannot be recovered from either source, so the only honest check is
+     * for the case where the reported class is provably wrong: an abstract class is never itself
+     * the test class. A concrete base with subclasses has the same problem but is indistinguishable
+     * from an ordinary test class, so it is documented rather than guessed at.
+     *
+     * @param testClassName the class name derived from the stack frame or declaring class
+     * @param howToFix      framework-specific instruction for supplying the running test class
+     */
+    protected static void requireConcreteTestClass(String testClassName, String howToFix) {
+        Class<?> clazz;
+        try {
+            clazz = Class.forName(testClassName);
+        } catch (Throwable e) {
+            // Cannot inspect it; leave the name as-is rather than failing on a resolution problem.
+            return;
+        }
+        if (Modifier.isAbstract(clazz.getModifiers())) {
+            throw new IllegalStateException("Cannot determine which test class is running: the test method is"
+                    + " declared in the abstract class " + testClassName + ", so the subclass actually running it"
+                    + " is not recoverable here. Every subclass would resolve to the same approved file and"
+                    + " overwrite each other.\n" + howToFix);
+        }
     }
 
     @Override
