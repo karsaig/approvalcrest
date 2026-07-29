@@ -99,11 +99,15 @@ By default approved files are stored alongside the test class under `src/test/ja
 # Integration tests under src/it/java
 mvn verify -DfileMatcherSourceRoot=src/it/java
 
-# Kotlin tests under src/test/kotlin (short alias)
-mvn test -DfmSourceRoot=src/test/kotlin
+# Short alias
+mvn verify -DfmSourceRoot=src/it/java
 ```
 
 The value is a path relative to the project root and defaults to `src/test/java`. It sets the base directory the test class's package path is appended to when resolving approved files, so `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. Per-matcher overrides (`.withPath`, `.withPathName`, `.withRelativePathName`) still take precedence when set.
+
+The property applies to both ways of identifying a test — stack-trace detection and the injected `TestInfo` / `Description` / `Method` — so it cannot move approved files for some tests but not others.
+
+> **Not supported by the Kotlin matchers.** `approvalcrest-junit-jupiter-kotlin` hardcodes `src/test/kotlin` and ignores this property, so Kotlin tests living anywhere else (`src/it/kotlin`, for example) cannot be configured with it. Use the per-matcher overrides instead. This applies to both Kotlin routes equally, so they stay consistent with each other.
 
 ## Migration from pre-1.0.0 Without Moving Files
 
