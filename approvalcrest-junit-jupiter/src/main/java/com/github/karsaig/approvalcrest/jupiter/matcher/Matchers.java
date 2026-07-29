@@ -27,6 +27,10 @@ public class Matchers {
 
     private static final MatchersImpl INSTANCE = new MatchersImpl();
 
+    private Matchers() {
+        // Static factory methods only; not intended to be instantiated.
+    }
+
 
     /**
      * Returns a {@link NullMatcher} in case the expectation is null, a

@@ -43,6 +43,8 @@ import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 /**
  * Extends the functionalities of {@link DiagnosingMatcher} with the possibility to specify fields and object types to
  * ignore in the comparison, or fields to be matched with a custom matcher
+ *
+ * @param <T> type of the object being asserted
  */
 public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<T> implements CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>> {
     protected final Set<Class<?>> circularReferenceTypes = new HashSet<>();

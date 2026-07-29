@@ -18,6 +18,8 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * {@link DiagnosingCustomisableMatcher} which applies the {@link IsEqual} matcher when the object to compare is a String
  * or a primitive type.
+ *
+ * @param <T> type of the object being asserted
  */
 public class IsEqualMatcher<T> extends DiagnosingCustomisableMatcher<T> {
 

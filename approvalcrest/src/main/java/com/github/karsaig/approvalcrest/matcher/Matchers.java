@@ -24,6 +24,10 @@ public class Matchers {
 
     private static final MatcherFactory MATCHER_FACTORY = new MatcherFactory();
 
+    private Matchers() {
+        // Static factory methods only; not intended to be instantiated.
+    }
+
     /**
      * Returns a {@link NullMatcher} in case the expectation is null, a
      * {@link IsEqualMatcher} if it's a primitive, String or Enum or a
@@ -53,7 +57,8 @@ public class Matchers {
      * file.
      *
      * @param <T>         Type of object to serialize to JSON
-     * @param description
+     * @param description JUnit 4 Description of the running test, used to derive the file name and
+     *                    path; obtain it with {@link com.github.karsaig.approvalcrest.Junit4DesciptionWatcher}
      * @return a new {@link JsonMatcher} instance
      */
     public static <T> JsonMatcher<T> sameJsonAsApproved(Description description) {
@@ -79,7 +84,9 @@ public class Matchers {
     /**
      * Returns a {@link ContentMatcher} for matching a string with a generated file.
      *
-     * @param <T> Only {@link String} is supported at the moment.
+     * @param <T>         Only {@link String} is supported at the moment.
+     * @param description JUnit 4 Description of the running test, used to derive the file name and
+     *                    path; obtain it with {@link com.github.karsaig.approvalcrest.Junit4DesciptionWatcher}
      * @return a new {@link ContentMatcher} instance
      */
     public static <T> ContentMatcher<T> sameContentAsApproved(Description description) {

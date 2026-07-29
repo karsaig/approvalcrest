@@ -46,6 +46,7 @@ import static java.util.Collections.emptySet;
  * custom file name and {@link #withPathName(String)} for custom path.
  * </p>
  *
+ * @param <T> type of the object being asserted
  * @author Andras_Gyuro
  */
 public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher<T>> implements CustomisableMatcher<T, JsonMatcher<T>> {

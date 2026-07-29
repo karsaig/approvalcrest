@@ -99,7 +99,11 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>${maven.javadoc.plugin.version}</version>
                 <configuration>
-                    <failOnError>false</failOnError>
+                    <!-- Malformed markup and broken @link targets fail the build; missing comments
+                         stay warnings. Without this a stray closing tag only logs an [ERROR] line
+                         and the build stays green, which is how one sat in ReflectUtil unnoticed. -->
+                    <doclint>html,reference,syntax,accessibility</doclint>
+                    <failOnError>true</failOnError>
                     <quiet>true</quiet>
                 </configuration>
                 <executions>

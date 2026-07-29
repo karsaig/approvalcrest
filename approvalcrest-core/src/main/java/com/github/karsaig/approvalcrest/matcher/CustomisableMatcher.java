@@ -19,6 +19,9 @@ import java.util.function.Function;
 /**
  * {@link Matcher} implementation where fields and object types can be skipped from the comparison, or matched with
  * custom matchers.
+ *
+ * @param <T> type of the object being asserted
+ * @param <U> the concrete matcher type, so the fluent methods return the right type when chained
  */
 public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> extends Matcher<T> {
 
