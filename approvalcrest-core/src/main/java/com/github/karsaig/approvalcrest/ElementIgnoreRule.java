@@ -9,6 +9,8 @@
  */
 package com.github.karsaig.approvalcrest;
 
+import java.util.Objects;
+
 import com.google.gson.JsonElement;
 import org.hamcrest.Matcher;
 
@@ -33,15 +35,23 @@ public class ElementIgnoreRule {
 
     /**
      * Remove elements whose leaf field value (coerced to a Java value) satisfies the matcher.
+     *
+     * <p>Rejects a null matcher here rather than at comparison time: the rule is applied deep inside
+     * the matcher, long after this call, and the resulting failure would name neither the rule nor
+     * the path it came from.
      */
     public static ElementIgnoreRule of(String path, Matcher<?> valueMatcher) {
+        Objects.requireNonNull(valueMatcher, "valueMatcher must not be null for element ignore rule on path: " + path);
         return new ElementIgnoreRule(path, valueMatcher, null);
     }
 
     /**
      * Remove elements whose leaf field, coerced to a String, equals {@code value}.
+     *
+     * <p>Rejects a null value for the same reason as {@link #of}.
      */
     public static ElementIgnoreRule ofValue(String path, String value) {
+        Objects.requireNonNull(value, "value must not be null for element ignore rule on path: " + path);
         return new ElementIgnoreRule(path, null, value);
     }
 

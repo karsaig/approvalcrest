@@ -13,8 +13,23 @@ public class InaccessibleFieldException extends RuntimeException {
     private final transient Field field;
 
     public InaccessibleFieldException(Field field) {
-        super("Cannot access field: " + field.getDeclaringClass().getName() + "." + field.getName());
+        super(message(field));
         this.field = field;
+    }
+
+    /**
+     * Keeps the underlying reflection failure. Without it an {@code IllegalAccessException}, an
+     * {@code InvocationTargetException}, a {@code SecurityException} and a bad-offset
+     * {@code IllegalArgumentException} all collapse into the same message, which makes the advice
+     * this exception eventually turns into impossible to check.
+     */
+    public InaccessibleFieldException(Field field, Throwable cause) {
+        super(message(field), cause);
+        this.field = field;
+    }
+
+    private static String message(Field field) {
+        return "Cannot access field: " + field.getDeclaringClass().getName() + "." + field.getName();
     }
 
     public Field getField() {

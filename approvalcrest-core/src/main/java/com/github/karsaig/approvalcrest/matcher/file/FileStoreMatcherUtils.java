@@ -22,6 +22,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 
+import com.github.karsaig.approvalcrest.ApprovedFileType;
 import com.github.karsaig.approvalcrest.FileMatcherConfig;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 
@@ -48,6 +49,14 @@ public class FileStoreMatcherUtils {
         this.fileType = fileType;
         this.fileExtension = "." + fileType;
         this.fileMatcherConfig = fileMatcherConfig;
+    }
+
+    /**
+     * @return the kind of approved file this instance reads and writes, or null for a type
+     *         approvalcrest does not know about
+     */
+    public ApprovedFileType getApprovedFileType() {
+        return ApprovedFileType.fromExtension(fileType);
     }
 
     /**
@@ -131,6 +140,36 @@ public class FileStoreMatcherUtils {
         return file;
     }
 
+    /**
+     * Returns the file content with its {@code /*comment*}{@code /} header and the newline that
+     * terminates it removed, or {@code null} if the content has no parseable header.
+     *
+     * <p>Headers are always written with a LF, but an approved file checked out on Windows with
+     * {@code core.autocrlf=true} arrives with a CRLF, so both are accepted. Matching the old
+     * behaviour, a {@code *}{@code /} that is not followed by a newline does not terminate the
+     * header and the search continues.
+     */
+    private static String contentAfterHeader(String fileContent) {
+        if (!fileContent.startsWith("/*")) {
+            return null;
+        }
+        int from = 2;
+        while (true) {
+            int terminator = fileContent.indexOf("*/", from);
+            if (terminator < 0) {
+                return null;
+            }
+            int afterTerminator = terminator + 2;
+            if (fileContent.startsWith("\r\n", afterTerminator)) {
+                return fileContent.substring(afterTerminator + 2);
+            }
+            if (fileContent.startsWith("\n", afterTerminator)) {
+                return fileContent.substring(afterTerminator + 1);
+            }
+            from = afterTerminator;
+        }
+    }
+
     public String readFile(Path file) throws IOException {
         return readFile(file, null);
     }
@@ -144,37 +183,27 @@ public class FileStoreMatcherUtils {
             throw new IllegalStateException("Pointer chain depth exceeded " + MAX_POINTER_DEPTH + " hops, possible cycle at: " + file);
         }
         String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                if (content.startsWith(POINTER_PREFIX)) {
-                    String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
-                    if (workingDirectory == null) {
-                        throw new IllegalStateException("Cannot follow pointer in file " + file + ": working directory is required to resolve relative path '" + target + "'");
-                    }
-                    Path targetPath = workingDirectory.resolve(target);
-                    return readFile(targetPath, workingDirectory, depth + 1);
-                }
-                return content;
-            }
+        String content = contentAfterHeader(fileContent);
+        if (content == null) {
+            return fileContent;
         }
-        return fileContent;
+        if (content.startsWith(POINTER_PREFIX)) {
+            String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
+            if (workingDirectory == null) {
+                throw new IllegalStateException("Cannot follow pointer in file " + file + ": working directory is required to resolve relative path '" + target + "'");
+            }
+            Path targetPath = workingDirectory.resolve(target);
+            return readFile(targetPath, workingDirectory, depth + 1);
+        }
+        return content;
     }
 
     /**
      * Returns true if the file contains a pointer reference (after stripping the comment header).
      */
     public boolean isPointerFile(Path file) throws IOException {
-        String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                return content.startsWith(POINTER_PREFIX);
-            }
-        }
-        return false;
+        String content = contentAfterHeader(new String(Files.readAllBytes(file), UTF_8));
+        return content != null && content.startsWith(POINTER_PREFIX);
     }
 
     /**
@@ -196,16 +225,9 @@ public class FileStoreMatcherUtils {
      * Returns the relative target path embedded in a pointer file, or empty if not a pointer.
      */
     public Optional<String> readPointerTarget(Path file) throws IOException {
-        String fileContent = new String(Files.readAllBytes(file), UTF_8);
-        if (fileContent.startsWith("/*")) {
-            int index = fileContent.indexOf("*/\n");
-            if (-1 < index) {
-                String content = fileContent.substring(index + 3);
-                if (content.startsWith(POINTER_PREFIX)) {
-                    String target = content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim();
-                    return Optional.of(target);
-                }
-            }
+        String content = contentAfterHeader(new String(Files.readAllBytes(file), UTF_8));
+        if (content != null && content.startsWith(POINTER_PREFIX)) {
+            return Optional.of(content.substring(POINTER_PREFIX.length(), content.indexOf("*/")).trim());
         }
         return Optional.empty();
     }
@@ -230,6 +252,21 @@ public class FileStoreMatcherUtils {
     }
 
     /**
+     * Derives the bucket directory name from a content key. Guards the depth explicitly so a
+     * misconfigured value surfaces as a configuration error naming the property, rather than as an
+     * opaque {@link StringIndexOutOfBoundsException} from deep inside the matcher.
+     */
+    private static String bucketOf(String key, int bucketDepth) {
+        if (bucketDepth < FileMatcherConfig.MIN_SHARED_BUCKET_DEPTH || bucketDepth > FileMatcherConfig.MAX_SHARED_BUCKET_DEPTH) {
+            throw new IllegalArgumentException("Invalid shared directory bucket depth: " + bucketDepth
+                    + ". Must be between " + FileMatcherConfig.MIN_SHARED_BUCKET_DEPTH
+                    + " and " + FileMatcherConfig.MAX_SHARED_BUCKET_DEPTH
+                    + " (see the fileMatcherSharedDirBucketDepth property).");
+        }
+        return key.substring(0, bucketDepth);
+    }
+
+    /**
      * Looks up a canonical file in the shared directory whose content matches the given string.
      * Uses a direct filename lookup based on SHA-256 hash prefix and content size (no directory scan).
      *
@@ -237,7 +274,7 @@ public class FileStoreMatcherUtils {
      */
     public Optional<String> findMatchingCanonical(String content, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) {
         String key = computeContentKey(content);
-        String bucket = key.substring(0, bucketDepth);
+        String bucket = bucketOf(key, bucketDepth);
         Path sharedDir = workingDirectory.resolve(sharedApprovalDirectory);
         Path canonicalPath = sharedDir.resolve(bucket).resolve(key + SEPARATOR + APPROVED_NAME_PART + fileExtension);
         if (Files.exists(canonicalPath)) {
@@ -248,12 +285,26 @@ public class FileStoreMatcherUtils {
     }
 
     /**
+     * Returns the project-relative path the canonical for this content would occupy, without
+     * creating anything. Tooling that previews its actions must use this rather than assembling
+     * the path itself, so that a preview cannot describe a different file from the one a real run
+     * would touch.
+     */
+    public String canonicalRelativePath(String content, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) {
+        String key = computeContentKey(content);
+        String bucket = bucketOf(key, bucketDepth);
+        Path canonicalPath = workingDirectory.resolve(sharedApprovalDirectory).resolve(bucket)
+                .resolve(key + SEPARATOR + APPROVED_NAME_PART + fileExtension);
+        return workingDirectory.relativize(canonicalPath).toString().replace('\\', '/');
+    }
+
+    /**
      * Writes a new canonical file to the shared directory for the given content.
      * Returns the relative path from workingDirectory to the newly created canonical.
      */
     public String writeCanonical(String content, String comment, Path workingDirectory, String sharedApprovalDirectory, int bucketDepth) throws IOException {
         String key = computeContentKey(content);
-        String bucket = key.substring(0, bucketDepth);
+        String bucket = bucketOf(key, bucketDepth);
         Path sharedDir = workingDirectory.resolve(sharedApprovalDirectory);
         Path bucketDir = sharedDir.resolve(bucket);
         if (isPosixCompatible(bucketDir)) {
@@ -265,7 +316,7 @@ public class FileStoreMatcherUtils {
         if (!Files.exists(canonicalPath)) {
             writeToFile(canonicalPath, content, comment);
         }
-        return workingDirectory.relativize(canonicalPath).toString().replace('\\', '/');
+        return canonicalRelativePath(content, workingDirectory, sharedApprovalDirectory, bucketDepth);
     }
 
     /**

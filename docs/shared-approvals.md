@@ -32,7 +32,9 @@ For example:
 src/test/java/shared-approvals/a1/a1b2c3d4e5f6-4827-approved.json
 ```
 
-The `{bucket}` directory is the first N characters of the hash (default N=2, giving 256 buckets). Using both the hash prefix and the byte size effectively prevents hash collisions for practical file sizes.
+The `{bucket}` directory is the first N characters of the hash (default N=2, giving 256 buckets). Using both the hash prefix and the byte size effectively prevents hash collisions for practical file sizes. A value outside the supported range of 1–6 is rejected with a configuration error naming the property.
+
+> **Changing the bucket depth relocates every canonical.** The depth is part of the path a pointer resolves to, so after changing it the existing canonicals are no longer found and duplicate content is silently written again under the new layout. To migrate, run `mvn approvalcrest:reinstate` with the old depth first, then `mvn approvalcrest:dedup` with the new one.
 
 ## Deduplication workflow
 
@@ -59,6 +61,21 @@ java -jar approvalcrest-dedup-VERSION-standalone.jar
 
 Every run is **idempotent** — running it again on an already-deduped tree is a no-op.
 
+**Scan directory vs. reference lookup.** `--dir` controls which files are *converted* into pointers. It does not control which canonicals are considered *in use*: that is looked up across the whole project, because a pointer outside the scanned subtree needs its canonical just as much as one inside it. This matters when you narrow `--dir`, or run the goal per module against a shared directory covering several modules — the canonicals belonging to the modules you did not scan are left alone.
+
+If the shared directory is outside the project directory, the pointers referencing it cannot be found, so garbage collection is skipped entirely and the summary says so.
+
+**Restricting to one file type.** Both goals accept a type selection, so a project can consolidate its JSON approvals without touching its `.content` ones, or the reverse:
+
+```bash
+mvn approvalcrest:dedup -DfileMatcherSharedTypes=json
+java -jar approvalcrest-dedup-VERSION-standalone.jar --types content
+```
+
+Only conversion and canonical deletion are restricted. Whether a canonical is still referenced is always decided across every type, because both types share the same bucket directories — so a single-type run can never strand the other type's pointers.
+
+**Overlapping directories are refused.** If the shared approvals directory contains the scan directory, every approved file in the scan tree would be treated as a canonical. Both goals refuse to start in that case rather than delete them.
+
 ### Subsequent test runs
 
 Normal test runs work without any configuration. After a code change that affects the output, the library detects a mismatch as usual. In-place update behaviour depends on the `fmSharedEnabled` setting:
@@ -81,6 +98,15 @@ mvn approvalcrest:reinstate
 java -jar approvalcrest-dedup-VERSION-standalone.jar --reinstate
 ```
 
+Reinstate replaces the pointers under `--dir` with their content, then deletes the canonicals that nothing references any more. As with dedup, the reference lookup spans the whole project, so reinstating one module does not strip the canonicals another module still points at.
+
+Pass `--dry-run` (or `-DdryRun=true` for the Maven goal) to print what would happen without writing or deleting anything:
+
+```bash
+mvn approvalcrest:reinstate -DdryRun=true
+java -jar approvalcrest-dedup-VERSION-standalone.jar --reinstate --dry-run
+```
+
 Use reinstate when:
 - Changing the shared directory location (reinstate with old config → dedup with new config)
 - Fully opting out of the shared file system
@@ -90,8 +116,9 @@ Use reinstate when:
 | Property | Alias | Default | Description |
 |---|---|---|---|
 | `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | Path to the shared directory for canonical files, relative to the project root |
-| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals |
+| `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Activates write-side integration: new approved files and in-place updates check for matching canonicals. `true`/`all` for both types, `json` or `content` for one, `false`/`none` for neither |
 | `fileMatcherSharedDirBucketDepth` | `fmSharedDirBucketDepth` | `2` | Number of leading hash characters used as the bucket subdirectory name (1–6) |
+| `fileMatcherSharedTypes` | — | `all` | Which approved file types `approvalcrest:dedup` and `approvalcrest:reinstate` process: `json`, `content`, `json,content` or `all`. Tool-only; it has no effect on the matchers at test time. |
 
 > **Warning:** Changing `fileMatcherSharedDirBucketDepth` after pointer files have been committed invalidates all existing pointers (the canonical paths are different). Use `mvn approvalcrest:reinstate` with the old depth, then `mvn approvalcrest:dedup` with the new depth.
 
@@ -108,6 +135,18 @@ mvn test -DfileMatcherUpdateInPlace=true -DfmSharedEnabled=true
 ```
 
 With `fmSharedEnabled=false` (the default), the library still **reads** pointer files correctly — it just does not create new ones automatically during test runs. Deduplication itself is always done via the CLI/plugin tool.
+
+**Restricting to one file type.** The property takes a type as well as a boolean, so the write-side can be limited to the same type the tool was run for:
+
+```bash
+# Only JSON approvals point at canonicals; .content files keep their own copy
+mvn test -DfmSharedEnabled=json
+
+# Both, which is what true means
+mvn test -DfmSharedEnabled=true
+```
+
+Accepted values are `true` and `all` (both types), `json`, `content`, a comma-separated list, and `false` or `none`. This pairs with the tool's `--types` / `-DfileMatcherSharedTypes`: dedup with `--types json` to create only JSON canonicals, then run tests with `-DfmSharedEnabled=json` so new `.content` files are not pointerised against canonicals that were never created for them.
 
 ## Stale pointers
 
@@ -128,6 +167,8 @@ java -jar approvalcrest-dedup-VERSION-standalone.jar [options]
   --dir <path>          Scan directory (default: src/test/java)
   --shared-dir <path>   Shared approvals directory (default: src/test/java/shared-approvals)
   --bucket-depth <n>    Bucket prefix depth 1-6 (default: 2)
+  --types <list>        Approved file types to process: json, content, json,content or all
+                        (default: all)
   --dry-run             Print what would happen without writing files
   --reinstate           Replace all pointers with standalone content and clear shared dir
 ```

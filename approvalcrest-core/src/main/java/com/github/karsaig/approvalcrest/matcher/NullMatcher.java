@@ -17,6 +17,8 @@ import org.hamcrest.Description;
 
 /**
  * {@link DiagnosingCustomisableMatcher} implementation which verifies a bean is null.
+ *
+ * @param <T> type of the object being asserted
  */
 public class NullMatcher<T> extends DiagnosingCustomisableMatcher<T> {
 	public NullMatcher(T expected) {

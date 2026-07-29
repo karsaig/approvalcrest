@@ -21,6 +21,10 @@ public class Matchers {
 
     private static final MatcherFactory MATCHER_FACTORY = new MatcherFactory();
 
+    private Matchers() {
+        // Static factory methods only; not intended to be instantiated.
+    }
+
     /**
      * Returns a {@link NullMatcher} in case the expectation is null, a
      * {@link IsEqualMatcher} if it's a primitive, String or Enum or a

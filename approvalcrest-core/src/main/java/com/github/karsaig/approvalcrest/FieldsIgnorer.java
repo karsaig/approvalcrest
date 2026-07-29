@@ -601,7 +601,15 @@ public class FieldsIgnorer {
         return false;
     }
 
-    static boolean isGraphAdapterKey(String key) {
+    /**
+     * Returns true if the given string is an object-graph reference id as produced by
+     * {@code GraphAdapterBuilder}, i.e. {@code "0x"} followed by one or more lowercase hex digits.
+     *
+     * <p>This is the single definition of the reference format; any code that needs to recognise
+     * these ids must use this method rather than its own pattern, so that ids from the tenth
+     * object onwards (which contain the hex letters a-f) are not missed.
+     */
+    public static boolean isGraphAdapterKey(String key) {
         if (key == null || !key.startsWith("0x") || key.length() <= 2) return false;
         for (int i = 2; i < key.length(); i++) {
             char c = key.charAt(i);

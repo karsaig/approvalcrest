@@ -108,3 +108,27 @@ Verify that an assertion fails with an expected exception:
 assertThrows(sameBeanAs(expectedException),
     () -> assertThat(actual, sameBeanAs(wrongExpected)));
 ```
+
+## Inherited test methods
+
+A test method declared in an abstract base class and run by several subclasses cannot be resolved by
+the default stack-trace detection: a stack frame names the class a method is *declared* in, not the
+subclass running it, so every subclass would resolve to the same approved file. Approvalcrest fails
+with a clear error rather than letting them overwrite each other.
+
+Use `Junit4DesciptionWatcher` as a `@Rule` and the matcher constructor taking a `Description`, which
+knows the concrete test class:
+
+```java
+public abstract class AbstractContractTest {
+    @Rule
+    public Junit4DesciptionWatcher watcher = new Junit4DesciptionWatcher();
+
+    @Test
+    public void sharedTest() {
+        assertThat(actual, sameJsonAsApproved(watcher.getDescription()));
+    }
+}
+```
+
+A **concrete** base class with subclasses has the same ambiguity but cannot be detected.

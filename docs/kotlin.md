@@ -89,6 +89,23 @@ companion object {
 }
 ```
 
+## Inherited test methods
+
+The Kotlin matchers use the JUnit 5 machinery, so the same rule applies: a test function declared in
+an abstract base class and run by several subclasses fails with a clear error, because the stack
+frame names the declaring class rather than the subclass. Pass `TestInfo` to get one approved file
+per subclass. See [junit5-jupiter](junit5-jupiter.md#inherited-test-methods).
+
+## Where approved files are stored
+
+Kotlin approved files default to `src/test/kotlin`, alongside the test class, rather than the `src/test/java` used by the Java matchers. If your Kotlin tests live somewhere else, point approvalcrest at it with the shared `fileMatcherSourceRoot` property:
+
+```bash
+mvn verify -DfileMatcherSourceRoot=src/it/kotlin
+```
+
+Only the default differs per framework — the property itself is shared, so in a project with both Java and Kotlin tests it moves both. See [file-control](file-control.md#configuring-the-test-source-root).
+
 ## Related
 
 - [junit5-jupiter](junit5-jupiter.md)

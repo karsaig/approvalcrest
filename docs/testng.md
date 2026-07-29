@@ -85,6 +85,16 @@ assertThrows(sameBeanAs(expectedException),
 
 The `approvalcrest-testng` artifact uses TestNG as a `provided` dependency — you bring your own TestNG version at runtime.
 
+## Inherited test methods
+
+A test method declared in an abstract base class and run by several subclasses cannot be resolved
+automatically. Both the stack frame and TestNG's injected `java.lang.reflect.Method` report the class
+the method is *declared* in, not the subclass running it, so every subclass would resolve to the same
+approved file. Approvalcrest fails with a clear error rather than letting them overwrite each other.
+
+Give each subclass its own test method, or supply a custom `TestMetaInformation` that knows the
+concrete class. A **concrete** base class has the same ambiguity but cannot be detected.
+
 ## Related
 
 - [same-json-as-approved](same-json-as-approved.md)

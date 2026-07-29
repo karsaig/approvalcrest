@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>{@code force} — uses setAccessible(true) directly (requires --add-opens on Java 9+)</li>
  *   <li>{@code fallback} — skips Unsafe entirely, uses getter-based (for testing/future-proofing)</li>
  * </ul>
- * </p>
  * <p>
  * IMPORTANT: All access to sun.misc.Unsafe, java.lang.Module, and MethodHandles.Lookup is
  * done via reflection. There is NO import of any of these. When Unsafe is removed from a
@@ -335,7 +334,7 @@ public class ReflectUtil {
                 field.setAccessible(true);
                 return field.get(obj);
             } catch (Exception e) {
-                throw new InaccessibleFieldException(field);
+                throw new InaccessibleFieldException(field, e);
             }
         }
 
@@ -391,7 +390,7 @@ public class ReflectUtil {
             if (type == double.class) return GET_DOUBLE.invoke(UNSAFE, obj, offset);
             return GET_OBJECT.invoke(UNSAFE, obj, offset);
         } catch (Exception e) {
-            throw new InaccessibleFieldException(field);
+            throw new InaccessibleFieldException(field, e);
         }
     }
 

@@ -4,16 +4,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
-import com.github.karsaig.approvalcrest.FileMatcherConfig;
+import com.github.karsaig.approvalcrest.ApprovedFileType;
 import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
 
 /**
@@ -23,8 +21,9 @@ import com.github.karsaig.approvalcrest.matcher.file.FileStoreMatcherUtils;
  * <p>Files that are already pointer files are not modified; their existing canonical references
  * are tracked to prevent garbage-collection of still-referenced canonicals.
  *
- * <p>After deduplication, any canonical in the shared directory not referenced by any pointer
- * file is removed (garbage collection).
+ * <p>After deduplication, any canonical in the shared directory that no pointer references is
+ * removed. See {@link #deduplicate()} for why that lookup spans the whole project rather than only
+ * the scan directory.
  */
 public class ApprovalDeduplicator {
 
@@ -33,63 +32,70 @@ public class ApprovalDeduplicator {
     private final String sharedApprovalDir;
     private final int bucketDepth;
     private final boolean dryRun;
-    private final FileStoreMatcherUtils jsonUtils;
-    private final FileStoreMatcherUtils contentUtils;
+    private final ApprovedFileScanner scanner;
 
+    /**
+     * Processes every approved file type.
+     */
     public ApprovalDeduplicator(Path workingDirectory, Path scanDir, String sharedApprovalDir, int bucketDepth, boolean dryRun) {
+        this(workingDirectory, scanDir, sharedApprovalDir, bucketDepth, dryRun, ApprovedFileType.all());
+    }
+
+    /**
+     * @param selectedTypes which approved file types to convert. Files of any other type are left
+     *                      alone, and so are their canonicals.
+     */
+    ApprovalDeduplicator(Path workingDirectory, Path scanDir, String sharedApprovalDir, int bucketDepth, boolean dryRun,
+                         Set<ApprovedFileType> selectedTypes) {
+        DedupPaths.requireSharedDirDoesNotContainScanDir(workingDirectory, scanDir, sharedApprovalDir);
         this.workingDirectory = workingDirectory;
         this.scanDir = scanDir;
         this.sharedApprovalDir = sharedApprovalDir;
         this.bucketDepth = bucketDepth;
         this.dryRun = dryRun;
-        FileMatcherConfig config = new FileMatcherConfig(false, false, false, false, true, sharedApprovalDir, true, bucketDepth);
-        this.jsonUtils = new FileStoreMatcherUtils("json", config);
-        this.contentUtils = new FileStoreMatcherUtils("content", config);
+        this.scanner = new ApprovedFileScanner(sharedApprovalDir, bucketDepth, selectedTypes);
     }
 
+    /**
+     * Converts duplicate approved files under the scan directory into pointer files, then removes
+     * canonicals that nothing references any more.
+     *
+     * <p>The scan directory decides which files get <em>converted</em>. Which canonicals are still
+     * <em>referenced</em> is a separate question, answered across the whole project: a pointer
+     * outside the scan directory keeps its canonical alive exactly as much as one inside it.
+     * Answering it on the narrower scan would delete those canonicals and strand the pointers with
+     * content that exists nowhere on disk.
+     */
     public DeduplicatorResult deduplicate() throws IOException {
         Path sharedDirPath = workingDirectory.resolve(sharedApprovalDir).normalize();
 
-        // Collect all approved files from the scan dir, excluding the shared dir
-        List<Path> allApprovedFiles = collectApprovedFiles(scanDir, sharedDirPath);
+        List<Path> allApprovedFiles = scanner.collectApprovedFiles(scanDir, sharedDirPath);
 
-        // Separate pointer files (track their references) from content files (group for dedup)
-        Set<String> referencedCanonicals = new HashSet<>();
         Map<String, List<ApprovedFileEntry>> contentGroups = new LinkedHashMap<>();
-
         for (Path file : allApprovedFiles) {
-            String ext = getExtension(file);
-            if (ext == null) {
+            ApprovedFileType ext = scanner.getType(file);
+            if (ext == null || !scanner.isSelectedType(file)) {
                 continue;
             }
-            FileStoreMatcherUtils utils = utilsFor(ext);
+            FileStoreMatcherUtils utils = scanner.utilsFor(ext);
             if (utils.isPointerFile(file)) {
-                Optional<String> target = utils.readPointerTarget(file);
-                if (target.isPresent()) {
-                    referencedCanonicals.add(target.get().replace('\\', '/'));
-                }
-            } else {
-                String content = utils.readFile(file, workingDirectory);
-                String key = utils.computeContentKey(content);
-                String comment = utils.readComment(file);
-                String groupKey = key + "." + ext;
-                List<ApprovedFileEntry> group = contentGroups.get(groupKey);
-                if (group == null) {
-                    group = new ArrayList<>();
-                    contentGroups.put(groupKey, group);
-                }
-                group.add(new ApprovedFileEntry(file, key, content, comment, ext));
+                continue;
             }
+            String content = utils.readFile(file, workingDirectory);
+            String key = utils.computeContentKey(content);
+            String comment = utils.readComment(file);
+            contentGroups.computeIfAbsent(key + "." + ext.extension(), k -> new ArrayList<>())
+                    .add(new ApprovedFileEntry(file, key, content, comment, ext));
         }
 
-        // For each group: point to existing canonical, or create a new one for groups of size >= 2
         int pointersWritten = 0;
         int canonicalsCreated = 0;
+        Set<String> canonicalsUsedThisRun = new HashSet<>();
 
         for (Map.Entry<String, List<ApprovedFileEntry>> entry : contentGroups.entrySet()) {
             List<ApprovedFileEntry> group = entry.getValue();
             ApprovedFileEntry first = group.get(0);
-            FileStoreMatcherUtils utils = utilsFor(first.extension);
+            FileStoreMatcherUtils utils = scanner.utilsFor(first.extension);
 
             Optional<String> existingCanonical = utils.findMatchingCanonical(
                     first.content, workingDirectory, sharedApprovalDir, bucketDepth);
@@ -98,13 +104,12 @@ public class ApprovalDeduplicator {
             if (existingCanonical.isPresent()) {
                 canonicalRelative = existingCanonical.get();
             } else if (group.size() >= 2) {
+                // Derive the path the same way in both modes so a dry-run preview cannot describe
+                // a different file from the one a real run would write.
+                canonicalRelative = utils.canonicalRelativePath(
+                        first.content, workingDirectory, sharedApprovalDir, bucketDepth);
                 if (!dryRun) {
-                    canonicalRelative = utils.writeCanonical(
-                            first.content, "shared", workingDirectory, sharedApprovalDir, bucketDepth);
-                } else {
-                    String key = utils.computeContentKey(first.content);
-                    String bucket = key.substring(0, bucketDepth);
-                    canonicalRelative = sharedApprovalDir + "/" + bucket + "/" + key + "-approved." + first.extension;
+                    utils.writeCanonical(first.content, "shared", workingDirectory, sharedApprovalDir, bucketDepth);
                 }
                 canonicalsCreated++;
             } else {
@@ -112,74 +117,64 @@ public class ApprovalDeduplicator {
                 continue;
             }
 
-            referencedCanonicals.add(canonicalRelative);
+            canonicalsUsedThisRun.add(canonicalRelative);
 
             for (ApprovedFileEntry fileEntry : group) {
                 if (!dryRun) {
-                    utilsFor(fileEntry.extension).writePointerFile(fileEntry.path, fileEntry.comment, canonicalRelative);
+                    scanner.utilsFor(fileEntry.extension)
+                            .writePointerFile(fileEntry.path, fileEntry.comment, canonicalRelative);
                 }
                 pointersWritten++;
             }
         }
 
-        // GC: remove any canonical in the shared dir that no pointer references
+        int orphansRemoved = collectGarbage(sharedDirPath, canonicalsUsedThisRun);
+
+        return new DeduplicatorResult(pointersWritten, canonicalsCreated, orphansRemoved,
+                isGarbageCollectionSkipped());
+    }
+
+    /**
+     * Deletes canonicals that no pointer anywhere in the project references.
+     *
+     * <p>Skipped when the shared directory lies outside the project, because the pointers that
+     * reference it cannot be enumerated and no deletion could be shown to be safe.
+     */
+    private int collectGarbage(Path sharedDirPath, Set<String> canonicalsUsedThisRun) throws IOException {
+        if (!Files.exists(sharedDirPath) || isGarbageCollectionSkipped()) {
+            return 0;
+        }
+
+        Set<String> referenced = new HashSet<>(canonicalsUsedThisRun);
+        referenced.addAll(DedupPaths.collectReferencedCanonicals(scanner, workingDirectory, sharedDirPath));
+
         int orphansRemoved = 0;
-        if (Files.exists(sharedDirPath)) {
-            List<Path> allCanonicals = collectApprovedFiles(sharedDirPath, null);
-            for (Path canonical : allCanonicals) {
-                String relPath = workingDirectory.relativize(canonical).toString().replace('\\', '/');
-                if (!referencedCanonicals.contains(relPath)) {
-                    if (!dryRun) {
-                        Files.delete(canonical);
-                    }
-                    orphansRemoved++;
+        for (Path canonical : scanner.collectApprovedFiles(sharedDirPath, null)) {
+            // Only canonicals of the selected types are candidates; a json-only run must leave
+            // content canonicals alone even when nothing currently points at them. This and the
+            // unfiltered reference lookup in DedupPaths are independently sufficient - verified by
+            // mutation: removing either alone still protects the other type, removing both deletes
+            // it. DedupTypeSelectionTest.jsonOnlyRunDoesNotCollectContentCanonicals covers that.
+            if (!scanner.isSelectedType(canonical)) {
+                continue;
+            }
+            if (!referenced.contains(DedupPaths.relativize(workingDirectory, canonical))) {
+                if (!dryRun) {
+                    Files.delete(canonical);
                 }
+                orphansRemoved++;
             }
         }
-
-        return new DeduplicatorResult(pointersWritten, canonicalsCreated, orphansRemoved);
+        return orphansRemoved;
     }
 
-    private List<Path> collectApprovedFiles(Path dir, Path excludeDir) throws IOException {
-        if (!Files.exists(dir)) {
-            return Collections.emptyList();
-        }
-        List<Path> result = new ArrayList<>();
-        try (Stream<Path> stream = Files.walk(dir)) {
-            final Path normalizedExclude = excludeDir == null ? null : excludeDir.normalize();
-            stream.filter(p -> {
-                if (!Files.isRegularFile(p)) {
-                    return false;
-                }
-                if (normalizedExclude != null && p.normalize().startsWith(normalizedExclude)) {
-                    return false;
-                }
-                return isApprovedFileName(p.getFileName().toString());
-            }).forEach(result::add);
-        }
-        return result;
-    }
-
-    private boolean isApprovedFileName(String name) {
-        return (name.endsWith("-approved.json") || name.endsWith("-approved.content"))
-                && !name.contains("-not-approved.");
-    }
-
-    private String getExtension(Path file) {
-        String name = file.getFileName().toString();
-        if (name.endsWith(".json")) {
-            return "json";
-        } else if (name.endsWith(".content")) {
-            return "content";
-        }
-        return null;
-    }
-
-    private FileStoreMatcherUtils utilsFor(String extension) {
-        if ("content".equals(extension)) {
-            return contentUtils;
-        }
-        return jsonUtils;
+    /**
+     * True when the shared directory sits outside the project, in which case garbage collection is
+     * skipped because the pointers referencing it cannot be found.
+     */
+    public boolean isGarbageCollectionSkipped() {
+        return !workingDirectory.resolve(sharedApprovalDir).normalize()
+                .startsWith(workingDirectory.normalize());
     }
 
     static class ApprovedFileEntry {
@@ -187,9 +182,9 @@ public class ApprovalDeduplicator {
         final String key;
         final String content;
         final String comment;
-        final String extension;
+        final ApprovedFileType extension;
 
-        ApprovedFileEntry(Path path, String key, String content, String comment, String extension) {
+        ApprovedFileEntry(Path path, String key, String content, String comment, ApprovedFileType extension) {
             this.path = path;
             this.key = key;
             this.content = content;
@@ -202,11 +197,18 @@ public class ApprovalDeduplicator {
         private final int pointersWritten;
         private final int canonicalsCreated;
         private final int orphansRemoved;
+        private final boolean garbageCollectionSkipped;
 
         public DeduplicatorResult(int pointersWritten, int canonicalsCreated, int orphansRemoved) {
+            this(pointersWritten, canonicalsCreated, orphansRemoved, false);
+        }
+
+        public DeduplicatorResult(int pointersWritten, int canonicalsCreated, int orphansRemoved,
+                                  boolean garbageCollectionSkipped) {
             this.pointersWritten = pointersWritten;
             this.canonicalsCreated = canonicalsCreated;
             this.orphansRemoved = orphansRemoved;
+            this.garbageCollectionSkipped = garbageCollectionSkipped;
         }
 
         public int getPointersWritten() {
@@ -221,11 +223,20 @@ public class ApprovalDeduplicator {
             return orphansRemoved;
         }
 
+        public boolean isGarbageCollectionSkipped() {
+            return garbageCollectionSkipped;
+        }
+
         @Override
         public String toString() {
-            return "Deduplication complete: " + canonicalsCreated + " canonical(s) created, "
+            String result = "Deduplication complete: " + canonicalsCreated + " canonical(s) created, "
                     + pointersWritten + " pointer(s) written, "
                     + orphansRemoved + " orphaned canonical(s) removed.";
+            if (garbageCollectionSkipped) {
+                result += " Skipped removing orphaned canonicals: the shared directory is outside the"
+                        + " project, so the pointers referencing it could not be found.";
+            }
+            return result;
         }
     }
 }

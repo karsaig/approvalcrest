@@ -100,6 +100,64 @@ public class FileMatcherConfigPropertyAliasTest {
         assertFalse(new FileMatcherConfig().isSharedEnabled());
     }
 
+    /** true and false keep their meaning, so an existing configuration behaves as before. */
+    @Test
+    public void sharedEnabledTrueAppliesToEveryType() {
+        System.setProperty("fileMatcherSharedEnabled", "true");
+        FileMatcherConfig config = new FileMatcherConfig();
+
+        assertTrue(config.isSharedEnabled());
+        assertTrue(config.isSharedEnabledFor(ApprovedFileType.JSON));
+        assertTrue(config.isSharedEnabledFor(ApprovedFileType.CONTENT));
+    }
+
+    @Test
+    public void sharedEnabledFalseAppliesToNoType() {
+        System.setProperty("fileMatcherSharedEnabled", "false");
+        FileMatcherConfig config = new FileMatcherConfig();
+
+        assertFalse(config.isSharedEnabled());
+        assertFalse(config.isSharedEnabledFor(ApprovedFileType.JSON));
+        assertFalse(config.isSharedEnabledFor(ApprovedFileType.CONTENT));
+    }
+
+    @Test
+    public void sharedEnabledCanSelectJsonOnly() {
+        System.setProperty("fileMatcherSharedEnabled", "json");
+        FileMatcherConfig config = new FileMatcherConfig();
+
+        assertTrue(config.isSharedEnabled(), "enabled for at least one type");
+        assertTrue(config.isSharedEnabledFor(ApprovedFileType.JSON));
+        assertFalse(config.isSharedEnabledFor(ApprovedFileType.CONTENT));
+    }
+
+    @Test
+    public void sharedEnabledCanSelectContentOnly() {
+        System.setProperty("fmSharedEnabled", "content");
+        FileMatcherConfig config = new FileMatcherConfig();
+
+        assertFalse(config.isSharedEnabledFor(ApprovedFileType.JSON));
+        assertTrue(config.isSharedEnabledFor(ApprovedFileType.CONTENT));
+    }
+
+    @Test
+    public void sharedEnabledAcceptsAListAndTheAllKeyword() {
+        System.setProperty("fileMatcherSharedEnabled", "json,content");
+        assertEquals(ApprovedFileType.all(), new FileMatcherConfig().getSharedTypes());
+
+        System.setProperty("fileMatcherSharedEnabled", "all");
+        assertEquals(ApprovedFileType.all(), new FileMatcherConfig().getSharedTypes());
+    }
+
+    @Test
+    public void sharedEnabledRejectsAnUnknownValue() {
+        System.setProperty("fileMatcherSharedEnabled", "xml");
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, FileMatcherConfig::new);
+        assertTrue(e.getMessage().contains("xml"), "names the offending value: " + e.getMessage());
+        assertTrue(e.getMessage().contains("json"), "lists the valid values: " + e.getMessage());
+    }
+
     @Test
     public void fmSharedDirBucketDepthAliasConfiguresBucketDepth() {
         System.setProperty("fmSharedDirBucketDepth", "3");

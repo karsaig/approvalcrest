@@ -11,12 +11,13 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Unit tests for {@link SortField} factory overloads and the mutable {@code ignoring(...)}
- * fluent API. These cover the configuration permutations a user has when telling the matcher
- * how to sort a collection and which nested paths/fields to leave out of the sort key.
+ * Unit tests for {@link SortField} factory overloads and the {@code ignoring(...)} fluent API.
+ * These cover the configuration permutations a user has when telling the matcher how to sort a
+ * collection and which nested paths/fields to leave out of the sort key.
  */
 public class SortFieldTest {
 
@@ -136,5 +137,59 @@ public class SortFieldTest {
 
         assertThrows(UnsupportedOperationException.class,
                 () -> sortField.getIgnoredFieldMatchersForSorting().add(startsWith("x")));
+    }
+    // --- deriving must not mutate the original ---
+
+    /**
+     * The fluent form reads as though it produces a new value, and the getters return unmodifiable
+     * views, so deriving has to leave the original alone. When it mutated in place, a SortField held
+     * in shared configuration accumulated every caller's paths, order-dependently.
+     */
+    @Test
+    void ignoringAPathDerivesRatherThanMutating() {
+        SortField<String> base = SortField.of("path.to.list");
+
+        SortField<String> first = base.ignoring("p1");
+        SortField<String> second = base.ignoring("p2");
+
+        assertThat(base.getIgnoredPathsForSorting(), hasSize(0));
+        assertThat(first.getIgnoredPathsForSorting(), contains("p1"));
+        assertThat(second.getIgnoredPathsForSorting(), contains("p2"));
+    }
+
+    @Test
+    void ignoringMatchersDerivesRatherThanMutating() {
+        Matcher<String> one = startsWith("a");
+        Matcher<String> two = startsWith("b");
+        SortField<String> base = SortField.of("path.to.list");
+
+        SortField<String> first = base.ignoring(one);
+        SortField<String> second = base.ignoring(two);
+
+        assertThat(base.getIgnoredFieldMatchersForSorting(), hasSize(0));
+        assertThat(first.getIgnoredFieldMatchersForSorting(), hasSize(1));
+        assertSame(one, first.getIgnoredFieldMatchersForSorting().get(0));
+        assertThat(second.getIgnoredFieldMatchersForSorting(), hasSize(1));
+        assertSame(two, second.getIgnoredFieldMatchersForSorting().get(0));
+    }
+
+    @Test
+    void varargsOverloadsAlsoDerive() {
+        SortField<String> base = SortField.of("path.to.list");
+
+        SortField<String> paths = base.ignoring("p1", "p2");
+        SortField<String> matchers = base.ignoring(startsWith("a"), startsWith("b"));
+
+        assertThat(base.isEmpty(), is(true));
+        assertThat(paths.getIgnoredPathsForSorting(), contains("p1", "p2"));
+        assertThat(matchers.getIgnoredFieldMatchersForSorting(), hasSize(2));
+    }
+
+    /** Chaining still accumulates, which is how the fluent API is normally used. */
+    @Test
+    void chainingAccumulatesOntoTheDerivedInstance() {
+        SortField<String> chained = SortField.of("path.to.list").ignoring("p1").ignoring("p2");
+
+        assertThat(chained.getIgnoredPathsForSorting(), contains("p1", "p2"));
     }
 }

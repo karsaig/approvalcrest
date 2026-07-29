@@ -1,0 +1,5 @@
+/*features.ParameterizedSourcesFeatureTest.argumentsSourceGetsOneFilePerCaseFromTheAutomaticIndex*/
+{
+  "dummyString": "dummy1",
+  "genericValue": "val1"
+}

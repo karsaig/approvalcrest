@@ -28,7 +28,19 @@ public interface TestMetaInformation {
      */
     String testMethodName();
 
+    /**
+     * Returns the directory approved files are stored under when the
+     * {@code useApprovedDirectory} property is enabled, instead of alongside the test class.
+     *
+     * @return the approved-file directory, relative to the project root
+     */
     Path getApprovedDirectory();
 
+    /**
+     * Returns the directory that relative approved-file paths are resolved against, normally the
+     * project root the tests were started from.
+     *
+     * @return the working directory, as an absolute path
+     */
     Path workingDirectory();
 }

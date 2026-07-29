@@ -317,8 +317,27 @@ public class DedupCliTest {
     }
 
     @Test
-    public void reinstateIgnoresDryRunFlag() throws IOException {
-        // ApprovalReinstate has no dry-run mode; --dry-run is ignored when --reinstate is also set.
+    public void reinstateHonoursDryRunFlag() throws IOException {
+        // --dry-run reports what reinstate would do without touching the filesystem.
+        try (FileSystem fs = newFs()) {
+            Path workDir = workingDir(fs);
+            String content = "{\"nodryrun\":true}";
+
+            String canonicalRelative = writeCanonicalAndGetRelative(workDir, content, DEFAULT_SHARED_DIR);
+            Path pointer = writePointerFile(workDir, "src/test/java/a/ptr-approved.json", "a.ptr", canonicalRelative);
+            String pointerBefore = readFile(pointer);
+
+            String output = run(new String[]{"--reinstate", "--dry-run"}, workDir);
+
+            assertTrue(output.contains("Reinstate complete:"), "Reinstate must still report what it would do");
+            assertEquals(pointerBefore, readFile(pointer), "--dry-run must not rewrite the pointer");
+            assertTrue(Files.exists(workDir.resolve(canonicalRelative)),
+                    "--dry-run must not delete the canonical");
+        }
+    }
+
+    @Test
+    public void reinstateWithoutDryRunRewritesThePointer() throws IOException {
         try (FileSystem fs = newFs()) {
             Path workDir = workingDir(fs);
             String content = "{\"nodryrun\":true}";
@@ -326,10 +345,10 @@ public class DedupCliTest {
             String canonicalRelative = writeCanonicalAndGetRelative(workDir, content, DEFAULT_SHARED_DIR);
             Path pointer = writePointerFile(workDir, "src/test/java/a/ptr-approved.json", "a.ptr", canonicalRelative);
 
-            String output = run(new String[]{"--reinstate", "--dry-run"}, workDir);
+            String output = run(new String[]{"--reinstate"}, workDir);
 
-            assertTrue(output.contains("Reinstate complete:"), "Reinstate must run even when --dry-run is passed");
-            assertFalse(readFile(pointer).contains("/*pointer:"), "Pointer must be reinstated regardless of --dry-run");
+            assertTrue(output.contains("Reinstate complete:"));
+            assertFalse(readFile(pointer).contains("/*pointer:"), "the pointer is replaced by its content");
 
             Set<InMemoryPermissions> expected = new HashSet<>(Arrays.asList(
                     new InMemoryPermissions(ap(workDir, "src"), DIRECTORY_CREATE_PERMISSONS),

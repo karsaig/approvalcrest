@@ -12,8 +12,8 @@ package com.github.karsaig.approvalcrest.jupiter;
 import com.github.karsaig.approvalcrest.matcher.CustomisableMatcher;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.function.Executable;
-import org.junit.platform.commons.util.UnrecoverableExceptions;
 import org.opentest4j.AssertionFailedError;
+import org.opentest4j.TestAbortedException;
 
 /**
  * Modified version of {@link org.hamcrest.MatcherAssert}. If the matcher doesn't match, determine if a {@link AssertionFailedError} should be
@@ -81,10 +81,32 @@ public class MatcherAssert {
         try {
             executable.execute();
         } catch (Throwable throwable) {
-            UnrecoverableExceptions.rethrowIfUnrecoverable(throwable);
+            rethrowIfNotTheExceptionUnderTest(throwable);
             assertThat(reason, throwable, matcher);
             return throwable;
         }
         throw new AssertionFailedError("Expected exception but no exception was thrown!");
+    }
+
+    /**
+     * Rethrows anything that cannot be the exception under test, so it is not matched against the
+     * expected one.
+     *
+     * <p>Two categories qualify. A {@link VirtualMachineError} means the JVM is in trouble, and
+     * comparing it to a business exception buries that; it is rethrown as-is rather than wrapped,
+     * which also avoids allocating while the heap may be exhausted. A {@link TestAbortedException} is the
+     * framework's signal to skip the test, so matching it would turn a skip into a pass or a
+     * confusing failure.
+     *
+     * <p>{@code AssertionError} is deliberately NOT rethrown: asserting that a matcher fails is a
+     * supported use of this method, and a matcher failure is an AssertionError.
+     */
+    private static void rethrowIfNotTheExceptionUnderTest(Throwable throwable) {
+        if (throwable instanceof VirtualMachineError) {
+            throw (VirtualMachineError) throwable;
+        }
+        if (throwable instanceof TestAbortedException) {
+            throw (TestAbortedException) throwable;
+        }
     }
 }

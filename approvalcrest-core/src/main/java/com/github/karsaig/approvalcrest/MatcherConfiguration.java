@@ -23,6 +23,8 @@ public class MatcherConfiguration {
 
     private static final String SERIALIZE_NULLS_PROPERTY = "approvalcrestSerializeNulls";
     private static final String SERIALIZE_NULLS_ALIAS = "aSerNulls";
+    private static final String LEGACY_SET_COLLAPSE_PROPERTY = "approvalcrestLegacySetCollapse";
+    private static final String LEGACY_SET_COLLAPSE_ALIAS = "aLSCollapse";
 
     private final Set<String> pathsToIgnore = new HashSet<>();
     private final Map<String, Matcher<?>> customMatchers = new HashMap<>();
@@ -36,6 +38,7 @@ public class MatcherConfiguration {
     private final List<ElementIgnoreRule> elementIgnoreRules = new ArrayList<>();
     private AliasMap aliasMap = AliasMap.builder().build();
     private boolean serializeNulls = getBooleanProperties("true", SERIALIZE_NULLS_PROPERTY, SERIALIZE_NULLS_ALIAS);
+    private boolean legacySetCollapse = getBooleanProperties("false", LEGACY_SET_COLLAPSE_PROPERTY, LEGACY_SET_COLLAPSE_ALIAS);
 
     public MatcherConfiguration() {
         skipCircularReferenceCheck.add(o -> Path.class.isInstance(o));
@@ -244,6 +247,23 @@ public class MatcherConfiguration {
 
     public MatcherConfiguration setSerializeNulls(boolean serializeNulls) {
         this.serializeNulls = serializeNulls;
+        return this;
+    }
+
+    /**
+     * When true, {@code Set} elements that serialise to the same JSON are collapsed into a single
+     * entry, as they were before this behaviour was corrected.
+     *
+     * <p>This is a migration escape hatch for codebases with a large approved-file corpus to
+     * re-approve, not a mode worth staying in: while it is on, a set that loses or gains a
+     * duplicate element cannot fail a test.
+     */
+    public boolean isLegacySetCollapse() {
+        return legacySetCollapse;
+    }
+
+    public MatcherConfiguration setLegacySetCollapse(boolean legacySetCollapse) {
+        this.legacySetCollapse = legacySetCollapse;
         return this;
     }
 

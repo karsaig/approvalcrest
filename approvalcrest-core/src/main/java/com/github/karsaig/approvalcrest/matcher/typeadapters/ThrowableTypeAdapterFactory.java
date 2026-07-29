@@ -1,5 +1,6 @@
 package com.github.karsaig.approvalcrest.matcher.typeadapters;
 
+import com.github.karsaig.approvalcrest.FieldsIgnorer;
 import com.github.karsaig.approvalcrest.InaccessibleFieldException;
 import com.github.karsaig.approvalcrest.ReflectUtil;
 import com.google.gson.JsonElement;
@@ -12,14 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
 public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Throwable> {
 
     private static final String STACK_TRACE_NAME = "stackTrace";
-    private static final Pattern OBJECT_REFERENCE_PATTERN = Pattern.compile("0x(?:\\d)+");
 
     public ThrowableTypeAdapterFactory() {
         super(Throwable.class);
@@ -53,7 +52,7 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
     }
 
     private Map<String, Object> buildSourceObjectMap(Throwable source, JsonObject jsonObject) {
-        Optional<String> firstRef = jsonObject.keySet().stream().filter(OBJECT_REFERENCE_PATTERN.asPredicate()).findFirst();
+        Optional<String> firstRef = jsonObject.keySet().stream().filter(FieldsIgnorer::isGraphAdapterKey).findFirst();
         if (!firstRef.isPresent()) {
             return Collections.emptyMap();
         }
@@ -65,9 +64,18 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
         return result;
     }
 
+    /**
+     * Walks the object graph, recording which source object each {@code 0x} reference stands for so
+     * that {@link #addClass} can name the concrete type of every nested throwable.
+     *
+     * <p>Following a reference is a jump across the graph rather than a step down the JSON tree, so
+     * a cycle leads straight back to a reference already seen. {@code result} doubles as the visited
+     * set: a reference is descended into only the first time it is encountered, which is enough,
+     * because the second visit would map it to the same object anyway.
+     */
     private void doBuildSourceObjectMap(Map<String, Object> result, Object o, JsonObject originalObject, JsonObject currentObject) {
         List<Map.Entry<String, JsonElement>> jsonPrimitiveRefs = currentObject.entrySet().stream()
-                .filter(e -> e.getValue().isJsonPrimitive()).filter(e -> OBJECT_REFERENCE_PATTERN.asPredicate().test(e.getValue().getAsJsonPrimitive().getAsString()))
+                .filter(e -> e.getValue().isJsonPrimitive()).filter(e -> FieldsIgnorer.isGraphAdapterKey(e.getValue().getAsJsonPrimitive().getAsString()))
                 .collect(Collectors.toList());
         Map<String, Field> fieldMap = getEveryField(o);
         if (!jsonPrimitiveRefs.isEmpty()) {
@@ -76,9 +84,12 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
                     Field field = fieldMap.get(entry.getKey());
                     Object current = ReflectUtil.getFieldValue(field, o);
                     String key = entry.getValue().getAsJsonPrimitive().getAsString();
+                    // containsKey rather than the return of put: a field that is legitimately null
+                    // would make put(...) == null indistinguishable from "not yet seen".
+                    boolean firstVisit = !result.containsKey(key);
                     result.put(key, current);
                     JsonElement jsonElementForCurrent = originalObject.get(key);
-                    if (jsonElementForCurrent != null && jsonElementForCurrent.isJsonObject()) {
+                    if (firstVisit && jsonElementForCurrent != null && jsonElementForCurrent.isJsonObject()) {
                         doBuildSourceObjectMap(result, current, originalObject, jsonElementForCurrent.getAsJsonObject());
                     }
                 } catch (InaccessibleFieldException e) {

@@ -99,11 +99,24 @@ By default approved files are stored alongside the test class under `src/test/ja
 # Integration tests under src/it/java
 mvn verify -DfileMatcherSourceRoot=src/it/java
 
-# Kotlin tests under src/test/kotlin (short alias)
-mvn test -DfmSourceRoot=src/test/kotlin
+# Short alias
+mvn verify -DfmSourceRoot=src/it/java
 ```
 
-The value is a path relative to the project root and defaults to `src/test/java`. It sets the base directory the test class's package path is appended to when resolving approved files, so `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. Per-matcher overrides (`.withPath`, `.withPathName`, `.withRelativePathName`) still take precedence when set.
+The value is a path relative to the project root. It sets the base directory the test class's package path is appended to when resolving approved files, so `com.example.MyTest` with `-DfileMatcherSourceRoot=src/it/java` resolves to `src/it/java/com/example/`. Per-matcher overrides (`.withPath`, `.withPathName`, `.withRelativePathName`) still take precedence when set.
+
+The property applies to both ways of identifying a test — stack-trace detection and the injected `TestInfo` / `Description` / `Method` — so it cannot move approved files for some tests but not others.
+
+### Defaults per framework
+
+The property is shared by every framework; only the value used **when it is unset** differs, so a project that does not set it keeps the layout its framework expects:
+
+| Matchers | Default when the property is unset |
+|---|---|
+| JUnit 4, JUnit 5 Jupiter, TestNG | `src/test/java` |
+| `approvalcrest-junit-jupiter-kotlin` | `src/test/kotlin` |
+
+> **One property, one root.** Because there is a single property, setting it in a project with **both** Java and Kotlin tests moves both. A mixed project that needs two different roots should leave the property unset and use the per-matcher overrides for whichever set of tests is non-standard. Getting this wrong fails loudly — the approved file is simply not found — rather than silently comparing against the wrong file.
 
 ## Migration from pre-1.0.0 Without Moving Files
 
