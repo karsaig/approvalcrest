@@ -10,7 +10,7 @@ Using approvalcrest with TestNG.
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-testng</artifactId>
-    <version>1.4.2</version>
+    <version>1.5.0</version>
     <scope>test</scope>
 </dependency>
 ```
