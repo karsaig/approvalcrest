@@ -64,6 +64,15 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
         return result;
     }
 
+    /**
+     * Walks the object graph, recording which source object each {@code 0x} reference stands for so
+     * that {@link #addClass} can name the concrete type of every nested throwable.
+     *
+     * <p>Following a reference is a jump across the graph rather than a step down the JSON tree, so
+     * a cycle leads straight back to a reference already seen. {@code result} doubles as the visited
+     * set: a reference is descended into only the first time it is encountered, which is enough,
+     * because the second visit would map it to the same object anyway.
+     */
     private void doBuildSourceObjectMap(Map<String, Object> result, Object o, JsonObject originalObject, JsonObject currentObject) {
         List<Map.Entry<String, JsonElement>> jsonPrimitiveRefs = currentObject.entrySet().stream()
                 .filter(e -> e.getValue().isJsonPrimitive()).filter(e -> FieldsIgnorer.isGraphAdapterKey(e.getValue().getAsJsonPrimitive().getAsString()))
@@ -75,9 +84,12 @@ public class ThrowableTypeAdapterFactory extends CustomizedTypeAdapterFactory<Th
                     Field field = fieldMap.get(entry.getKey());
                     Object current = ReflectUtil.getFieldValue(field, o);
                     String key = entry.getValue().getAsJsonPrimitive().getAsString();
+                    // containsKey rather than the return of put: a field that is legitimately null
+                    // would make put(...) == null indistinguishable from "not yet seen".
+                    boolean firstVisit = !result.containsKey(key);
                     result.put(key, current);
                     JsonElement jsonElementForCurrent = originalObject.get(key);
-                    if (jsonElementForCurrent != null && jsonElementForCurrent.isJsonObject()) {
+                    if (firstVisit && jsonElementForCurrent != null && jsonElementForCurrent.isJsonObject()) {
                         doBuildSourceObjectMap(result, current, originalObject, jsonElementForCurrent.getAsJsonObject());
                     }
                 } catch (InaccessibleFieldException e) {
