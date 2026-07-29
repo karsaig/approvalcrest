@@ -31,8 +31,14 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
         this(buildClassPath(testClassName), testClassName, testMethodName, APPROVED_DIRECTORY);
     }
 
-    protected AbstractTestMetaBase(String testClassName, String testMethodName, String sourceRoutePathString) {
-        this(buildClassPath(testClassName, sourceRoutePathString), testClassName, testMethodName, APPROVED_DIRECTORY);
+    /**
+     * @param defaultSourceRoot the test source root to use when {@code fileMatcherSourceRoot} is not
+     *                          set. Frameworks whose tests live somewhere other than
+     *                          {@code src/test/java} — Kotlin, for instance — supply their own
+     *                          default here; the property still overrides it when present.
+     */
+    protected AbstractTestMetaBase(String testClassName, String testMethodName, String defaultSourceRoot) {
+        this(buildClassPath(testClassName, getSourceRoutePathString(defaultSourceRoot)), testClassName, testMethodName, APPROVED_DIRECTORY);
     }
 
     protected AbstractTestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
@@ -60,7 +66,18 @@ public abstract class AbstractTestMetaBase implements TestMetaInformation {
     }
 
     protected static String getSourceRoutePathString() {
-        String configured = EnvVarReader.getStringProperties(SRC_TEST_JAVA_PATH, SOURCE_ROOT_NAME, SOURCE_ROOT_ALIAS);
+        return getSourceRoutePathString(SRC_TEST_JAVA_PATH);
+    }
+
+    /**
+     * Resolves the test source root, falling back to the given default when
+     * {@code fileMatcherSourceRoot} (alias {@code fmSourceRoot}) is not set.
+     *
+     * <p>The property is shared by every framework; only the fallback differs, so a project that
+     * does not set it keeps the layout its framework expects.
+     */
+    protected static String getSourceRoutePathString(String defaultSourceRoot) {
+        String configured = EnvVarReader.getStringProperties(defaultSourceRoot, SOURCE_ROOT_NAME, SOURCE_ROOT_ALIAS);
         return normalizeSourceRoot(configured);
     }
 

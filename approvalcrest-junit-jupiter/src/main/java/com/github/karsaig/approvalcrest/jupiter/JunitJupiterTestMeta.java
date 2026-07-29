@@ -20,12 +20,12 @@ public class JunitJupiterTestMeta extends Junit5TestMetaBase {
         this(Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
     }
 
-    protected JunitJupiterTestMeta(String sourceRoutePathString) {
-        this(sourceRoutePathString, Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
+    protected JunitJupiterTestMeta(String defaultSourceRoot) {
+        this(defaultSourceRoot, Objects.requireNonNull(getTestStackTraceElement(Thread.currentThread().getStackTrace()), CANNOT_DETERMINE_TEST_METHOD_ERROR));
     }
 
-    private JunitJupiterTestMeta(String sourceRoutePathString, StackTraceElement testStackTraceElement) {
-        super(concreteClassName(testStackTraceElement), testStackTraceElement.getMethodName(), sourceRoutePathString);
+    private JunitJupiterTestMeta(String defaultSourceRoot, StackTraceElement testStackTraceElement) {
+        super(concreteClassName(testStackTraceElement), testStackTraceElement.getMethodName(), defaultSourceRoot);
     }
 
     private JunitJupiterTestMeta(StackTraceElement testStackTraceElement) {

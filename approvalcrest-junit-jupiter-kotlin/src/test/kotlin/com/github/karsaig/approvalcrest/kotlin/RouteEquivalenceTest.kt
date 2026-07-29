@@ -59,22 +59,48 @@ class RouteEquivalenceTest {
     }
 
     /**
-     * Both Kotlin routes hardcode `src/test/kotlin` and so ignore the `fileMatcherSourceRoot`
-     * property that the Java routes honour. Pinned here because it is a real limitation for Kotlin
-     * projects whose tests live elsewhere, not because it is desirable.
+     * With the property unset, both routes must still resolve `src/test/kotlin`. This is the
+     * regression that would relocate every Kotlin approved file in existence, so it is asserted
+     * directly rather than left to the integration tests to notice.
      */
     @Test
-    fun bothKotlinRoutesIgnoreTheSourceRootProperty(testInfo: TestInfo) {
+    fun bothKotlinRoutesDefaultToSrcTestKotlin(testInfo: TestInfo) {
+        val expected = java.nio.file.Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin")
+
+        assertEquals(expected, KotlinTestMeta().testClassPath)
+        assertEquals(expected, KotlinInfoBasedTestMeta(testInfo).testClassPath)
+    }
+
+    /**
+     * `fileMatcherSourceRoot` is shared by every framework; only the fallback differs. Kotlin
+     * projects whose tests live outside `src/test/kotlin` can therefore configure it like everyone
+     * else.
+     */
+    @Test
+    fun bothKotlinRoutesHonourTheSourceRootProperty(testInfo: TestInfo) {
         System.setProperty("fileMatcherSourceRoot", "src/it/kotlin")
         try {
-            val expected = java.nio.file.Paths.get("src/test/kotlin/com/github/karsaig/approvalcrest/kotlin")
+            val expected = java.nio.file.Paths.get("src/it/kotlin/com/github/karsaig/approvalcrest/kotlin")
 
             assertEquals(expected, KotlinTestMeta().testClassPath,
-                    "the stack route still uses the hardcoded src/test/kotlin")
+                    "the stack route must honour the property")
             assertEquals(expected, KotlinInfoBasedTestMeta(testInfo).testClassPath,
-                    "and so does the TestInfo route - the two stay consistent with each other")
+                    "and the TestInfo route must honour it identically")
         } finally {
             System.clearProperty("fileMatcherSourceRoot")
+        }
+    }
+
+    @Test
+    fun bothKotlinRoutesHonourTheAlias(testInfo: TestInfo) {
+        System.setProperty("fmSourceRoot", "src/it/kotlin")
+        try {
+            val expected = java.nio.file.Paths.get("src/it/kotlin/com/github/karsaig/approvalcrest/kotlin")
+
+            assertEquals(expected, KotlinTestMeta().testClassPath)
+            assertEquals(expected, KotlinInfoBasedTestMeta(testInfo).testClassPath)
+        } finally {
+            System.clearProperty("fmSourceRoot")
         }
     }
 

@@ -10,8 +10,8 @@ abstract class Junit5TestMetaBase extends AbstractTestMetaBase {
         super(testClassName, testMethodName);
     }
 
-    protected Junit5TestMetaBase(String testClassName, String testMethodName, String sourceRoutePathString) {
-        super(testClassName, testMethodName, sourceRoutePathString);
+    protected Junit5TestMetaBase(String testClassName, String testMethodName, String defaultSourceRoot) {
+        super(testClassName, testMethodName, defaultSourceRoot);
     }
 
     protected Junit5TestMetaBase(Path testClassPath, String testClassName, String testMethodName, Path approvedDirectory) {
