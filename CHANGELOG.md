@@ -6,6 +6,7 @@ Changelog
 Version 1.4.3 - 2026/07/28
 -----
 
+- `SortField.ignoring(...)` now returns a new `SortField` instead of mutating the receiver. Deriving two configurations from one base previously produced a single object carrying both sets of ignores, so a `SortField` held in shared configuration accumulated every caller's paths, order-dependently, and was unsafe under parallel execution. Chaining (`SortField.of("x").ignoring("a").ignoring("b")`) is unaffected; code that called `ignoring(...)` for its side effect and discarded the result must now use the returned instance.
 - `assertThrows` no longer treats a skipped test or a JVM-level error as the exception under test. An assumption failure (`TestAbortedException`, `AssumptionViolatedException`, TestNG's `SkipException`) is now rethrown so the test is reported as skipped rather than compared against the expected exception, and a `VirtualMachineError` is rethrown as-is instead of being matched or wrapped. Asserting that a matcher fails still works: `AssertionError` is deliberately still matched.
 - The error reported when an in-place approved-file overwrite fails now names the file it could not write. It previously interpolated the object under comparison instead, so the message identified no file and put the whole serialised content into the exception, the log and the CI output.
 - `ignoringElementsWhere` now rejects a null value or matcher where the rule is declared, naming the path, instead of failing with an unattributed `NullPointerException` later during comparison.

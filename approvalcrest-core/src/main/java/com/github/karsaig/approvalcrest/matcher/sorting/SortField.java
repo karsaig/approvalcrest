@@ -49,26 +49,43 @@ public class SortField<T> {
         this.ignoredFieldMatchersForSorting = new ArrayList<>(ignoredFieldMatchersForSorting);
     }
 
+    /**
+     * Returns a new {@code SortField} with the given path added to the fields excluded from the
+     * sort key.
+     *
+     * <p>Derives rather than mutates. The fluent form reads as though it produces a new value, and
+     * the getters hand back unmodifiable views, so mutating in place made
+     * {@code base.ignoring("a")} and {@code base.ignoring("b")} silently the same object — which
+     * accumulated every caller's paths when an instance was shared, order-dependently, and raced
+     * under parallel execution.
+     */
     public SortField<T> ignoring(String fieldPath) {
-        this.ignoredPathsForSorting.add(fieldPath);
-        return this;
+        List<String> paths = new ArrayList<>(ignoredPathsForSorting);
+        paths.add(fieldPath);
+        return new SortField<>(sortFieldSelector, paths, ignoredFieldMatchersForSorting);
     }
 
+    /** @see #ignoring(String) */
     public SortField<T> ignoring(String... fieldPaths) {
-        Collections.addAll(this.ignoredPathsForSorting, fieldPaths);
-        return this;
+        List<String> paths = new ArrayList<>(ignoredPathsForSorting);
+        Collections.addAll(paths, fieldPaths);
+        return new SortField<>(sortFieldSelector, paths, ignoredFieldMatchersForSorting);
     }
 
+    /** @see #ignoring(String) */
     public SortField<T> ignoring(Matcher<String> matcher) {
-        this.ignoredFieldMatchersForSorting.add(matcher);
-        return this;
+        List<Matcher<String>> matchers = new ArrayList<>(ignoredFieldMatchersForSorting);
+        matchers.add(matcher);
+        return new SortField<>(sortFieldSelector, ignoredPathsForSorting, matchers);
     }
 
+    /** @see #ignoring(String) */
     @SuppressWarnings({"varargs", "unchecked"})
     @SafeVarargs
     public final SortField<T> ignoring(Matcher<String>... matchers) {
-        Collections.addAll(this.ignoredFieldMatchersForSorting, matchers);
-        return this;
+        List<Matcher<String>> combined = new ArrayList<>(ignoredFieldMatchersForSorting);
+        Collections.addAll(combined, matchers);
+        return new SortField<>(sortFieldSelector, ignoredPathsForSorting, combined);
     }
 
     public T getSortFieldSelector() {
