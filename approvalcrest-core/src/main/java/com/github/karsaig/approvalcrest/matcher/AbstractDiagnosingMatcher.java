@@ -6,7 +6,6 @@ import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.Either;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.PathNullPointerException;
-import com.github.karsaig.approvalcrest.PathUnresolvableException;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
@@ -417,16 +416,8 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
         /** True when the bean value already settles the verdict, so the JSON retry must not run. */
         final boolean beanVerdictIsFinal;
 
-        /**
-         * The verdict is final only for a path the declared types prove wrong. Every other
-         * failure to resolve against the object has to be retried against the serialised JSON:
-         * that retry is the only thing that resolves a map entry addressed by key, a path through
-         * an array, and every path over a raw JSON string input, since walking {@code String}'s
-         * fields finds nothing. Finality is read off the exception rather than passed in, so there
-         * is one place it can be decided and no call site that can get it wrong.
-         */
         static FailEntry beanPath(String path, Matcher<?> matcher, RuntimeException e) {
-            return new FailEntry(Kind.BEAN_PATH, path, matcher, null, e, e instanceof PathUnresolvableException);
+            return new FailEntry(Kind.BEAN_PATH, path, matcher, null, e, false);
         }
 
         static FailEntry matcherFailed(String path, Matcher<?> matcher, Object value, boolean beanVerdictIsFinal) {

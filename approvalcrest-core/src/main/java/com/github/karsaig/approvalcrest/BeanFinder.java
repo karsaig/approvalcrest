@@ -82,9 +82,6 @@ public class BeanFinder {
                             return Either.right(value);
                         } else {
                             if (value == null) {
-                                if (nextSegmentCannotExistOn(field.getType(), fields)) {
-                                    return Either.left(new PathUnresolvableException(fullPath + " does not exist"));
-                                }
                                 return Either.left(new PathNullPointerException(field.getName()));
                             }
                             return findBeanAt(fullPath, fields.subList(1, fields.size()), value);
@@ -101,60 +98,6 @@ public class BeanFinder {
         } catch (Exception e) {
             return Either.left(new IllegalArgumentException("Error searching for: " + fullPath,e));
         }
-    }
-
-    /**
-     * True when the field's declared type proves the next path segment names nothing, so a null value
-     * here cannot be the reason the path failed to resolve.
-     * <p>
-     * A null mid-path otherwise falls back to the serialised JSON, which is what lets a path address a
-     * map entry by key or descend into an array — neither of which this walk has a branch for. But a
-     * null in parsed JSON carries no type, so the fallback answers "null" for anything below it and a
-     * {@code nullValue()} matcher passes. A typo'd or refactored path over a null reference therefore
-     * went green. Where the declared type answers the question, take the answer.
-     * <p>
-     * Only the immediately-next segment is checked. Going deeper would need the generic type arguments,
-     * and erasure hides them for exactly the types that matter: a {@code List<ChildBean>} field reports
-     * {@code List}, a {@code Map<String,ChildBean>} reports {@code Map}, and a {@code T} field reports
-     * {@code Object}. The reported case — a bogus segment straight after the null — is caught, and a
-     * typo deeper along stays lenient, which is the same wall the full generic walk would hit.
-     */
-    private static boolean nextSegmentCannotExistOn(Class<?> declaredType, List<String> fields) {
-        String next = fields.get(1);
-        if (JsonElementUtil.WILDCARD.equals(next) || !declaresItsOwnFields(declaredType)) {
-            return false;
-        }
-        for (Field candidate : getEveryField(declaredType)) {
-            if (next.equals(candidate.getName())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * True for a type whose declared fields are the whole of what a path may name below it.
-     * <p>
-     * Everything excluded here has to stay lenient, and each exclusion is load-bearing rather than
-     * cautious. A {@code Map} is addressed by key, so the next segment is data and not a field name at
-     * all — rejecting it would break map-key addressing, which is documented and tested. A
-     * {@code Collection} or array is traversed transparently, so the next segment belongs to the
-     * element type, which erasure has already discarded. An interface or {@code Object} declares
-     * nothing useful, and a type variable erases to one of them. JDK types are excluded because their
-     * private fields are implementation detail that moves between releases, so a path resolving against
-     * one is not something to make a verdict on either way.
-     */
-    private static boolean declaresItsOwnFields(Class<?> type) {
-        if (type.isPrimitive() || type.isArray() || type.isInterface() || type.isEnum()
-                || type == Object.class
-                || Map.class.isAssignableFrom(type)
-                || Collection.class.isAssignableFrom(type)) {
-            return false;
-        }
-        String name = type.getName();
-        return !name.startsWith("java.") && !name.startsWith("javax.")
-                && !name.startsWith("jdk.") && !name.startsWith("sun.")
-                && !name.startsWith("com.sun.");
     }
 
     /**

@@ -7036,7 +7036,6 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
         }
     }
 
-    @SuppressWarnings("unused")
     // -----------------------------------------------------------------------
     // A Map-typed field emptied by ignoring goes, rather than being left empty
     // -----------------------------------------------------------------------
@@ -7060,6 +7059,7 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
                         .ignoring("childBeanMap.k1.childInteger"));
     }
 
+    @SuppressWarnings("unused")
     private static class SingleField {
         private final String value;
         SingleField(String value) { this.value = value; }

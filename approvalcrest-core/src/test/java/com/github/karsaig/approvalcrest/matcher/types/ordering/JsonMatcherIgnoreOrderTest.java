@@ -785,12 +785,18 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void ignoresOrderingInNotLinkedNestedMap() {
-        // Each entry renders value-first. A complex-key map entry serialises as a
-        // [key, value] array, and that array is sorted like any other, so whichever side's
-        // JSON sorts first comes first. Every value here carries a nested map, and
-        // "map": [ sorts before the key's "map": null. No code reads the position -- the
-        // walkers remove any emptied element rather than a fixed index -- so this affects
-        // only how the file reads.
+        // Each entry renders value-first. A complex-key map entry serialises as a [key, value]
+        // array, and sortJsonArray recurses into that array like any other, so whichever side's
+        // JSON sorts first comes first. The comparison runs on the marker-prefixed compact form
+        // with members already key-sorted, so "map" precedes "string": every value here carries a
+        // nested map, and "map": [ sorts ahead of the key's "map": null.
+        //
+        // This is a defect, not a presentation quirk, and it predates this class being collected.
+        // Sorting the pair destroys the key/value distinction, so a map {a: z} and its transpose
+        // {z: a} serialise byte-identically and an approved file written for one is matched by the
+        // other. The file side is never re-sorted, so nothing cancels it out. Not fixed here --
+        // fixing it rewrites every approved file holding a complex-key map -- but do not read these
+        // expectations as endorsing it.
         String expected = "{\n" +
                 "  \"array\": null,\n" +
                 "  \"hashMap\": null,\n" +
@@ -1070,12 +1076,18 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void ignoresOrderingInNestedMap() {
-        // Each entry renders value-first. A complex-key map entry serialises as a
-        // [key, value] array, and that array is sorted like any other, so whichever side's
-        // JSON sorts first comes first. Every value here carries a nested map, and
-        // "map": [ sorts before the key's "map": null. No code reads the position -- the
-        // walkers remove any emptied element rather than a fixed index -- so this affects
-        // only how the file reads.
+        // Each entry renders value-first. A complex-key map entry serialises as a [key, value]
+        // array, and sortJsonArray recurses into that array like any other, so whichever side's
+        // JSON sorts first comes first. The comparison runs on the marker-prefixed compact form
+        // with members already key-sorted, so "map" precedes "string": every value here carries a
+        // nested map, and "map": [ sorts ahead of the key's "map": null.
+        //
+        // This is a defect, not a presentation quirk, and it predates this class being collected.
+        // Sorting the pair destroys the key/value distinction, so a map {a: z} and its transpose
+        // {z: a} serialise byte-identically and an approved file written for one is matched by the
+        // other. The file side is never re-sorted, so nothing cancels it out. Not fixed here --
+        // fixing it rewrites every approved file holding a complex-key map -- but do not read these
+        // expectations as endorsing it.
         String expected = "{\n" +
                 "  \"array\": null,\n" +
                 "  \"hashMap\": null,\n" +

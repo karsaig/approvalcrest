@@ -242,7 +242,7 @@ Fan-out through an array is unaffected — `.with("orderArray.trackingCode", not
 
 ## Container Matchers and JSON String Input
 
-`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
+`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. On JSON-string input the path never resolves against the object, and one combination there cannot fail; see the negation note below. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
 
 Size, emptiness and scalar contents therefore hold for both input forms. What a JSON string cannot supply is element *classes*:
 
@@ -284,7 +284,7 @@ assertThat(actual, sameBeanAs(expected)
 
 ```java
 // Object input: fails when an order with this reference is present. Correct.
-assertThat(orderList, sameBeanAs(expected)
+assertThat(actual, sameBeanAs(expected)
     .with("orders", not(hasItem(orderWithRef("A-9")))));
 
 // JSON string input: passes even when A-9 IS present. The matcher is handed a
@@ -299,31 +299,28 @@ The two ways round it: compare the object rather than a JSON string, or write th
 
 This is not something the library can detect and reject for you. A container matcher and an element matcher are handed the same `JsonArray`, so any check that rejected the second would also reject `hasSize` and `iterableWithSize`, which do work here; and Hamcrest keeps a matcher's expected type and negation flag private, so the matcher itself cannot be interrogated.
 
-### A null half-way along a path
+## A null half-way along a path
 
-A path is resolved against the Java object first and retried against the serialised JSON only where the object walk cannot reach — an array segment, a map entry addressed by its key, or a raw JSON string input. When a reference along the path is `null`, the two input forms differ, and they have to.
+A path resolves against the Java object first and is retried against the serialised JSON wherever the object walk cannot reach — an array segment, a map entry addressed by its key, a member whose serialised name differs from the field's, and everything at all when the input is a raw JSON string.
 
-With **object input** the field's declared type is known, so a segment that type rules out is reported as wrong rather than answered with `null`:
+When a reference along the path is `null`, that retry answers `null` for **everything** below it, because a null in parsed JSON carries no type. So a path whose remaining segments name nothing still resolves, and `nullValue()` accepts it:
 
 ```java
-// customer is null, and Customer declares no "nmae"
-// throws IllegalArgumentException: customer.nmae does not exist
+// customer is null. This passes whether or not Customer has an "nmae" member.
 assertThat(actual, sameBeanAs(expected)
     .with("customer.nmae", nullValue()));
 ```
 
-With **JSON string input** the same path passes. A `null` in parsed text carries no type, so there is nothing to check `nmae` against, and no amount of implementation effort recovers it.
+A path left behind by a rename therefore asserts nothing, so long as some reference along it is null. Read a passing `nullValue()` assertion over a nested path as evidence about the reference, not about the leaf.
 
-Only the segment immediately after the null is checked. A typo further along stays lenient either way, because reaching it needs the generic type arguments erasure has discarded: a `List<Order>` field reports `List`, a `Map<String, Order>` reports `Map`. The check is also skipped where the declared type cannot answer the question:
+This cannot be closed by checking the field's declared type for the next segment — that was tried and reverted. The retry resolves serialised **member** names, and those are not Java field names: `@SerializedName` renames a member, a registered `JsonSerializer` invents them freely, a `JsonObject`-typed field's members are data, a bounded type variable erases to its bound rather than to `Object`, and a field declared as a supertype legitimately carries a subtype's fields. Each of those makes "does not exist" a false statement about a path that resolves perfectly well for real data.
 
-| Declared type of the null field | Why the next segment is not checked |
-|---|---|
-| `Map` | the next segment is a key, not a field name |
-| `Collection` or array | the next segment belongs to the element type |
-| `Object`, an interface, or a type variable | declares nothing a path could name |
-| a JDK type | its private fields are implementation detail that moves between releases |
+What helps is asserting on the reference itself, so the assertion says what you mean:
 
-A `*` wildcard as the next segment is never checked either, since it is not a field name.
+```java
+assertThat(actual, sameBeanAs(expected)
+    .with("customer", nullValue()));
+```
 
 ## Match All Fields Whose Name Matches a Pattern
 

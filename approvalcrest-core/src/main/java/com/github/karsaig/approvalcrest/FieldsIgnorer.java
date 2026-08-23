@@ -120,13 +120,10 @@ public class FieldsIgnorer {
             // .ignoring("a.b.c") where a.b keeps other fields removes c and returns false all the
             // way up, so the rule went unrecorded. The accumulator answers "did anything change".
             boolean[] changedAnywhere = new boolean[1];
-            boolean removed = findPath(jsonElement, pathToFind, pathSegments, false, changedAnywhere);
-            if (removed) {
-                changedAnywhere[0] = true;
-            }
+            findPath(jsonElement, pathToFind, pathSegments, false, changedAnywhere);
             if (changedAnywhere[0] && tracker != null && reasonMap != null) {
                 IgnoredFieldsTracker.Reason reason = reasonMap.getOrDefault(pathToFind, IgnoredFieldsTracker.Reason.IGNORE_PATH);
-                tracker.recordIgnored(pathToFind, reason);
+                tracker.recordIgnoredRule(pathToFind, reason);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(pathToFind + " does not exist", e);
@@ -153,6 +150,7 @@ public class FieldsIgnorer {
                                     boolean parentIsArray, boolean[] changedAnywhere) {
         if (jsonElement.isJsonArray()) {
             JsonArray jsonArray = jsonElement.getAsJsonArray();
+            int sizeBeforeRemoval = jsonArray.size();
             Iterator<JsonElement> iterator = jsonArray.iterator();
             boolean result = false;
             while (iterator.hasNext()) {
@@ -171,15 +169,20 @@ public class FieldsIgnorer {
             // ignoring.  Clear them so the inner array becomes empty and the outer
             // loop's existing isEmpty check can remove the whole entry.
             //
-            // Only when this array is itself an array element, which is what a complex-key map's
-            // [key, value] pair always is. A collection held by an object property is not, and
-            // clearing one of those discards values the caller never mentioned: ignoring "list.a"
-            // over {"list":[{"a":1},"keep-me",42]} emptied the object, found only primitives left
-            // and deleted them too, so the whole field went. The discriminator is imperfect for a
-            // collection of collections, where a nested list that empties to primitives is
-            // indistinguishable from a map pair; that case is accepted, and it is far narrower
-            // than treating every array alike.
-            if (result && parentIsArray) {
+            // Only for something shaped like a map entry: an array of exactly two elements that is
+            // itself an element of an array. A complex-key map serialises each entry as [key, value]
+            // inside the map's array, so it always matches; a collection held by an object property
+            // never does, and neither does a nested collection of any other length.
+            //
+            // Clearing anything else discards values the caller never mentioned. Ignoring "list.a"
+            // over {"list":[{"a":1},"keep-me",42]} emptied the object, found only primitives left,
+            // deleted those too and so dropped the whole field. The two-element test is what extends
+            // that protection past the outermost level: without it, the same loss happened one level
+            // down, in {"ll":[[{"a":1},"keep",7]]}.
+            //
+            // A nested collection of exactly two elements is still indistinguishable from a map
+            // entry and is still cleared. That residue is accepted and recorded in the CHANGELOG.
+            if (result && parentIsArray && sizeBeforeRemoval == 2) {
                 boolean hasNonPrimitive = false;
                 for (JsonElement remaining : jsonArray) {
                     if (!remaining.isJsonNull() && !remaining.isJsonPrimitive()) {
@@ -219,6 +222,13 @@ public class FieldsIgnorer {
                     // removeSetMarker strips, so the file shows an empty collection where the field
                     // should have gone. Doing the two probes here rather than in getChild keeps that
                     // helper's signature, which three other callers use for the value alone.
+                    // Prefers the bare name when an object somehow holds both. That is reachable —
+                    // a subclass widening an inherited field to a Set or Map gets both names, since
+                    // Gson's duplicate-name check runs after the naming strategy — and in that shape
+                    // only the bare twin is descended into, whereas the leaf branch below removes
+                    // both names. Not worth resolving here: such an object is written with two
+                    // identical JSON keys once the prefix is stripped, which cannot be read back at
+                    // all, so the shape is broken well before this line sees it.
                     String childKey = jo.has(field) ? field : MARKER + field;
                     JsonElement child = jo.get(childKey);
                     if (child == null) {

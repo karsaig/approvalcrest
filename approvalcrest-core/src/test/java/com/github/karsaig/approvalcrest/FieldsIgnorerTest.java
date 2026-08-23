@@ -651,6 +651,46 @@ public class FieldsIgnorerTest {
     }
 
     @Test
+    void keepsUnmentionedValuesOneLevelDownAsWell() {
+        // The same loss as above, a level deeper. Guarding only on "my parent is an array" left this
+        // untouched, because a nested collection IS an array element; the entry-shaped test — exactly
+        // two elements — is what covers it.
+        JsonObject json = parseObject("{\"ll\":[[{\"a\":1},\"keep\",7]]}");
+
+        FieldsIgnorer.findPaths(json, paths("ll.a"));
+
+        assertThat(json.toString(), is("{\"ll\":[[\"keep\",7]]}"));
+    }
+
+    @Test
+    void keepsUnmentionedValuesWhenASiblingInnerCollectionSurvives() {
+        // Nastier variant: a surviving sibling keeps the field alive, so the loss is silent rather
+        // than an obviously absent field.
+        JsonObject json = parseObject("{\"ll\":[[{\"a\":1},\"keep\",7],[{\"z\":1}]]}");
+
+        FieldsIgnorer.findPaths(json, paths("ll.a"));
+
+        assertThat(json.toString(), is("{\"ll\":[[\"keep\",7],[{\"z\":1}]]}"));
+    }
+
+    @Test
+    void recordsEveryElementRemovalEvenWhenSiblingArraysReportTheSamePath() {
+        // Two removals in different fan-out branches. An intermediate array is traversed without
+        // appending an index, so both report entry.tag[0] — deduplicating a location would drop a
+        // real removal and report one where two happened.
+        JsonObject json = parseObject("{\"entry\":[{\"tag\":[{\"system\":\"drop\"},{\"system\":\"keep\"}]},"
+                + "{\"tag\":[{\"system\":\"drop\"},{\"system\":\"keep\"}]}]}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.removeMatchingElements(json,
+                Collections.singletonList(ElementIgnoreRule.ofValue("entry.tag.system", "drop")), tracker);
+
+        assertThat(json.toString(), is("{\"entry\":[{\"tag\":[{\"system\":\"keep\"}]},"
+                + "{\"tag\":[{\"system\":\"keep\"}]}]}"));
+        assertThat(tracker.getFields(), hasSize(2));
+    }
+
+    @Test
     void removesElementsByMatcherRule() {
         JsonObject json = parseObject(
                 "{\"tags\":[{\"n\":5},{\"n\":50},{\"n\":500}]}");

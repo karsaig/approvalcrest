@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -47,14 +46,6 @@ public class BeanFinderTest {
 
     static class Child extends Parent {
         final String own = "own";
-    }
-
-    static class Containers {
-        final Map<String, Person> peopleByName = null;
-        final List<Person> people = null;
-        final Person[] peopleArray = null;
-        final Object anything = null;
-        final String text = null;
     }
 
     @Test
@@ -163,103 +154,5 @@ public class BeanFinderTest {
 
         assertTrue(result.isRight());
         assertThat((FanoutResult) result.getRight(), contains("a"));
-    }
-
-    // -----------------------------------------------------------------------
-    // A null half-way along a path: when the declared type settles it, and when it cannot
-    // -----------------------------------------------------------------------
-
-    @Test
-    void nullIntermediateWithAnUnknownNextSegmentIsRejected() {
-        // Person declares no "bogus", so no data could make person.bogus resolve. Reporting this as
-        // a null would let the JSON retry answer null for it and a nullValue() matcher pass.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("person.bogus", new Holder(null));
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathUnresolvableException.class));
-        assertThat(result.getLeft().getMessage(), is("person.bogus does not exist"));
-    }
-
-    @Test
-    void nullIntermediateWithAnUnknownNextSegmentIsRejectedEvenWithMoreSegmentsToGo() {
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("person.bogus.deeper", new Holder(null));
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathUnresolvableException.class));
-        assertThat(result.getLeft().getMessage(), is("person.bogus.deeper does not exist"));
-    }
-
-    @Test
-    void nullIntermediateWithAKnownNextSegmentStaysLenientHoweverDeepThePathGoes() {
-        // Only the segment straight after the null is checked. "name" is a field of Person, so this
-        // reports a null and lets the JSON retry have its say, even though nothing could follow a
-        // String. Checking further would need the generic type arguments erasure has discarded.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("person.name.deeper", new Holder(null));
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullMapFieldStaysLenientBecauseTheNextSegmentIsAKeyNotAFieldName() {
-        // Map entries are addressed by key, so "Alice" is data. Rejecting it would break map-key
-        // addressing, which this walk cannot resolve at all and the JSON retry always handles.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("peopleByName.Alice.name", new Containers());
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullCollectionFieldStaysLenientBecauseTheNextSegmentBelongsToTheElementType() {
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("people.name", new Containers());
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullArrayFieldStaysLenient() {
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("peopleArray.name", new Containers());
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullFieldOfAnUnresolvableTypeStaysLenient() {
-        // A T-typed field erases to Object, which declares nothing a path could name.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("anything.whatever", new Containers());
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullJdkTypedFieldStaysLenient() {
-        // String has private fields that differ between JDK releases; they are not something to
-        // hand a user a verdict on.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("text.whatever", new Containers());
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
-    }
-
-    @Test
-    void nullFieldFollowedByAWildcardStaysLenient() {
-        // "*" is never a field name, so it cannot be checked against the declared type.
-        Either<RuntimeException, Object> result =
-                BeanFinder.findBeanAt("person.*.name", new Holder(null));
-
-        assertTrue(result.isLeft());
-        assertThat(result.getLeft(), instanceOf(PathNullPointerException.class));
     }
 }

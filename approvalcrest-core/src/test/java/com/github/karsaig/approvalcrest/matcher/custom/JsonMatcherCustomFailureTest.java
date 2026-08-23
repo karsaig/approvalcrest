@@ -303,16 +303,28 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     }
 
     // -----------------------------------------------------------------------
-    // A segment after a null that the declared type rules out
+    // Known limitation: below a null, a path that names nothing cannot fail
+    //
+    // These assert a pass, and that is the point. A path resolves against the object first and is
+    // retried against the serialised JSON, because that retry is the only thing that reaches a map
+    // entry addressed by its key, a path through an array, a member whose serialised name differs
+    // from the field's, and anything at all when the input is a raw JSON string. A null in parsed
+    // JSON carries no type, so the retry answers null for every path below it and nullValue()
+    // accepts that. A path left behind by a rename asserts nothing, as long as some reference along
+    // it is null.
+    //
+    // Rejecting such a path by checking the field's DECLARED TYPE for the next segment was tried and
+    // reverted as unsound: the retry resolves serialised MEMBER names, and those are not Java field
+    // names. @SerializedName renames a member, a registered JsonSerializer invents them freely, a
+    // JsonObject-typed field's members are data, a bounded type variable erases to its bound rather
+    // than to Object, and a field declared as a supertype legitimately carries a subtype's fields.
+    // Each makes "does not exist" a false statement about a path that resolves for real data.
+    // Throwing also escapes not(...), so a negated matcher could no longer express "does not match".
     // -----------------------------------------------------------------------
 
     @Test
-    public void rejectsASegmentAfterANullThatTheDeclaredTypeRulesOut() {
-        // childBean is null and ChildBean declares no "nonExistingField", so nothing could make this
-        // path resolve. It used to pass: the object walk reported a null, the retry against the
-        // serialised JSON found "childBean": null and answered null for anything below it, and
-        // nullValue() accepted that -- so a typo'd or refactored path over a null reference asserted
-        // nothing at all. The declared type settles it, so the path is now reported as wrong.
+    public void aPathNamingNothingBelowANullCannotFail() {
+        // childBean is null and ChildBean declares no "nonExistingField".
         Object input = parent().build();
         String approvedFileContent = "{\n" +
                 "  \"childBean\": null,\n" +
@@ -321,26 +333,19 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 "  \"parentString\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
-                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()),
-                thrown -> Assertions.assertTrue(
-                        thrown.getMessage().contains("childBean.nonExistingField does not exist"),
-                        "Expected a does-not-exist message, was: " + thrown.getMessage()),
-                IllegalArgumentException.class);
+                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()), null);
     }
 
     @Test
-    public void jsonStringInputStaysLenientForTheSamePath() {
-        // The same path over the same data as a JSON string still passes, and cannot do otherwise:
-        // a null in parsed text carries no type, so there is nothing to check "nonExistingField"
-        // against. Object input is strict here and JSON-string input is not.
+    public void aPathNamingNothingBelowANullCannotFailForJsonStringInputEither() {
+        // childBean itself stays in the comparison: only the segment below it is stripped, and it
+        // was never there.
         String input = "{\n" +
                 "  \"childBean\": null,\n" +
                 "  \"childBeanList\": [],\n" +
                 "  \"childBeanMap\": [],\n" +
                 "  \"parentString\": null\n" +
                 "}";
-        // childBean itself stays in the comparison: only the segment below it is stripped, and it
-        // was never there.
         assertJsonMatcherWithDummyTestInfo(input, input, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()), null);
     }
@@ -763,6 +768,17 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
         assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
                 enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("tags", not(containsInAnyOrder("review", "urgent"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedHasSizeFailsOnJsonStringInput() {
+        // Claimed in the CHANGELOG and the docs for both input forms; only object input was covered.
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(hasSize(2))),
                 error -> Assertions.assertTrue(error.getMessage().contains("tags"),
                         "Expected a tags mismatch, was: " + error.getMessage()),
                 AssertionError.class);
