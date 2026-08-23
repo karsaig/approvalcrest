@@ -580,6 +580,32 @@ public class FieldsIgnorerTest {
     }
 
     @Test
+    void keepsUnmentionedValuesWhenAnObjectElementIsIgnoredAway() {
+        // Ignoring list.a empties the object element, which goes. The two primitives beside it were
+        // never mentioned by the rule and must stay: they used to be deleted as well, taking the
+        // whole field with them, because the cleanup below treated any array left holding only
+        // primitives as the remains of a map entry.
+        JsonObject json = parseObject("{\"list\":[{\"a\":1},\"keep-me\",42]}");
+
+        FieldsIgnorer.findPaths(json, paths("list.a"));
+
+        assertThat(json.toString(), is("{\"list\":[\"keep-me\",42]}"));
+    }
+
+    @Test
+    void clearsOrphanedValuesWhenAComplexKeyMapKeyIsIgnoredAway() {
+        // The case the cleanup exists for, and the reason it cannot simply be dropped. A map with a
+        // bean key serialises as [[key, value]]; emptying the key leaves the value with nothing to
+        // belong to, so the entry goes. A pair like this is always an array inside an array, which
+        // is what distinguishes it from the collection above.
+        JsonObject json = parseObject("{\"map\":[[{\"a\":1},\"someValue\"]]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.a"));
+
+        assertThat(json.has("map"), is(false));
+    }
+
+    @Test
     void removesElementsByMatcherRule() {
         JsonObject json = parseObject(
                 "{\"tags\":[{\"n\":5},{\"n\":50},{\"n\":500}]}");

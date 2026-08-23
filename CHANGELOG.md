@@ -23,6 +23,8 @@ Version 1.5.1 -
 
 - Ignoring everything under a `Set`- or `Map`-typed field now removes the field, rather than leaving an empty collection behind in the approved file. Such a field's JSON key carries an internal sorting prefix that is stripped again before the file is written, and the emptied field was removed by its unprefixed name, so nothing went: the file kept `"ordersByRef": []` where an ordinary field emptied the same way disappeared. The prefix decided the outcome while being invisible in the result. Only fields that ignoring empties completely are affected.
 
+- Ignoring a field inside an object held in a collection no longer removes the other values in that collection. Where the ignored field was the object's only one, the emptied object went — correctly — and anything sitting beside it went with it, so `.ignoring("list.a")` over `{"list":[{"a":1},"keep-me",42]}` left the collection empty and then dropped the field altogether. Two values the rule never mentioned disappeared, and with both sides of the comparison filtered alike the assertion still passed. That clearing exists for maps with a bean key, where a key emptied by ignoring leaves its value with nothing to belong to, and it now applies only to that shape: a map entry is always an array inside an array, whereas a collection held by a field is not. A collection of collections cannot be told apart from a map entry, so a nested collection that ignoring reduces to plain values is still cleared.
+
 Version 1.5.0 - 2026/07/29
 -----
 

@@ -114,7 +114,7 @@ public class FieldsIgnorer {
         String pathToFind = headOf(pathsToFind);
         List<String> pathSegments = asList(pathToFind.split(PATH_SEPARATOR_PATTERN));
         try {
-            boolean removed = findPath(jsonElement, pathToFind, pathSegments);
+            boolean removed = findPath(jsonElement, pathToFind, pathSegments, false);
             if (removed && tracker != null && reasonMap != null) {
                 IgnoredFieldsTracker.Reason reason = reasonMap.getOrDefault(pathToFind, IgnoredFieldsTracker.Reason.IGNORE_PATH);
                 tracker.recordIgnored(pathToFind, reason);
@@ -131,7 +131,14 @@ public class FieldsIgnorer {
         return set;
     }
 
-    private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments) {
+    /**
+     * @param parentIsArray whether {@code jsonElement} is itself an element of an array. Only the
+     *                      orphan cleanup below needs it, and only to tell a complex-key map's
+     *                      {@code [key, value]} pair — always an array inside an array — from a
+     *                      collection held by an object property.
+     */
+    private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments,
+                                    boolean parentIsArray) {
         if (jsonElement.isJsonArray()) {
             JsonArray jsonArray = jsonElement.getAsJsonArray();
             Iterator<JsonElement> iterator = jsonArray.iterator();
@@ -141,7 +148,7 @@ public class FieldsIgnorer {
                 if (arrayElement.isJsonNull() || arrayElement.isJsonPrimitive()) {
                     continue;
                 }
-                boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments);
+                boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments, true);
                 if (ignoredElement && JsonElementUtil.isEmpty(arrayElement)) {
                     iterator.remove();
                     result |= true;
@@ -151,7 +158,16 @@ public class FieldsIgnorer {
             // those are orphaned map values whose complex key was entirely stripped by
             // ignoring.  Clear them so the inner array becomes empty and the outer
             // loop's existing isEmpty check can remove the whole entry.
-            if (result) {
+            //
+            // Only when this array is itself an array element, which is what a complex-key map's
+            // [key, value] pair always is. A collection held by an object property is not, and
+            // clearing one of those discards values the caller never mentioned: ignoring "list.a"
+            // over {"list":[{"a":1},"keep-me",42]} emptied the object, found only primitives left
+            // and deleted them too, so the whole field went. The discriminator is imperfect for a
+            // collection of collections, where a nested list that empties to primitives is
+            // indistinguishable from a map pair; that case is accepted, and it is far narrower
+            // than treating every array alike.
+            if (result && parentIsArray) {
                 boolean hasNonPrimitive = false;
                 for (JsonElement remaining : jsonArray) {
                     if (!remaining.isJsonNull() && !remaining.isJsonPrimitive()) {
@@ -204,7 +220,7 @@ public class FieldsIgnorer {
                             if (envelope == null || !envelope.isJsonObject()) {
                                 continue;
                             }
-                            if (findPath(envelope, pathToFind, pathSegments)) {
+                            if (findPath(envelope, pathToFind, pathSegments, false)) {
                                 anyEnvelopeChanged = true;
                                 if (JsonElementUtil.isEmpty(envelope)) {
                                     jo.remove(envelopeKey);
@@ -214,7 +230,7 @@ public class FieldsIgnorer {
                         return anyEnvelopeChanged;
                     }
                     List<String> tail = pathSegments.subList(1, pathSegments.size());
-                    if (findPath(child, pathToFind, tail) && JsonElementUtil.isEmpty(child)) {
+                    if (findPath(child, pathToFind, tail, false) && JsonElementUtil.isEmpty(child)) {
                         jo.remove(childKey);
                         return true;
                     }
@@ -339,7 +355,7 @@ public class FieldsIgnorer {
                 continue;
             }
             boolean envelope = isGraphAdapterKey(key) && child.isJsonObject();
-            boolean changed = findPath(child, pathToFind, envelope ? pathSegments : tail);
+            boolean changed = findPath(child, pathToFind, envelope ? pathSegments : tail, false);
             if (changed && JsonElementUtil.isEmpty(child)) {
                 jo.remove(key);
                 removedOwnKey = true;
