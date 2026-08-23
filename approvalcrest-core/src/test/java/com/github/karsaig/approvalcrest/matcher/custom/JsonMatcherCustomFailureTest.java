@@ -10,8 +10,10 @@ import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.iterableWithSize;
@@ -711,6 +713,58 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 thrown -> Assertions.assertTrue(
                         thrown.getMessage().contains("childBeanList"),
                         "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // The boundary of the negated-element-matcher limitation: scalar elements
+    //
+    // Over objects on JSON-string input these three cannot fail, which is pinned in
+    // JsonMatcherCustomSuccessTest. Over scalars they fail correctly, because the read-only list
+    // view over the JsonArray coerces a JSON scalar on read -- a string arrives as a String. That
+    // is what makes the limitation about element classes rather than about the input form, and it
+    // is what any future fix must not break.
+    // -----------------------------------------------------------------------
+
+    private static final String SCALAR_LIST_JSON = "{\n"
+            + "  \"other\": 1,\n"
+            + "  \"tags\": [\n"
+            + "    \"urgent\",\n"
+            + "    \"review\"\n"
+            + "  ]\n"
+            + "}";
+
+    private static final String SCALAR_LIST_JSON_APPROVED = "{\n"
+            + "  \"other\": 1\n"
+            + "}";
+
+    @Test
+    public void negatedHasItemOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(hasItem("urgent"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedContainsOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(contains("urgent", "review"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedContainsInAnyOrderOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(containsInAnyOrder("review", "urgent"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
                 AssertionError.class);
     }
 }

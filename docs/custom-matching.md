@@ -250,7 +250,7 @@ Size, emptiness and scalar contents therefore hold for both input forms. What a 
 |---|---|---|
 | `hasSize`, `empty`, `iterableWithSize`, `emptyIterable` | works | works |
 | `hasItem`, `contains`, `containsInAnyOrder` over **scalars** | works | works |
-| `hasItem`, `contains`, `containsInAnyOrder` over **objects** | works | container is matched, but an element matcher written against the field's own class cannot match a `JsonObject` |
+| `hasItem`, `contains`, `containsInAnyOrder` over **objects** | works | container is matched, but an element matcher written against the field's own class cannot match a `JsonObject` — and see the negation note below, where this becomes a silent pass |
 | `hasEntry`, `hasKey`, `aMapWithSize` | works | fails — a map serialises to a `JsonArray` of single-entry objects, not a `java.util.Map` |
 
 ```java
@@ -268,17 +268,36 @@ A size mismatch reports the size, for either input form:
 orders collection size was <2>
 ```
 
-Negation works normally. A container matcher is settled by the value at the path, so `not(...)` around one reports what you would expect:
+Negation works for a container matcher on either input form, because the container matcher is settled by the value at the path:
 
 ```java
-// Fails when orders is empty
-assertThat(actual, sameBeanAs(expected)
+// Fails when orders is empty, for object and JSON-string input alike
+assertThat(actual, sameJsonAsApproved()
     .with("orders", not(empty())));
 
 // Fails when an order with this reference is present
 assertThat(actual, sameBeanAs(expected)
     .with("orders", not(hasItem(orderWithRef("A-9")))));
 ```
+
+**One combination cannot fail, and it is worth knowing before you rely on it.** `not(hasItem(...))`, `not(contains(...))` and `not(containsInAnyOrder(...))` pass whatever the data holds when *all three* of these are true: the input is a raw JSON string, the elements are objects rather than scalars, and the element matcher is written against the element's own class.
+
+```java
+// Object input: fails when an order with this reference is present. Correct.
+assertThat(orderList, sameBeanAs(expected)
+    .with("orders", not(hasItem(orderWithRef("A-9")))));
+
+// JSON string input: passes even when A-9 IS present. The matcher is handed a
+// JsonObject, which no Order matcher can match, so hasItem is false and not(...) is true.
+assertThat(jsonString, sameJsonAsApproved()
+    .with("orders", not(hasItem(orderWithRef("A-9")))));
+```
+
+Un-negated the same mismatch is loud rather than silent — `mismatches were: [was JsonObject <{...}>]` — which is the limitation already described in the table above. Negation turns that non-match into a pass.
+
+The two ways round it: compare the object rather than a JSON string, or write the matcher against the JSON shape. Over **scalar** elements all three work on both input forms, because the list view coerces a scalar on read, so `not(hasItem("urgent"))` over a `tags` array fails correctly whichever form the input takes.
+
+This is not something the library can detect and reject for you. A container matcher and an element matcher are handed the same `JsonArray`, so any check that rejected the second would also reject `hasSize` and `iterableWithSize`, which do work here; and Hamcrest keeps a matcher's expected type and negation flag private, so the matcher itself cannot be interrogated.
 
 ### A null half-way along a path
 

@@ -983,4 +983,62 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBeanList", not(empty())), null, null);
     }
+
+    // -----------------------------------------------------------------------
+    // Known limitation: a negated element matcher over objects, JSON-string input
+    //
+    // These assert a pass, and that is the point. With a JSON-string input there is no element
+    // class, so a matcher written against one cannot match a JsonObject; un-negated that is a loud
+    // failure ("was JsonObject <...>"), but negated the same non-match makes not(...) true and the
+    // assertion cannot fail whatever the data holds.
+    //
+    // Not fixable from the value side: a container matcher and an element matcher are handed the
+    // same JsonArray, so any guard that rejected one would break hasSize and iterableWithSize,
+    // which are pinned for this input form. Hamcrest's expected type and negation flag are private,
+    // so the matcher cannot be interrogated either.
+    //
+    // The boundary is covered by the scalar cases in JsonMatcherCustomFailureTest, which do fail
+    // correctly because the list view coerces a scalar on read. Change any of these deliberately.
+    // -----------------------------------------------------------------------
+
+    private static final String CHILD_BEAN_LIST_JSON = "{\n"
+            + "  \"childBean\": null,\n"
+            + "  \"childBeanList\": [\n"
+            + "    {\n"
+            + "      \"childInteger\": 1,\n"
+            + "      \"childString\": \"apple\"\n"
+            + "    }\n"
+            + "  ],\n"
+            + "  \"childBeanMap\": [],\n"
+            + "  \"parentString\": null\n"
+            + "}";
+
+    private static final String CHILD_BEAN_LIST_JSON_APPROVED = "{\n"
+            + "  \"childBean\": null,\n"
+            + "  \"childBeanMap\": [],\n"
+            + "  \"parentString\": null\n"
+            + "}";
+
+    @Test
+    public void negatedHasItemOverObjectsCannotFailOnJsonStringInput() {
+        // "apple" is present, so this ought to fail.
+        assertJsonMatcherWithDummyTestInfo(CHILD_BEAN_LIST_JSON, CHILD_BEAN_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(hasItem(childStringEqualTo("apple")))), null);
+    }
+
+    @Test
+    public void negatedContainsOverObjectsCannotFailOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(CHILD_BEAN_LIST_JSON, CHILD_BEAN_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(contains(childStringEqualTo("apple")))), null);
+    }
+
+    @Test
+    public void negatedContainsInAnyOrderOverObjectsCannotFailOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(CHILD_BEAN_LIST_JSON, CHILD_BEAN_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList",
+                        not(containsInAnyOrder(childStringEqualTo("apple")))), null);
+    }
 }
