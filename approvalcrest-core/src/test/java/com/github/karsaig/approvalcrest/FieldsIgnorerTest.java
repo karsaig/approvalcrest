@@ -565,15 +565,18 @@ public class FieldsIgnorerTest {
     }
 
     @Test
-    void ignoresPathUnderMarkedFieldEmptyingIt() {
-        // The ignored path is resolved against a field queued for sorting (MARKER prefix);
-        // its leaf is removed, leaving the marked object empty.
+    void cascadesRemovalWhenAMarkedParentBecomesEmpty() {
+        // Same shape and same outcome as cascadesRemovalWhenParentBecomesEmpty, which is the point:
+        // the MARKER prefix the naming strategy puts on Set- and Map-typed fields is stripped before
+        // anyone reads the file, so it must not decide whether an emptied parent survives. It used
+        // to: the child was found under the prefixed name and removed by the bare one, so the empty
+        // husk stayed and the file showed an empty collection where the field should have gone.
         JsonObject json = parseObject("{\"" + FieldsIgnorer.MARKER + "a\":{\"b\":\"drop\"}}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));
 
-        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").has("b"), is(false));
-        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").size(), is(0));
+        assertThat(json.has(FieldsIgnorer.MARKER + "a"), is(false));
+        assertThat(json.size(), is(0));
     }
 
     @Test

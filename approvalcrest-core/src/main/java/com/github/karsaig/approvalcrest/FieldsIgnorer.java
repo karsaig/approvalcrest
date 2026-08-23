@@ -178,12 +178,15 @@ public class FieldsIgnorer {
                     if (JsonElementUtil.WILDCARD.equals(field)) {
                         return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments);
                     }
-                    // getChild tolerates the MARKER prefix the field naming strategy puts on Set- and
-                    // Map-typed field names. Note the removal below is by the bare name, so a child
-                    // found under the prefixed name is emptied but left in place: that is pinned by
-                    // ignoresPathUnderMarkedFieldEmptyingIt, so it is deliberate rather than an
-                    // oversight, and both sides of a comparison are filtered alike.
-                    JsonElement child = getChild(jo, field);
+                    // The field naming strategy puts the MARKER prefix on Set- and Map-typed field
+                    // names, so the child may sit under either name. Take the key as well as the
+                    // value: removing an emptied child by the bare name silently does nothing when
+                    // it was found under the prefixed one, leaving an empty husk whose prefix
+                    // removeSetMarker strips, so the file shows an empty collection where the field
+                    // should have gone. Doing the two probes here rather than in getChild keeps that
+                    // helper's signature, which three other callers use for the value alone.
+                    String childKey = jo.has(field) ? field : MARKER + field;
+                    JsonElement child = jo.get(childKey);
                     if (child == null) {
                         // Try descending through GraphAdapter envelope keys. Every envelope has
                         // to be visited: one graph can hold several objects carrying the same
@@ -212,7 +215,7 @@ public class FieldsIgnorer {
                     }
                     List<String> tail = pathSegments.subList(1, pathSegments.size());
                     if (findPath(child, pathToFind, tail) && JsonElementUtil.isEmpty(child)) {
-                        jo.remove(field);
+                        jo.remove(childKey);
                         return true;
                     }
                 }

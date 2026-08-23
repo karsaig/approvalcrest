@@ -21,6 +21,8 @@ Version 1.5.1 -
 
 - A custom matcher path that runs into a `null` no longer passes when the rest of the path names nothing. `.with(path, matcher)` resolves against the object first and retries against the serialised JSON, which is what lets a path address a map entry by key or cross an array. But a `null` in parsed JSON carries no type, so the retry answered `null` for every path below it and a `nullValue()` matcher accepted that — a path left behind by a rename, or simply mistyped, asserted nothing at all as long as some reference along it was null. Where the field's declared type settles the question, the path is now reported as not existing. Only the segment straight after the null is checked, and not where the declared type cannot answer: under a `Map` the next segment is a key rather than a field name, under a `Collection` or array it belongs to the element type, and `Object`, interfaces and JDK types declare nothing a path could name. A raw JSON string input stays lenient, because nothing can recover a type from a null in parsed text. See [custom-matching](docs/custom-matching.md).
 
+- Ignoring everything under a `Set`- or `Map`-typed field now removes the field, rather than leaving an empty collection behind in the approved file. Such a field's JSON key carries an internal sorting prefix that is stripped again before the file is written, and the emptied field was removed by its unprefixed name, so nothing went: the file kept `"ordersByRef": []` where an ordinary field emptied the same way disappeared. The prefix decided the outcome while being invisible in the result. Only fields that ignoring empties completely are affected.
+
 Version 1.5.0 - 2026/07/29
 -----
 
