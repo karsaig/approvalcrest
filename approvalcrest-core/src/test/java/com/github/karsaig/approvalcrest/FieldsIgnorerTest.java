@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -603,6 +605,49 @@ public class FieldsIgnorerTest {
         FieldsIgnorer.findPaths(json, paths("map.a"));
 
         assertThat(json.has("map"), is(false));
+    }
+
+    // -----------------------------------------------------------------------
+    // What the tracker records
+    // -----------------------------------------------------------------------
+
+    @Test
+    void recordsARuleWhoseParentKeepsItsOtherFields() {
+        // findPath returns "a direct child of mine went", which is false all the way up here: c is
+        // removed but b keeps another field, so nothing cascades. The rule did apply, and used to go
+        // unrecorded -- which is the ordinary case, not an edge one.
+        JsonObject json = parseObject("{\"a\":{\"b\":{\"c\":1,\"keep\":2}}}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(json, paths("a.b.c"), tracker, Collections.emptyMap());
+
+        assertThat(tracker.getFields(), hasSize(1));
+        assertThat(tracker.getFields().get(0).getPath(), is("a.b.c"));
+        assertThat(json.toString(), is("{\"a\":{\"b\":{\"keep\":2}}}"));
+    }
+
+    @Test
+    void recordsARuleThatAppliesToBothSidesOnlyOnce() {
+        // One tracker records the run over the actual value and the run over the approved content.
+        // An ignore rule matching both is one rule.
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"b\":1,\"keep\":2}}"), paths("a.b"),
+                tracker, Collections.emptyMap());
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"b\":1,\"keep\":2}}"), paths("a.b"),
+                tracker, Collections.emptyMap());
+
+        assertThat(tracker.getFields(), hasSize(1));
+    }
+
+    @Test
+    void recordsNothingWhenTheRuleMatchedNothing() {
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"keep\":2}}"), paths("a.absent"),
+                tracker, Collections.emptyMap());
+
+        assertThat(tracker.isEmpty(), is(true));
     }
 
     @Test

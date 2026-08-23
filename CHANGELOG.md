@@ -25,6 +25,8 @@ Version 1.5.1 -
 
 - Ignoring a field inside an object held in a collection no longer removes the other values in that collection. Where the ignored field was the object's only one, the emptied object went — correctly — and anything sitting beside it went with it, so `.ignoring("list.a")` over `{"list":[{"a":1},"keep-me",42]}` left the collection empty and then dropped the field altogether. Two values the rule never mentioned disappeared, and with both sides of the comparison filtered alike the assertion still passed. That clearing exists for maps with a bean key, where a key emptied by ignoring leaves its value with nothing to belong to, and it now applies only to that shape: a map entry is always an array inside an array, whereas a collection held by a field is not. A collection of collections cannot be told apart from a map entry, so a nested collection that ignoring reduces to plain values is still cleared.
 
+- Machine-readable output now lists an ignore rule that took effect below the top of its path, and lists a rule that applied to both sides once instead of twice. The filter reported only whether it had removed a direct child of the object it was called on, so `.ignoring("a.b.c")` went unrecorded whenever `a.b` kept its other fields — the ordinary case rather than an edge one. Separately, one tracker records both the run over the actual value and the run over the approved content, so every rule matching both was counted twice. This affects the machine-readable report only; what gets compared is unchanged.
+
 Version 1.5.0 - 2026/07/29
 -----
 
