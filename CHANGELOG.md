@@ -19,6 +19,8 @@ Version 1.5.1 -
 
 - A map holding two entries whose key and value both serialise identically now renders each entry as its own key/value pair. Such entries were grouped together, and the whole group rendered into a single pair array, so two of them serialised as two copies of one four-element array rather than as two pairs — an approved file that misrepresented the map. Both positions held the same array instance, so a walk over the map visited those objects twice. Only maps whose keys are not primitives, `String`s or enums are affected; keys of those types serialise as one object per entry, which was already correct.
 
+- A custom matcher path that runs into a `null` no longer passes when the rest of the path names nothing. `.with(path, matcher)` resolves against the object first and retries against the serialised JSON, which is what lets a path address a map entry by key or cross an array. But a `null` in parsed JSON carries no type, so the retry answered `null` for every path below it and a `nullValue()` matcher accepted that — a path left behind by a rename, or simply mistyped, asserted nothing at all as long as some reference along it was null. Where the field's declared type settles the question, the path is now reported as not existing. Only the segment straight after the null is checked, and not where the declared type cannot answer: under a `Map` the next segment is a key rather than a field name, under a `Collection` or array it belongs to the element type, and `Object`, interfaces and JDK types declare nothing a path could name. A raw JSON string input stays lenient, because nothing can recover a type from a null in parsed text. See [custom-matching](docs/custom-matching.md).
+
 Version 1.5.0 - 2026/07/29
 -----
 

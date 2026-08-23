@@ -280,6 +280,32 @@ assertThat(actual, sameBeanAs(expected)
     .with("orders", not(hasItem(orderWithRef("A-9")))));
 ```
 
+### A null half-way along a path
+
+A path is resolved against the Java object first and retried against the serialised JSON only where the object walk cannot reach — an array segment, a map entry addressed by its key, or a raw JSON string input. When a reference along the path is `null`, the two input forms differ, and they have to.
+
+With **object input** the field's declared type is known, so a segment that type rules out is reported as wrong rather than answered with `null`:
+
+```java
+// customer is null, and Customer declares no "nmae"
+// throws IllegalArgumentException: customer.nmae does not exist
+assertThat(actual, sameBeanAs(expected)
+    .with("customer.nmae", nullValue()));
+```
+
+With **JSON string input** the same path passes. A `null` in parsed text carries no type, so there is nothing to check `nmae` against, and no amount of implementation effort recovers it.
+
+Only the segment immediately after the null is checked. A typo further along stays lenient either way, because reaching it needs the generic type arguments erasure has discarded: a `List<Order>` field reports `List`, a `Map<String, Order>` reports `Map`. The check is also skipped where the declared type cannot answer the question:
+
+| Declared type of the null field | Why the next segment is not checked |
+|---|---|
+| `Map` | the next segment is a key, not a field name |
+| `Collection` or array | the next segment belongs to the element type |
+| `Object`, an interface, or a type variable | declares nothing a path could name |
+| a JDK type | its private fields are implementation detail that moves between releases |
+
+A `*` wildcard as the next segment is never checked either, since it is not a field name.
+
 ## Match All Fields Whose Name Matches a Pattern
 
 Use `.withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher)` to apply a custom matcher to **every field at any depth** whose name matches the pattern. This is useful when many fields share a naming convention:

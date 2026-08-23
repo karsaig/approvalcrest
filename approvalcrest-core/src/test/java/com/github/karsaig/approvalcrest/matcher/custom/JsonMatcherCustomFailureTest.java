@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest {
@@ -297,6 +298,49 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         thrown.getMessage().contains("childBean.childString was null"),
                         "Expected parent-null message, was: " + thrown.getMessage()),
                 AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // A segment after a null that the declared type rules out
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void rejectsASegmentAfterANullThatTheDeclaredTypeRulesOut() {
+        // childBean is null and ChildBean declares no "nonExistingField", so nothing could make this
+        // path resolve. It used to pass: the object walk reported a null, the retry against the
+        // serialised JSON found "childBean": null and answered null for anything below it, and
+        // nullValue() accepted that -- so a typo'd or refactored path over a null reference asserted
+        // nothing at all. The declared type settles it, so the path is now reported as wrong.
+        Object input = parent().build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBean.nonExistingField does not exist"),
+                        "Expected a does-not-exist message, was: " + thrown.getMessage()),
+                IllegalArgumentException.class);
+    }
+
+    @Test
+    public void jsonStringInputStaysLenientForTheSamePath() {
+        // The same path over the same data as a JSON string still passes, and cannot do otherwise:
+        // a null in parsed text carries no type, so there is nothing to check "nonExistingField"
+        // against. Object input is strict here and JSON-string input is not.
+        String input = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        // childBean itself stays in the comparison: only the segment below it is stripped, and it
+        // was never there.
+        assertJsonMatcherWithDummyTestInfo(input, input, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()), null);
     }
 
     // -----------------------------------------------------------------------
