@@ -3,7 +3,14 @@ package com.github.karsaig.approvalcrest.matcher.sorting;
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.hamcrest.Matchers.anything;
@@ -270,5 +277,110 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingMatcher(actual, expected,
                 matcher -> matcher.sortType(ChildBean.class));
+    }
+
+    // -------------------------------------------------------------------------
+    // The * wildcard segment in a sort path
+    // -------------------------------------------------------------------------
+
+    /**
+     * Holds two collections, so one can be reached by a wildcard and the other by a literal key —
+     * which is what makes the merge of the two sort levels observable.
+     */
+    static class TagHolder {
+        List<String> tags;
+        List<String> notes;
+
+        TagHolder(List<String> tags, List<String> notes) {
+            this.tags = tags;
+            this.notes = notes;
+        }
+    }
+
+    /** Two map entries, each holding collections that need sorting before comparison. */
+    static class TagMapHolder {
+        Map<String, TagHolder> byKey = new LinkedHashMap<>();
+
+        TagMapHolder(List<String> firstTags, List<String> firstNotes, List<String> secondTags) {
+            byKey.put("k1", new TagHolder(firstTags, firstNotes));
+            byKey.put("k2", new TagHolder(secondTags, Collections.emptyList()));
+        }
+    }
+
+    private static TagMapHolder unsorted() {
+        return new TagMapHolder(Arrays.asList("b", "a"), Arrays.asList("y", "x"), Arrays.asList("d", "c"));
+    }
+
+    private static TagMapHolder sorted() {
+        return new TagMapHolder(Arrays.asList("a", "b"), Arrays.asList("x", "y"), Arrays.asList("c", "d"));
+    }
+
+    /**
+     * A * segment applies the sort path to every map value, so the same rule that governs ignoring
+     * and custom matching governs sorting — one syntax across all three.
+     */
+    @Test
+    public void wildcardSortPathSortsTheCollectionUnderEveryMapValue() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.*.tags", "byKey.*.notes"));
+    }
+
+    /** The wildcard does the same as naming every key, which is the point of it. */
+    @Test
+    public void wildcardSortPathMatchesNamingEveryKey() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.k1.tags", "byKey.k2.tags", "byKey.k1.notes"));
+    }
+
+    /**
+     * Naming one key leaves the other entry unsorted. The assertion has to be about *which* entry is
+     * reported, not merely that something failed: a message naming only k2 shows k1 really was sorted,
+     * where a message naming both would mean the sort had not run at all.
+     */
+    @Test
+    public void namingOneKeyLeavesTheOtherEntryUnsorted() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.k1.tags", "byKey.k1.notes"),
+                AssertionError.class, error -> {
+                    Assertions.assertTrue(error.getMessage().contains("k2"),
+                            "Expected the unsorted k2 entry to be reported, was: " + error.getMessage());
+                    Assertions.assertFalse(error.getMessage().contains("k1"),
+                            "k1 was sorted, so it should not be reported: " + error.getMessage());
+                });
+    }
+
+    /**
+     * A wildcard and a literal key at the same level both take effect rather than one winning. Two
+     * different leaves are needed to show it: tags is reached only by the wildcard and notes only by
+     * the literal key, so dropping either level fails the assertion.
+     */
+    @Test
+    public void wildcardAndLiteralKeyAtTheSameLevelBothApply() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.*.tags", "byKey.k1.notes"));
+    }
+
+    /**
+     * A wildcard and a literal key naming the <em>same</em> leaf combine rather than one replacing the
+     * other. The test above uses different leaves, which proves both levels are consulted but never
+     * makes them meet on one key; this one does, so the per-key combine is exercised.
+     */
+    @Test
+    public void wildcardAndLiteralKeyNamingTheSameLeafCombine() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.*.tags", "byKey.k1.tags", "byKey.*.notes"));
+    }
+
+    /** Each half alone is insufficient, which is what makes the test above meaningful. */
+    @Test
+    public void neitherTheWildcardNorTheLiteralKeyAloneIsEnough() {
+        assertDiagnosingMatcher(unsorted(), sorted(), matcher -> matcher.sortField("byKey.*.tags"),
+                AssertionError.class, error -> Assertions.assertTrue(
+                        error.getMessage().contains("notes"),
+                        "Expected unsorted notes to be reported, was: " + error.getMessage()));
+        assertDiagnosingMatcher(unsorted(), sorted(), matcher -> matcher.sortField("byKey.k1.notes"),
+                AssertionError.class, error -> Assertions.assertTrue(
+                        error.getMessage().contains("tags"),
+                        "Expected unsorted tags to be reported, was: " + error.getMessage()));
     }
 }

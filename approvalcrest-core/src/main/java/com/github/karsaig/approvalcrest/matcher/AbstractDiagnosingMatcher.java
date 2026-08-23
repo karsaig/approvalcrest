@@ -2,6 +2,7 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import com.github.karsaig.approvalcrest.BeanFinder;
 import com.github.karsaig.approvalcrest.ComparisonDescription;
+import com.github.karsaig.approvalcrest.JsonElementUtil;
 import com.github.karsaig.approvalcrest.Either;
 import com.github.karsaig.approvalcrest.MatcherConfiguration;
 import com.github.karsaig.approvalcrest.PathNullPointerException;
@@ -9,6 +10,7 @@ import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.SortedFieldsTracker;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
@@ -18,6 +20,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -229,7 +232,8 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                     if (beanResult.isRight()) {
                         Object beanValue = beanResult.getRight();
                         if (!matcherPassesOnValue(matcher, beanValue)) {
-                            retryList.add(FailEntry.matcherFailed(path, matcher, reportValueFor(matcher, beanValue)));
+                            retryList.add(FailEntry.matcherFailed(path, matcher, reportValueFor(matcher, beanValue),
+                                    isContainerValue(beanValue)));
                         }
                     } else {
                         retryList.add(FailEntry.beanPath(path, matcher, beanResult.getLeft()));
@@ -240,6 +244,10 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                     List<FailEntry> finalFailures = new ArrayList<>();
 
                     for (FailEntry retryEntry : retryList) {
+                        if (retryEntry.beanVerdictIsFinal) {
+                            finalFailures.add(retryEntry);
+                            continue;
+                        }
                         Either<RuntimeException, Object> jsonResult = findJsonValueAt(retryEntry.path, actualAsJsonElement);
                         if (jsonResult.isRight()) {
                             Object jsonValue = jsonResult.getRight();
@@ -281,7 +289,9 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                 Matcher<?> valueMatcher = entry.getValue();
                 List<JsonElement> matchingValues = collectValuesByFieldNamePattern(actualAsJsonElement, fieldNamePattern);
                 for (JsonElement je : matchingValues) {
-                    Object value = jsonElementToJavaValue(je);
+                    // Same presentation as the path-based matchers get, so the two agree on a
+                    // collection-valued field: hasSize works here as it does in with(path, matcher).
+                    Object value = asMatchableValue(jsonElementToJavaValue(je));
                     if (!valueMatcher.matches(value)) {
                         mismatchDescription.appendDescriptionOf(fieldNamePattern).appendText(" ");
                         valueMatcher.describeMismatch(value, mismatchDescription);
@@ -315,7 +325,53 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             }
             return true;
         }
-        return matcher.matches(value);
+        return matcher.matches(asMatchableValue(value));
+    }
+
+    /**
+     * Presents a value in the form Hamcrest's container matchers expect: a {@code JsonArray} becomes a
+     * list view, anything else passes through untouched. Applied to every value handed to a matcher,
+     * whichever walk produced it.
+     * <p>
+     * A {@code JsonArray} arrives when the path could not be resolved against the object under
+     * comparison — a raw JSON string input, or an array segment the bean walker does not traverse — so
+     * the value comes from the serialised JSON instead. That is an {@code Iterable}
+     * but not a {@code Collection}, so {@code hasSize} and {@code empty} answered false on the type
+     * check alone whatever the array held, and their negations were correspondingly true whatever it
+     * held. A {@link JsonElementUtil#asList(JsonArray) list view} lets them answer for real.
+     * <p>
+     * The view copies nothing, and it coerces a scalar element on read, so an element matcher written
+     * against the value — {@code hasItem("a")}, {@code contains(1L, 2L)} — matches a collection of
+     * scalars as it would on the object. An element that is itself an object or an array is handed
+     * back unchanged: JSON carries no type information, so a matcher written against the element's
+     * own class cannot match it either way.
+     */
+    private static Object asMatchableValue(Object value) {
+        return value instanceof JsonArray ? JsonElementUtil.asList((JsonArray) value) : value;
+    }
+
+    /**
+     * Returns true when the resolved bean value is a {@code Collection}, {@code Map} or array — a
+     * container the path terminated at, rather than something it fanned out through — in which case
+     * the serialised JSON form cannot give a better answer than the object already did.
+     * <p>
+     * Re-running such a matcher against the serialised JSON can only make the verdict worse: the
+     * JSON form of a collection is a {@code JsonArray} and of a map a {@code JsonArray} of
+     * single-entry objects, neither of which is a {@code Collection} or {@code Map}, so a container
+     * matcher is false there on type grounds regardless of content — and its negation
+     * correspondingly true. Retrying is only useful when the bean walker could not resolve the path
+     * at all, or when the value is a scalar whose JSON form differs usefully (a Gson number is a
+     * {@code Long} where the bean holds an {@code int}).
+     * <p>
+     * A {@link BeanFinder.FanoutResult} is deliberately excluded: it means the path fanned out
+     * <em>through</em> a collection rather than terminating at one, so the matcher applies to the
+     * leaf values and scalar coercion still matters.
+     */
+    private static boolean isContainerValue(Object value) {
+        if (value instanceof BeanFinder.FanoutResult) {
+            return false;
+        }
+        return value instanceof Collection || value instanceof Map || (value != null && value.getClass().isArray());
     }
 
     /**
@@ -331,7 +387,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                 }
             }
         }
-        return value;
+        return asMatchableValue(value);
     }
 
     protected void appendFieldPath(Matcher<?> matcher, Description mismatchDescription, MatcherConfiguration matcherConfiguration) {
@@ -357,25 +413,29 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
         final Matcher<?> matcher;
         final Object value;
         final RuntimeException exception;
+        /** True when the bean value already settles the verdict, so the JSON retry must not run. */
+        final boolean beanVerdictIsFinal;
 
         static FailEntry beanPath(String path, Matcher<?> matcher, RuntimeException e) {
-            return new FailEntry(Kind.BEAN_PATH, path, matcher, null, e);
+            return new FailEntry(Kind.BEAN_PATH, path, matcher, null, e, false);
         }
 
-        static FailEntry matcherFailed(String path, Matcher<?> matcher, Object value) {
-            return new FailEntry(Kind.MATCHER_FAILED, path, matcher, value, null);
+        static FailEntry matcherFailed(String path, Matcher<?> matcher, Object value, boolean beanVerdictIsFinal) {
+            return new FailEntry(Kind.MATCHER_FAILED, path, matcher, value, null, beanVerdictIsFinal);
         }
 
         static FailEntry jsonFailed(String path, Matcher<?> matcher, Object value) {
-            return new FailEntry(Kind.JSON_FAILED, path, matcher, value, null);
+            return new FailEntry(Kind.JSON_FAILED, path, matcher, value, null, false);
         }
 
-        private FailEntry(Kind kind, String path, Matcher<?> matcher, Object value, RuntimeException exception) {
+        private FailEntry(Kind kind, String path, Matcher<?> matcher, Object value, RuntimeException exception,
+                          boolean beanVerdictIsFinal) {
             this.kind = kind;
             this.path = path;
             this.matcher = matcher;
             this.value = value;
             this.exception = exception;
+            this.beanVerdictIsFinal = beanVerdictIsFinal;
         }
     }
 }

@@ -372,4 +372,44 @@ public class FieldsIgnorerSortingTest {
     private static Set<String> set(String... s) {
         return new LinkedHashSet<>(Arrays.asList(s));
     }
+
+    // -------------------------------------------------------------------------
+    // A * in a SortField's ignored sub-paths
+    // -------------------------------------------------------------------------
+
+    private static JsonElement twoWrappedLeaves() {
+        return JsonParser.parseString("{\"list\":[{\"o\":{\"id\":1,\"v\":\"zz\"}},{\"o\":{\"id\":2,\"v\":\"aa\"}}]}");
+    }
+
+    private static JsonElement sortedIgnoring(String ignoredPath) {
+        JsonElement root = twoWrappedLeaves();
+        Map<String, List<SortField<String>>> paths = new LinkedHashMap<>();
+        paths.put("list", Collections.singletonList(
+                ignoredPath == null ? SortField.of("list") : SortField.of("list", ignoredPath)));
+        FieldsIgnorer.applySorting(root, paths, Collections.<SortField<Matcher<String>>>emptyList(), true);
+        return root;
+    }
+
+    /**
+     * A {@code SortField}'s ignored sub-paths take a {@code *} segment too, so the field can be kept out
+     * of the sort key under every child rather than under one named one. Without it the {@code *} was
+     * read as a literal key name, no child matched, and the field silently stayed in the key — which
+     * bakes an order nobody asked for into the approved file.
+     * <p>
+     * The three cases together are what make this meaningful: id in the key sorts by id, id out of it
+     * sorts by v, and the wildcard must land on the latter.
+     */
+    @Test
+    void wildcardInIgnoredSortPathsExcludesTheFieldUnderEveryChild() {
+        // Control: with id in the sort key the elements order by id.
+        assertThat(sortedIgnoring(null).toString(),
+                is("{\"list\":[{\"o\":{\"id\":1,\"v\":\"zz\"}},{\"o\":{\"id\":2,\"v\":\"aa\"}}]}"));
+
+        // Naming the child excludes id, so they order by v instead.
+        String byValue = "{\"list\":[{\"o\":{\"id\":2,\"v\":\"aa\"}},{\"o\":{\"id\":1,\"v\":\"zz\"}}]}";
+        assertThat(sortedIgnoring("o.id").toString(), is(byValue));
+
+        // The wildcard must do the same without naming the child.
+        assertThat(sortedIgnoring("*.id").toString(), is(byValue));
+    }
 }

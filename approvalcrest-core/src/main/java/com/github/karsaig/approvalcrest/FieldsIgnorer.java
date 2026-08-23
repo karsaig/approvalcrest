@@ -175,37 +175,45 @@ public class FieldsIgnorer {
             } else {
                 if (jsonElement.isJsonObject()) {
                     JsonObject jo = jsonElement.getAsJsonObject();
-                    JsonElement child = jo.get(field);
+                    if (JsonElementUtil.WILDCARD.equals(field)) {
+                        return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments);
+                    }
+                    // getChild tolerates the MARKER prefix the field naming strategy puts on Set- and
+                    // Map-typed field names. Note the removal below is by the bare name, so a child
+                    // found under the prefixed name is emptied but left in place: that is pinned by
+                    // ignoresPathUnderMarkedFieldEmptyingIt, so it is deliberate rather than an
+                    // oversight, and both sides of a comparison are filtered alike.
+                    JsonElement child = getChild(jo, field);
                     if (child == null) {
-                        child = jo.get(MARKER + field);
-                        if (child == null) {
-                            // Try descending through GraphAdapter envelope keys
-                            for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
-                                if (isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
-                                    boolean changed = findPath(entry.getValue(), pathToFind, pathSegments);
-                                    if (changed) {
-                                        if (JsonElementUtil.isEmpty(entry.getValue())) {
-                                            jo.remove(entry.getKey());
-                                        }
-                                        return true;
-                                    }
+                        // Try descending through GraphAdapter envelope keys. Every envelope has
+                        // to be visited: one graph can hold several objects carrying the same
+                        // field, and stopping at the first leaves the rest in place. Since this
+                        // runs separately over the actual and the expected side, that filters the
+                        // two differently and fails the comparison on data rather than on the
+                        // ignore rule. Keys are snapshotted because entrySet() is a live view and
+                        // an emptied envelope is removed below.
+                        boolean anyEnvelopeChanged = false;
+                        for (String envelopeKey : new ArrayList<>(jo.keySet())) {
+                            if (!isGraphAdapterKey(envelopeKey)) {
+                                continue;
+                            }
+                            JsonElement envelope = jo.get(envelopeKey);
+                            if (envelope == null || !envelope.isJsonObject()) {
+                                continue;
+                            }
+                            if (findPath(envelope, pathToFind, pathSegments)) {
+                                anyEnvelopeChanged = true;
+                                if (JsonElementUtil.isEmpty(envelope)) {
+                                    jo.remove(envelopeKey);
                                 }
                             }
-                            return false;
                         }
-                        List<String> tail = pathSegments.subList(1, pathSegments.size());
-                        boolean changed = findPath(child, pathToFind, tail);
-                        if (changed && JsonElementUtil.isEmpty(child)) {
-                            jo.remove(field);
-                            return true;
-                        }
-                    } else {
-                        List<String> tail = pathSegments.subList(1, pathSegments.size());
-                        boolean changed = findPath(child, pathToFind, tail);
-                        if (changed && JsonElementUtil.isEmpty(child)) {
-                            jo.remove(field);
-                            return true;
-                        }
+                        return anyEnvelopeChanged;
+                    }
+                    List<String> tail = pathSegments.subList(1, pathSegments.size());
+                    if (findPath(child, pathToFind, tail) && JsonElementUtil.isEmpty(child)) {
+                        jo.remove(field);
+                        return true;
                     }
                 }
                 return false;
@@ -256,6 +264,22 @@ public class FieldsIgnorer {
         JsonObject jo = element.getAsJsonObject();
         String field = headOf(prefix);
         List<String> tail = prefix.subList(1, prefix.size());
+        if (JsonElementUtil.WILDCARD.equals(field)) {
+            // Every named child, so the rule reaches the array under each map value rather than
+            // under one named key. Reached only from the prefix, so a * that ends the whole path is
+            // the leaf field name instead and keeps its literal meaning.
+            for (String key : new ArrayList<>(jo.keySet())) {
+                JsonElement value = jo.get(key);
+                if (value == null || value.isJsonNull()) {
+                    continue;
+                }
+                boolean envelope = isGraphAdapterKey(key) && value.isJsonObject();
+                String wildcardPath = currentPath.isEmpty() ? key : currentPath + "." + key;
+                removeMatchingElements(value, envelope ? prefix : tail, leafField, rule, tracker,
+                        envelope ? currentPath : wildcardPath);
+            }
+            return;
+        }
         String childPath = currentPath.isEmpty() ? field : currentPath + "." + field;
         JsonElement child = getChild(jo, field);
         if (child != null) {
@@ -286,7 +310,47 @@ public class FieldsIgnorer {
         }
     }
 
-    private static JsonElement getChild(JsonObject jo, String field) {
+    /**
+     * Applies the rest of the path under every named child of {@code jo}, for a
+     * {@link JsonElementUtil#WILDCARD} segment. Reached only when something follows the wildcard: a
+     * trailing one is handled by the leaf branch above, where it keeps its ordinary meaning of a key
+     * literally named {@code *}.
+     * <p>
+     * A graph-adapter envelope key is descended through rather than consumed, so the wildcard applies
+     * to the real fields underneath and never to the envelope itself.
+     * <p>
+     * Returns true only when a direct key of {@code jo} was removed, matching the contract the object
+     * branch uses — the caller relies on it to cascade the removal of emptied parents.
+     */
+    private static boolean ignoreUnderEveryNamedChild(JsonObject jo, String pathToFind, List<String> pathSegments) {
+        List<String> tail = pathSegments.subList(1, pathSegments.size());
+        boolean removedOwnKey = false;
+        // Keys are snapshotted: emptied children are removed from the map below.
+        for (String key : new ArrayList<>(jo.keySet())) {
+            JsonElement child = jo.get(key);
+            // Skip nulls and scalars, as the array fan-out above does: a scalar child simply has no
+            // field for the rest of the path to name, and descending into one reaches ignorePath,
+            // which rejects a non-object. Without this a wildcard would be unusable at any position
+            // with a scalar sibling -- which is the ordinary shape of a bean.
+            if (child == null || child.isJsonNull() || child.isJsonPrimitive()) {
+                continue;
+            }
+            boolean envelope = isGraphAdapterKey(key) && child.isJsonObject();
+            boolean changed = findPath(child, pathToFind, envelope ? pathSegments : tail);
+            if (changed && JsonElementUtil.isEmpty(child)) {
+                jo.remove(key);
+                removedOwnKey = true;
+            }
+        }
+        return removedOwnKey;
+    }
+
+    /**
+     * Returns the child of {@code jo} named {@code field}, tolerating the {@link #MARKER} prefix that
+     * the field naming strategy adds to {@code Set}- and {@code Map}-typed fields, or null if neither
+     * form is present. Package-private so the JSON path resolver can apply the same rule.
+     */
+    static JsonElement getChild(JsonObject jo, String field) {
         JsonElement child = jo.get(field);
         if (child == null) {
             child = jo.get(MARKER + field);
@@ -320,6 +384,7 @@ public class FieldsIgnorer {
                         jsonObject.add(pair.originalKey, element);
                     }
                 }
+                PathLevel wildcardLevel = pathMap.get(JsonElementUtil.WILDCARD);
                 for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
                     JsonElement actualValue = actual.getValue();
                     if (actualValue.isJsonNull() || actualValue.isJsonPrimitive()) {
@@ -332,10 +397,12 @@ public class FieldsIgnorer {
                         continue;
                     }
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
-                    Map<String, PathLevel> nextPathMap = pathLevel.nextLevel.isEmpty()
-                            ? Collections.emptyMap() : getPathsMap(pathLevel.nextLevel);
+                    Map<String, List<SortField<String>>> nextLevel =
+                            mergeWildcardLevel(pathLevel.nextLevel, wildcardLevel);
+                    Map<String, PathLevel> nextPathMap = nextLevel.isEmpty()
+                            ? Collections.emptyMap() : getPathsMap(nextLevel);
                     String childPath = currentPath.isEmpty() ? fieldNamePair.newKey : currentPath + "." + fieldNamePair.newKey;
-                    applySortingInternal(actualValue, nextPathMap, pathLevel.nextLevel, fieldMatchersToSort, sortFile, tracker, childPath);
+                    applySortingInternal(actualValue, nextPathMap, nextLevel, fieldMatchersToSort, sortFile, tracker, childPath);
                     if (actualValue.isJsonArray()) {
                         List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, sortFile);
                         List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile);
@@ -424,6 +491,37 @@ public class FieldsIgnorer {
             }
         }
         return result;
+    }
+
+    /**
+     * Folds a {@link JsonElementUtil#WILDCARD} level into the level reached by a named key, so a
+     * sort path written with {@code *} applies to every named child at that position — the same
+     * meaning the wildcard has when ignoring or custom matching.
+     * <p>
+     * The two are merged per key rather than one replacing the other, so a wildcard and a literal
+     * key naming the same child both take effect: {@code sortField("map.*.tags", "map.k1.other")}
+     * sorts {@code tags} under every entry and {@code other} under {@code k1}.
+     */
+    private static Map<String, List<SortField<String>>> mergeWildcardLevel(
+            Map<String, List<SortField<String>>> namedLevel, PathLevel wildcard) {
+        if (wildcard == null || wildcard.nextLevel.isEmpty()) {
+            return namedLevel;
+        }
+        if (namedLevel.isEmpty()) {
+            return wildcard.nextLevel;
+        }
+        Map<String, List<SortField<String>>> merged = new HashMap<>(namedLevel);
+        for (Map.Entry<String, List<SortField<String>>> entry : wildcard.nextLevel.entrySet()) {
+            List<SortField<String>> existing = merged.get(entry.getKey());
+            if (existing == null) {
+                merged.put(entry.getKey(), entry.getValue());
+            } else {
+                List<SortField<String>> combined = new ArrayList<>(existing);
+                combined.addAll(entry.getValue());
+                merged.put(entry.getKey(), combined);
+            }
+        }
+        return merged;
     }
 
     private static Map<String, PathLevel> getPathsMap(List<SortField<String>> pathsToSort) {
@@ -543,6 +641,7 @@ public class FieldsIgnorer {
                 innerIgnoredFieldMatchers.addAll(fm.getIgnoredFieldMatchersForSorting());
             }
             Map<String, PathLevel> pathMap = getPathsMap(combinedPaths);
+            PathLevel wildcardLevel = pathMap.get(JsonElementUtil.WILDCARD);
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             for (Map.Entry<String, JsonElement> actual : jsonObject.entrySet()) {
@@ -568,7 +667,8 @@ public class FieldsIgnorer {
                     jsonForSort.add(actualKey, actualValue);
                 } else {
                     List<SortField<String>> nextLevelSortFields = new ArrayList<>();
-                    for (List<SortField<String>> sortFields : matchingPath.nextLevel.values()) {
+                    for (List<SortField<String>> sortFields
+                            : mergeWildcardLevel(matchingPath.nextLevel, wildcardLevel).values()) {
                         nextLevelSortFields.addAll(sortFields);
                     }
                     jsonForSort.add(actualKey, getFilteredStringForSorting(actualValue, nextLevelSortFields, fieldMatchers));
