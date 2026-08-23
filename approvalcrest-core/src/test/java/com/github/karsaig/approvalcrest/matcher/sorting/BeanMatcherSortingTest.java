@@ -360,6 +360,17 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
                 matcher -> matcher.sortField("byKey.*.tags", "byKey.k1.notes"));
     }
 
+    /**
+     * A wildcard and a literal key naming the <em>same</em> leaf combine rather than one replacing the
+     * other. The test above uses different leaves, which proves both levels are consulted but never
+     * makes them meet on one key; this one does, so the per-key combine is exercised.
+     */
+    @Test
+    public void wildcardAndLiteralKeyNamingTheSameLeafCombine() {
+        assertDiagnosingMatcher(unsorted(), sorted(),
+                matcher -> matcher.sortField("byKey.*.tags", "byKey.k1.tags", "byKey.*.notes"));
+    }
+
     /** Each half alone is insufficient, which is what makes the test above meaningful. */
     @Test
     public void neitherTheWildcardNorTheLiteralKeyAloneIsEnough() {

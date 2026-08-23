@@ -503,6 +503,58 @@ public class FieldsIgnorerTest {
     }
 
     @Test
+    void skipsAnEnvelopeKeyWhoseValueIsNotAnObject() {
+        // Only an object under a graph-adapter key is an envelope. A graph-shaped key holding anything
+        // else is passed over rather than descended into.
+        JsonObject json = parseObject("{\"0x1\":\"scalar\",\"0x2\":{\"a\":{\"b\":1,\"k\":9}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.get("0x1").getAsString(), is("scalar"));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("b"), is(false));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("k"), is(true));
+    }
+
+    @Test
+    void keepsAnEnvelopeThatChangedWithoutEmptying() {
+        // The envelope loses the ignored field but keeps another, so the envelope itself stays.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2}},\"keep\":9}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        // Both envelopes emptied out and went; the unrelated sibling is untouched.
+        assertThat(json.toString(), is("{\"keep\":9}"));
+    }
+
+    @Test
+    void wildcardDescendsThroughAnEnvelopeInAnElementRule() {
+        // A graph-adapter envelope is transparent here too: the wildcard applies to the real fields
+        // underneath it, so the array to filter is found inside the envelope rather than the envelope
+        // being consumed as the wildcard's child.
+        JsonObject json = parseObject(
+                "{\"map\":{\"0x1\":{\"k1\":{\"tags\":[{\"n\":\"drop\"},{\"n\":\"keep\"}]}}}}");
+
+        FieldsIgnorer.removeMatchingElements(json,
+                Collections.singletonList(ElementIgnoreRule.ofValue("map.*.tags.n", "drop")), null);
+
+        assertThat(json.toString(),
+                is("{\"map\":{\"0x1\":{\"k1\":{\"tags\":[{\"n\":\"keep\"}]}}}}"));
+    }
+
+    @Test
+    void wildcardSkipsANullChildInAnElementRule() {
+        // A null child of the wildcard level has no array below it to filter.
+        JsonObject json = parseObject(
+                "{\"map\":{\"k1\":{\"tags\":[{\"n\":\"drop\"},{\"n\":\"keep\"}]},\"k2\":null}}");
+
+        FieldsIgnorer.removeMatchingElements(json,
+                Collections.singletonList(ElementIgnoreRule.ofValue("map.*.tags.n", "drop")), null);
+
+        assertThat(json.toString(),
+                is("{\"map\":{\"k1\":{\"tags\":[{\"n\":\"keep\"}]},\"k2\":null}}"));
+    }
+
+    @Test
     void ignoresLeafPathWhereFieldLivesUnderEnvelopeKey() {
         // Last-segment removal falls back to descending envelope keys.
         JsonObject json = parseObject("{\"a\":{\"0x1\":{\"b\":\"drop\"}}}");

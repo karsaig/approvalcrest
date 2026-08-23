@@ -183,6 +183,39 @@ public class JsonElementUtilTest {
     }
 
     @Test
+    void wildcardSkipsANullChild() {
+        // A null cannot be traversed further, so it is passed over rather than contributing a null.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("*.leaf",
+                parse("{\"a\":{\"leaf\":1},\"n\":null}"));
+
+        assertTrue(result.isRight());
+        assertThat((FanoutResult) result.getRight(), contains((Object) 1L));
+    }
+
+    @Test
+    void wildcardOverAnEmptyObjectYieldsAnEmptyFanout() {
+        // Not an error: there is nothing to reject. The empty fan-out is what the matcher then fails on,
+        // so an empty container still cannot pass vacuously.
+        Either<RuntimeException, Object> result =
+                JsonElementUtil.findJsonValueAt("map.*.leaf", parse("{\"map\":{}}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), instanceOf(FanoutResult.class));
+        assertThat((FanoutResult) result.getRight(), hasSize(0));
+    }
+
+    @Test
+    void wildcardTreatsAGraphKeyWithANonObjectValueAsAnOrdinaryChild() {
+        // Only an object under a graph-adapter key is an envelope to descend through. A graph-shaped
+        // key holding an array is a plain named child, and the wildcard consumes it as one.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("*.leaf",
+                parse("{\"0x1\":[{\"leaf\":1}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight().toString(), is("[[1]]"));
+    }
+
+    @Test
     void wildcardThatResolvesNothingIsAnError() {
         // Otherwise a mistyped wildcard path would pass by matching nothing at all.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.absent",

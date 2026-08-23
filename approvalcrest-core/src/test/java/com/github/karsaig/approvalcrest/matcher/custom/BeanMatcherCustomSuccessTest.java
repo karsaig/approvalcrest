@@ -9,8 +9,11 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 
@@ -784,6 +787,85 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     }
 
     // -----------------------------------------------------------------------
+    // What a * skips among a map's values
+    // -----------------------------------------------------------------------
+
+    /** A map whose values are heterogeneous, so each skip rule has something to skip. */
+    static class MixedValueMap {
+        Map<String, Object> m = new LinkedHashMap<>();
+
+        MixedValueMap(Object... values) {
+            for (int i = 0; i < values.length; i++) {
+                m.put("k" + i, values[i]);
+            }
+        }
+    }
+
+    /** A null value cannot be traversed, so it is passed over and the reachable value still decides. */
+    @Test
+    public void wildcardSkipsANullMapValue() {
+        MixedValueMap bean = new MixedValueMap(child().childString("banana").build(), null);
+
+        assertDiagnosingMatcher(bean, bean,
+                beanMatcher -> beanMatcher.with("m.*.childString", equalTo("banana")));
+    }
+
+    /** A scalar value carries no such field, so it is skipped rather than failing the assertion. */
+    @Test
+    public void wildcardSkipsAMapValueThatCannotCarryTheRestOfThePath() {
+        MixedValueMap bean = new MixedValueMap(child().childString("banana").build(), "a bare string");
+
+        assertDiagnosingMatcher(bean, bean,
+                beanMatcher -> beanMatcher.with("m.*.childString", equalTo("banana")));
+    }
+
+    /**
+     * A value that resolves to nothing — here an empty collection, which yields an empty fan-out — is
+     * skipped too. Left in, it would fail the assertion whatever the other values held.
+     */
+    @Test
+    public void wildcardSkipsAMapValueThatResolvesToNothing() {
+        MixedValueMap bean = new MixedValueMap(
+                child().childString("banana").build(), new ArrayList<ChildBean>());
+
+        assertDiagnosingMatcher(bean, bean,
+                beanMatcher -> beanMatcher.with("m.*.childString", equalTo("banana")));
+    }
+
+    /** But a map with no usable value at all is an error, not a pass. */
+    @Test
+    public void wildcardOverAMapWithNothingReachableIsRejected() {
+        MixedValueMap bean = new MixedValueMap("a bare string", null);
+
+        assertDiagnosingMatcher(bean, bean,
+                beanMatcher -> beanMatcher.with("m.*.childString", equalTo("banana")),
+                IllegalArgumentException.class, error -> org.junit.jupiter.api.Assertions.assertEquals(
+                        "m.*.childString does not exist", error.getMessage()));
+    }
+
+    /** Holds a map that genuinely has a key named "*". */
+    static class StarKeyed {
+        Map<String, String> headers = new LinkedHashMap<>();
+
+        StarKeyed() {
+            headers.put("*", "any");
+            headers.put("accept", "json");
+        }
+    }
+
+    /**
+     * A trailing * is a key name, so it resolves the entry literally called * rather than fanning out.
+     * The object walk has no way to a map key, so this is answered by the serialised form.
+     */
+    @Test
+    public void trailingWildcardResolvesTheKeyLiterallyNamedStar() {
+        StarKeyed bean = new StarKeyed();
+
+        assertDiagnosingMatcher(bean, bean,
+                beanMatcher -> beanMatcher.with("headers.*", equalTo("any")));
+    }
+
+    // -----------------------------------------------------------------------
     // A * stays within the fields the serialised form has
     // -----------------------------------------------------------------------
 
@@ -827,8 +909,12 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     /**
      * An enum makes the static-field leak observable: its constants are static fields of its own class,
      * so a wildcard that walked them would read every other constant off the one actually held. There
-     * is no retry to hide it, because an enum serialises to a bare string. With the fields filtered
-     * nothing under the enum resolves, so the path is rejected — the honest answer.
+     * is no retry to hide it, because an enum serialises to a bare string.
+     * <p>
+     * The assertion is that BANANA is never reached, not that a particular exception is raised: whether
+     * the remaining non-static fields of Enum are readable at all depends on the reflection mode, so the
+     * failure is a rejected path under one and a mismatch under the other. Either way the other constant
+     * must not appear.
      */
     @Test
     public void wildcardDoesNotWalkAnEnumsOtherConstants() {
@@ -836,8 +922,9 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingMatcher(holder, holder,
                 beanMatcher -> beanMatcher.with("fruit.*.name", equalTo("APPLE")),
-                IllegalArgumentException.class, error -> org.junit.jupiter.api.Assertions.assertEquals(
-                        "fruit.*.name does not exist", error.getMessage()));
+                Throwable.class, error -> org.junit.jupiter.api.Assertions.assertFalse(
+                        String.valueOf(error.getMessage()).contains("BANANA"),
+                        "The wildcard read another enum constant: " + error.getMessage()));
     }
 
     /** A non-static inner class, whose synthetic reference points back at the enclosing instance. */
