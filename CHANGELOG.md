@@ -3,7 +3,7 @@
 Changelog
 ===========
 
-Version 1.5.1 - 2026/08/23
+Version 1.5.1 - 
 -----
 
 - A `*` segment no longer walks fields the serialised form does not contain. It iterated every declared field, including `static`, `transient` and compiler-generated ones, so on an enum it read the other constants off the one held, and on a non-static inner class it followed the synthetic reference to the enclosing instance — letting an assertion pass on data outside the object being compared. It also could not be satisfied beside an empty collection or an unreachable sibling, reporting a path the caller never wrote.
