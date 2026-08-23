@@ -301,9 +301,9 @@ class GsonProvider {
             }
         } else {
             for (String jsonRepresentation : sortedMapKeySet) {
-                JsonArray keyValueArray = new JsonArray();
                 List<Object> objectsInTheSet = objects.get(jsonRepresentation);
                 for (Object objectInTheSet : objectsInTheSet) {
+                    JsonArray keyValueArray = new JsonArray();
                     keyValueArray.add(gson.toJsonTree(objectInTheSet));
                     keyValueArray.add(gson.toJsonTree(map.get(objectInTheSet)));
                     array.add(keyValueArray);

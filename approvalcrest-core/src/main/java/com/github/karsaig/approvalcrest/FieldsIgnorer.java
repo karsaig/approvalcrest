@@ -114,10 +114,16 @@ public class FieldsIgnorer {
         String pathToFind = headOf(pathsToFind);
         List<String> pathSegments = asList(pathToFind.split(PATH_SEPARATOR_PATTERN));
         try {
-            boolean removed = findPath(jsonElement, pathToFind, pathSegments);
-            if (removed && tracker != null && reasonMap != null) {
+            // Two facts, not one. The return value means "a direct child of mine went", which is
+            // what the cascade logic needs and must not be widened -- widening it would delete
+            // parents that still hold other fields. But it is the wrong question for the tracker:
+            // .ignoring("a.b.c") where a.b keeps other fields removes c and returns false all the
+            // way up, so the rule went unrecorded. The accumulator answers "did anything change".
+            boolean[] changedAnywhere = new boolean[1];
+            findPath(jsonElement, pathToFind, pathSegments, false, changedAnywhere);
+            if (changedAnywhere[0] && tracker != null && reasonMap != null) {
                 IgnoredFieldsTracker.Reason reason = reasonMap.getOrDefault(pathToFind, IgnoredFieldsTracker.Reason.IGNORE_PATH);
-                tracker.recordIgnored(pathToFind, reason);
+                tracker.recordIgnoredRule(pathToFind, reason);
             }
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(pathToFind + " does not exist", e);
@@ -131,9 +137,20 @@ public class FieldsIgnorer {
         return set;
     }
 
-    private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments) {
+    /**
+     * @param parentIsArray whether {@code jsonElement} is itself an element of an array. Only the
+     *                      orphan cleanup below needs it, and only to tell a complex-key map's
+     *                      {@code [key, value]} pair — always an array inside an array — from a
+     *                      collection held by an object property.
+     * @param changedAnywhere single-element accumulator set whenever a removal actually happens,
+     *                      anywhere below this call. Distinct from the return value, which reports
+     *                      only whether a direct child of {@code jsonElement} went.
+     */
+    private static boolean findPath(JsonElement jsonElement, String pathToFind, List<String> pathSegments,
+                                    boolean parentIsArray, boolean[] changedAnywhere) {
         if (jsonElement.isJsonArray()) {
             JsonArray jsonArray = jsonElement.getAsJsonArray();
+            int sizeBeforeRemoval = jsonArray.size();
             Iterator<JsonElement> iterator = jsonArray.iterator();
             boolean result = false;
             while (iterator.hasNext()) {
@@ -141,7 +158,7 @@ public class FieldsIgnorer {
                 if (arrayElement.isJsonNull() || arrayElement.isJsonPrimitive()) {
                     continue;
                 }
-                boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments);
+                boolean ignoredElement = findPath(arrayElement, pathToFind, pathSegments, true, changedAnywhere);
                 if (ignoredElement && JsonElementUtil.isEmpty(arrayElement)) {
                     iterator.remove();
                     result |= true;
@@ -151,7 +168,21 @@ public class FieldsIgnorer {
             // those are orphaned map values whose complex key was entirely stripped by
             // ignoring.  Clear them so the inner array becomes empty and the outer
             // loop's existing isEmpty check can remove the whole entry.
-            if (result) {
+            //
+            // Only for something shaped like a map entry: an array of exactly two elements that is
+            // itself an element of an array. A complex-key map serialises each entry as [key, value]
+            // inside the map's array, so it always matches; a collection held by an object property
+            // never does, and neither does a nested collection of any other length.
+            //
+            // Clearing anything else discards values the caller never mentioned. Ignoring "list.a"
+            // over {"list":[{"a":1},"keep-me",42]} emptied the object, found only primitives left,
+            // deleted those too and so dropped the whole field. The two-element test is what extends
+            // that protection past the outermost level: without it, the same loss happened one level
+            // down, in {"ll":[[{"a":1},"keep",7]]}.
+            //
+            // A nested collection of exactly two elements is still indistinguishable from a map
+            // entry and is still cleared. That residue is accepted and recorded in the CHANGELOG.
+            if (result && parentIsArray && sizeBeforeRemoval == 2) {
                 boolean hasNonPrimitive = false;
                 for (JsonElement remaining : jsonArray) {
                     if (!remaining.isJsonNull() && !remaining.isJsonPrimitive()) {
@@ -171,19 +202,35 @@ public class FieldsIgnorer {
         } else {
             String field = headOf(pathSegments);
             if (pathSegments.size() == 1) {
-                return ignorePath(jsonElement, pathToFind);
+                // Every removal anywhere cascades from a leaf removal here, so this is the one place
+                // the accumulator has to be set.
+                boolean removedLeaf = ignorePath(jsonElement, pathToFind);
+                if (removedLeaf) {
+                    changedAnywhere[0] = true;
+                }
+                return removedLeaf;
             } else {
                 if (jsonElement.isJsonObject()) {
                     JsonObject jo = jsonElement.getAsJsonObject();
                     if (JsonElementUtil.WILDCARD.equals(field)) {
-                        return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments);
+                        return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments, changedAnywhere);
                     }
-                    // getChild tolerates the MARKER prefix the field naming strategy puts on Set- and
-                    // Map-typed field names. Note the removal below is by the bare name, so a child
-                    // found under the prefixed name is emptied but left in place: that is pinned by
-                    // ignoresPathUnderMarkedFieldEmptyingIt, so it is deliberate rather than an
-                    // oversight, and both sides of a comparison are filtered alike.
-                    JsonElement child = getChild(jo, field);
+                    // The field naming strategy puts the MARKER prefix on Set- and Map-typed field
+                    // names, so the child may sit under either name. Take the key as well as the
+                    // value: removing an emptied child by the bare name silently does nothing when
+                    // it was found under the prefixed one, leaving an empty husk whose prefix
+                    // removeSetMarker strips, so the file shows an empty collection where the field
+                    // should have gone. Doing the two probes here rather than in getChild keeps that
+                    // helper's signature, which three other callers use for the value alone.
+                    // Prefers the bare name when an object somehow holds both. That is reachable —
+                    // a subclass widening an inherited field to a Set or Map gets both names, since
+                    // Gson's duplicate-name check runs after the naming strategy — and in that shape
+                    // only the bare twin is descended into, whereas the leaf branch below removes
+                    // both names. Not worth resolving here: such an object is written with two
+                    // identical JSON keys once the prefix is stripped, which cannot be read back at
+                    // all, so the shape is broken well before this line sees it.
+                    String childKey = jo.has(field) ? field : MARKER + field;
+                    JsonElement child = jo.get(childKey);
                     if (child == null) {
                         // Try descending through GraphAdapter envelope keys. Every envelope has
                         // to be visited: one graph can hold several objects carrying the same
@@ -201,7 +248,7 @@ public class FieldsIgnorer {
                             if (envelope == null || !envelope.isJsonObject()) {
                                 continue;
                             }
-                            if (findPath(envelope, pathToFind, pathSegments)) {
+                            if (findPath(envelope, pathToFind, pathSegments, false, changedAnywhere)) {
                                 anyEnvelopeChanged = true;
                                 if (JsonElementUtil.isEmpty(envelope)) {
                                     jo.remove(envelopeKey);
@@ -211,8 +258,8 @@ public class FieldsIgnorer {
                         return anyEnvelopeChanged;
                     }
                     List<String> tail = pathSegments.subList(1, pathSegments.size());
-                    if (findPath(child, pathToFind, tail) && JsonElementUtil.isEmpty(child)) {
-                        jo.remove(field);
+                    if (findPath(child, pathToFind, tail, false, changedAnywhere) && JsonElementUtil.isEmpty(child)) {
+                        jo.remove(childKey);
                         return true;
                     }
                 }
@@ -322,7 +369,8 @@ public class FieldsIgnorer {
      * Returns true only when a direct key of {@code jo} was removed, matching the contract the object
      * branch uses — the caller relies on it to cascade the removal of emptied parents.
      */
-    private static boolean ignoreUnderEveryNamedChild(JsonObject jo, String pathToFind, List<String> pathSegments) {
+    private static boolean ignoreUnderEveryNamedChild(JsonObject jo, String pathToFind, List<String> pathSegments,
+                                                      boolean[] changedAnywhere) {
         List<String> tail = pathSegments.subList(1, pathSegments.size());
         boolean removedOwnKey = false;
         // Keys are snapshotted: emptied children are removed from the map below.
@@ -336,7 +384,7 @@ public class FieldsIgnorer {
                 continue;
             }
             boolean envelope = isGraphAdapterKey(key) && child.isJsonObject();
-            boolean changed = findPath(child, pathToFind, envelope ? pathSegments : tail);
+            boolean changed = findPath(child, pathToFind, envelope ? pathSegments : tail, false, changedAnywhere);
             if (changed && JsonElementUtil.isEmpty(child)) {
                 jo.remove(key);
                 removedOwnKey = true;

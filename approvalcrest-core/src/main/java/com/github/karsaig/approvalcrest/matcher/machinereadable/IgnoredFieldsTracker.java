@@ -2,7 +2,9 @@ package com.github.karsaig.approvalcrest.matcher.machinereadable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Accumulates records of fields that were actually removed during JSON filtering.
@@ -62,9 +64,27 @@ public class IgnoredFieldsTracker {
     }
 
     private final List<IgnoredField> fields = new ArrayList<>();
+    private final Set<String> recordedRules = new HashSet<>();
 
     public void recordIgnored(String path, Reason reason) {
         fields.add(IgnoredField.of(path, reason));
+    }
+
+    /**
+     * Records a rule whose path identifies the RULE rather than a location, deduplicating it.
+     * <p>
+     * One tracker spans both filter runs, over the actual value and over the approved content, so a
+     * rule applying to both sides was reported twice. Only a rule path can be deduplicated this way.
+     * A location must not be — an element index, or the path of a parent removed for becoming empty —
+     * because sibling locations can share a path today: an intermediate array is traversed without
+     * appending an index, so two removals in different branches both report {@code entry.tag[0]}.
+     * Deduplicating those turns a mislabelled but complete report into a mislabelled and short one,
+     * which is worse.
+     */
+    public void recordIgnoredRule(String path, Reason reason) {
+        if (recordedRules.add(reason + "\u0000" + path)) {
+            fields.add(IgnoredField.of(path, reason));
+        }
     }
 
     public void recordIgnoredPattern(String path, Reason reason, String patternDescription) {

@@ -4,7 +4,9 @@ import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGeneric;
 import com.github.karsaig.approvalcrest.testdata.BeanWithGenericIterable;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.google.common.collect.Sets;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -22,9 +24,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 
 class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
 
@@ -192,5 +197,70 @@ class JsonMatcherSupportedTypeTest extends AbstractFileMatcherTest {
                 "  \"array\": null\n" +
                 "}";
         assertJsonMatcherWithDummyTestInfo(BeanWithGenericIterable.Builder.bean().set(Sets.newHashSet(input)).build(), expectedString, expectedExceptionMessage == null);
+    }
+
+    private static Map<ChildBean, ChildBean> mapWithTwoStructurallyIdenticalEntries() {
+        // Neither ChildBean nor Bean overrides equals, so both entries survive in the map.
+        // They land in the same bucket of the grouping multimap, whose key is the key's JSON
+        // concatenated with the value's.
+        Map<ChildBean, ChildBean> input = new LinkedHashMap<>();
+        input.put(child().childString("k").childInteger(1).build(), child().childString("v").childInteger(2).build());
+        input.put(child().childString("k").childInteger(1).build(), child().childString("v").childInteger(2).build());
+        return input;
+    }
+
+    @Test
+    void complexKeyMapRendersEachStructurallyIdenticalEntryAsItsOwnPair() {
+        String expected = "[\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 1,\n" +
+                "      \"childString\": \"k\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childInteger\": 2,\n" +
+                "      \"childString\": \"v\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 1,\n" +
+                "      \"childString\": \"k\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childInteger\": 2,\n" +
+                "      \"childString\": \"v\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(mapWithTwoStructurallyIdenticalEntries(), expected, (String) null);
+    }
+
+    @Test
+    void ignoringAFieldInAComplexKeyMapFiltersEachStructurallyIdenticalEntry() {
+        // Exercises the in-place walker over the same shape: with one JsonArray shared between
+        // both entries it would see four elements per entry instead of two.
+        String expected = "[\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 1\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childInteger\": 2\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  [\n" +
+                "    {\n" +
+                "      \"childInteger\": 1\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childInteger\": 2\n" +
+                "    }\n" +
+                "  ]\n" +
+                "]";
+
+        assertJsonMatcherWithDummyTestInfo(mapWithTwoStructurallyIdenticalEntries(), expected,
+                jsonMatcher -> jsonMatcher.ignoring("childString"), null);
     }
 }

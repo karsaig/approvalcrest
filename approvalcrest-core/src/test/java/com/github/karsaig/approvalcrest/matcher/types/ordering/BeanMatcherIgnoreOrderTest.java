@@ -17,7 +17,7 @@ import com.github.karsaig.approvalcrest.matcher.TestMatcherFactory;
 import com.github.karsaig.approvalcrest.testdata.Bean;
 
 
-public class BeanMatcherIgnoreOrder extends AbstractTest {
+public class BeanMatcherIgnoreOrderTest extends AbstractTest {
 
     private TestMatcherFactory matcherFactory = new TestMatcherFactory();
 

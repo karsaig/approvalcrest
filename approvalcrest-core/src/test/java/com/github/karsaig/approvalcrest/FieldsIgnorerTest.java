@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
+import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -565,15 +567,127 @@ public class FieldsIgnorerTest {
     }
 
     @Test
-    void ignoresPathUnderMarkedFieldEmptyingIt() {
-        // The ignored path is resolved against a field queued for sorting (MARKER prefix);
-        // its leaf is removed, leaving the marked object empty.
+    void cascadesRemovalWhenAMarkedParentBecomesEmpty() {
+        // Same shape and same outcome as cascadesRemovalWhenParentBecomesEmpty, which is the point:
+        // the MARKER prefix the naming strategy puts on Set- and Map-typed fields is stripped before
+        // anyone reads the file, so it must not decide whether an emptied parent survives. It used
+        // to: the child was found under the prefixed name and removed by the bare one, so the empty
+        // husk stayed and the file showed an empty collection where the field should have gone.
         JsonObject json = parseObject("{\"" + FieldsIgnorer.MARKER + "a\":{\"b\":\"drop\"}}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));
 
-        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").has("b"), is(false));
-        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "a").size(), is(0));
+        assertThat(json.has(FieldsIgnorer.MARKER + "a"), is(false));
+        assertThat(json.size(), is(0));
+    }
+
+    @Test
+    void keepsUnmentionedValuesWhenAnObjectElementIsIgnoredAway() {
+        // Ignoring list.a empties the object element, which goes. The two primitives beside it were
+        // never mentioned by the rule and must stay: they used to be deleted as well, taking the
+        // whole field with them, because the cleanup below treated any array left holding only
+        // primitives as the remains of a map entry.
+        JsonObject json = parseObject("{\"list\":[{\"a\":1},\"keep-me\",42]}");
+
+        FieldsIgnorer.findPaths(json, paths("list.a"));
+
+        assertThat(json.toString(), is("{\"list\":[\"keep-me\",42]}"));
+    }
+
+    @Test
+    void clearsOrphanedValuesWhenAComplexKeyMapKeyIsIgnoredAway() {
+        // The case the cleanup exists for, and the reason it cannot simply be dropped. A map with a
+        // bean key serialises as [[key, value]]; emptying the key leaves the value with nothing to
+        // belong to, so the entry goes. A pair like this is always an array inside an array, which
+        // is what distinguishes it from the collection above.
+        JsonObject json = parseObject("{\"map\":[[{\"a\":1},\"someValue\"]]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.a"));
+
+        assertThat(json.has("map"), is(false));
+    }
+
+    // -----------------------------------------------------------------------
+    // What the tracker records
+    // -----------------------------------------------------------------------
+
+    @Test
+    void recordsARuleWhoseParentKeepsItsOtherFields() {
+        // findPath returns "a direct child of mine went", which is false all the way up here: c is
+        // removed but b keeps another field, so nothing cascades. The rule did apply, and used to go
+        // unrecorded -- which is the ordinary case, not an edge one.
+        JsonObject json = parseObject("{\"a\":{\"b\":{\"c\":1,\"keep\":2}}}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(json, paths("a.b.c"), tracker, Collections.emptyMap());
+
+        assertThat(tracker.getFields(), hasSize(1));
+        assertThat(tracker.getFields().get(0).getPath(), is("a.b.c"));
+        assertThat(json.toString(), is("{\"a\":{\"b\":{\"keep\":2}}}"));
+    }
+
+    @Test
+    void recordsARuleThatAppliesToBothSidesOnlyOnce() {
+        // One tracker records the run over the actual value and the run over the approved content.
+        // An ignore rule matching both is one rule.
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"b\":1,\"keep\":2}}"), paths("a.b"),
+                tracker, Collections.emptyMap());
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"b\":1,\"keep\":2}}"), paths("a.b"),
+                tracker, Collections.emptyMap());
+
+        assertThat(tracker.getFields(), hasSize(1));
+    }
+
+    @Test
+    void recordsNothingWhenTheRuleMatchedNothing() {
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.findPaths(parseObject("{\"a\":{\"keep\":2}}"), paths("a.absent"),
+                tracker, Collections.emptyMap());
+
+        assertThat(tracker.isEmpty(), is(true));
+    }
+
+    @Test
+    void keepsUnmentionedValuesOneLevelDownAsWell() {
+        // The same loss as above, a level deeper. Guarding only on "my parent is an array" left this
+        // untouched, because a nested collection IS an array element; the entry-shaped test — exactly
+        // two elements — is what covers it.
+        JsonObject json = parseObject("{\"ll\":[[{\"a\":1},\"keep\",7]]}");
+
+        FieldsIgnorer.findPaths(json, paths("ll.a"));
+
+        assertThat(json.toString(), is("{\"ll\":[[\"keep\",7]]}"));
+    }
+
+    @Test
+    void keepsUnmentionedValuesWhenASiblingInnerCollectionSurvives() {
+        // Nastier variant: a surviving sibling keeps the field alive, so the loss is silent rather
+        // than an obviously absent field.
+        JsonObject json = parseObject("{\"ll\":[[{\"a\":1},\"keep\",7],[{\"z\":1}]]}");
+
+        FieldsIgnorer.findPaths(json, paths("ll.a"));
+
+        assertThat(json.toString(), is("{\"ll\":[[\"keep\",7],[{\"z\":1}]]}"));
+    }
+
+    @Test
+    void recordsEveryElementRemovalEvenWhenSiblingArraysReportTheSamePath() {
+        // Two removals in different fan-out branches. An intermediate array is traversed without
+        // appending an index, so both report entry.tag[0] — deduplicating a location would drop a
+        // real removal and report one where two happened.
+        JsonObject json = parseObject("{\"entry\":[{\"tag\":[{\"system\":\"drop\"},{\"system\":\"keep\"}]},"
+                + "{\"tag\":[{\"system\":\"drop\"},{\"system\":\"keep\"}]}]}");
+        IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
+
+        FieldsIgnorer.removeMatchingElements(json,
+                Collections.singletonList(ElementIgnoreRule.ofValue("entry.tag.system", "drop")), tracker);
+
+        assertThat(json.toString(), is("{\"entry\":[{\"tag\":[{\"system\":\"keep\"}]},"
+                + "{\"tag\":[{\"system\":\"keep\"}]}]}"));
+        assertThat(tracker.getFields(), hasSize(2));
     }
 
     @Test

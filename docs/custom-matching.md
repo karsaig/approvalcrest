@@ -242,7 +242,7 @@ Fan-out through an array is unaffected — `.with("orderArray.trackingCode", not
 
 ## Container Matchers and JSON String Input
 
-`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
+`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. On JSON-string input the path never resolves against the object, and one combination there cannot fail; see the negation note below. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
 
 Size, emptiness and scalar contents therefore hold for both input forms. What a JSON string cannot supply is element *classes*:
 
@@ -250,7 +250,7 @@ Size, emptiness and scalar contents therefore hold for both input forms. What a 
 |---|---|---|
 | `hasSize`, `empty`, `iterableWithSize`, `emptyIterable` | works | works |
 | `hasItem`, `contains`, `containsInAnyOrder` over **scalars** | works | works |
-| `hasItem`, `contains`, `containsInAnyOrder` over **objects** | works | container is matched, but an element matcher written against the field's own class cannot match a `JsonObject` |
+| `hasItem`, `contains`, `containsInAnyOrder` over **objects** | works | container is matched, but an element matcher written against the field's own class cannot match a `JsonObject` — and see the negation note below, where this becomes a silent pass |
 | `hasEntry`, `hasKey`, `aMapWithSize` | works | fails — a map serialises to a `JsonArray` of single-entry objects, not a `java.util.Map` |
 
 ```java
@@ -268,16 +268,58 @@ A size mismatch reports the size, for either input form:
 orders collection size was <2>
 ```
 
-Negation works normally. A container matcher is settled by the value at the path, so `not(...)` around one reports what you would expect:
+Negation works for a container matcher on either input form, because the container matcher is settled by the value at the path:
 
 ```java
-// Fails when orders is empty
-assertThat(actual, sameBeanAs(expected)
+// Fails when orders is empty, for object and JSON-string input alike
+assertThat(actual, sameJsonAsApproved()
     .with("orders", not(empty())));
 
 // Fails when an order with this reference is present
 assertThat(actual, sameBeanAs(expected)
     .with("orders", not(hasItem(orderWithRef("A-9")))));
+```
+
+**One combination cannot fail, and it is worth knowing before you rely on it.** `not(hasItem(...))`, `not(contains(...))` and `not(containsInAnyOrder(...))` pass whatever the data holds when *all three* of these are true: the input is a raw JSON string, the elements are objects rather than scalars, and the element matcher is written against the element's own class.
+
+```java
+// Object input: fails when an order with this reference is present. Correct.
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", not(hasItem(orderWithRef("A-9")))));
+
+// JSON string input: passes even when A-9 IS present. The matcher is handed a
+// JsonObject, which no Order matcher can match, so hasItem is false and not(...) is true.
+assertThat(jsonString, sameJsonAsApproved()
+    .with("orders", not(hasItem(orderWithRef("A-9")))));
+```
+
+Un-negated the same mismatch is loud rather than silent — `mismatches were: [was JsonObject <{...}>]` — which is the limitation already described in the table above. Negation turns that non-match into a pass.
+
+The two ways round it: compare the object rather than a JSON string, or write the matcher against the JSON shape. Over **scalar** elements all three work on both input forms, because the list view coerces a scalar on read, so `not(hasItem("urgent"))` over a `tags` array fails correctly whichever form the input takes.
+
+This is not something the library can detect and reject for you. A container matcher and an element matcher are handed the same `JsonArray`, so any check that rejected the second would also reject `hasSize` and `iterableWithSize`, which do work here; and Hamcrest keeps a matcher's expected type and negation flag private, so the matcher itself cannot be interrogated.
+
+## A null half-way along a path
+
+A path resolves against the Java object first and is retried against the serialised JSON wherever the object walk cannot reach — an array segment, a map entry addressed by its key, a member whose serialised name differs from the field's, and everything at all when the input is a raw JSON string.
+
+When a reference along the path is `null`, that retry answers `null` for **everything** below it, because a null in parsed JSON carries no type. So a path whose remaining segments name nothing still resolves, and `nullValue()` accepts it:
+
+```java
+// customer is null. This passes whether or not Customer has an "nmae" member.
+assertThat(actual, sameBeanAs(expected)
+    .with("customer.nmae", nullValue()));
+```
+
+A path left behind by a rename therefore asserts nothing, so long as some reference along it is null. Read a passing `nullValue()` assertion over a nested path as evidence about the reference, not about the leaf.
+
+This cannot be closed by checking the field's declared type for the next segment — that was tried and reverted. The retry resolves serialised **member** names, and those are not Java field names: `@SerializedName` renames a member, a registered `JsonSerializer` invents them freely, a `JsonObject`-typed field's members are data, a bounded type variable erases to its bound rather than to `Object`, and a field declared as a supertype legitimately carries a subtype's fields. Each of those makes "does not exist" a false statement about a path that resolves perfectly well for real data.
+
+What helps is asserting on the reference itself, so the assertion says what you mean:
+
+```java
+assertThat(actual, sameBeanAs(expected)
+    .with("customer", nullValue()));
 ```
 
 ## Match All Fields Whose Name Matches a Pattern

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.startsWith;
 
-public class BeanMatcherCustomMatchOnInheritedFields extends AbstractBeanMatcherTest {
+public class BeanMatcherCustomMatchOnInheritedFieldsTest extends AbstractBeanMatcherTest {
 
     @Test
     public void customMatchersShouldWorkForInheritedFieldsWhenNoDifference() {

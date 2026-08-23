@@ -10,12 +10,15 @@ import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest {
@@ -297,6 +300,54 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         thrown.getMessage().contains("childBean.childString was null"),
                         "Expected parent-null message, was: " + thrown.getMessage()),
                 AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Known limitation: below a null, a path that names nothing cannot fail
+    //
+    // These assert a pass, and that is the point. A path resolves against the object first and is
+    // retried against the serialised JSON, because that retry is the only thing that reaches a map
+    // entry addressed by its key, a path through an array, a member whose serialised name differs
+    // from the field's, and anything at all when the input is a raw JSON string. A null in parsed
+    // JSON carries no type, so the retry answers null for every path below it and nullValue()
+    // accepts that. A path left behind by a rename asserts nothing, as long as some reference along
+    // it is null.
+    //
+    // Rejecting such a path by checking the field's DECLARED TYPE for the next segment was tried and
+    // reverted as unsound: the retry resolves serialised MEMBER names, and those are not Java field
+    // names. @SerializedName renames a member, a registered JsonSerializer invents them freely, a
+    // JsonObject-typed field's members are data, a bounded type variable erases to its bound rather
+    // than to Object, and a field declared as a supertype legitimately carries a subtype's fields.
+    // Each makes "does not exist" a false statement about a path that resolves for real data.
+    // Throwing also escapes not(...), so a negated matcher could no longer express "does not match".
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void aPathNamingNothingBelowANullCannotFail() {
+        // childBean is null and ChildBean declares no "nonExistingField".
+        Object input = parent().build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()), null);
+    }
+
+    @Test
+    public void aPathNamingNothingBelowANullCannotFailForJsonStringInputEither() {
+        // childBean itself stays in the comparison: only the segment below it is stripped, and it
+        // was never there.
+        String input = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, input, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBean.nonExistingField", nullValue()), null);
     }
 
     // -----------------------------------------------------------------------
@@ -667,6 +718,69 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 thrown -> Assertions.assertTrue(
                         thrown.getMessage().contains("childBeanList"),
                         "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // The boundary of the negated-element-matcher limitation: scalar elements
+    //
+    // Over objects on JSON-string input these three cannot fail, which is pinned in
+    // JsonMatcherCustomSuccessTest. Over scalars they fail correctly, because the read-only list
+    // view over the JsonArray coerces a JSON scalar on read -- a string arrives as a String. That
+    // is what makes the limitation about element classes rather than about the input form, and it
+    // is what any future fix must not break.
+    // -----------------------------------------------------------------------
+
+    private static final String SCALAR_LIST_JSON = "{\n"
+            + "  \"other\": 1,\n"
+            + "  \"tags\": [\n"
+            + "    \"urgent\",\n"
+            + "    \"review\"\n"
+            + "  ]\n"
+            + "}";
+
+    private static final String SCALAR_LIST_JSON_APPROVED = "{\n"
+            + "  \"other\": 1\n"
+            + "}";
+
+    @Test
+    public void negatedHasItemOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(hasItem("urgent"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedContainsOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(contains("urgent", "review"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedContainsInAnyOrderOverScalarsFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(containsInAnyOrder("review", "urgent"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void negatedHasSizeFailsOnJsonStringInput() {
+        // Claimed in the CHANGELOG and the docs for both input forms; only object input was covered.
+        assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", not(hasSize(2))),
+                error -> Assertions.assertTrue(error.getMessage().contains("tags"),
+                        "Expected a tags mismatch, was: " + error.getMessage()),
                 AssertionError.class);
     }
 }
