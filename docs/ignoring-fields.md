@@ -60,6 +60,62 @@ assertThat(actual, sameJsonAsApproved()
 
 This works identically whether the type is `List`, `Set`, any `Collection` subtype, or a JSON array. Paths through empty collections do nothing silently.
 
+## Paths Through Maps
+
+A `Map` is **not** fanned out over — it is traversed by key. The key is a path segment:
+
+```java
+// Removes generatedId from the order stored under key "A-1" only
+assertThat(actual, sameJsonAsApproved()
+    .ignoring("ordersByRef.A-1.generatedId"));
+```
+
+To apply the same path to every entry, use `*`:
+
+```java
+// Removes generatedId from EVERY order in the map
+assertThat(actual, sameJsonAsApproved()
+    .ignoring("ordersByRef.*.generatedId"));
+```
+
+`*` means "every named child at that position" — a map key, an object property, or a bean field. It
+behaves the same in `.with(path, matcher)`, so an ignore and a custom matcher written over the same
+shape agree.
+
+Two limits worth knowing:
+
+- **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
+  a key literally named `*`, which a JSON document or a `Map<String,?>` may have. So
+  `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
+  meaning "every value", which is a silent no-op if there is none.
+- **Emptying every value cascades.** If the ignored field is the only one on each value, every value
+  empties, so each entry is removed, the array empties, and the map field disappears from the output
+  altogether. That is the same cascade a named key triggers, but `*` hits every entry at once, so it is
+  the common case rather than the corner.
+
+### Removing elements under every map entry
+
+`ignoringElementsWhere` takes the same `*` segment, which is the only way to reach the array under each
+entry of a `Map<String, List<T>>`:
+
+```java
+// Removes tags with that system from the list under EVERY entry
+assertThat(actual, sameJsonAsApproved()
+    .ignoringElementsWhere("ordersByRef.*.tag.system", FLOW_ID_TAG_SYSTEM));
+```
+
+The comparison to draw is against the **wildcard-free** form, not against a named key.
+`ordersByRef.system` filters the outer array of map entries, testing each entry object for a `system`
+field — which matches nothing, so it is a silent no-op. `ordersByRef.*.system` filters the list *inside*
+each entry, which is what you want for a map of lists. Naming a key, `ordersByRef.A-1.system`, reaches
+that same inner list for that one entry, so the wildcard is the named form applied to every entry.
+
+A `*` that ends the whole path is the leaf field name rather than a wildcard, as everywhere else.
+
+A map with non-primitive keys serialises differently — as pairs rather than as single-entry objects — so
+a path through it reaches fields of the **key** objects as well as the values. That is pre-existing
+behaviour for a named path; `*` inherits it.
+
 ## Removing Array Elements by Value
 
 `.ignoring()` removes *fields*; it cannot drop an individual array element based on what that element contains. `.ignoringElementsWhere()` fills that gap: it removes the array elements whose nested field has a given value.

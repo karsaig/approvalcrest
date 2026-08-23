@@ -8,7 +8,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
+import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.IsEqual.equalTo;
 
@@ -513,5 +519,154 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                         "Expected path in failure message, was: " + error.getMessage()),
                 AssertionError.class);
     }
-}
 
+    // -----------------------------------------------------------------------
+    // Container matcher limits on JSON string input
+    // -----------------------------------------------------------------------
+
+    /** A two-element childBeanList supplied as a JSON string, so no bean is available. */
+    private static final String TWO_CHILD_BEANS_AS_JSON = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanList\": [\n" +
+            "    {\n" +
+            "      \"childInteger\": 0,\n" +
+            "      \"childString\": \"apple\"\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"childInteger\": 0,\n" +
+            "      \"childString\": \"banana\"\n" +
+            "    }\n" +
+            "  ],\n" +
+            "  \"childBeanMap\": [],\n" +
+            "  \"parentString\": null\n" +
+            "}";
+
+    private static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanMap\": [],\n" +
+            "  \"parentString\": null\n" +
+            "}";
+
+    /** hasSize reports the actual size on JSON string input, as it does on a bean. */
+    @Test
+    public void failsWithSizeMismatchWhenHasSizeIsUsedOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(TWO_CHILD_BEANS_AS_JSON, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", hasSize(3)),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList collection size was <2>"),
+                        "Expected size mismatch, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    /**
+     * The list view coerces scalar elements but hands objects back as they are, so contains() and
+     * containsInAnyOrder() still cannot match element matchers written against the bean type.
+     * The container is matchable; an object element carries no type information.
+     */
+    @Test
+    public void failsWhenContainsIsUsedOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(TWO_CHILD_BEANS_AS_JSON, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList",
+                        contains(childStringEqualTo("apple"), childStringEqualTo("banana"))),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList"),
+                        "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    /** iterableWithSize works on a JsonArray, so it fails on the size — the useful failure. */
+    @Test
+    public void failsWithSizeMismatchWhenIterableWithSizeIsUsedOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(TWO_CHILD_BEANS_AS_JSON, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", iterableWithSize(3)),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList iterable size was <2>"),
+                        "Expected size mismatch, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    /**
+     * A Map is traversed by key, not fanned out over: skipping the key reaches nothing, because no
+     * entry is called childString. Name the key, use a * segment to mean every value, or target the
+     * map itself with hasEntry or aMapWithSize.
+     */
+    @Test
+    public void failsWhenPathDescendsIntoMapValues() {
+        Object input = parent().putToChildBeanMap("key", child().childString("apple")).build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap.childString", equalTo("apple")),
+                thrown -> Assertions.assertEquals("childBeanMap.childString does not exist", thrown.getMessage()),
+                IllegalArgumentException.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Negated container matchers
+    // -----------------------------------------------------------------------
+
+    /**
+     * not(empty()) on an empty collection must fail. Previously the bean-level rejection was
+     * retried against the JsonArray form, where empty() is false on type grounds, making the
+     * negation true and the assertion unfailable.
+     */
+    @Test
+    public void failsWhenNegatedEmptyIsFalseForAnEmptyCollection() {
+        Object input = parent().build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(empty())),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList"),
+                        "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    /**
+     * not(empty()) on an empty collection must fail for JSON string input too. There is no bean to
+     * resolve the path against, so the matcher sees the JSON form; the list view over the JsonArray
+     * lets empty() evaluate for real rather than answering false on the type check.
+     */
+    @Test
+    public void failsWhenNegatedEmptyIsFalseForAnEmptyCollectionOnJsonStringInput() {
+        String emptyListAsJson = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(emptyListAsJson, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(empty())),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList"),
+                        "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+
+    /** not(hasSize(n)) must fail when the collection does have size n. */
+    @Test
+    public void failsWhenNegatedHasSizeIsFalse() {
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(hasSize(2))),
+                thrown -> Assertions.assertTrue(
+                        thrown.getMessage().contains("childBeanList"),
+                        "Expected path in failure message, was: " + thrown.getMessage()),
+                AssertionError.class);
+    }
+}

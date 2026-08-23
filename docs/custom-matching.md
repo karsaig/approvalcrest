@@ -83,7 +83,17 @@ assertThat(actual, sameJsonAsApproved()
     .with("orders.trackingCode", notNullValue()));
 ```
 
-**Important:** the matcher must pass on **every** element. If any one element fails, the whole assertion fails, and the error message identifies the first failing element.
+Two rules govern this, and they pull in opposite directions, so it is worth separating them. They apply
+to the `*` segment below in exactly the same way.
+
+**Matching is strict:** the matcher must pass on **every** value the path resolved to. If one fails, the
+whole assertion fails, and the message identifies the first failing element.
+
+**Resolution is lenient:** elements that do not have the field are skipped rather than failing. So on a
+list where only some orders carry `trackingCode`, the matcher is applied to the ones that do and the
+assertion can pass. Only a path that resolves against **no** element at all is an error. That leniency is
+what makes a map's array-of-entries shape reachable, but it also means a heterogeneous collection quietly
+narrows what you asserted — assert the container's size alongside it when that matters.
 
 **Empty collection fails:** if the fanned-out collection is empty, the assertion fails. This prevents silent vacuous-truth passes when a list is unexpectedly empty.
 
@@ -96,12 +106,178 @@ assertThat(actual, sameJsonAsApproved()
     .with("orders.items.sku", notNullValue()));
 ```
 
-To assert a property of the collection **itself** (e.g. its size or which elements it contains) rather than each element individually, target the collection field directly:
+Fan-out applies to `Collection` fields and to Java arrays. A `Map` works differently: it is not fanned
+out over, it is **traversed by key**. The key is a path segment, so name the entry you mean:
 
 ```java
-// The orders list as a whole must have at least one element
+// The trackingCode of the order stored under key "A-1"
 assertThat(actual, sameJsonAsApproved()
+    .with("ordersByRef.A-1.trackingCode", notNullValue()));
+```
+
+Skipping the key does not reach the values — there is no entry called `trackingCode`, so the path is
+rejected:
+
+```java
+// throws IllegalArgumentException: "ordersByRef.trackingCode does not exist"
+assertThat(actual, sameJsonAsApproved()
+    .with("ordersByRef.trackingCode", notNullValue()));
+```
+
+To assert something about the map as a whole rather than one entry, target the map itself with a map
+matcher — see below.
+
+### Every value: the `*` segment
+
+Naming a key is fine when you know it. When you want the same assertion for every entry, use `*`:
+
+```java
+// The trackingCode of EVERY order in the map must be non-null
+assertThat(actual, sameJsonAsApproved()
+    .with("ordersByRef.*.trackingCode", notNullValue()));
+```
+
+`*` stands for **every named child at that position** — a map key, an object property, or a bean field.
+It works the same way in `.ignoring(path)`, so the two agree:
+
+```java
+assertThat(actual, sameJsonAsApproved()
+    .ignoring("ordersByRef.*.generatedId"));
+```
+
+Three things to know:
+
+- **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
+  a key literally named `*`, which a JSON document or a `Map<String,?>` may genuinely have. So
+  `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
+  meaning "every value". To assert something about the map as a whole, target the map field itself.
+- **`*` is not needed for collections or arrays.** They are already traversed transparently, so
+  `orders.trackingCode` already means "in every order". Writing `orders.*.trackingCode` is a *different*
+  query — "any named field of each order, then trackingCode" — not a synonym.
+- **A `*` that matches nothing is an error** for `.with(...)`, so a mistyped path cannot pass by matching
+  nothing. For `.ignoring(...)` it is a no-op, as any non-matching ignore path is.
+- **Strict matching, lenient resolution** — the same two rules as the collection fan-out above. Every
+  child the path resolves against must pass; children that do not carry the rest of the path are
+  skipped.
+- **A scalar child is skipped, not an error.** A bean has scalar fields as well as object ones, so
+  `*.trackingCode` passes over the scalars and applies to the objects.
+
+A `*` resolves against the object when there is one, so the values keep their real types. Naming a key
+instead falls through to the serialised JSON, where a whole number arrives as a `Long`. So
+`.with("ordersByRef.*.quantity", equalTo(1))` and `equalTo(1L)` both match, while
+`.with("ordersByRef.A-1.quantity", equalTo(1))` needs the `1L` form.
+
+## Matching the Container Itself
+
+To assert a property of the container rather than of each element, point the path **at the container field** and use a container matcher. The path stops there, so no fan-out happens and the matcher receives the collection, map or array itself.
+
+### Size
+
+```java
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.greaterThan;
+
+// The orders list must contain exactly one element
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", hasSize(1)));
+
+// At least one element, without pinning the exact count
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", hasSize(greaterThan(0))));
+```
+
+### Content and order
+
+```java
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+
+// Exactly these elements, in exactly this order
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", contains(orderWithRef("A-1"), orderWithRef("A-2"))));
+
+// Exactly these elements, order irrelevant — the right choice for a Set
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", containsInAnyOrder(orderWithRef("A-2"), orderWithRef("A-1"))));
+
+// At least one matching element; others may be present
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", hasItem(orderWithRef("A-1"))));
+```
+
+### Maps
+
+```java
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
+
+assertThat(actual, sameBeanAs(expected)
+    .with("ordersByRef", aMapWithSize(1)));
+
+assertThat(actual, sameBeanAs(expected)
+    .with("ordersByRef", hasEntry(equalTo("A-1"), orderWithRef("A-1"))));
+
+assertThat(actual, sameBeanAs(expected)
+    .with("ordersByRef", hasKey("A-1")));
+```
+
+### Arrays
+
+A Java array is not a `Collection`, so `hasSize` and `contains` do not apply to an array field. Use the array-specific matchers:
+
+```java
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.arrayContaining;
+
+assertThat(actual, sameBeanAs(expected)
+    .with("orderArray", arrayWithSize(2)));
+
+assertThat(actual, sameBeanAs(expected)
+    .with("orderArray", arrayContaining(orderWithRef("A-1"), orderWithRef("A-2"))));
+```
+
+Fan-out through an array is unaffected — `.with("orderArray.trackingCode", notNullValue())` works exactly as it does for a `List`.
+
+## Container Matchers and JSON String Input
+
+`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
+
+Size, emptiness and scalar contents therefore hold for both input forms. What a JSON string cannot supply is element *classes*:
+
+| Matcher | Object input | JSON string input |
+|---|---|---|
+| `hasSize`, `empty`, `iterableWithSize`, `emptyIterable` | works | works |
+| `hasItem`, `contains`, `containsInAnyOrder` over **scalars** | works | works |
+| `hasItem`, `contains`, `containsInAnyOrder` over **objects** | works | container is matched, but an element matcher written against the field's own class cannot match a `JsonObject` |
+| `hasEntry`, `hasKey`, `aMapWithSize` | works | fails — a map serialises to a `JsonArray` of single-entry objects, not a `java.util.Map` |
+
+```java
+// Both hold whether the input is an object or a JSON string
+assertThat(actual, sameJsonAsApproved()
+    .with("orders", hasSize(2)));
+
+assertThat(actual, sameJsonAsApproved()
+    .with("tags", contains("urgent", "review")));
+```
+
+A size mismatch reports the size, for either input form:
+
+```
+orders collection size was <2>
+```
+
+Negation works normally. A container matcher is settled by the value at the path, so `not(...)` around one reports what you would expect:
+
+```java
+// Fails when orders is empty
+assertThat(actual, sameBeanAs(expected)
     .with("orders", not(empty())));
+
+// Fails when an order with this reference is present
+assertThat(actual, sameBeanAs(expected)
+    .with("orders", not(hasItem(orderWithRef("A-9")))));
 ```
 
 ## Match All Fields Whose Name Matches a Pattern
@@ -132,6 +308,15 @@ assertThat(actual, sameJsonAsApproved()
 ```
 
 Unlike `.with(path, matcher)` — which targets a single named field — `.withMatcher` scans the entire object graph and applies to every matching field name wherever it appears. Pattern-based matchers are applied before sorting.
+
+Values are presented to the matcher exactly as they are for `.with(path, matcher)`, so a
+collection-valued field takes a container matcher here too and the table above applies unchanged:
+
+```java
+// Every field named "tags" must hold two elements
+assertThat(actual, sameJsonAsApproved()
+    .withMatcher(is("tags"), hasSize(2)));
+```
 
 ## Works With
 

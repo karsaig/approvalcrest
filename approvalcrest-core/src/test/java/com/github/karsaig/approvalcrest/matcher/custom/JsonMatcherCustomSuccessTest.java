@@ -12,7 +12,14 @@ import java.util.List;
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
@@ -710,5 +717,270 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         assertJsonMatcherWithDummyTestInfo(actual, approved,
                 jsonMatcher -> jsonMatcher.withMatcher(containsString("field"), equalTo("anything")),
                 (String) null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Container matchers: size, order and content of the collection itself
+    // -----------------------------------------------------------------------
+
+    /** Input carrying a two-element childBeanList, as an object and as a JSON string. */
+    public static Object[][] customMatcherInputsWithTwoChildBeans() {
+        return new Object[][]{
+                {"Object input", parent()
+                        .addToChildBeanList(child().childString("apple"))
+                        .addToChildBeanList(child().childString("banana"))
+                        .build()},
+                {"Json string input", "{\n" +
+                        "  \"childBean\": null,\n" +
+                        "  \"childBeanList\": [\n" +
+                        "    {\n" +
+                        "      \"childInteger\": 0,\n" +
+                        "      \"childString\": \"apple\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "      \"childInteger\": 0,\n" +
+                        "      \"childString\": \"banana\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"childBeanMap\": [],\n" +
+                        "  \"parentString\": null\n" +
+                        "}"}
+        };
+    }
+
+    private static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanMap\": [],\n" +
+            "  \"parentString\": null\n" +
+            "}";
+
+    /**
+     * hasSize is typed on Collection. It resolves against the real {@code List<ChildBean>} for an
+     * object input, and against a list view over the JsonArray for a JSON string input, so it holds
+     * for both forms.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithTwoChildBeans")
+    public void matchesCollectionSizeWithHasSize(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", hasSize(2)), null, null);
+    }
+
+    /** empty() likewise evaluates for real on a JSON string input. */
+    @Test
+    public void matchesEmptyCollectionWithEmptyOnJsonStringInput() {
+        String emptyListAsJson = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(emptyListAsJson, APPROVED_WITHOUT_CHILD_BEAN_LIST,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", empty()), null, null);
+    }
+
+    /** hasSize composed with another matcher — "at least one element" without pinning the count. */
+    @Test
+    public void matchesCollectionSizeWithHasSizeOfMatcherOnObjectInput() {
+        Object input = parent().addToChildBeanList(child().childString("apple")).build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", hasSize(greaterThan(0))), null, null);
+    }
+
+    /** contains asserts the exact elements in the exact order. Object input only, as for hasSize. */
+    @Test
+    public void matchesCollectionInOrderWithContainsOnObjectInput() {
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList",
+                        contains(childStringEqualTo("apple"), childStringEqualTo("banana"))), null, null);
+    }
+
+    /** containsInAnyOrder asserts the exact elements, order irrelevant. Object input only. */
+    @Test
+    public void matchesCollectionIgnoringOrderWithContainsInAnyOrderOnObjectInput() {
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList",
+                        containsInAnyOrder(childStringEqualTo("banana"), childStringEqualTo("apple"))), null, null);
+    }
+
+    /**
+     * iterableWithSize works for both input forms, because JsonArray implements Iterable.
+     * This is the portable way to assert a collection's size in an approval test.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithTwoChildBeans")
+    public void matchesCollectionSizeWithIterableWithSizeForBothInputForms(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", iterableWithSize(2)), null, null);
+    }
+
+    /** aMapWithSize on a Map field — the map itself is handed to the matcher, not its entries. */
+    @Test
+    public void matchesMapSizeWithAMapWithSizeOnObjectInput() {
+        Object input = parent().putToChildBeanMap("key", child().childString("banana")).build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap", aMapWithSize(1)), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Container matcher combined with ignoring() on a sibling collection
+    // -----------------------------------------------------------------------
+
+    /**
+     * A container matcher on one collection and ignoring() on a sibling collection are
+     * independent: childBeanList is asserted by iterableWithSize while childBeanMap is dropped
+     * from the comparison, so it need not appear in the approved file at all.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithTwoChildBeans")
+    public void matchesCollectionWhileIgnoringSiblingCollection(String testName, Object input) {
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBeanList", iterableWithSize(2))
+                        .ignoring("childBeanMap"), null, null);
+    }
+
+    /** Fan-out through one collection while a sibling collection is ignored. */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("customMatcherInputsWithTwoChildBeans")
+    public void matchesPathThroughCollectionWhileIgnoringSiblingCollection(String testName, Object input) {
+        // Only childString is consumed by the matcher; childInteger remains in each element.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [\n" +
+                "    {\n" +
+                "      \"childInteger\": 0\n" +
+                "    },\n" +
+                "    {\n" +
+                "      \"childInteger\": 0\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher
+                        .with("childBeanList.childString", anyOf(equalTo("apple"), equalTo("banana")))
+                        .ignoring("childBeanMap"), null, null);
+    }
+
+    /**
+     * A map is traversed by key: the key is a path segment. Until the MARKER-prefixed key fix this
+     * could not resolve at all, because childBeanMap is Map-typed and so carries a prefixed JSON key,
+     * and the bean walker has no Map branch so the path falls through to the JSON tree.
+     */
+    @Test
+    public void matchesPropertyOfMapEntryAddressedByKey() {
+        Object input = parent().putToChildBeanMap("key", child().childString("banana")).build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [\n" +
+                "    {\n" +
+                "      \"key\": {\n" +
+                "        \"childInteger\": 0\n" +
+                "      }\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap.key.childString", equalTo("banana")), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Collections of scalars
+    // -----------------------------------------------------------------------
+
+    /** A bean carrying a collection of scalars rather than of beans. */
+    static class ScalarCollectionWrapper {
+        String name;
+        List<String> tags;
+
+        ScalarCollectionWrapper(String name, List<String> tags) {
+            this.name = name;
+            this.tags = tags;
+        }
+    }
+
+    public static Object[][] scalarCollectionInputs() {
+        return new Object[][]{
+                {"Object input", new ScalarCollectionWrapper("n", Arrays.asList("urgent", "review"))},
+                {"Json string input", "{\n" +
+                        "  \"name\": \"n\",\n" +
+                        "  \"tags\": [\n" +
+                        "    \"urgent\",\n" +
+                        "    \"review\"\n" +
+                        "  ]\n" +
+                        "}"}
+        };
+    }
+
+    private static final String APPROVED_WITHOUT_TAGS = "{\n  \"name\": \"n\"\n}";
+
+    /**
+     * Element matchers phrased against the value match a collection of scalars on either input form:
+     * the object resolves to a real List, and a JSON string resolves to a list view whose scalar
+     * elements are coerced on read.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("scalarCollectionInputs")
+    public void matchesScalarCollectionInOrderWithContains(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_TAGS, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", contains("urgent", "review")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("scalarCollectionInputs")
+    public void matchesScalarCollectionIgnoringOrderWithContainsInAnyOrder(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_TAGS, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", containsInAnyOrder("review", "urgent")), null, null);
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("scalarCollectionInputs")
+    public void matchesScalarCollectionMemberWithHasItem(String testName, Object input) {
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_TAGS, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("tags", hasItem("urgent")), null, null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Negated container matchers
+    // -----------------------------------------------------------------------
+
+    /** not(hasItem(x)) passes when x is absent from the collection. */
+    @Test
+    public void matchesNegatedHasItemWhenElementIsAbsentOnObjectInput() {
+        Object input = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(hasItem(childStringEqualTo("kiwi")))), null, null);
+    }
+
+    /** not(empty()) passes on a non-empty collection. */
+    @Test
+    public void matchesNegatedEmptyOnNonEmptyCollectionOnObjectInput() {
+        Object input = parent().addToChildBeanList(child().childString("apple")).build();
+        assertJsonMatcherWithDummyTestInfo(input, APPROVED_WITHOUT_CHILD_BEAN_LIST, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", not(empty())), null, null);
     }
 }

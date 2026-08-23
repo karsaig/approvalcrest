@@ -4,6 +4,7 @@ import com.github.karsaig.approvalcrest.BeanFinder.FanoutResult;
 import com.github.karsaig.approvalcrest.matcher.alias.AliasMap;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.AliasTracker;
 import com.github.karsaig.approvalcrest.matcher.machinereadable.IgnoredFieldsTracker;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -20,6 +21,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -39,6 +41,57 @@ public class JsonElementUtilTest {
     }
 
     // -------------------------------------------------------------------------
+    // asList
+    // -------------------------------------------------------------------------
+
+    @Test
+    void asListCoercesScalarElementsSoValueMatchersCanMatch() {
+        List<Object> view = JsonElementUtil.asList(parse("[1,2]").getAsJsonArray());
+
+        assertThat(view, hasSize(2));
+        assertThat(view, contains(1L, 2L));
+        assertThat(view, hasItem(1L));
+    }
+
+    @Test
+    void asListCoercesStringsAndBooleans() {
+        List<Object> view = JsonElementUtil.asList(parse("[\"a\",true]").getAsJsonArray());
+
+        assertThat(view, contains("a", true));
+    }
+
+    @Test
+    void asListHandsBackObjectElementsUnchanged() {
+        // JSON carries no type information, so an object element cannot be coerced to anything useful.
+        List<Object> view = JsonElementUtil.asList(parse("[{\"a\":1}]").getAsJsonArray());
+
+        assertThat(view, hasSize(1));
+        assertThat(view.get(0), instanceOf(JsonObject.class));
+    }
+
+    @Test
+    void asListReflectsLaterChangesToTheBackingArray() {
+        // The view delegates rather than copying.
+        JsonArray array = parse("[1]").getAsJsonArray();
+        List<Object> view = JsonElementUtil.asList(array);
+        array.add(2);
+
+        assertThat(view, contains(1L, 2L));
+    }
+
+    @Test
+    void asListViewSerialisesWithoutFailing() {
+        // The view reaches gson.toJsonTree when a failure message is built, so a mixed view of
+        // coerced scalars and untouched objects has to serialise.
+        Gson gson = new Gson();
+        List<Object> scalars = JsonElementUtil.asList(parse("[1,\"a\",true]").getAsJsonArray());
+        List<Object> objects = JsonElementUtil.asList(parse("[{\"a\":1}]").getAsJsonArray());
+
+        assertThat(gson.toJsonTree(scalars).toString(), is("[1,\"a\",true]"));
+        assertThat(gson.toJsonTree(objects).toString(), is("[{\"a\":1}]"));
+    }
+
+    // -------------------------------------------------------------------------
     // findJsonValueAt
     // -------------------------------------------------------------------------
 
@@ -49,6 +102,102 @@ public class JsonElementUtilTest {
 
         assertTrue(result.isRight());
         assertThat(result.getRight(), is("val"));
+    }
+
+    @Test
+    void findsValueBehindMarkerPrefixedKey() {
+        // The field naming strategy prefixes Set- and Map-typed field names with MARKER, so a path
+        // crossing such a field has to tolerate it the way FieldsIgnorer already does.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k",
+                parse("{\"" + FieldsIgnorer.MARKER + "aMap\":{\"k\":\"val\"}}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is("val"));
+    }
+
+    @Test
+    void findsValueBehindMarkerPrefixedKeyInSerialisedMapShape() {
+        // A Map serialises to an array of single-entry objects under a MARKER-prefixed key.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k.leaf",
+                parse("{\"" + FieldsIgnorer.MARKER + "aMap\":[{\"k\":{\"leaf\":\"val\"}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), instanceOf(FanoutResult.class));
+        assertThat((FanoutResult) result.getRight(), contains("val"));
+    }
+
+    @Test
+    void prefersThePlainKeyOverTheMarkerPrefixedOne() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("x",
+                parse("{\"x\":\"plain\",\"" + FieldsIgnorer.MARKER + "x\":\"marked\"}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is("plain"));
+    }
+
+    @Test
+    void stillFailsForAKeyThatExistsInNeitherForm() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.absent",
+                parse("{\"" + FieldsIgnorer.MARKER + "aMap\":{\"k\":\"val\"}}"));
+
+        assertTrue(result.isLeft());
+    }
+
+    @Test
+    void wildcardResolvesUnderEveryMapValue() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.leaf",
+                parse("{\"map\":[{\"k1\":{\"leaf\":1}},{\"k2\":{\"leaf\":2}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight().toString(), is("[[1], [2]]"));
+    }
+
+    @Test
+    void wildcardResolvesTheValueEvenWhenAKeyCollidesWithAFieldNameOfTheValues() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.name",
+                parse("{\"map\":[{\"name\":{\"name\":\"x\"}},{\"p2\":{\"name\":\"y\"}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight().toString(), is("[[x], [y]]"));
+    }
+
+    @Test
+    void wildcardDescendsThroughAGraphAdapterEnvelopeRatherThanMatchingIt() {
+        Either<RuntimeException, Object> result =
+                JsonElementUtil.findJsonValueAt("*.leaf", parse("{\"0x1\":{\"a\":{\"leaf\":7}}}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight().toString(), is("[[7]]"));
+    }
+
+    @Test
+    void wildcardCollectsOnlyFromTheChildrenThatResolveTheRestOfThePath() {
+        // Lenient, matching the array fan-out it sits beside: k2 has no leaf, so the result covers k1
+        // only rather than failing. A path where NO child resolves is an error -- see the next test --
+        // so a typo still surfaces, but a heterogeneous map narrows what is asserted.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.leaf",
+                parse("{\"map\":[{\"k1\":{\"leaf\":1}},{\"k2\":{\"other\":2}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight().toString(), is("[[1]]"));
+    }
+
+    @Test
+    void wildcardThatResolvesNothingIsAnError() {
+        // Otherwise a mistyped wildcard path would pass by matching nothing at all.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.absent",
+                parse("{\"map\":[{\"k1\":{\"leaf\":1}}]}"));
+
+        assertTrue(result.isLeft());
+    }
+
+    @Test
+    void trailingWildcardResolvesTheKeyLiterallyNamedStar() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("headers.*",
+                parse("{\"headers\":{\"*\":\"any\",\"accept\":\"json\"}}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is("any"));
     }
 
     @Test

@@ -36,6 +36,231 @@ public class FieldsIgnorerTest {
     }
 
     // -------------------------------------------------------------------------
+    // findPaths — the * wildcard segment
+    // -------------------------------------------------------------------------
+
+    @Test
+    void wildcardIgnoresPathUnderEveryMapValue() {
+        // A Map serialises to an array of single-entry objects, so * lands on each entry's one
+        // named child: the value.
+        JsonObject json = parseObject(
+                "{\"map\":[{\"k1\":{\"leaf\":1,\"keep\":9}},{\"k2\":{\"leaf\":2,\"keep\":9}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"k1\":{\"keep\":9}},{\"k2\":{\"keep\":9}}]}"));
+    }
+
+    @Test
+    void wildcardOverASingleKeyMapMatchesNamingThatKey() {
+        // Acceptance criterion: on a single-entry map the wildcard and the named key must produce
+        // byte-identical output, so the wildcard cannot be doing anything else along the way.
+        String input = "{\"map\":[{\"k1\":{\"leaf\":1,\"keep\":9}}]}";
+        JsonObject viaWildcard = parseObject(input);
+        JsonObject viaKey = parseObject(input);
+
+        FieldsIgnorer.findPaths(viaWildcard, paths("map.*.leaf"));
+        FieldsIgnorer.findPaths(viaKey, paths("map.k1.leaf"));
+
+        assertThat(viaWildcard.toString(), is(viaKey.toString()));
+    }
+
+    @Test
+    void wildcardOverATwoKeyMapDoesNotMatchNamingOneKey() {
+        // The negative twin: naming one key must leave the other alone.
+        String input = "{\"map\":[{\"k1\":{\"leaf\":1}},{\"k2\":{\"leaf\":2}}]}";
+        JsonObject viaWildcard = parseObject(input);
+        JsonObject viaKey = parseObject(input);
+
+        FieldsIgnorer.findPaths(viaWildcard, paths("map.*.leaf"));
+        FieldsIgnorer.findPaths(viaKey, paths("map.k1.leaf"));
+
+        // Every value emptied, so the entries, the array and the field itself cascade away.
+        assertThat(viaWildcard.toString(), is("{}"));
+        assertThat(viaKey.toString(), is("{\"map\":[{\"k2\":{\"leaf\":2}}]}"));
+    }
+
+    @Test
+    void wildcardResolvesTheValueEvenWhenAKeyCollidesWithAFieldNameOfTheValues() {
+        // The case that rules out deciding by shape: the first entry's key is also a field name of
+        // the values, so an implementation that treated the entry itself as the child would strip a
+        // different field here than in the sibling entry -- and empty this entry away entirely.
+        JsonObject json = parseObject(
+                "{\"map\":[{\"firstName\":{\"firstName\":\"x\",\"o\":1}},"
+                        + "{\"p2\":{\"firstName\":\"y\",\"o\":2}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*.firstName"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"firstName\":{\"o\":1}},{\"p2\":{\"o\":2}}]}"));
+    }
+
+    @Test
+    void wildcardIgnoresPathUnderEveryFieldOfAnObject() {
+        JsonObject json = parseObject("{\"a\":{\"leaf\":1,\"keep\":9},\"b\":{\"leaf\":2,\"keep\":9}}");
+
+        FieldsIgnorer.findPaths(json, paths("*.leaf"));
+
+        assertThat(json.toString(), is("{\"a\":{\"keep\":9},\"b\":{\"keep\":9}}"));
+    }
+
+    @Test
+    void wildcardFindsAMarkerPrefixedChild() {
+        // Set- and Map-typed field names carry the MARKER prefix; the wildcard matches any named
+        // child, so it needs no special handling -- this pins that.
+        JsonObject json = parseObject(
+                "{\"" + FieldsIgnorer.MARKER + "aSet\":{\"leaf\":1,\"keep\":9}}");
+
+        FieldsIgnorer.findPaths(json, paths("*.leaf"));
+
+        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "aSet").has("leaf"), is(false));
+        assertThat(json.getAsJsonObject(FieldsIgnorer.MARKER + "aSet").has("keep"), is(true));
+    }
+
+    @Test
+    void wildcardDescendsThroughAGraphAdapterEnvelopeRatherThanMatchingIt() {
+        // An envelope key is a named child too, so the wildcard must not consume it -- otherwise
+        // "*.leaf" would mean "the leaf of the envelope" and find nothing.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"leaf\":7,\"keep\":9}}}");
+
+        FieldsIgnorer.findPaths(json, paths("*.leaf"));
+
+        JsonObject a = json.getAsJsonObject("0x1").getAsJsonObject("a");
+        assertThat(a.has("leaf"), is(false));
+        assertThat(a.has("keep"), is(true));
+    }
+
+    @Test
+    void nestedWildcardsResolveThroughTwoLevels() {
+        JsonObject json = parseObject("{\"a\":{\"k\":{\"b\":{\"j\":{\"c\":5,\"keep\":9}}}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.*.b.*.c"));
+
+        JsonObject j = json.getAsJsonObject("a").getAsJsonObject("k")
+                .getAsJsonObject("b").getAsJsonObject("j");
+        assertThat(j.has("c"), is(false));
+        assertThat(j.has("keep"), is(true));
+    }
+
+    @Test
+    void wildcardMatchingNothingIsANoOp() {
+        JsonObject json = parseObject("{\"map\":[{\"k1\":{\"leaf\":1}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*.absent"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"k1\":{\"leaf\":1}}]}"));
+    }
+
+    @Test
+    void wildcardDoesNotTouchASiblingCollection() {
+        // The negative case that matters most: a wildcard aimed at the map must leave the list alone,
+        // even though both serialise to a JsonArray of objects carrying the same field name.
+        JsonObject json = parseObject(
+                "{\"map\":[{\"k1\":{\"leaf\":1,\"keep\":9}}],\"list\":[{\"leaf\":5}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"k1\":{\"keep\":9}}],\"list\":[{\"leaf\":5}]}"));
+    }
+
+    @Test
+    void pathThroughANonPrimitiveKeyMapReachesTheKeyObjectsToo() {
+        // A map with non-primitive keys serialises to [[key, value], ...] rather than to single-entry
+        // objects, so the transparent array traversal visits the key object as well as the value.
+        // Pre-existing behaviour, pinned because a wildcard through such a map inherits it.
+        JsonObject json = parseObject(
+                "{\"map\":[[{\"leaf\":1,\"keep\":9},{\"leaf\":2,\"keep\":9}]]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[[{\"keep\":9},{\"keep\":9}]]}"));
+    }
+
+    @Test
+    void wildcardSkipsScalarChildren() {
+        // A bean's ordinary shape is some object fields and some scalar ones. A scalar child has no
+        // field for the rest of the path to name, so it is skipped -- exactly as the array fan-out
+        // skips a scalar element -- rather than being descended into, which would reject a non-object
+        // and take the whole assertion down with it.
+        JsonObject json = parseObject("{\"a\":{\"name\":1,\"keep\":9},\"s\":\"str\"}");
+
+        FieldsIgnorer.findPaths(json, paths("*.name"));
+
+        assertThat(json.toString(), is("{\"a\":{\"keep\":9},\"s\":\"str\"}"));
+    }
+
+    @Test
+    void wildcardSkipsScalarMapValues() {
+        // The same shape through a Map<String,Object> holding a bean and a bare scalar.
+        JsonObject json = parseObject(
+                "{\"map\":[{\"k1\":{\"name\":1,\"keep\":9}},{\"k2\":\"scalar\"}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*.name"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"k1\":{\"keep\":9}},{\"k2\":\"scalar\"}]}"));
+    }
+
+    @Test
+    void wildcardSkipsNullChildren() {
+        JsonObject json = parseObject("{\"a\":{\"name\":1,\"keep\":9},\"n\":null}");
+
+        FieldsIgnorer.findPaths(json, paths("*.name"));
+
+        assertThat(json.toString(), is("{\"a\":{\"keep\":9},\"n\":null}"));
+    }
+
+    // -------------------------------------------------------------------------
+    // A trailing * is a literal key, not a wildcard
+    // -------------------------------------------------------------------------
+
+    @Test
+    void trailingWildcardRemovesTheKeyLiterallyNamedStar() {
+        // "*" is a legal JSON key and a legal Map<String,?> key -- CORS configs and route tables use
+        // one -- so as the final segment it keeps its ordinary meaning.
+        JsonObject json = parseObject("{\"headers\":{\"*\":\"any\",\"accept\":\"json\"}}");
+
+        FieldsIgnorer.findPaths(json, paths("headers.*"));
+
+        assertThat(json.toString(), is("{\"headers\":{\"accept\":\"json\"}}"));
+    }
+
+    @Test
+    void trailingWildcardWithoutALiteralStarKeyIsANoOp() {
+        // The accepted sharp edge: someone writing map.* expecting every value gets a no-op, which is
+        // what any non-matching ignore path against an object already does.
+        JsonObject json = parseObject("{\"map\":{\"k1\":{\"leaf\":1}}}");
+
+        FieldsIgnorer.findPaths(json, paths("map.*"));
+
+        assertThat(json.toString(), is("{\"map\":{\"k1\":{\"leaf\":1}}}"));
+    }
+
+    @Test
+    void loneWildcardPathRemovesARootLevelStarKey() {
+        JsonObject json = parseObject("{\"*\":\"any\",\"keep\":9}");
+
+        FieldsIgnorer.findPaths(json, paths("*"));
+
+        assertThat(json.toString(), is("{\"keep\":9}"));
+    }
+
+    @Test
+    void trailingWildcardIsNotAWildcard() {
+        // The rule stated as an assertion: on one fixture, a non-final * fans out over the values
+        // while a final * addresses only the entry literally keyed "*".
+        String input = "{\"map\":[{\"k1\":{\"leaf\":1}},{\"*\":{\"leaf\":2}}]}";
+        JsonObject nonFinal = parseObject(input);
+        JsonObject asFinal = parseObject(input);
+
+        FieldsIgnorer.findPaths(nonFinal, paths("map.*.leaf"));
+        FieldsIgnorer.findPaths(asFinal, paths("map.*"));
+
+        // Non-final: every value loses leaf, so everything cascades away.
+        assertThat(nonFinal.toString(), is("{}"));
+        // Final: only the entry keyed "*" goes; the k1 entry is untouched.
+        assertThat(asFinal.toString(), is("{\"map\":[{\"k1\":{\"leaf\":1}}]}"));
+    }
+
+    // -------------------------------------------------------------------------
     // findPaths — path ignoring
     // -------------------------------------------------------------------------
 
@@ -237,6 +462,44 @@ public class FieldsIgnorerTest {
         JsonObject a = json.getAsJsonObject("0x1").getAsJsonObject("a");
         assertThat(a.has("b"), is(false));
         assertThat(a.has("keep"), is(true));
+    }
+
+    @Test
+    void ignoresPathInEveryEnvelopeWhenTheFirstOneEmpties() {
+        // One graph, two objects, each carrying a.b. Removing b empties a, which empties the
+        // envelope. The descent must still visit the second envelope: because findPaths runs
+        // separately over the actual and the expected side, stopping early filters the two
+        // differently and fails the comparison on data rather than on the ignore rule.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.keySet().isEmpty(), is(true));
+    }
+
+    @Test
+    void ignoresPathInEveryEnvelopeWhenNoneEmpties() {
+        JsonObject json = parseObject(
+                "{\"0x1\":{\"a\":{\"b\":1,\"k\":9}},\"0x2\":{\"a\":{\"b\":2,\"k\":9}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.getAsJsonObject("0x1").getAsJsonObject("a").has("b"), is(false));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("b"), is(false));
+        assertThat(json.getAsJsonObject("0x1").getAsJsonObject("a").has("k"), is(true));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("k"), is(true));
+    }
+
+    @Test
+    void ignoresPathWhenOnlyOneEnvelopeEmpties() {
+        // Mixed: 0x1 empties and is removed, 0x2 survives with its remaining field.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2,\"k\":9}}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.has("0x1"), is(false));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("b"), is(false));
+        assertThat(json.getAsJsonObject("0x2").getAsJsonObject("a").has("k"), is(true));
     }
 
     @Test

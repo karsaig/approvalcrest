@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.matcher.custom;
 
 import com.github.karsaig.approvalcrest.matcher.AbstractBeanMatcherTest;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,13 @@ import org.junit.jupiter.api.Test;
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
+import static org.hamcrest.Matchers.arrayWithSize;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
@@ -243,4 +251,202 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
                                 "Expected path in failure message, was: " + error.getMessage()));
     }
 
+    // -----------------------------------------------------------------------
+    // Container matcher limits
+    // -----------------------------------------------------------------------
+
+    /** contains() is order-sensitive: the right elements in the wrong order still fail. */
+    @Test
+    public void failsWhenCollectionOrderDiffersFromContains() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList",
+                        contains(childStringEqualTo("banana"), childStringEqualTo("apple"))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** containsInAnyOrder still requires every element to be accounted for. */
+    @Test
+    public void failsWhenCollectionHasUnmatchedElementForContainsInAnyOrder() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList",
+                        containsInAnyOrder(childStringEqualTo("apple"))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** hasSize reports the actual size when it differs. */
+    @Test
+    public void failsWhenCollectionSizeDiffersFromHasSize() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", hasSize(3)),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /**
+     * hasSize is a Collection matcher and a Java array is not a Collection, so it fails on an
+     * array field however many elements the array has. Use arrayWithSize instead.
+     */
+    @Test
+    public void failsWhenHasSizeIsAppliedToAnArrayField() {
+        ArrayHolder expected = new ArrayHolder("kiwi", "kiwi");
+        ArrayHolder actual = new ArrayHolder("apple", "banana");
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanArray", hasSize(2)),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanArray"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /**
+     * A Map is traversed by key, not fanned out over: skipping the key reaches nothing, because no
+     * entry is called childString. Name the key, use a * segment to mean every value, or target the
+     * Map itself with hasEntry or aMapWithSize.
+     */
+    @Test
+    public void failsWhenPathDescendsIntoMapValues() {
+        ParentBean expected = parent().putToChildBeanMap("key", child().childString("apple")).build();
+        ParentBean actual = parent().putToChildBeanMap("key", child().childString("apple")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("childBeanMap.childString", equalTo("apple")),
+                IllegalArgumentException.class, error ->
+                        Assertions.assertEquals("childBeanMap.childString does not exist", error.getMessage()));
+    }
+
+
+    // -----------------------------------------------------------------------
+    // Negated container matchers
+    // -----------------------------------------------------------------------
+
+    /**
+     * not(empty()) on an empty collection must fail. The bean value is a real Collection, so it
+     * settles the matcher; the JSON retry does not run and cannot rescue the negation.
+     */
+    @Test
+    public void failsWhenNegatedEmptyIsFalseForAnEmptyCollection() {
+        ParentBean expected = parent().build();
+        ParentBean actual = parent().build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", not(empty())),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** not(hasSize(n)) must fail when the collection does have size n. */
+    @Test
+    public void failsWhenNegatedHasSizeIsFalse() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList", not(hasSize(2))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** not(hasItem(x)) must fail when x is present. */
+    @Test
+    public void failsWhenNegatedHasItemIsFalse() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("childBeanList", not(hasItem(childStringEqualTo("apple")))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** not(contains(...)) must fail when the elements do match in order. */
+    @Test
+    public void failsWhenNegatedContainsIsFalse() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList",
+                        not(contains(childStringEqualTo("apple"), childStringEqualTo("banana")))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** not(containsInAnyOrder(...)) must fail when the elements do match. */
+    @Test
+    public void failsWhenNegatedContainsInAnyOrderIsFalse() {
+        ParentBean expected = parent().addToChildBeanList(child().childString("kiwi")).build();
+        ParentBean actual = parent()
+                .addToChildBeanList(child().childString("apple"))
+                .addToChildBeanList(child().childString("banana"))
+                .build();
+
+        assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanList",
+                        not(containsInAnyOrder(childStringEqualTo("banana"), childStringEqualTo("apple")))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanList"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** An array field settles the matcher on the bean too, so its negation is honoured. */
+    @Test
+    public void failsWhenNegatedArrayWithSizeIsFalse() {
+        ArrayHolder expected = new ArrayHolder("kiwi", "melon");
+        ArrayHolder actual = new ArrayHolder("apple", "banana");
+
+        assertDiagnosingMatcher(actual, expected,
+                beanMatcher -> beanMatcher.with("childBeanArray", not(arrayWithSize(2))),
+                AssertionError.class, error ->
+                        Assertions.assertTrue(
+                                error.getMessage().contains("childBeanArray"),
+                                "Expected path in failure message, was: " + error.getMessage()));
+    }
+
+    /** Holds an array of ChildBean so array-specific matcher behaviour can be exercised. */
+    static class ArrayHolder {
+        ChildBean[] childBeanArray;
+
+        ArrayHolder(String first, String second) {
+            childBeanArray = new ChildBean[]{
+                    child().childString(first).build(),
+                    child().childString(second).build()};
+        }
+    }
 }

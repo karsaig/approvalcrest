@@ -152,3 +152,35 @@ assertThat(actual, sameBeanAs(expected)
 This is particularly useful when the same element type appears in multiple collections throughout a deep object graph and you want all of them sorted without listing each field path individually.
 
 Works with `sameBeanAs` and `sameJsonAsApproved`.
+
+## Paths Through Maps
+
+A sort path reaches a map entry by its key, and `*` stands for every entry:
+
+```java
+// Sorts the tags collection under ONE entry
+assertThat(actual, sameJsonAsApproved()
+    .sortField("ordersByRef.A-1.tags"));
+
+// Sorts the tags collection under EVERY entry
+assertThat(actual, sameJsonAsApproved()
+    .sortField("ordersByRef.*.tags"));
+```
+
+`*` means the same thing here as in [custom-matching](custom-matching.md) and
+[ignoring-fields](ignoring-fields.md) — every named child at that position — so one syntax covers all
+three. A wildcard and a literal key at the same level both apply rather than one overriding the other,
+so `sortField("ordersByRef.*.tags", "ordersByRef.A-1.notes")` sorts `tags` everywhere and `notes` under
+`A-1`.
+
+A `SortField`'s ignored sub-paths take `*` as well, so a field can be kept out of the sort key under
+every child rather than under one named one:
+
+```java
+// Sort orders by everything except each entry's generated id
+assertThat(actual, sameJsonAsApproved()
+    .sortFieldPath(SortField.of("orders", "*.generatedId")));
+```
+
+As elsewhere, `*` is a wildcard only in a non-final segment. `sortField("ordersByRef.*")` addresses a key
+literally named `*`; to sort the map itself, name the map field.

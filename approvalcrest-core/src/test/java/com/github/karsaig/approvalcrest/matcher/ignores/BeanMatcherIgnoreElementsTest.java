@@ -222,4 +222,106 @@ public class BeanMatcherIgnoreElementsTest extends AbstractBeanMatcherTest {
             this.code = code;
         }
     }
+
+    // -------------------------------------------------------------------------
+    // The * wildcard segment in an element-ignore path
+    // -------------------------------------------------------------------------
+
+    /** A tag carrying the field the rule tests. */
+    static class WildcardTag {
+        String system;
+
+        WildcardTag(String system) {
+            this.system = system;
+        }
+    }
+
+    /** Two map entries, each holding a list of tags to filter. */
+    static class WildcardTagMap {
+        java.util.Map<String, List<WildcardTag>> byKey = new java.util.LinkedHashMap<>();
+
+        WildcardTagMap(List<String> first, List<String> second) {
+            byKey.put("k1", tags(first));
+            byKey.put("k2", tags(second));
+        }
+
+        private static List<WildcardTag> tags(List<String> systems) {
+            List<WildcardTag> result = new java.util.ArrayList<>();
+            for (String system : systems) {
+                result.add(new WildcardTag(system));
+            }
+            return result;
+        }
+    }
+
+    private static WildcardTagMap withDropTags() {
+        return new WildcardTagMap(Lists.newArrayList("keep", "drop"), Lists.newArrayList("keep", "drop"));
+    }
+
+    private static WildcardTagMap keepOnly() {
+        return new WildcardTagMap(Lists.newArrayList("keep"), Lists.newArrayList("keep"));
+    }
+
+    /**
+     * A * segment moves the rule from one named entry to every entry, which is the case a map of
+     * lists could not express before: the filtered array sits under each map value.
+     */
+    @Test
+    public void wildcardRemovesMatchingElementsUnderEveryMapValue() {
+        assertDiagnosingMatcher(withDropTags(), keepOnly(),
+                matcher -> matcher.ignoringElementsWhere("byKey.*.system", "drop"));
+    }
+
+    /** The wildcard does the same as naming every key. */
+    @Test
+    public void wildcardMatchesNamingEveryKey() {
+        assertDiagnosingMatcher(withDropTags(), keepOnly(),
+                matcher -> matcher.ignoringElementsWhere("byKey.k1.system", "drop")
+                        .ignoringElementsWhere("byKey.k2.system", "drop"));
+    }
+
+    /**
+     * Naming one key leaves the other entry's list unfiltered. The assertion is about *which* entry is
+     * reported: only k2 means k1 really was filtered, where both being reported would mean the rule had
+     * not run at all.
+     */
+    @Test
+    public void namingOneKeyLeavesTheOtherEntryUnfiltered() {
+        assertDiagnosingMatcher(withDropTags(), keepOnly(),
+                matcher -> matcher.ignoringElementsWhere("byKey.k1.system", "drop"),
+                AssertionError.class, error -> {
+                    Assertions.assertTrue(error.getMessage().contains("k2"),
+                            "Expected the unfiltered k2 entry to be reported, was: " + error.getMessage());
+                    Assertions.assertFalse(error.getMessage().contains("k1"),
+                            "k1 was filtered, so it should not be reported: " + error.getMessage());
+                });
+    }
+
+    /**
+     * A * that ends the whole path is the leaf field name, not a wildcard, so it looks for a field
+     * literally called * on the array elements and filters nothing. Asserted against an expected value
+     * that differs, so a wildcard reading — which would filter the drop tags and make the comparison
+     * pass — is ruled out rather than merely unobserved.
+     */
+    @Test
+    public void trailingWildcardIsTheLeafFieldNameNotAWildcard() {
+        assertDiagnosingMatcher(withDropTags(), keepOnly(),
+                matcher -> matcher.ignoringElementsWhere("byKey.*", "drop"),
+                AssertionError.class, error -> Assertions.assertTrue(
+                        error.getMessage().contains("k1") && error.getMessage().contains("k2"),
+                        "Nothing should have been filtered, so both entries differ: " + error.getMessage()));
+    }
+
+    /**
+     * The comparison that makes the wildcard worth having: without it the rule filters the outer array
+     * of map entries, testing each entry object for the leaf field, which matches nothing.
+     */
+    @Test
+    public void wildcardFreePathFiltersTheOuterEntryArrayAndSoMatchesNothing() {
+        assertDiagnosingMatcher(withDropTags(), keepOnly(),
+                matcher -> matcher.ignoringElementsWhere("byKey.system", "drop"),
+                AssertionError.class, error -> Assertions.assertTrue(
+                        error.getMessage().contains("k1") && error.getMessage().contains("k2"),
+                        "Nothing should have been filtered: " + error.getMessage()));
+    }
 }

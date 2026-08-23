@@ -10,6 +10,7 @@ import com.google.gson.JsonPrimitive;
 import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
+import java.util.AbstractList;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,7 +20,57 @@ import java.util.Optional;
 
 public class JsonElementUtil {
 
+    /**
+     * Path segment standing for "every named child at this position" — a JSON object property, a
+     * {@code Map} key, or a bean field.
+     * <p>
+     * It is only a wildcard in a non-final segment. As the final segment it keeps its ordinary
+     * meaning, a key literally named {@code *}, which a JSON document or a {@code Map<String,?>} may
+     * genuinely have.
+     * <p>
+     * Arrays, collections and sets are not covered, and need no covering: they are traversed
+     * transparently without consuming a segment — collections in the object walk
+     * ({@code BeanFinder}), arrays and collections in the JSON walk — so {@code list.x} already means
+     * "x in every element".
+     */
+    public static final String WILDCARD = "*";
+
     private JsonElementUtil() {
+    }
+
+    /** True when {@code segments[segIdx]} is the wildcard and something follows it to descend into. */
+    private static boolean isWildcardSegment(String[] segments, int segIdx) {
+        return WILDCARD.equals(segments[segIdx]) && segIdx + 1 < segments.length;
+    }
+
+    /**
+     * Returns a read-only {@link List} view of {@code array}.
+     * <p>
+     * Gson's {@link JsonArray} is {@code Iterable<JsonElement>} but not a {@link java.util.Collection},
+     * so Hamcrest matchers typed on {@code Collection} — {@code hasSize}, {@code empty} — cannot
+     * evaluate against one: they answer false on the type check without ever inspecting the content,
+     * which makes their negations vacuously true. This view lets them answer for real.
+     * <p>
+     * Nothing is copied: {@code size()} and {@code get(int)} delegate to the live array. Elements are
+     * coerced on read by {@link #jsonElementToJavaValue(JsonElement)}, so a JSON scalar arrives as the
+     * {@code String}, {@code Long}, {@code Double} or {@code Boolean} it represents and an element
+     * matcher written against the value can match it. This mirrors what the fan-out path already does
+     * at a path leaf. A {@code JsonObject} or nested {@code JsonArray} is handed back as it is: JSON
+     * carries no type information, so an element matcher written against the field's own class could
+     * not match it either way.
+     */
+    public static List<Object> asList(JsonArray array) {
+        return new AbstractList<Object>() {
+            @Override
+            public Object get(int index) {
+                return jsonElementToJavaValue(array.get(index));
+            }
+
+            @Override
+            public int size() {
+                return array.size();
+            }
+        };
     }
 
     public static Either<RuntimeException, Object> findJsonValueAt(String path, JsonElement root) {
@@ -32,6 +83,9 @@ public class JsonElementUtil {
 
     private static Either<RuntimeException, Object> findJsonValueAt(String path, String[] segments, int segIdx, JsonElement current) {
         if (current == null || current.isJsonNull()) {
+            // Deliberately yields null whatever segments remain, rather than failing to resolve:
+            // findJsonValueThroughNullMidPathReturnsNull pins it, and the "<path> is null" diagnostic
+            // that doesNotIncludeParentBeanFromFieldPath asserts depends on it.
             return Either.right(null);
         }
         if (segIdx == segments.length) {
@@ -61,7 +115,13 @@ public class JsonElementUtil {
         }
         JsonObject obj = current.getAsJsonObject();
         String segment = segments[segIdx];
-        if (!obj.has(segment)) {
+        if (isWildcardSegment(segments, segIdx)) {
+            return fanOutOverNamedChildren(path, segments, segIdx, obj);
+        }
+        // getChild tolerates the MARKER prefix the field naming strategy adds to Set- and Map-typed
+        // fields; without it no path could cross such a field on the JSON fallback.
+        JsonElement child = FieldsIgnorer.getChild(obj, segment);
+        if (child == null) {
             // Try transparent descent through graph-adapter envelope keys
             for (java.util.Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 if (FieldsIgnorer.isGraphAdapterKey(entry.getKey()) && entry.getValue().isJsonObject()) {
@@ -71,7 +131,48 @@ public class JsonElementUtil {
             }
             return Either.left(new IllegalArgumentException(path + " not found"));
         }
-        return findJsonValueAt(path, segments, segIdx + 1, obj.get(segment));
+        return findJsonValueAt(path, segments, segIdx + 1, child);
+    }
+
+    /**
+     * Resolves the rest of {@code segments} against every named child of {@code obj}, for a
+     * {@link #WILDCARD} segment. A graph-adapter envelope key is descended through rather than
+     * consumed, so the wildcard applies to the real fields underneath it and never to the envelope.
+     * <p>
+     * A child the rest of the path cannot be traversed through — a null, or a scalar with segments still
+     * to go — is skipped. An empty object yields an empty {@code FanoutResult}, which the caller
+     * deliberately treats as a failure rather than a vacuous pass, and a non-empty object where nothing
+     * resolves is an error, so a mistyped path cannot pass by matching nothing.
+     */
+    private static Either<RuntimeException, Object> fanOutOverNamedChildren(String path, String[] segments,
+                                                                           int segIdx, JsonObject obj) {
+        BeanFinder.FanoutResult fanout = new BeanFinder.FanoutResult();
+        for (String key : new ArrayList<>(obj.keySet())) {
+            JsonElement value = obj.get(key);
+            // A null child cannot be traversed further, and the wildcard selects children by pattern,
+            // so it is an irrelevance rather than a null result. Skipped, as a scalar child is.
+            if (value == null || value.isJsonNull()) {
+                continue;
+            }
+            boolean envelope = FieldsIgnorer.isGraphAdapterKey(key) && value.isJsonObject();
+            Either<RuntimeException, Object> r =
+                    findJsonValueAt(path, segments, envelope ? segIdx : segIdx + 1, value);
+            // An empty fan-out means the child resolved to nothing. Elsewhere that is a deliberate
+            // failure, stopping list.x passing vacuously over an empty list, but a wildcard's children
+            // are selected by pattern: one that yields nothing is an irrelevance, not a result. Keeping
+            // it would make a wildcard unsatisfiable beside any empty collection.
+            if (r.isRight() && !isEmptyFanout(r.getRight())) {
+                fanout.add(r.getRight());
+            }
+        }
+        if (fanout.isEmpty() && !obj.keySet().isEmpty()) {
+            return Either.left(new IllegalArgumentException(path + " not found"));
+        }
+        return Either.right(fanout);
+    }
+
+    private static boolean isEmptyFanout(Object value) {
+        return value instanceof BeanFinder.FanoutResult && ((BeanFinder.FanoutResult) value).isEmpty();
     }
 
     public static Object jsonElementToJavaValue(JsonElement el) {
