@@ -13,6 +13,9 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.aMapWithSize;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
@@ -592,11 +595,6 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
             "  \"parentString\": null\n" +
             "}";
 
-    private static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
-            "  \"childBean\": null,\n" +
-            "  \"childBeanMap\": [],\n" +
-            "  \"parentString\": null\n" +
-            "}";
 
     /** hasSize reports the actual size on JSON string input, as it does on a bean. */
     @Test
@@ -781,6 +779,67 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
                 jsonMatcher -> jsonMatcher.with("tags", not(hasSize(2))),
                 error -> Assertions.assertTrue(error.getMessage().contains("tags"),
                         "Expected a tags mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Map matchers on JSON-string input: the table's "fails" cells, asserted nowhere until now
+    //
+    // A map serialises to a JsonArray of single-entry objects, so nothing hands a java.util.Map to
+    // the matcher and a Map-typed matcher cannot match. These pin the documented behaviour rather
+    // than endorsing it; the way to assert on a map through a JSON string is to address an entry by
+    // its key.
+    // -----------------------------------------------------------------------
+
+    private static final String MAP_AS_JSON_STRING = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanList\": [],\n" +
+            "  \"childBeanMap\": [\n" +
+            "    {\n" +
+            "      \"key\": {\n" +
+            "        \"childInteger\": 0,\n" +
+            "        \"childString\": \"banana\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ],\n" +
+            "  \"parentString\": null\n" +
+            "}";
+
+    private static final String MAP_AS_JSON_STRING_APPROVED = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanList\": [],\n" +
+            "  \"parentString\": null\n" +
+            "}";
+
+    @Test
+    public void hasKeyFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(MAP_AS_JSON_STRING, MAP_AS_JSON_STRING_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap", hasKey("key")),
+                error -> Assertions.assertTrue(error.getMessage().contains("childBeanMap"),
+                        "Expected a childBeanMap mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void aMapWithSizeFailsOnJsonStringInput() {
+        assertJsonMatcherWithDummyTestInfo(MAP_AS_JSON_STRING, MAP_AS_JSON_STRING_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap", aMapWithSize(1)),
+                error -> Assertions.assertTrue(error.getMessage().contains("childBeanMap"),
+                        "Expected a childBeanMap mismatch, was: " + error.getMessage()),
+                AssertionError.class);
+    }
+
+    @Test
+    public void hasEntryFailsOnJsonStringInput() {
+        // Covered for object input already; this is the JSON-string half of the same row.
+        assertJsonMatcherWithDummyTestInfo(MAP_AS_JSON_STRING, MAP_AS_JSON_STRING_APPROVED,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap",
+                        hasEntry(equalTo("key"), childStringEqualTo("banana"))),
+                error -> Assertions.assertTrue(error.getMessage().contains("childBeanMap"),
+                        "Expected a childBeanMap mismatch, was: " + error.getMessage()),
                 AssertionError.class);
     }
 }

@@ -518,8 +518,10 @@ public class FieldsIgnorerTest {
     }
 
     @Test
-    void keepsAnEnvelopeThatChangedWithoutEmptying() {
-        // The envelope loses the ignored field but keeps another, so the envelope itself stays.
+    void removesEveryEnvelopeThatEmpties() {
+        // Named for what it asserts. Each envelope holds only the ignored path, so both empty and
+        // both go; the case its old name described -- an envelope that changes without emptying --
+        // is covered by ignoresPathInEveryEnvelopeWhenNoneEmpties and ignoresPathWhenOnlyOneEnvelopeEmpties.
         JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2}},\"keep\":9}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));

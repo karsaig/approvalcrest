@@ -447,4 +447,15 @@ public abstract class AbstractJsonMatcherIgnoreTest extends AbstractFileMatcherT
             Assertions.assertEquals(expected, thrown.getExpected().getStringRepresentation(), "beanInt shouldn't be present");
         }, AssertionFailedError.class);
     }
+
+    /**
+     * A ParentBean with childBeanList consumed by a custom matcher, so the approved file holds only
+     * the remaining fields. Shared by the custom-matcher success and failure suites, which had
+     * byte-identical copies.
+     */
+    protected static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
+            "  \"childBean\": null,\n" +
+            "  \"childBeanMap\": [],\n" +
+            "  \"parentString\": null\n" +
+            "}";
 }
