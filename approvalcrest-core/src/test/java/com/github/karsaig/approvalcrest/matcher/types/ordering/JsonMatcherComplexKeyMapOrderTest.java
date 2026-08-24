@@ -197,6 +197,20 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         assertJsonMatcherWithDummyTestInfo(input, input, Function.identity(), null);
     }
 
+
+    @Test
+    public void jsonStringInputStillReordersUnderAnExplicitSortField() {
+        // The one configuration where the input-form limitation is observable, and it was unpinned: the test
+        // above uses no sort, so nothing sorted the pairs either way. Naming the field does reach them, and a
+        // parsed tree carries no marker to say they are entries, so here they are reordered -- which is the
+        // limitation the CHANGELOG claims. Compare with explicitSortFieldOnAMapKeepsTheKeyFirst, the same
+        // configuration over object input, where the key stays first.
+        String input = mapOf(pair("zk", "av"));
+
+        assertJsonMatcherWithDummyTestInfo(input, mapOf(pair("av", "zk")),
+                jsonMatcher -> jsonMatcher.sortField("m"), null);
+    }
+
     // --- the writer and the comparator must agree --------------------------------------------------
 
     @Test
