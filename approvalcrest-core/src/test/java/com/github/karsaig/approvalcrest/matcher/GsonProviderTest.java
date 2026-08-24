@@ -56,9 +56,10 @@ public class GsonProviderTest {
 
         String json = gson.toJson(new Holder());
 
-        // Set, Map, Collection<SortMe> and SortMe[] fields are marked; plain is not.
+        // Set, Map, Collection<SortMe> and SortMe[] fields are marked; plain is not. A Map carries its
+        // own marker, because only a Map's array holds [key, value] entries.
         assertThat(json, containsString(FieldsIgnorer.MARKER + "aSet"));
-        assertThat(json, containsString(FieldsIgnorer.MARKER + "aMap"));
+        assertThat(json, containsString(FieldsIgnorer.MAP_MARKER + "aMap"));
         assertThat(json, containsString(FieldsIgnorer.MARKER + "sortList"));
         assertThat(json, containsString(FieldsIgnorer.MARKER + "sortArr"));
         assertThat(json, containsString("\"plain\""));
@@ -72,7 +73,7 @@ public class GsonProviderTest {
         String json = gson.toJson(new Holder());
 
         assertThat(json, containsString(FieldsIgnorer.MARKER + "aSet"));
-        assertThat(json, containsString(FieldsIgnorer.MARKER + "aMap"));
+        assertThat(json, containsString(FieldsIgnorer.MAP_MARKER + "aMap"));
         // no typesToSort → Collection/array fields keep their plain names
         assertThat(json, containsString("\"sortList\""));
         assertThat(json, containsString("\"sortArr\""));

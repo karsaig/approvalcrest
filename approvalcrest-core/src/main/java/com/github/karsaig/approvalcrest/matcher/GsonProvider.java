@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MAP_MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static com.google.common.collect.Sets.newTreeSet;
@@ -189,7 +190,12 @@ class GsonProvider {
 
     private static void markSortedFields(GsonBuilder gsonBuilder, List<Class<?>> typesToSort) {
         gsonBuilder.setFieldNamingStrategy(f -> {
-            if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
+            // A Map gets its own marker: both queue the field for sorting, but only a Map's array holds
+            // [key, value] entries, and the sorter must not reorder a key with its value.
+            if (Map.class.isAssignableFrom(f.getType())) {
+                return MAP_MARKER + f.getName();
+            }
+            if (Set.class.isAssignableFrom(f.getType())) {
                 return MARKER + f.getName();
             }
             if (!typesToSort.isEmpty()) {

@@ -27,7 +27,16 @@ import static java.util.Collections.emptyList;
  */
 public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
-    public static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
+    /**
+     * Marks a {@code Map}-typed field, where {@link #MARKER} marks a {@code Set} or a type-selected
+     * collection. Both queue the field for sorting; only this one says the field's array elements are
+     * {@code [key, value]} entries rather than a collection, which is what stops the sorter reordering a
+     * key with its value. Like {@link #MARKER} it is stripped before anything is written, so it never
+     * reaches a file.
+     */
+    public static final String MAP_MARKER = "!_TO_BE_SORTED_MAP_!";
+    /** Matches either marker. Neither is a prefix of the other, so the alternation order is irrelevant. */
+    public static final Pattern MARKER_PATTERN = Pattern.compile(MAP_MARKER + "|" + MARKER);
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
     public static String removeSetMarker(String json) {
@@ -229,8 +238,8 @@ public class FieldsIgnorer {
                     // both names. Not worth resolving here: such an object is written with two
                     // identical JSON keys once the prefix is stripped, which cannot be read back at
                     // all, so the shape is broken well before this line sees it.
-                    String childKey = jo.has(field) ? field : MARKER + field;
-                    JsonElement child = jo.get(childKey);
+                    String childKey = childKeyOf(jo, field);
+                    JsonElement child = childKey == null ? null : jo.get(childKey);
                     if (child == null) {
                         // Try descending through GraphAdapter envelope keys. Every envelope has
                         // to be visited: one graph can hold several objects carrying the same
@@ -394,16 +403,31 @@ public class FieldsIgnorer {
     }
 
     /**
-     * Returns the child of {@code jo} named {@code field}, tolerating the {@link #MARKER} prefix that
-     * the field naming strategy adds to {@code Set}- and {@code Map}-typed fields, or null if neither
-     * form is present. Package-private so the JSON path resolver can apply the same rule.
+     * Returns the key under which {@code field} is present, tolerating either marker prefix the field
+     * naming strategy adds, or null if no form is present. The bare name wins when more than one is
+     * present, which is the long-standing behaviour.
+     */
+    private static String childKeyOf(JsonObject jo, String field) {
+        if (jo.has(field)) {
+            return field;
+        }
+        if (jo.has(MARKER + field)) {
+            return MARKER + field;
+        }
+        if (jo.has(MAP_MARKER + field)) {
+            return MAP_MARKER + field;
+        }
+        return null;
+    }
+
+    /**
+     * Returns the child of {@code jo} named {@code field}, tolerating either marker prefix that the field
+     * naming strategy adds to {@code Set}-, {@code Map}- and type-selected fields, or null if no form is
+     * present. Package-private so the JSON path resolver can apply the same rule.
      */
     static JsonElement getChild(JsonObject jo, String field) {
-        JsonElement child = jo.get(field);
-        if (child == null) {
-            child = jo.get(MARKER + field);
-        }
-        return child;
+        String key = childKeyOf(jo, field);
+        return key == null ? null : jo.get(key);
     }
 
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
@@ -873,7 +897,12 @@ public class FieldsIgnorer {
 
     private static String getOriginalFieldName(String input) {
         String result = input;
-        if (result.startsWith(MARKER)) {
+        // MAP_MARKER first: it is not a prefix of MARKER, but checking the longer sentinel first keeps
+        // this correct if either string ever changes. Stripping matters beyond cosmetics -- the result
+        // feeds path matching and every tracker string, neither of which removeSetMarker ever sees.
+        if (result.startsWith(MAP_MARKER)) {
+            result = result.substring(MAP_MARKER.length());
+        } else if (result.startsWith(MARKER)) {
             result = result.substring(MARKER.length());
         }
         return result;
@@ -888,6 +917,7 @@ public class FieldsIgnorer {
             String lastSegment = getLastSegmentOf(pathToIgnore);
             boolean removedElement = jo.remove(lastSegment) != null;
             removedElement |= jo.remove(MARKER + lastSegment) != null;
+            removedElement |= jo.remove(MAP_MARKER + lastSegment) != null;
             if (!removedElement) {
                 // Try descending through GraphAdapter envelope keys
                 for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
@@ -895,6 +925,7 @@ public class FieldsIgnorer {
                         JsonObject inner = entry.getValue().getAsJsonObject();
                         boolean innerRemoved = inner.remove(lastSegment) != null;
                         innerRemoved |= inner.remove(MARKER + lastSegment) != null;
+                        innerRemoved |= inner.remove(MAP_MARKER + lastSegment) != null;
                         removedElement |= innerRemoved;
                     }
                 }
