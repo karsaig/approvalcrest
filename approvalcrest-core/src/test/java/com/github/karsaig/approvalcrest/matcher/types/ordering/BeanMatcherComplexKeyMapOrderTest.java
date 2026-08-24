@@ -67,4 +67,26 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
                                 && error.getMessage().contains("[0][1].childString"),
                         "Expected mismatches at both pair positions, was: " + error.getMessage()));
     }
+
+    @Test
+    public void aRootMapNoLongerMatchesItsTransposeWhenASelectorReachesTheRoot() {
+        // The root case is only protected because applySorting is told the root is a map. It runs before
+        // applyRootCollectionSorting, so that method cannot make up for a wrong answer here -- the halves
+        // would already be swapped. The tests above never reach this code, because with no selector
+        // matching "" the root array is not sorted at all.
+        assertDiagnosingMatcher(rootMap("zk", "av"), rootMap("av", "zk"),
+                beanMatcher -> beanMatcher.sortField(org.hamcrest.Matchers.any(String.class)),
+                AssertionError.class,
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("[0][0].childString")
+                                && error.getMessage().contains("[0][1].childString"),
+                        "Expected mismatches at both pair positions, was: " + error.getMessage()));
+    }
+
+    @Test
+    public void aRootMapKeepsItsKeyFirstUnderAnEmptyPathSort() {
+        // sortField("") is the other way a selector reaches the root.
+        assertDiagnosingMatcher(rootMap("zk", "av"), rootMap("zk", "av"),
+                beanMatcher -> beanMatcher.sortField(""));
+    }
 }

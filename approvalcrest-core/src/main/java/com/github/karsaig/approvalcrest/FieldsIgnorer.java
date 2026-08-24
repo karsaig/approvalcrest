@@ -82,12 +82,13 @@ public class FieldsIgnorer {
 
     public static JsonElement findPaths(JsonElement preComputedJson, Object objectForTypeCheck, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
-        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
+        boolean rootIsMap = objectForTypeCheck != null && Map.class.isAssignableFrom(objectForTypeCheck.getClass());
+        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true, null, true, rootIsMap);
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
             // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
             sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
-                    Map.class.isAssignableFrom(objectForTypeCheck.getClass()), true);
+                    rootIsMap, true);
         } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
@@ -102,12 +103,13 @@ public class FieldsIgnorer {
         JsonElement jsonElement = gson.toJsonTree(object);
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
-        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
+        boolean rootIsMap = object != null && Map.class.isAssignableFrom(object.getClass());
+        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true, null, true, rootIsMap);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
             // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
             sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
-                    Map.class.isAssignableFrom(object.getClass()), true);
+                    rootIsMap, true);
             return filteredJson;
         } else if (object != null && Collection.class.isAssignableFrom(object.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
@@ -459,10 +461,20 @@ public class FieldsIgnorer {
      *        {@code sameBeanAs}, pass true unconditionally.
      */
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker, boolean keepMapEntryOrder) {
+        applySorting(jsonElement, pathsToSort, fieldMatchersToSort, sortFile, tracker, keepMapEntryOrder, false);
+    }
+
+    /**
+     * @param rootHoldsMapEntries whether {@code jsonElement} is itself a map's entry array, so its direct
+     *        elements are {@code [key, value]} pairs. A root map has no field name to carry the marker, so
+     *        only the caller knows. Getting this wrong reorders a root map's keys with its values: this
+     *        sort runs before {@code applyRootCollectionSorting}, so that method cannot make up for it.
+     */
+    public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker, boolean keepMapEntryOrder, boolean rootHoldsMapEntries) {
         if (jsonElement == null || jsonElement.isJsonNull()) return;
         Map<String, PathLevel> pathMap = pathsToSort.isEmpty() ? Collections.emptyMap() : getPathsMap(pathsToSort);
         applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, "",
-                false, false, keepMapEntryOrder);
+                false, rootHoldsMapEntries, keepMapEntryOrder);
     }
 
     /**

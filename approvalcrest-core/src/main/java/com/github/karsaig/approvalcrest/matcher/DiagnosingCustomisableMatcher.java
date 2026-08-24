@@ -219,7 +219,10 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         // Unconditionally true here: sameBeanAs serialises both sides itself, through the same Gson, so
         // both carry the Map marker and suppression is symmetric. There is no approved file and no
         // strict-matching setting to consult.
-        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker, true);
+        // The root's map-ness has to be passed here, not left to applyRootCollectionSorting below: this
+        // call runs first, so a root map's pairs would already be swapped by the time that ran.
+        boolean rootIsMap = objectForTypeCheck != null && java.util.Map.class.isAssignableFrom(objectForTypeCheck.getClass());
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker, true, rootIsMap);
         applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort(), sortedTracker, true);
         return removeSetMarker(gson.toJson(filteredJson));
     }

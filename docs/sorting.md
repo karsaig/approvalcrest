@@ -219,12 +219,14 @@ Two consequences worth knowing:
   `-DfMStrictMatching=ture` silently turns strict matching off, and this behaviour with it.
 
 Still not covered, because the marker that identifies a map is attached to a *field name*: a map reached
-without one — as another map's value, as a collection element, or through an `Object`-declared field — has
-its pairs sorted as before. A map held in a field, including a field of another map's value, is covered.
+without one — as another map's value, as a collection element, or through an `Object`-declared field — is
+unprotected, so its pairs are reordered if anything sorts at that level. Often nothing does, and then they
+come out key first by default; add a `sortField` that reaches them and they swap. A map held in a field,
+including a field of another map's value, is protected.
 
-A map at the **root** of the comparison has no field name either, and the two matchers differ there:
-`sameBeanAs` recognises it from the object's own type, while `sameJsonAsApproved` never sorts a root map at
-all, so neither reorders it — but only the former does so deliberately.
+A map at the **root** is protected, even though it has no field name: it is recognised from the object's own
+type instead. That matters when a sort selector reaches the root — `sortField("")`, or any name matcher that
+matches the empty string, such as `sortField(not(equalTo("id")))`.
 
 A **raw JSON string** input carries no marker, so the type-driven sort never fires on it and its pairs are
 left exactly as written. Naming the field in a `sortField` still reaches them, and there they are sorted like

@@ -154,7 +154,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 matches = appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, "null", "actual was null",
                         ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
             } else {
-                String actualJson = filterJson(gson, actualJsonElement, true, false, false, ignoredTracker, aliasTracker, sortedTracker);
+                String actualJson = filterJson(gson, actualJsonElement, true, false, false, actual instanceof Map, ignoredTracker, aliasTracker, sortedTracker);
 
                 matches = assertJsonEquals(expectedJson, actualJson, mismatchDescription, e -> getAssertMessage(fileStoreMatcherUtils, e),
                         ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
@@ -209,6 +209,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings,
+                              boolean rootIsMap,
                               IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
         Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
@@ -239,13 +240,13 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         // suppresses. Two independent conditions keep it unsorted, and both are needed because they cover
         // different routes -- sortFile, which is isSortInputFile() for the expected side, gates the
         // field-level sort via anyPathMatch/anyFieldMatcherMatches; and skipCustomSortings, which empties
-        // the path map and is the only thing gating FieldsIgnorer's root-array branch, since that branch
-        // ignores sortFile. Widen either for the expected side and pairs would be reordered there while
+        // the path map, which is what gates the root-array branch's path selectors, since those ignore
+        // sortFile -- its field-name matchers are gated by sortFile like everything else. Widen either for the expected side and pairs would be reordered there while
         // this side leaves them alone, failing with no way to regenerate out of it --
         // explicitSortFieldOnAMapKeepsTheKeyFirst and fieldMatcherSortOnAMapKeepsTheKeyFirst are the
         // tests that notice.
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker,
-                fileMatcherConfig.isStrictFileMatching());
+                fileMatcherConfig.isStrictFileMatching(), rootIsMap);
 
         return removeSetMarker(gson.toJson(filteredJson));
     }
@@ -264,7 +265,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
-        return filterJson(gson, actualJsonElement, true, false, false, null, null, null);
+        return filterJson(gson, actualJsonElement, true, false, false, toApprove instanceof Map, null, null, null);
     }
 
     private String filterExpectedJson(Gson gson, boolean sortFile,
@@ -276,6 +277,9 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 sortFile,
                 fileMatcherConfig.isStrictFileMatching(),
                 fileMatcherConfig.isStrictFileMatching(),
+                // The approved content is parsed text with no object behind it, so nothing here can know a
+                // root array was a map. Inert under strict matching, where this side is never sorted.
+                false,
                 ignoredTracker, aliasTracker, sortedTracker);
     }
 
