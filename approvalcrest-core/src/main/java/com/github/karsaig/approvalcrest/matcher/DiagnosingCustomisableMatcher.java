@@ -216,8 +216,11 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         if (!aliasMap.isEmpty()) {
             JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
-        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker);
-        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort(), sortedTracker);
+        // Unconditionally true here: sameBeanAs serialises both sides itself, through the same Gson, so
+        // both carry the Map marker and suppression is symmetric. There is no approved file and no
+        // strict-matching setting to consult.
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker, true);
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort(), sortedTracker, true);
         return removeSetMarker(gson.toJson(filteredJson));
     }
 

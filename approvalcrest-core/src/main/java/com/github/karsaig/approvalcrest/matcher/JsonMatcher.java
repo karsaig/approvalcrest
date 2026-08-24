@@ -233,7 +233,15 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         if (!aliasMap.isEmpty() && !skipIgnores) {
             JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
-        applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker);
+        // The last argument keeps a complex-key map's [key, value] pair in order rather than sorting it
+        // like a collection. It is safe only because THIS LINE guarantees the expected side never sorts
+        // under strict matching: skipCustomSortings empties both collections, so nothing downstream
+        // reaches sortJsonArray for a tree parsed from an approved file. If that ever changes -- if the
+        // expected side is allowed to honour sortField -- the expected side would resume reordering pairs
+        // while the actual side does not, and the comparison would fail with no way to regenerate out of
+        // it. No test would catch that, so change this line only deliberately.
+        applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker,
+                fileMatcherConfig.isStrictFileMatching());
 
         return removeSetMarker(gson.toJson(filteredJson));
     }

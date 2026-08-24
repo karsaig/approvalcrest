@@ -754,6 +754,58 @@ public class FieldsIgnorerTest {
         assertThat(json.toString(), is("{\"map\":[{\"0x1\":{\"keep\":2}}]}"));
     }
 
+    // -------------------------------------------------------------------------
+    // MAP_MARKER twins of the MARKER cases
+    //
+    // A Map-typed field carries its own sentinel so the sorter can tell a [key, value] entry from a
+    // nested collection. Every site that recognised the old prefix must recognise this one; none of those
+    // is a compile error if missed.
+    // -------------------------------------------------------------------------
+
+    @Test
+    void ignoresAPathUnderAMapMarkedField() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1,\"keep\":2}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.toString(), is("{\"" + FieldsIgnorer.MAP_MARKER + "a\":{\"keep\":2}}"));
+    }
+
+    @Test
+    void cascadesRemovalWhenAMapMarkedParentBecomesEmpty() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":\"drop\"}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.has(FieldsIgnorer.MAP_MARKER + "a"), is(false));
+        assertThat(json.size(), is(0));
+    }
+
+    @Test
+    void removesAMapMarkedFieldByItsBareName() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1},\"keep\":2}");
+
+        FieldsIgnorer.findPaths(json, paths("a"));
+
+        assertThat(json.toString(), is("{\"keep\":2}"));
+    }
+
+    @Test
+    void removesAMapMarkedFieldInsideAnEnvelope() {
+        JsonObject json = parseObject("{\"0x1\":{\"" + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1},\"keep\":2}}");
+
+        FieldsIgnorer.findPaths(json, paths("a"));
+
+        assertThat(json.toString(), is("{\"0x1\":{\"keep\":2}}"));
+    }
+
+    @Test
+    void removeSetMarkerStripsBothSentinels() {
+        String json = "{\"" + FieldsIgnorer.MARKER + "s\":[],\"" + FieldsIgnorer.MAP_MARKER + "m\":[]}";
+
+        assertThat(FieldsIgnorer.removeSetMarker(json), is("{\"s\":[],\"m\":[]}"));
+    }
+
     @Test
     void removesElementsByMatcherRule() {
         JsonObject json = parseObject(

@@ -185,28 +185,44 @@ assertThat(actual, sameJsonAsApproved()
 As elsewhere, `*` is a wildcard only in a non-final segment. `sortField("ordersByRef.*")` addresses a key
 literally named `*`; to sort the map itself, name the map field.
 
-## A complex-key map and its transpose are indistinguishable
+## How a complex-key map is written
 
-A map whose keys are not strings, primitives or enums is written as an array of `[key, value]` pairs. That
-pair is an array, and the sort recurses into arrays, so the pair itself is reordered by its JSON — which
-discards which half was the key:
+A map whose keys are not strings, primitives or enums is written as an array of `[key, value]` pairs, key
+first:
 
-```java
-Map<Bean, Bean> forward    = { beanNamed("a") -> beanNamed("z") };
-Map<Bean, Bean> transposed  = { beanNamed("z") -> beanNamed("a") };
-// both write the same bytes, so an approved file for one is matched by the other
+```json
+"ordersByRef": [
+  [ { "ref": "A-1" }, { "total": 12 } ],
+  [ { "ref": "A-2" }, { "total": 30 } ]
+]
 ```
 
-The comparison cannot tell them apart, and the approved file cannot record the difference. Order within a
-pair follows whichever side's JSON sorts first, which is not always the key: a value carrying a nested map
-sorts ahead of a key that does not, because `"map": [` precedes `"map": null`.
+The pair keeps that order. Everything else about it is still sorted — the entries are ordered by their
+content, and a collection-valued half is sorted like any other collection — but the two positions inside a
+pair are not swapped, so the approved file records which half was the key.
 
-If the direction matters to your assertion, do not rely on the file to capture it — assert on the key or the
-value explicitly with `.with(...)`, or use a `String` key, which is written as `{"key": value}` and keeps its
-position.
+Until 1.5.1 the pair was sorted like a collection, which discarded that: `{a: z}` and `{z: a}` wrote the same
+bytes and an approved file for one matched the other.
 
-Not fixed, because excluding pair arrays from the sort changes the written form of every approved file that
-holds such a map.
+Two consequences worth knowing:
+
+- **Entry order can differ from earlier versions.** A pair's sort key is computed after its halves are
+  sorted, so where some pairs used to be reordered and others were not, the entries themselves could land in
+  a different order. Regenerate rather than hand-edit.
+- **This applies under strict file matching**, which is the default. With `-DfileMatcherStrictFileMatching=false`
+  the approved content is filtered and sorted as well, and a tree parsed from a file cannot tell a `[key, value]`
+  pair from a nested collection — so with strict off, pairs are still sorted on both sides and a map remains
+  indistinguishable from its transpose. Because of that, the written form depends on the setting: switching it
+  in either direction needs the affected approved files regenerating.
+
+  Note that an unrecognised value for that property is read as `false`, so a typo such as
+  `-DfMStrictMatching=ture` silently turns strict matching off, and this behaviour with it.
+
+Still not covered, because the marker that identifies a map is attached to a *field name*: a map reached
+without one — as another map's value, as a collection element, or through an `Object`-declared field — has
+its pairs sorted as before. A map held in a field, including a field of another map's value, is covered. A
+raw JSON string input is unaffected too, since it carries no marker; the sort never applied to it in the
+first place.
 
 ## A map key that looks like a circular-reference marker
 
