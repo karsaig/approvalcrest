@@ -324,6 +324,12 @@ class GsonProvider {
         for (String jsonRepresentation : sortedMapKeySet) {
             List<Object> mapKeys = objects.get(jsonRepresentation);
             for (Object object : mapKeys) {
+                // A null key has no class to inspect, and it belongs in this branch rather than the pair
+                // one: here it renders as the member name "null", which a JSON string input can express and
+                // a path can address, whereas a pair would put it at a position that path navigation skips.
+                if (object == null) {
+                    continue;
+                }
                 if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
                     return false;
                 }

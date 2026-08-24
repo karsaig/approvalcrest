@@ -232,6 +232,26 @@ A **raw JSON string** input carries no marker, so the type-driven sort never fir
 left exactly as written. Naming the field in a `sortField` still reaches them, and there they are sorted like
 any other array.
 
+## A null map key
+
+A `null` key is recorded as the member name `"null"`:
+
+```json
+"m": [ { "null": "someValue" } ]
+```
+
+That keeps the map in the ordinary single-key-object form, so the text is something a raw JSON string input
+can express and a path can address, exactly like any other key. Where the map holds a key that is not a
+primitive, `String` or enum, the whole map is written as `[key, value]` pairs instead and a null key appears
+there as a bare JSON null.
+
+The cost is that a `null` key and a `String` key of `"null"` write the same member name. Both entries are
+recorded — nothing is lost — but a comparison cannot tell one from the other, so a map keyed `null` matches a
+map keyed `"null"`. Rendering the key so it could not collide would mean writing it as a pair, which puts it
+at a position path navigation skips, and that would silently stop `.ignoring("map.someKey.leaf")` resolving
+for every other key in the map. If the distinction matters to your assertion, assert on it directly rather
+than relying on the file.
+
 ## A map key that looks like a circular-reference marker
 
 An object holding a circular reference is written wrapped under a generated key — `{"0x1": {…}}` — and that
