@@ -1385,4 +1385,96 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
         result.put(key3, value3);
         return result;
     }
+
+    // -----------------------------------------------------------------------
+    // Known limitation: a complex-key map and its transpose are indistinguishable
+    //
+    // A map with a bean key serialises each entry as a [key, value] array, and sortJsonArray recurses
+    // into that array like any other, so the pair is reordered by JSON. The key/value distinction is
+    // lost with it: Map{a -> z} and Map{z -> a} produce the same bytes, and the approved file written
+    // for one is matched by the other. The file side is never re-sorted, so nothing cancels it out.
+    //
+    // Pre-existing and not fixed here: stopping the sort at a pair array changes the written form of
+    // every approved file holding such a map. These two tests are the pin -- when that is fixed, they
+    // are what should change, deliberately.
+    // -----------------------------------------------------------------------
+
+    private static Bean singleEntryMap(String key, String value) {
+        HashMap<Bean, Bean> m = new LinkedHashMap<>();
+        m.put(bean().string(key).build(), bean().string(value).build());
+        return bean().map(m).build();
+    }
+
+    @Test
+    public void complexKeyMapRendersThePairInSortedOrder() {
+        String expected = "{\n" +
+                "  \"array\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"integer\": 0,\n" +
+                "  \"map\": [\n" +
+                "    [\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"a\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"z\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  ],\n" +
+                "  \"set\": null,\n" +
+                "  \"string\": null\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(singleEntryMap("a", "z"), expected, Function.identity(), null);
+    }
+
+    @Test
+    public void transposedComplexKeyMapRendersIdentically() {
+        // Same bytes as above, from a map whose key and value are swapped.
+        String expected = "{\n" +
+                "  \"array\": null,\n" +
+                "  \"hashMap\": null,\n" +
+                "  \"hashSet\": null,\n" +
+                "  \"integer\": 0,\n" +
+                "  \"map\": [\n" +
+                "    [\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"a\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"z\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  ],\n" +
+                "  \"set\": null,\n" +
+                "  \"string\": null\n" +
+                "}";
+
+        assertJsonMatcherWithDummyTestInfo(singleEntryMap("z", "a"), expected, Function.identity(), null);
+    }
 }

@@ -708,6 +708,52 @@ public class FieldsIgnorerTest {
         assertThat(tracker.getFields(), hasSize(2));
     }
 
+    // -------------------------------------------------------------------------
+    // Known limitation: a map key that looks like a graph-adapter envelope key
+    //
+    // Circular references are written as {"0xN": {...}}, and the envelope key is skipped during path
+    // navigation so a path works whether or not the type has cycles (Version 1.3.2). isGraphAdapterKey
+    // accepts 0x followed by lowercase hex, which a user's own map key can spell, and nothing in the
+    // serialised text separates the two: a Map<String,?> entry serialises to a single-key object, and
+    // so does an envelope.
+    //
+    // The one discriminator that looked available -- an envelope is never an array element -- was
+    // measured and is false: a List of graph-typed objects writes an envelope at each array position.
+    // Fixing this needs a different wire format for envelopes, which would invalidate every approved
+    // file holding a circular reference and every hand-written one, so it is recorded rather than
+    // changed. These tests pin what happens today.
+    // -------------------------------------------------------------------------
+
+    @Test
+    void aMapKeySpelledLikeAnEnvelopeIsSkippedByAPathThatOmitsIt() {
+        // The defect. Naming the key works, as it must; omitting it also reaches through, which for
+        // any other key is a no-op.
+        JsonObject json = parseObject("{\"map\":[{\"0x1\":{\"leaf\":1,\"keep\":2}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"0x1\":{\"keep\":2}}]}"));
+    }
+
+    @Test
+    void anOrdinaryMapKeyIsNotSkippedByAPathThatOmitsIt() {
+        // The control that makes the previous test a defect rather than a design choice.
+        JsonObject json = parseObject("{\"map\":[{\"k1\":{\"leaf\":1,\"keep\":2}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"k1\":{\"leaf\":1,\"keep\":2}}]}"));
+    }
+
+    @Test
+    void namingAnEnvelopeLikeMapKeyStillWorks() {
+        JsonObject json = parseObject("{\"map\":[{\"0x1\":{\"leaf\":1,\"keep\":2}}]}");
+
+        FieldsIgnorer.findPaths(json, paths("map.0x1.leaf"));
+
+        assertThat(json.toString(), is("{\"map\":[{\"0x1\":{\"keep\":2}}]}"));
+    }
+
     @Test
     void removesElementsByMatcherRule() {
         JsonObject json = parseObject(
