@@ -22,6 +22,8 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
@@ -748,11 +750,6 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
         };
     }
 
-    private static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
-            "  \"childBean\": null,\n" +
-            "  \"childBeanMap\": [],\n" +
-            "  \"parentString\": null\n" +
-            "}";
 
     /**
      * hasSize is typed on Collection. It resolves against the real {@code List<ChildBean>} for an
@@ -1040,5 +1037,56 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
                 enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("childBeanList",
                         not(containsInAnyOrder(childStringEqualTo("apple")))), null);
+    }
+
+    // -----------------------------------------------------------------------
+    // Matchers the compatibility table documents as working, which nothing exercised
+    // -----------------------------------------------------------------------
+
+    @Test
+    public void matchesMapKeyOnObjectInput() {
+        // hasKey is documented and was reachable only through MatcherConfigurationTest, never
+        // through .with(). It works on object input because the map arrives as a java.util.Map.
+        Object input = parent().putToChildBeanMap("key", child().childString("banana")).build();
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent, enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanMap", hasKey("key")), null);
+    }
+
+    @Test
+    public void matchesEmptyIterableOnObjectInput() {
+        // emptyIterable is documented as working for both input forms and appeared nowhere.
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(parent().build(), approvedFileContent,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", emptyIterable()), null);
+    }
+
+    @Test
+    public void matchesEmptyIterableOnJsonStringInput() {
+        // The other half of that row: the read-only list view over the JsonArray is an Iterable,
+        // so this holds without the elements needing a class.
+        String input = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanList\": [],\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        String approvedFileContent = "{\n" +
+                "  \"childBean\": null,\n" +
+                "  \"childBeanMap\": [],\n" +
+                "  \"parentString\": null\n" +
+                "}";
+        assertJsonMatcherWithDummyTestInfo(input, approvedFileContent,
+                enableExpectedFileSortingWithLenientMatching(),
+                jsonMatcher -> jsonMatcher.with("childBeanList", emptyIterable()), null);
     }
 }

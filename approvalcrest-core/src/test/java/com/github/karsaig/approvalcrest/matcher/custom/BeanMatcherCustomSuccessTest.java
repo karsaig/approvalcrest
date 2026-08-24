@@ -265,7 +265,12 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     public void matchesIntFieldViaJsonFallback() {
         // Bean path for an int/Integer field returns Integer(0); equalTo(0L) fails because
         // Integer != Long.  The JSON fallback returns Long(0), which passes the matcher.
-        ParentBean expected = parent().childBean(child().childString("apple")).build();
+        //
+        // The two sides differ on the matched field on purpose. Built identically, this test passed
+        // whether the matcher fired or was silently skipped, because the structural comparison
+        // agreed either way. With expected on 7 and actual on 0, only consuming the path lets it
+        // through.
+        ParentBean expected = parent().childBean(child().childString("apple").childInteger(7)).build();
         ParentBean actual = parent().childBean(child().childString("apple")).build();
 
         assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBean.childInteger", equalTo(0L)));
@@ -286,8 +291,10 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     public void matchesDeeplyNestedFieldPath() {
         // 3-level deep path box.item.value is verified by the custom matcher; box.label and name
         // are compared structurally.
+        // The two sides differ on the matched field on purpose: built identically, this passed
+        // whether the matcher fired or was skipped.
         BeanContainer.BeanBox.BeanItem item = new BeanContainer.BeanBox.BeanItem();
-        item.value = "deepValue";
+        item.value = "notTheDeepValue";
         BeanContainer.BeanBox box = new BeanContainer.BeanBox();
         box.label = "box1";
         box.item = item;
@@ -979,14 +986,4 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         }
     }
 
-    /** Holds a single array of ChildBean so array matchers can be exercised on an array field. */
-    static class ArrayHolder {
-        ChildBean[] childBeanArray;
-
-        ArrayHolder(String first, String second) {
-            childBeanArray = new ChildBean[]{
-                    child().childString(first).build(),
-                    child().childString(second).build()};
-        }
-    }
 }

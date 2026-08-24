@@ -518,8 +518,26 @@ public class FieldsIgnorerTest {
     }
 
     @Test
-    void keepsAnEnvelopeThatChangedWithoutEmptying() {
-        // The envelope loses the ignored field but keeps another, so the envelope itself stays.
+    void keepsAnEnvelopeThatLosesAChildButHasASibling() {
+        // The combination none of the neighbours had: a multi-segment path empties "a", so "a" is
+        // removed from the envelope itself, and the envelope survives on its remaining sibling.
+        // ignoresPathUnderGraphAdapterEnvelopeKey has the envelope-level sibling but removes a leaf;
+        // ignoresPathInEveryEnvelopeWhenNoneEmpties keeps the envelope but removes nothing from it.
+        // This is the branch that reports "a direct key of mine went" and must still not delete the
+        // envelope.
+        JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1},\"other\":2}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.toString(), is("{\"0x1\":{\"other\":2}}"));
+    }
+
+    @Test
+    void removesEveryEnvelopeThatEmpties() {
+        // Named for what it asserts. Each envelope holds only the ignored path, so both empty and
+        // both go; the case its old name described -- an envelope that changes without emptying --
+        // is covered by ignoresPathInEveryEnvelopeWhenNoneEmpties, ignoresPathWhenOnlyOneEnvelopeEmpties
+        // and keepsAnEnvelopeThatLosesAChildButHasASibling.
         JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2}},\"keep\":9}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));

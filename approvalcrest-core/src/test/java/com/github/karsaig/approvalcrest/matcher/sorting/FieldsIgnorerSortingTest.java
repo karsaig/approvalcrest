@@ -123,6 +123,53 @@ public class FieldsIgnorerSortingTest {
                 is("[{\"v\":1},{\"v\":2}]"));
     }
 
+    // -------------------------------------------------------------------------
+    // A trailing * is a literal key here too
+    //
+    // The rule is pinned for .ignoring() and ignoringElementsWhere(); for sortField it lived only in
+    // docs/sorting.md, which is the one place a wrong claim would go unnoticed.
+    // -------------------------------------------------------------------------
+
+    @Test
+    void trailingWildcardSortsOnlyTheKeyLiterallyNamedStar() {
+        JsonElement json = parse("{\"map\":{\"*\":[3,1],\"k1\":[3,1]}}");
+
+        FieldsIgnorer.applySorting(json, sortPaths("map.*"), NO_MATCHERS, true);
+
+        // Only the entry keyed "*" is sorted; the sibling keeps the order it was given.
+        assertThat(json.toString(), is("{\"map\":{\"*\":[1,3],\"k1\":[3,1]}}"));
+    }
+
+    @Test
+    void nonFinalWildcardSortsUnderEveryMapValue() {
+        // The contrast on the same shape: with a segment after it, * fans out over every value.
+        JsonElement json = parse("{\"map\":{\"*\":{\"l\":[3,1]},\"k1\":{\"l\":[3,1]}}}");
+
+        FieldsIgnorer.applySorting(json, sortPaths("map.*.l"), NO_MATCHERS, true);
+
+        assertThat(json.toString(), is("{\"map\":{\"*\":{\"l\":[1,3]},\"k1\":{\"l\":[1,3]}}}"));
+    }
+
+    @Test
+    void trailingWildcardWithoutALiteralStarKeySortsNothing() {
+        // The accepted sharp edge: someone writing map.* expecting every value gets a no-op.
+        JsonElement json = parse("{\"map\":{\"k1\":[3,1]}}");
+
+        FieldsIgnorer.applySorting(json, sortPaths("map.*"), NO_MATCHERS, true);
+
+        assertThat(json.toString(), is("{\"map\":{\"k1\":[3,1]}}"));
+    }
+
+    @Test
+    void trailingWildcardSortsALiteralStarKeyInASerialisedMap() {
+        // A real Map serialises to an array of single-entry objects, so cover that shape too.
+        JsonElement json = parse("{\"map\":[{\"*\":[3,1]},{\"k1\":[3,1]}]}");
+
+        FieldsIgnorer.applySorting(json, sortPaths("map.*"), NO_MATCHERS, true);
+
+        assertThat(json.toString(), is("{\"map\":[{\"*\":[1,3]},{\"k1\":[3,1]}]}"));
+    }
+
     @Test
     void applySortingSortsByFieldNameMatcher() {
         JsonElement json = parse("{\"myList\":[{\"v\":2},{\"v\":1}]}");

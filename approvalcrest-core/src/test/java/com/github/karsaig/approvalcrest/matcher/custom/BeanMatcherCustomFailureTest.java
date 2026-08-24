@@ -440,13 +440,4 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
     }
 
     /** Holds an array of ChildBean so array-specific matcher behaviour can be exercised. */
-    static class ArrayHolder {
-        ChildBean[] childBeanArray;
-
-        ArrayHolder(String first, String second) {
-            childBeanArray = new ChildBean[]{
-                    child().childString(first).build(),
-                    child().childString(second).build()};
-        }
-    }
 }
