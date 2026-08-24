@@ -220,9 +220,15 @@ Two consequences worth knowing:
 
 Still not covered, because the marker that identifies a map is attached to a *field name*: a map reached
 without one — as another map's value, as a collection element, or through an `Object`-declared field — has
-its pairs sorted as before. A map held in a field, including a field of another map's value, is covered. A
-raw JSON string input is unaffected too, since it carries no marker; the sort never applied to it in the
-first place.
+its pairs sorted as before. A map held in a field, including a field of another map's value, is covered.
+
+A map at the **root** of the comparison has no field name either, and the two matchers differ there:
+`sameBeanAs` recognises it from the object's own type, while `sameJsonAsApproved` never sorts a root map at
+all, so neither reorders it — but only the former does so deliberately.
+
+A **raw JSON string** input carries no marker, so the type-driven sort never fires on it and its pairs are
+left exactly as written. Naming the field in a `sortField` still reaches them, and there they are sorted like
+any other array.
 
 ## A map key that looks like a circular-reference marker
 

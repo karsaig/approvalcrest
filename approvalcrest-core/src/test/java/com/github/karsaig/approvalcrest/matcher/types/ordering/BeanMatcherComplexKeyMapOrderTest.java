@@ -46,8 +46,10 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
         // this passed -- a map and its transpose were indistinguishable.
         assertDiagnosingMatcher(new MapHolder("zk", "av"), new MapHolder("av", "zk"),
                 beanMatcher -> beanMatcher, AssertionError.class,
-                error -> Assertions.assertTrue(error.getMessage().contains("childString"),
-                        "Expected a childString mismatch, was: " + error.getMessage()));
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("[0][0].childString")
+                                && error.getMessage().contains("[0][1].childString"),
+                        "Expected mismatches at both pair positions, was: " + error.getMessage()));
     }
 
     @Test
@@ -60,7 +62,9 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
         // A root map is recognised from the object's type, since there is no field name to carry a marker.
         assertDiagnosingMatcher(rootMap("zk", "av"), rootMap("av", "zk"),
                 beanMatcher -> beanMatcher, AssertionError.class,
-                error -> Assertions.assertTrue(error.getMessage().contains("childString"),
-                        "Expected a childString mismatch, was: " + error.getMessage()));
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("[0][0].childString")
+                                && error.getMessage().contains("[0][1].childString"),
+                        "Expected mismatches at both pair positions, was: " + error.getMessage()));
     }
 }

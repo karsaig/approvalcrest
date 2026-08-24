@@ -84,8 +84,10 @@ public class FieldsIgnorer {
         JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
-            // Sets and Maps are always sorted by their root representation (no meaningful order)
-            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort, false, false);
+            // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
+            // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
+                    Map.class.isAssignableFrom(objectForTypeCheck.getClass()), true);
         } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
@@ -102,8 +104,10 @@ public class FieldsIgnorer {
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
         applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
-            // Sets and Maps are always sorted by their root representation (no meaningful order)
-            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort, false, false);
+            // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
+            // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
+                    Map.class.isAssignableFrom(object.getClass()), true);
             return filteredJson;
         } else if (object != null && Collection.class.isAssignableFrom(object.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
@@ -234,13 +238,12 @@ public class FieldsIgnorer {
                     if (JsonElementUtil.WILDCARD.equals(field)) {
                         return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments, changedAnywhere);
                     }
-                    // The field naming strategy puts the MARKER prefix on Set- and Map-typed field
-                    // names, so the child may sit under either name. Take the key as well as the
+                    // The field naming strategy prefixes Set-typed fields with MARKER and Map-typed fields
+                    // with MAP_MARKER, so the child may sit under any of three names. Take the key as well as the
                     // value: removing an emptied child by the bare name silently does nothing when
-                    // it was found under the prefixed one, leaving an empty husk whose prefix
+                    // it was found under a prefixed one, leaving an empty husk whose prefix
                     // removeSetMarker strips, so the file shows an empty collection where the field
-                    // should have gone. Doing the two probes here rather than in getChild keeps that
-                    // helper's signature, which three other callers use for the value alone.
+                    // should have gone.
                     // Prefers the bare name when an object somehow holds both. That is reachable —
                     // a subclass widening an inherited field to a Set or Map gets both names, since
                     // Gson's duplicate-name check runs after the naming strategy — and in that shape
@@ -494,8 +497,10 @@ public class FieldsIgnorer {
                     FieldNamePair fieldNamePair = convertToKeyPair(actual.getKey());
                     if (isGraphAdapterKey(fieldNamePair.newKey)) {
                         // Transparent: descend with same pathMap, don't consume a level
+                        // false/false: both flags describe an array, and an envelope is only descended
+                        // into when its value is an object, so neither can apply to what is below it.
                         applySortingInternal(actualValue, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath,
-                                isMapEntry, holdsMapEntries, keepMapEntryOrder);
+                                false, false, keepMapEntryOrder);
                         continue;
                     }
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
@@ -710,9 +715,11 @@ public class FieldsIgnorer {
      *        {@code [key, value]} pairs. A pair is two positions, not a collection: reordering it swaps
      *        the key with the value, losing which half was which. Its halves are still descended into, so
      *        a list-valued half is sorted as before.
-     * @param keepMapEntryOrder whether that suppression is active. Only under strict file matching, where
-     *        the expected side is parsed from the approved file and never sorted, so suppressing on this
-     *        side cannot disagree with it. With strict off both sides keep the old behaviour.
+     * @param keepMapEntryOrder whether that suppression is active. The caller is responsible for passing
+     *        it only when both sides of its comparison are treated alike: {@code sameBeanAs} serialises
+     *        both itself and passes true unconditionally, while a file matcher passes its strict-matching
+     *        setting, since only under strict matching is the approved content left unsorted. Suppressing
+     *        on one side while the other still reorders would fail with no way to regenerate out of it.
      */
     private static void sortJsonArray(JsonArray input, List<SortField<String>> matchingPathMatchers,
                                       List<SortField<Matcher<String>>> matchingFieldMatchers,

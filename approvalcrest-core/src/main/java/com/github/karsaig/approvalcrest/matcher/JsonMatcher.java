@@ -234,12 +234,16 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             JsonElementUtil.applyAliases(filteredJson, aliasMap, aliasTracker);
         }
         // The last argument keeps a complex-key map's [key, value] pair in order rather than sorting it
-        // like a collection. It is safe only because THIS LINE guarantees the expected side never sorts
-        // under strict matching: skipCustomSortings empties both collections, so nothing downstream
-        // reaches sortJsonArray for a tree parsed from an approved file. If that ever changes -- if the
-        // expected side is allowed to honour sortField -- the expected side would resume reordering pairs
-        // while the actual side does not, and the comparison would fail with no way to regenerate out of
-        // it. No test would catch that, so change this line only deliberately.
+        // like a collection. Passing the strict-matching setting is what makes that safe: the approved
+        // content is parsed text and cannot recognise a pair, so it must not be sorted while this side
+        // suppresses. Two independent conditions keep it unsorted, and both are needed because they cover
+        // different routes -- sortFile, which is isSortInputFile() for the expected side, gates the
+        // field-level sort via anyPathMatch/anyFieldMatcherMatches; and skipCustomSortings, which empties
+        // the path map and is the only thing gating FieldsIgnorer's root-array branch, since that branch
+        // ignores sortFile. Widen either for the expected side and pairs would be reordered there while
+        // this side leaves them alone, failing with no way to regenerate out of it --
+        // explicitSortFieldOnAMapKeepsTheKeyFirst and fieldMatcherSortOnAMapKeepsTheKeyFirst are the
+        // tests that notice.
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker,
                 fileMatcherConfig.isStrictFileMatching());
 

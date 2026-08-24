@@ -86,8 +86,10 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), fileForKeyZk, Function.identity(), null);
 
         assertJsonMatcherWithDummyTestInfo(new MapHolder("av", "zk"), fileForKeyZk, Function.identity(),
-                error -> Assertions.assertTrue(error.getMessage().contains("childString"),
-                        "Expected a childString mismatch, was: " + error.getMessage()),
+                error -> Assertions.assertTrue(
+                        error.getMessage().contains("m[0][0].childString")
+                                && error.getMessage().contains("m[0][1].childString"),
+                        "Expected mismatches at both pair positions, was: " + error.getMessage()),
                 AssertionError.class);
     }
 
@@ -101,6 +103,15 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     public void fieldMatcherSortOnAMapKeepsTheKeyFirst() {
         assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), mapOf(pair("zk", "av")),
                 jsonMatcher -> jsonMatcher.sortField(startsWith("m")), null);
+    }
+
+    @Test
+    public void aPairReachedAsTheSortInputItselfKeepsItsOrder() {
+        // A pair arrives at the sorter as its own input, not just as an element, when a field matcher
+        // matches at pair level. That is a separate branch from the element case and the only reader of
+        // the "I am a pair" flag; without it the key and value swap here.
+        assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), mapOf(pair("zk", "av")),
+                jsonMatcher -> jsonMatcher.sortField(org.hamcrest.Matchers.any(String.class)), null);
     }
 
     @Test
@@ -132,7 +143,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     // --- regression guards ------------------------------------------------------------------------
 
     @Test
-    public void innerListsOfASetAreUnaffected() {
+    public void aSetOfListsIsUnaffected() {
         SetOfLists h = new SetOfLists();
         h.s.add(Arrays.asList("z", "a"));
 
@@ -195,12 +206,14 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     }
 
     @Test
-    public void aFileWrittenByTheMatcherIsThenMatchedByIt() {
-        // The round trip: the text the writer produces is exactly what the comparator accepts. This is what
-        // fails if the suppression is applied at one of those sites and not the other.
-        assertJsonMatcherWithDummyTestInfoForNotApprovedFile(new MapHolder("zk", "av"),
-                mapOf(pair("zk", "av")), Function.identity());
-        assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), mapOf(pair("zk", "av")),
+    public void theEntryArrayIsStillSortedByContent() {
+        // Suppression is confined to within a pair: the entries themselves are still ordered, so a map
+        // built in either insertion order renders the same way.
+        MapHolder forward = new MapHolder();
+        forward.m.put(child().childString("b").build(), child().childString("c").build());
+        forward.m.put(child().childString("zk").build(), child().childString("av").build());
+
+        assertJsonMatcherWithDummyTestInfo(forward, mapOf(pair("b", "c"), pair("zk", "av")),
                 Function.identity(), null);
     }
 }

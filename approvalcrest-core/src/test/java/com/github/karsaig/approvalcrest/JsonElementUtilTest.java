@@ -106,8 +106,9 @@ public class JsonElementUtilTest {
 
     @Test
     void findsValueBehindMarkerPrefixedKey() {
-        // The field naming strategy prefixes Set- and Map-typed field names with MARKER, so a path
-        // crossing such a field has to tolerate it the way FieldsIgnorer already does.
+        // The field naming strategy prefixes a Set-typed field name with MARKER, so a path crossing such
+        // a field has to tolerate it the way FieldsIgnorer already does. A Map-typed field carries
+        // MAP_MARKER instead -- see the twin below.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k",
                 parse("{\"" + FieldsIgnorer.MARKER + "aMap\":{\"k\":\"val\"}}"));
 
@@ -117,7 +118,8 @@ public class JsonElementUtilTest {
 
     @Test
     void findsValueBehindMarkerPrefixedKeyInSerialisedMapShape() {
-        // A Map serialises to an array of single-entry objects under a MARKER-prefixed key.
+        // A Map serialises to an array of single-entry objects, under a MAP_MARKER-prefixed key since
+        // 1.5.1; this covers the MARKER form, which a Set-typed field still uses.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k.leaf",
                 parse("{\"" + FieldsIgnorer.MARKER + "aMap\":[{\"k\":{\"leaf\":\"val\"}}]}"));
 
@@ -126,6 +128,27 @@ public class JsonElementUtilTest {
         assertThat((FanoutResult) result.getRight(), contains("val"));
     }
 
+
+    @Test
+    void findsValueBehindAMapMarkerPrefixedKey() {
+        // The twin of the MARKER case: a Map-typed field carries its own prefix, and the JSON path
+        // resolver has to tolerate that one too or no path could cross a map on the fallback route.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k",
+                parse("{\"" + FieldsIgnorer.MAP_MARKER + "aMap\":{\"k\":\"val\"}}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is("val"));
+    }
+
+    @Test
+    void findsValueBehindAMapMarkerPrefixedKeyInSerialisedMapShape() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k.leaf",
+                parse("{\"" + FieldsIgnorer.MAP_MARKER + "aMap\":[{\"k\":{\"leaf\":\"val\"}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), instanceOf(FanoutResult.class));
+        assertThat((FanoutResult) result.getRight(), contains("val"));
+    }
     @Test
     void prefersThePlainKeyOverTheMarkerPrefixedOne() {
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("x",
