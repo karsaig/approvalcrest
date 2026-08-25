@@ -297,8 +297,6 @@ Un-negated the same mismatch is loud rather than silent — `mismatches were: [w
 
 The two ways round it: compare the object rather than a JSON string, or write the matcher against the JSON shape. Over **scalar** elements all three work on both input forms, because the list view coerces a scalar on read, so `not(hasItem("urgent"))` over a `tags` array fails correctly whichever form the input takes.
 
-This is not something the library can detect and reject for you. A container matcher and an element matcher are handed the same `JsonArray`, so any check that rejected the second would also reject `hasSize` and `iterableWithSize`, which do work here; and Hamcrest keeps a matcher's expected type and negation flag private, so the matcher itself cannot be interrogated.
-
 ## A null half-way along a path
 
 A path resolves against the Java object first and is retried against the serialised JSON wherever the object walk cannot reach — an array segment, a map entry addressed by its key, a member whose serialised name differs from the field's, and everything at all when the input is a raw JSON string.
@@ -313,9 +311,7 @@ assertThat(actual, sameBeanAs(expected)
 
 A path left behind by a rename therefore asserts nothing, so long as some reference along it is null. Read a passing `nullValue()` assertion over a nested path as evidence about the reference, not about the leaf.
 
-This cannot be closed by checking the field's declared type for the next segment — that was tried and reverted. The retry resolves serialised **member** names, and those are not Java field names: `@SerializedName` renames a member, a registered `JsonSerializer` invents them freely, a `JsonObject`-typed field's members are data, a bounded type variable erases to its bound rather than to `Object`, and a field declared as a supertype legitimately carries a subtype's fields. Each of those makes "does not exist" a false statement about a path that resolves perfectly well for real data.
-
-What helps is asserting on the reference itself, so the assertion says what you mean:
+Assert on the reference itself, so the assertion says what you mean:
 
 ```java
 assertThat(actual, sameBeanAs(expected)

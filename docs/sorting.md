@@ -197,40 +197,22 @@ first:
 ]
 ```
 
-The pair keeps that order. Everything else about it is still sorted — the entries are ordered by their
-content, and a collection-valued half is sorted like any other collection — but the two positions inside a
-pair are not swapped, so the approved file records which half was the key.
+The two positions inside a pair are never swapped, so the file records which half was the key. Everything
+else is still sorted: entries are ordered by their content, and a collection-valued half is sorted like any
+other collection.
 
-Until 1.5.1 the pair was sorted like a collection, which discarded that: `{a: z}` and `{z: a}` wrote the same
-bytes and an approved file for one matched the other.
+This holds for a map held in a field — including a field of another map's value — and for a map at the root.
+It does not hold for a map reached as another map's value, as a collection element, or through an
+`Object`-declared field: those pairs are ordered by content like any array, so the key is not necessarily
+first.
 
-Two consequences worth knowing:
+It also requires strict file matching, which is on by default. With `-DfileMatcherStrictFileMatching=false`
+pairs are ordered by content on both sides, and a map then compares equal to the same map with its keys and
+values swapped. Note that an unrecognised value for that property reads as `false`, so a typo such as
+`-DfMStrictMatching=ture` turns strict matching off.
 
-- **Entry order can differ from earlier versions.** A pair's sort key is computed after its halves are
-  sorted, so where some pairs used to be reordered and others were not, the entries themselves could land in
-  a different order. Regenerate rather than hand-edit.
-- **This applies under strict file matching**, which is the default. With `-DfileMatcherStrictFileMatching=false`
-  the approved content is filtered and sorted as well, and a tree parsed from a file cannot tell a `[key, value]`
-  pair from a nested collection — so with strict off, pairs are still sorted on both sides and a map remains
-  indistinguishable from its transpose. Because of that, the written form depends on the setting: switching it
-  in either direction needs the affected approved files regenerating.
-
-  Note that an unrecognised value for that property is read as `false`, so a typo such as
-  `-DfMStrictMatching=ture` silently turns strict matching off, and this behaviour with it.
-
-Still not covered, because the marker that identifies a map is attached to a *field name*: a map reached
-without one — as another map's value, as a collection element, or through an `Object`-declared field — is
-unprotected, so its pairs are reordered if anything sorts at that level. Often nothing does, and then they
-come out key first by default; add a `sortField` that reaches them and they swap. A map held in a field,
-including a field of another map's value, is protected.
-
-A map at the **root** is protected, even though it has no field name: it is recognised from the object's own
-type instead. That matters when a sort selector reaches the root — `sortField("")`, or any name matcher that
-matches the empty string, such as `sortField(not(equalTo("id")))`.
-
-A **raw JSON string** input carries no marker, so the type-driven sort never fires on it and its pairs are
-left exactly as written. Naming the field in a `sortField` still reaches them, and there they are sorted like
-any other array.
+A raw JSON string input keeps its pairs exactly as written, unless a `sortField` names the field holding
+them, in which case they are ordered by content.
 
 ## A null map key
 
@@ -240,17 +222,13 @@ A `null` key is recorded as the member name `"null"`:
 "m": [ { "null": "someValue" } ]
 ```
 
-That keeps the map in the ordinary single-key-object form, so the text is something a raw JSON string input
-can express and a path can address, exactly like any other key. Where the map holds a key that is not a
-primitive, `String` or enum, the whole map is written as `[key, value]` pairs instead and a null key appears
+A path addresses the entry by that name, like any other key. Where the map holds a key that is not a
+primitive, `String` or enum, the whole map is written as `[key, value]` pairs instead, and a null key appears
 there as a bare JSON null.
 
-The cost is that a `null` key and a `String` key of `"null"` write the same member name. Both entries are
-recorded — nothing is lost — but a comparison cannot tell one from the other, so a map keyed `null` matches a
-map keyed `"null"`. Rendering the key so it could not collide would mean writing it as a pair, which puts it
-at a position path navigation skips, and that would silently stop `.ignoring("map.someKey.leaf")` resolving
-for every other key in the map. If the distinction matters to your assertion, assert on it directly rather
-than relying on the file.
+A `null` key and a `String` key of `"null"` write the same member name. Both entries are recorded, but a
+comparison cannot tell them apart, so a map keyed `null` compares equal to a map keyed `"null"`. If that
+distinction matters, assert on it directly rather than relying on the file.
 
 ## A map key that looks like a circular-reference marker
 
@@ -258,9 +236,7 @@ An object holding a circular reference is written wrapped under a generated key 
 key is skipped during path navigation, so a path reads the same whether or not the type has cycles. The test
 for "is this a wrapper key" is `0x` followed by lowercase hex digits, which a map key of your own can spell.
 
-Nothing in the serialised text separates the two. A `Map<String, ?>` entry is written as a single-key object,
-and so is a wrapper. The consequence is that a path which omits such a key still reaches through it, where
-for any other key it would match nothing:
+A path that omits such a key still reaches through it, where for any other key it would match nothing:
 
 ```java
 // map has one entry, keyed "0x1"
@@ -276,8 +252,3 @@ it. The same applies to `sortField(...)` and `ignoringElementsWhere(...)`, which
 Affected keys are exactly those matching `0x` plus lowercase hex: `0x1`, `0xff`, `0xdeadbeef`. A key with an
 uppercase digit (`0xFF`), a prefix, or a suffix is unaffected. If you hold such keys and need paths under
 them to be exact, rename the key for the comparison or address the entry by a path that does not cross it.
-
-This is not fixable without changing how wrappers are written, which would invalidate every approved file
-containing a circular reference, including hand-written ones. The one discriminator that looked usable — that
-a wrapper is never an array element — was measured and is false: a collection of objects that each carry a
-cycle writes a wrapper at every array position.
