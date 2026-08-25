@@ -27,7 +27,16 @@ import static java.util.Collections.emptyList;
  */
 public class FieldsIgnorer {
     public static final String MARKER = "!_TO_BE_SORTED_!";
-    public static final Pattern MARKER_PATTERN = Pattern.compile(MARKER);
+    /**
+     * Marks a {@code Map}-typed field, where {@link #MARKER} marks a {@code Set} or a type-selected
+     * collection. Both queue the field for sorting; only this one says the field's array elements are
+     * {@code [key, value]} entries rather than a collection, which is what stops the sorter reordering a
+     * key with its value. Like {@link #MARKER} it is stripped before anything is written, so it never
+     * reaches a file.
+     */
+    public static final String MAP_MARKER = "!_TO_BE_SORTED_MAP_!";
+    /** Matches either marker. Neither is a prefix of the other, so the alternation order is irrelevant. */
+    public static final Pattern MARKER_PATTERN = Pattern.compile(MAP_MARKER + "|" + MARKER);
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
     public static String removeSetMarker(String json) {
@@ -43,35 +52,48 @@ public class FieldsIgnorer {
     }
 
     public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort, Collection<Class<?>> typesToSort, SortedFieldsTracker tracker) {
+        applyRootCollectionSorting(filteredJson, objectForTypeCheck, fieldMatchersToSort, pathsToSort, typesToSort, tracker, false);
+    }
+
+    /**
+     * @param keepMapEntryOrder see {@link #applySorting(JsonElement, Map, List, boolean, SortedFieldsTracker, boolean)}.
+     *        A root map has no field name to mark, so its entries are recognised from the object's own type.
+     */
+    public static void applyRootCollectionSorting(JsonElement filteredJson, Object objectForTypeCheck, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort, Collection<Class<?>> typesToSort, SortedFieldsTracker tracker, boolean keepMapEntryOrder) {
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
             // Sets and Maps are always sorted by their root representation (no meaningful order) — NOT tracked
-            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
+            boolean rootHoldsMapEntries = Map.class.isAssignableFrom(objectForTypeCheck.getClass());
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
+                    rootHoldsMapEntries, keepMapEntryOrder);
         } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
-                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, false, keepMapEntryOrder);
                 if (tracker != null) {
                     recordSortMatches(tracker, "", rootSortFields, fieldMatchersToSort);
                 }
             } else if (!typesToSort.isEmpty() && collectionElementMatchesTypesToSort((Collection<?>) objectForTypeCheck, typesToSort)) {
                 // Type-based sorting — NOT tracked (same as type-based ignoring)
-                sortJsonArray(filteredJson.getAsJsonArray(), emptyList(), fieldMatchersToSort);
+                sortJsonArray(filteredJson.getAsJsonArray(), emptyList(), fieldMatchersToSort, false, keepMapEntryOrder);
             }
         }
     }
 
     public static JsonElement findPaths(JsonElement preComputedJson, Object objectForTypeCheck, Set<String> pathsToFind, List<SortField<Matcher<String>>> fieldMatchersToSort, Map<String, List<SortField<String>>> pathsToSort) {
         JsonElement filteredJson = findPaths(preComputedJson, pathsToFind);
-        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
+        boolean rootIsMap = objectForTypeCheck != null && Map.class.isAssignableFrom(objectForTypeCheck.getClass());
+        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true, null, true, rootIsMap);
         if (objectForTypeCheck != null && (Set.class.isAssignableFrom(objectForTypeCheck.getClass()) || Map.class.isAssignableFrom(objectForTypeCheck.getClass()))) {
-            // Sets and Maps are always sorted by their root representation (no meaningful order)
-            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
+            // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
+            // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
+                    rootIsMap, true);
         } else if (objectForTypeCheck != null && Collection.class.isAssignableFrom(objectForTypeCheck.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
-                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, false, false);
             }
         }
         return filteredJson;
@@ -81,16 +103,19 @@ public class FieldsIgnorer {
         JsonElement jsonElement = gson.toJsonTree(object);
 
         JsonElement filteredJson = findPaths(jsonElement, pathsToFind);
-        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true);
+        boolean rootIsMap = object != null && Map.class.isAssignableFrom(object.getClass());
+        applySorting(filteredJson, pathsToSort, fieldMatchersToSort, true, null, true, rootIsMap);
         if (object != null && (Set.class.isAssignableFrom(object.getClass()) || Map.class.isAssignableFrom(object.getClass()))) {
-            // Sets and Maps are always sorted by their root representation (no meaningful order)
-            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort);
+            // Sets and Maps are always sorted by their root representation (no meaningful order). A root map
+            // has no field name, so its entries are recognised from the type, as applyRootCollectionSorting does.
+            sortJsonArray(filteredJson.getAsJsonArray(), pathsToSort.getOrDefault("", emptyList()), fieldMatchersToSort,
+                    rootIsMap, true);
             return filteredJson;
         } else if (object != null && Collection.class.isAssignableFrom(object.getClass())) {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
-                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort);
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, false, false);
             }
         }
         return filteredJson;
@@ -215,13 +240,12 @@ public class FieldsIgnorer {
                     if (JsonElementUtil.WILDCARD.equals(field)) {
                         return ignoreUnderEveryNamedChild(jo, pathToFind, pathSegments, changedAnywhere);
                     }
-                    // The field naming strategy puts the MARKER prefix on Set- and Map-typed field
-                    // names, so the child may sit under either name. Take the key as well as the
+                    // The field naming strategy prefixes Set-typed fields with MARKER and Map-typed fields
+                    // with MAP_MARKER, so the child may sit under any of three names. Take the key as well as the
                     // value: removing an emptied child by the bare name silently does nothing when
-                    // it was found under the prefixed one, leaving an empty husk whose prefix
+                    // it was found under a prefixed one, leaving an empty husk whose prefix
                     // removeSetMarker strips, so the file shows an empty collection where the field
-                    // should have gone. Doing the two probes here rather than in getChild keeps that
-                    // helper's signature, which three other callers use for the value alone.
+                    // should have gone.
                     // Prefers the bare name when an object somehow holds both. That is reachable —
                     // a subclass widening an inherited field to a Set or Map gets both names, since
                     // Gson's duplicate-name check runs after the naming strategy — and in that shape
@@ -229,8 +253,8 @@ public class FieldsIgnorer {
                     // both names. Not worth resolving here: such an object is written with two
                     // identical JSON keys once the prefix is stripped, which cannot be read back at
                     // all, so the shape is broken well before this line sees it.
-                    String childKey = jo.has(field) ? field : MARKER + field;
-                    JsonElement child = jo.get(childKey);
+                    String childKey = childKeyOf(jo, field);
+                    JsonElement child = childKey == null ? null : jo.get(childKey);
                     if (child == null) {
                         // Try descending through GraphAdapter envelope keys. Every envelope has
                         // to be visited: one graph can hold several objects carrying the same
@@ -394,16 +418,31 @@ public class FieldsIgnorer {
     }
 
     /**
-     * Returns the child of {@code jo} named {@code field}, tolerating the {@link #MARKER} prefix that
-     * the field naming strategy adds to {@code Set}- and {@code Map}-typed fields, or null if neither
-     * form is present. Package-private so the JSON path resolver can apply the same rule.
+     * Returns the key under which {@code field} is present, tolerating either marker prefix the field
+     * naming strategy adds, or null if no form is present. The bare name wins when more than one is
+     * present, which is the long-standing behaviour.
+     */
+    private static String childKeyOf(JsonObject jo, String field) {
+        if (jo.has(field)) {
+            return field;
+        }
+        if (jo.has(MARKER + field)) {
+            return MARKER + field;
+        }
+        if (jo.has(MAP_MARKER + field)) {
+            return MAP_MARKER + field;
+        }
+        return null;
+    }
+
+    /**
+     * Returns the child of {@code jo} named {@code field}, tolerating either marker prefix that the field
+     * naming strategy adds to {@code Set}-, {@code Map}- and type-selected fields, or null if no form is
+     * present. Package-private so the JSON path resolver can apply the same rule.
      */
     static JsonElement getChild(JsonObject jo, String field) {
-        JsonElement child = jo.get(field);
-        if (child == null) {
-            child = jo.get(MARKER + field);
-        }
-        return child;
+        String key = childKeyOf(jo, field);
+        return key == null ? null : jo.get(key);
     }
 
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile) {
@@ -411,15 +450,44 @@ public class FieldsIgnorer {
     }
 
     public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker) {
-        if (jsonElement == null || jsonElement.isJsonNull()) return;
-        Map<String, PathLevel> pathMap = pathsToSort.isEmpty() ? Collections.emptyMap() : getPathsMap(pathsToSort);
-        applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, "");
+        applySorting(jsonElement, pathsToSort, fieldMatchersToSort, sortFile, tracker, false);
     }
 
+    /**
+     * @param keepMapEntryOrder whether a complex-key map's {@code [key, value]} pair keeps its order
+     *        instead of being sorted like a collection. Pass the caller's strict-file-matching setting:
+     *        under strict matching the expected side is parsed and never sorted, so suppressing here
+     *        cannot disagree with it. Callers that serialise both sides themselves, such as
+     *        {@code sameBeanAs}, pass true unconditionally.
+     */
+    public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker, boolean keepMapEntryOrder) {
+        applySorting(jsonElement, pathsToSort, fieldMatchersToSort, sortFile, tracker, keepMapEntryOrder, false);
+    }
+
+    /**
+     * @param rootHoldsMapEntries whether {@code jsonElement} is itself a map's entry array, so its direct
+     *        elements are {@code [key, value]} pairs. A root map has no field name to carry the marker, so
+     *        only the caller knows. Getting this wrong reorders a root map's keys with its values: this
+     *        sort runs before {@code applyRootCollectionSorting}, so that method cannot make up for it.
+     */
+    public static void applySorting(JsonElement jsonElement, Map<String, List<SortField<String>>> pathsToSort, List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile, SortedFieldsTracker tracker, boolean keepMapEntryOrder, boolean rootHoldsMapEntries) {
+        if (jsonElement == null || jsonElement.isJsonNull()) return;
+        Map<String, PathLevel> pathMap = pathsToSort.isEmpty() ? Collections.emptyMap() : getPathsMap(pathsToSort);
+        applySortingInternal(jsonElement, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, "",
+                false, rootHoldsMapEntries, keepMapEntryOrder);
+    }
+
+    /**
+     * @param isMapEntry whether {@code jsonElement} is itself a complex-key map's {@code [key, value]}
+     *        pair, in which case its own element order must be preserved.
+     * @param holdsMapEntries whether {@code jsonElement} is a map's entry array, so its direct elements
+     *        are pairs.
+     */
     private static void applySortingInternal(JsonElement jsonElement, Map<String, PathLevel> pathMap,
             Map<String, List<SortField<String>>> pathsToSort,
             List<SortField<Matcher<String>>> fieldMatchersToSort, boolean sortFile,
-            SortedFieldsTracker tracker, String currentPath) {
+            SortedFieldsTracker tracker, String currentPath,
+            boolean isMapEntry, boolean holdsMapEntries, boolean keepMapEntryOrder) {
         if (jsonElement != null && !jsonElement.isJsonNull()) {
             if (jsonElement.isJsonObject()) {
                 JsonObject jsonObject = jsonElement.getAsJsonObject();
@@ -441,7 +509,10 @@ public class FieldsIgnorer {
                     FieldNamePair fieldNamePair = convertToKeyPair(actual.getKey());
                     if (isGraphAdapterKey(fieldNamePair.newKey)) {
                         // Transparent: descend with same pathMap, don't consume a level
-                        applySortingInternal(actualValue, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath);
+                        // false/false: both flags describe an array, and an envelope is only descended
+                        // into when its value is an object, so neither can apply to what is below it.
+                        applySortingInternal(actualValue, pathMap, pathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath,
+                                false, false, keepMapEntryOrder);
                         continue;
                     }
                     PathLevel pathLevel = pathMap.getOrDefault(fieldNamePair.newKey, PathLevel.EMPTY);
@@ -450,12 +521,14 @@ public class FieldsIgnorer {
                     Map<String, PathLevel> nextPathMap = nextLevel.isEmpty()
                             ? Collections.emptyMap() : getPathsMap(nextLevel);
                     String childPath = currentPath.isEmpty() ? fieldNamePair.newKey : currentPath + "." + fieldNamePair.newKey;
-                    applySortingInternal(actualValue, nextPathMap, nextLevel, fieldMatchersToSort, sortFile, tracker, childPath);
+                    applySortingInternal(actualValue, nextPathMap, nextLevel, fieldMatchersToSort, sortFile, tracker, childPath,
+                            false, fieldNamePair.holdsMapEntries(), keepMapEntryOrder);
                     if (actualValue.isJsonArray()) {
                         List<SortField<String>> matchingPathMatchers = anyPathMatch(fieldNamePair.newKey, pathMap, sortFile);
                         List<SortField<Matcher<String>>> matchingFieldMatchers = anyFieldMatcherMatches(fieldNamePair.newKey, fieldMatchersToSort, sortFile);
                         if (fieldNamePair.shouldSortDueToType() || !matchingPathMatchers.isEmpty() || !matchingFieldMatchers.isEmpty()) {
-                            sortJsonArray(actualValue.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
+                            sortJsonArray(actualValue.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers,
+                                    fieldNamePair.holdsMapEntries(), keepMapEntryOrder);
                             if (tracker != null) {
                                 recordSortMatches(tracker, childPath, matchingPathMatchers, matchingFieldMatchers);
                             }
@@ -487,14 +560,17 @@ public class FieldsIgnorer {
                     if (current.isJsonNull() || current.isJsonPrimitive()) {
                         continue;
                     }
-                    applySortingInternal(current, innerPathMap, innerPathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath);
+                    applySortingInternal(current, innerPathMap, innerPathsToSort, fieldMatchersToSort, sortFile, tracker, currentPath,
+                            holdsMapEntries, false, keepMapEntryOrder);
                 }
                 // Sort the array itself last (root), so the sort key reflects the
                 // already-sorted state of nested elements.
                 List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
                 List<SortField<Matcher<String>>> rootFieldMatchers = anyFieldMatcherMatches("", fieldMatchersToSort, sortFile);
-                if (!rootSortFields.isEmpty() || !rootFieldMatchers.isEmpty()) {
-                    sortJsonArray(jsonElement.getAsJsonArray(), rootSortFields, rootFieldMatchers);
+                if ((!rootSortFields.isEmpty() || !rootFieldMatchers.isEmpty())
+                        && !(isMapEntry && keepMapEntryOrder)) {
+                    sortJsonArray(jsonElement.getAsJsonArray(), rootSortFields, rootFieldMatchers,
+                            holdsMapEntries, keepMapEntryOrder);
                     if (tracker != null) {
                         recordSortMatches(tracker, currentPath, rootSortFields, rootFieldMatchers);
                     }
@@ -646,7 +722,20 @@ public class FieldsIgnorer {
         return emptyList();
     }
 
-    private static void sortJsonArray(JsonArray input, List<SortField<String>> matchingPathMatchers, List<SortField<Matcher<String>>> matchingFieldMatchers) {
+    /**
+     * @param elementsAreMapEntries whether {@code input}'s direct elements are a complex-key map's
+     *        {@code [key, value]} pairs. A pair is two positions, not a collection: reordering it swaps
+     *        the key with the value, losing which half was which. Its halves are still descended into, so
+     *        a list-valued half is sorted as before.
+     * @param keepMapEntryOrder whether that suppression is active. The caller is responsible for passing
+     *        it only when both sides of its comparison are treated alike: {@code sameBeanAs} serialises
+     *        both itself and passes true unconditionally, while a file matcher passes its strict-matching
+     *        setting, since only under strict matching is the approved content left unsorted. Suppressing
+     *        on one side while the other still reorders would fail with no way to regenerate out of it.
+     */
+    private static void sortJsonArray(JsonArray input, List<SortField<String>> matchingPathMatchers,
+                                      List<SortField<Matcher<String>>> matchingFieldMatchers,
+                                      boolean elementsAreMapEntries, boolean keepMapEntryOrder) {
         List<SortElement> toSort = new ArrayList<>(input.size());
         Iterator<JsonElement> iter = input.iterator();
         while (iter.hasNext()) {
@@ -658,7 +747,18 @@ public class FieldsIgnorer {
             // Elements that are objects (beans) are NOT sorted here; only their fields
             // that were explicitly configured via sortField will be sorted via applySorting.
             if (actual.isJsonArray()) {
-                sortJsonArray(actual.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers);
+                if (elementsAreMapEntries && keepMapEntryOrder) {
+                    // Descend into the key and the value, but leave the pair's own order alone.
+                    for (JsonElement half : actual.getAsJsonArray()) {
+                        if (half.isJsonArray()) {
+                            sortJsonArray(half.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers,
+                                    false, keepMapEntryOrder);
+                        }
+                    }
+                } else {
+                    sortJsonArray(actual.getAsJsonArray(), matchingPathMatchers, matchingFieldMatchers,
+                            false, keepMapEntryOrder);
+                }
             }
             toSort.add(new SortElement(getFilteredStringForSorting(actual, matchingPathMatchers, matchingFieldMatchers).toString(), actual));
             iter.remove();
@@ -821,6 +921,16 @@ public class FieldsIgnorer {
             return newKey;
         }
 
+        /**
+         * True when the field is a {@code Map}, so an element of its array that is itself an array is a
+         * {@code [key, value]} entry rather than a nested collection. A primitive-, {@code String}- or
+         * enum-keyed map renders one object per entry instead, which no caller mistakes for a pair — the
+         * whole map takes one branch or the other, so its elements are never mixed.
+         */
+        public boolean holdsMapEntries() {
+            return originalKey.startsWith(MAP_MARKER);
+        }
+
         public boolean shouldSortDueToType() {
             return !originalKey.equals(newKey);
         }
@@ -873,7 +983,12 @@ public class FieldsIgnorer {
 
     private static String getOriginalFieldName(String input) {
         String result = input;
-        if (result.startsWith(MARKER)) {
+        // MAP_MARKER first: it is not a prefix of MARKER, but checking the longer sentinel first keeps
+        // this correct if either string ever changes. Stripping matters beyond cosmetics -- the result
+        // feeds path matching and every tracker string, neither of which removeSetMarker ever sees.
+        if (result.startsWith(MAP_MARKER)) {
+            result = result.substring(MAP_MARKER.length());
+        } else if (result.startsWith(MARKER)) {
             result = result.substring(MARKER.length());
         }
         return result;
@@ -888,6 +1003,7 @@ public class FieldsIgnorer {
             String lastSegment = getLastSegmentOf(pathToIgnore);
             boolean removedElement = jo.remove(lastSegment) != null;
             removedElement |= jo.remove(MARKER + lastSegment) != null;
+            removedElement |= jo.remove(MAP_MARKER + lastSegment) != null;
             if (!removedElement) {
                 // Try descending through GraphAdapter envelope keys
                 for (Map.Entry<String, JsonElement> entry : jo.entrySet()) {
@@ -895,6 +1011,7 @@ public class FieldsIgnorer {
                         JsonObject inner = entry.getValue().getAsJsonObject();
                         boolean innerRemoved = inner.remove(lastSegment) != null;
                         innerRemoved |= inner.remove(MARKER + lastSegment) != null;
+                        innerRemoved |= inner.remove(MAP_MARKER + lastSegment) != null;
                         removedElement |= innerRemoved;
                     }
                 }

@@ -3,7 +3,15 @@ package com.github.karsaig.approvalcrest.matcher.machinereadable;
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 import com.github.karsaig.approvalcrest.matcher.JsonMatcher;
 import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives;
+import com.github.karsaig.approvalcrest.FieldsIgnorer;
+import com.github.karsaig.approvalcrest.testdata.ChildBean;
 import com.google.gson.JsonObject;
+
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import com.google.gson.JsonParser;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
@@ -15,6 +23,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
@@ -374,5 +383,44 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
             assertFalse(expectedValue.contains("\n"), "expected JSON value in machine-readable output must be compact (no newlines)");
             assertFalse(actualValue.contains("\n"), "actual JSON value in machine-readable output must be compact (no newlines)");
         });
+    }
+
+    @Test
+    public void shouldNotLeakEitherSortingMarkerIntoMachineReadableOutput() {
+        // The sorting markers are stripped from the written JSON by removeSetMarker, which never sees the
+        // machine-readable message: tracker paths are built from the field name as resolved, so a missed
+        // strip in getOriginalFieldName would surface here and nowhere else.
+        Map<ChildBean, String> mapField = new LinkedHashMap<>();
+        mapField.put(child().childString("k").build(), "v");
+        Set<String> setField = new LinkedHashSet<>(Arrays.asList("b", "a"));
+        MarkedFields actual = new MarkedFields(mapField, setField);
+
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<MarkedFields> underTest =
+                    MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", "{}");
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThat(actual, underTest));
+
+            assertAll(
+                    () -> assertFalse(error.getMessage().contains(FieldsIgnorer.MARKER),
+                            "MARKER leaked into machine-readable output"),
+                    () -> assertFalse(error.getMessage().contains(FieldsIgnorer.MAP_MARKER),
+                            "MAP_MARKER leaked into machine-readable output"));
+        });
+    }
+
+    static class MarkedFields {
+        final Map<ChildBean, String> mapField;
+        final Set<String> setField;
+
+        MarkedFields(Map<ChildBean, String> mapField,
+                     Set<String> setField) {
+            this.mapField = mapField;
+            this.setField = setField;
+        }
     }
 }

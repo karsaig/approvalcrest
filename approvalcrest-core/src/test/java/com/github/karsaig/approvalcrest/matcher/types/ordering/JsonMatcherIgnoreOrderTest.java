@@ -809,6 +809,15 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"hashMap\": null,\n" +
                 "        \"hashSet\": null,\n" +
                 "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"key1\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
                 "        \"map\": [\n" +
                 "          [\n" +
                 "            {\n" +
@@ -873,7 +882,9 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value1\"\n" +
-                "      },\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    [\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -881,10 +892,8 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"key1\"\n" +
-                "      }\n" +
-                "    ],\n" +
-                "    [\n" +
+                "        \"string\": \"key2\"\n" +
+                "      },\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -954,7 +963,9 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value2\"\n" +
-                "      },\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    [\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -962,10 +973,8 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"key2\"\n" +
-                "      }\n" +
-                "    ],\n" +
-                "    [\n" +
+                "        \"string\": \"key3\"\n" +
+                "      },\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -1035,15 +1044,6 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value3\"\n" +
-                "      },\n" +
-                "      {\n" +
-                "        \"array\": null,\n" +
-                "        \"hashMap\": null,\n" +
-                "        \"hashSet\": null,\n" +
-                "        \"integer\": 0,\n" +
-                "        \"map\": null,\n" +
-                "        \"set\": null,\n" +
-                "        \"string\": \"key3\"\n" +
                 "      }\n" +
                 "    ]\n" +
                 "  ],\n" +
@@ -1100,6 +1100,15 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"hashMap\": null,\n" +
                 "        \"hashSet\": null,\n" +
                 "        \"integer\": 0,\n" +
+                "        \"map\": null,\n" +
+                "        \"set\": null,\n" +
+                "        \"string\": \"key1\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"array\": null,\n" +
+                "        \"hashMap\": null,\n" +
+                "        \"hashSet\": null,\n" +
+                "        \"integer\": 0,\n" +
                 "        \"map\": [\n" +
                 "          [\n" +
                 "            {\n" +
@@ -1164,7 +1173,9 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value1\"\n" +
-                "      },\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    [\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -1172,10 +1183,8 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"key1\"\n" +
-                "      }\n" +
-                "    ],\n" +
-                "    [\n" +
+                "        \"string\": \"key2\"\n" +
+                "      },\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -1245,7 +1254,9 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value2\"\n" +
-                "      },\n" +
+                "      }\n" +
+                "    ],\n" +
+                "    [\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -1253,10 +1264,8 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"key2\"\n" +
-                "      }\n" +
-                "    ],\n" +
-                "    [\n" +
+                "        \"string\": \"key3\"\n" +
+                "      },\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
                 "        \"hashMap\": null,\n" +
@@ -1326,15 +1335,6 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        ],\n" +
                 "        \"set\": null,\n" +
                 "        \"string\": \"value3\"\n" +
-                "      },\n" +
-                "      {\n" +
-                "        \"array\": null,\n" +
-                "        \"hashMap\": null,\n" +
-                "        \"hashSet\": null,\n" +
-                "        \"integer\": 0,\n" +
-                "        \"map\": null,\n" +
-                "        \"set\": null,\n" +
-                "        \"string\": \"key3\"\n" +
                 "      }\n" +
                 "    ]\n" +
                 "  ],\n" +
@@ -1387,16 +1387,15 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
     }
 
     // -----------------------------------------------------------------------
-    // Known limitation: a complex-key map and its transpose are indistinguishable
+    // A complex-key map keeps its key before its value
     //
-    // A map with a bean key serialises each entry as a [key, value] array, and sortJsonArray recurses
-    // into that array like any other, so the pair is reordered by JSON. The key/value distinction is
-    // lost with it: Map{a -> z} and Map{z -> a} produce the same bytes, and the approved file written
-    // for one is matched by the other. The file side is never re-sorted, so nothing cancels it out.
+    // A map with a bean key serialises each entry as a [key, value] array. sortJsonArray used to recurse
+    // into that array like any other and reorder it by JSON, which lost the key/value distinction:
+    // Map{a -> z} and Map{z -> a} produced the same bytes, so an approved file written for one matched
+    // the other. The pair is now left in place while both halves are still descended into.
     //
-    // Pre-existing and not fixed here: stopping the sort at a pair array changes the written form of
-    // every approved file holding such a map. These two tests are the pin -- when that is fixed, they
-    // are what should change, deliberately.
+    // These two tests are the pin from opposite directions: the first would pass even before the fix,
+    // because "a" < "z" put the key first by luck; the second is the one that could not.
     // -----------------------------------------------------------------------
 
     private static Bean singleEntryMap(String key, String value) {
@@ -1406,7 +1405,7 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
     }
 
     @Test
-    public void complexKeyMapRendersThePairInSortedOrder() {
+    public void complexKeyMapKeepsTheKeyBeforeTheValue() {
         String expected = "{\n" +
                 "  \"array\": null,\n" +
                 "  \"hashMap\": null,\n" +
@@ -1442,8 +1441,10 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
     }
 
     @Test
-    public void transposedComplexKeyMapRendersIdentically() {
-        // Same bytes as above, from a map whose key and value are swapped.
+    public void transposedComplexKeyMapRendersTheOtherWayRound() {
+        // The key is "z" and the value is "a", so this renders [z, a] -- the reverse of the test above
+        // and the whole point. Before the fix both produced [a, z], so an approved file for one matched
+        // the other.
         String expected = "{\n" +
                 "  \"array\": null,\n" +
                 "  \"hashMap\": null,\n" +
@@ -1458,7 +1459,7 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"a\"\n" +
+                "        \"string\": \"z\"\n" +
                 "      },\n" +
                 "      {\n" +
                 "        \"array\": null,\n" +
@@ -1467,7 +1468,7 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
                 "        \"integer\": 0,\n" +
                 "        \"map\": null,\n" +
                 "        \"set\": null,\n" +
-                "        \"string\": \"z\"\n" +
+                "        \"string\": \"a\"\n" +
                 "      }\n" +
                 "    ]\n" +
                 "  ],\n" +

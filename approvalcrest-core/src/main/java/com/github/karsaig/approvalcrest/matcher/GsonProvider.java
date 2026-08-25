@@ -9,6 +9,7 @@
  */
 package com.github.karsaig.approvalcrest.matcher;
 
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MAP_MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static com.google.common.collect.Sets.newTreeSet;
@@ -189,7 +190,12 @@ class GsonProvider {
 
     private static void markSortedFields(GsonBuilder gsonBuilder, List<Class<?>> typesToSort) {
         gsonBuilder.setFieldNamingStrategy(f -> {
-            if (Set.class.isAssignableFrom(f.getType()) || Map.class.isAssignableFrom(f.getType())) {
+            // A Map gets its own marker: both queue the field for sorting, but only a Map's array holds
+            // [key, value] entries, and the sorter must not reorder a key with its value.
+            if (Map.class.isAssignableFrom(f.getType())) {
+                return MAP_MARKER + f.getName();
+            }
+            if (Set.class.isAssignableFrom(f.getType())) {
                 return MARKER + f.getName();
             }
             if (!typesToSort.isEmpty()) {
@@ -318,6 +324,12 @@ class GsonProvider {
         for (String jsonRepresentation : sortedMapKeySet) {
             List<Object> mapKeys = objects.get(jsonRepresentation);
             for (Object object : mapKeys) {
+                // A null key has no class to inspect, and it belongs in this branch rather than the pair
+                // one: here it renders as the member name "null", which a JSON string input can express and
+                // a path can address, whereas a pair would put it at a position that path navigation skips.
+                if (object == null) {
+                    continue;
+                }
                 if (!(isPrimitiveOrWrapper(object.getClass()) || object.getClass() == String.class || object.getClass().isEnum())) {
                     return false;
                 }

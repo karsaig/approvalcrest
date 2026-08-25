@@ -15,6 +15,7 @@ import com.github.karsaig.approvalcrest.util.PreBuilt;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MAP_MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
 import static com.github.karsaig.approvalcrest.testdata.Bean.Builder.bean;
 import static com.google.common.collect.Maps.newHashMap;
@@ -329,10 +330,16 @@ public class BeanMatcherAssertTest extends AbstractTest {
                 () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
                         comparisonDescriptionHandler()));
 
+        // Both sentinels: contains(MARKER) cannot catch a MAP_MARKER leak, since neither is a substring
+        // of the other.
         Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MARKER),
                 "expected side should not contain MARKER sentinel");
         Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MARKER),
                 "actual side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MAP_MARKER),
+                "expected side should not contain MAP_MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MAP_MARKER),
+                "actual side should not contain MAP_MARKER sentinel");
     }
 
     @Test
@@ -348,9 +355,15 @@ public class BeanMatcherAssertTest extends AbstractTest {
                 () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
                         comparisonDescriptionHandler()));
 
+        // Both sentinels: contains(MARKER) cannot catch a MAP_MARKER leak, since neither is a substring
+        // of the other.
         Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MARKER),
                 "expected side should not contain MARKER sentinel");
         Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MARKER),
                 "actual side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MAP_MARKER),
+                "expected side should not contain MAP_MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MAP_MARKER),
+                "actual side should not contain MAP_MARKER sentinel");
     }
 }

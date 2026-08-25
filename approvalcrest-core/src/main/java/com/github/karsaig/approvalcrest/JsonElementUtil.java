@@ -118,8 +118,9 @@ public class JsonElementUtil {
         if (isWildcardSegment(segments, segIdx)) {
             return fanOutOverNamedChildren(path, segments, segIdx, obj);
         }
-        // getChild tolerates the MARKER prefix the field naming strategy adds to Set- and Map-typed
-        // fields; without it no path could cross such a field on the JSON fallback.
+        // getChild tolerates either prefix the field naming strategy adds: MARKER for a Set-typed field,
+        // MAP_MARKER for a Map-typed one. Without that no path could cross such a field on the JSON
+        // fallback.
         JsonElement child = FieldsIgnorer.getChild(obj, segment);
         if (child == null) {
             // Try transparent descent through graph-adapter envelope keys
