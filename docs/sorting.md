@@ -184,3 +184,56 @@ assertThat(actual, sameJsonAsApproved()
 
 As elsewhere, `*` is a wildcard only in a non-final segment. `sortField("ordersByRef.*")` addresses a key
 literally named `*`; to sort the map itself, name the map field.
+
+## A complex-key map and its transpose are indistinguishable
+
+A map whose keys are not strings, primitives or enums is written as an array of `[key, value]` pairs. That
+pair is an array, and the sort recurses into arrays, so the pair itself is reordered by its JSON — which
+discards which half was the key:
+
+```java
+Map<Bean, Bean> forward    = { beanNamed("a") -> beanNamed("z") };
+Map<Bean, Bean> transposed  = { beanNamed("z") -> beanNamed("a") };
+// both write the same bytes, so an approved file for one is matched by the other
+```
+
+The comparison cannot tell them apart, and the approved file cannot record the difference. Order within a
+pair follows whichever side's JSON sorts first, which is not always the key: a value carrying a nested map
+sorts ahead of a key that does not, because `"map": [` precedes `"map": null`.
+
+If the direction matters to your assertion, do not rely on the file to capture it — assert on the key or the
+value explicitly with `.with(...)`, or use a `String` key, which is written as `{"key": value}` and keeps its
+position.
+
+Not fixed, because excluding pair arrays from the sort changes the written form of every approved file that
+holds such a map.
+
+## A map key that looks like a circular-reference marker
+
+An object holding a circular reference is written wrapped under a generated key — `{"0x1": {…}}` — and that
+key is skipped during path navigation, so a path reads the same whether or not the type has cycles. The test
+for "is this a wrapper key" is `0x` followed by lowercase hex digits, which a map key of your own can spell.
+
+Nothing in the serialised text separates the two. A `Map<String, ?>` entry is written as a single-key object,
+and so is a wrapper. The consequence is that a path which omits such a key still reaches through it, where
+for any other key it would match nothing:
+
+```java
+// map has one entry, keyed "0x1"
+.ignoring("map.0x1.leaf")   // removes leaf, as it should
+.ignoring("map.leaf")       // ALSO removes leaf -- the key is skipped as if it were a wrapper
+.ignoring("map.k1.leaf")    // for an ordinary key "k1", omitting it matches nothing
+```
+
+Both sides of a comparison are filtered the same way, so this does not produce a spurious failure; it
+silently removes more from the comparison than you asked, which weakens the assertion rather than breaking
+it. The same applies to `sortField(...)` and `ignoringElementsWhere(...)`, which navigate paths the same way.
+
+Affected keys are exactly those matching `0x` plus lowercase hex: `0x1`, `0xff`, `0xdeadbeef`. A key with an
+uppercase digit (`0xFF`), a prefix, or a suffix is unaffected. If you hold such keys and need paths under
+them to be exact, rename the key for the comparison or address the entry by a path that does not cross it.
+
+This is not fixable without changing how wrappers are written, which would invalidate every approved file
+containing a circular reference, including hand-written ones. The one discriminator that looked usable — that
+a wrapper is never an array element — was measured and is false: a collection of objects that each carry a
+cycle writes a wrapper at every array position.

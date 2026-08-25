@@ -257,6 +257,36 @@ assertThat(actual, sameBeanAs(expected)
     .ignoring(Instant.class));
 ```
 
+## A map key that looks like a circular-reference marker
+
+An object holding a circular reference is written wrapped under a generated key — `{"0x1": {…}}` — and that
+key is skipped during path navigation, so a path reads the same whether or not the type has cycles. The test
+for "is this a wrapper key" is `0x` followed by lowercase hex digits, which a map key of your own can spell.
+
+Nothing in the serialised text separates the two. A `Map<String, ?>` entry is written as a single-key object,
+and so is a wrapper. The consequence is that a path which omits such a key still reaches through it, where
+for any other key it would match nothing:
+
+```java
+// map has one entry, keyed "0x1"
+.ignoring("map.0x1.leaf")   // removes leaf, as it should
+.ignoring("map.leaf")       // ALSO removes leaf -- the key is skipped as if it were a wrapper
+.ignoring("map.k1.leaf")    // for an ordinary key "k1", omitting it matches nothing
+```
+
+Both sides of a comparison are filtered the same way, so this does not produce a spurious failure; it
+silently removes more from the comparison than you asked, which weakens the assertion rather than breaking
+it. The same applies to `sortField(...)` and `ignoringElementsWhere(...)`, which navigate paths the same way.
+
+Affected keys are exactly those matching `0x` plus lowercase hex: `0x1`, `0xff`, `0xdeadbeef`. A key with an
+uppercase digit (`0xFF`), a prefix, or a suffix is unaffected. If you hold such keys and need paths under
+them to be exact, rename the key for the comparison or address the entry by a path that does not cross it.
+
+This is not fixable without changing how wrappers are written, which would invalidate every approved file
+containing a circular reference, including hand-written ones. The one discriminator that looked usable — that
+a wrapper is never an array element — was measured and is false: a collection of objects that each carry a
+cycle writes a wrapper at every array position.
+
 ## Related
 
 - [dynamic-values](dynamic-values.md) — choosing between ignore, alias, and custom matching
