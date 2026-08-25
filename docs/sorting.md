@@ -199,17 +199,21 @@ first:
 
 The two positions inside a pair are never swapped, so the file records which half was the key. Everything
 else is still sorted: entries are ordered by their content, and a collection-valued half is sorted like any
-other collection.
+other collection. Before 1.5.1 the pair was ordered by content too, so `{a: z}` and `{z: a}` wrote the same
+bytes.
 
-This holds for a map held in a field — including a field of another map's value — and for a map at the root.
-It does not hold for a map reached as another map's value, as a collection element, or through an
-`Object`-declared field: those pairs are ordered by content like any array, so the key is not necessarily
-first.
+This holds for a map held in a field — including a field *on* another map's value — and for a map at the
+root. It does not hold for a map that *is* another map's value, or one reached as a collection element or
+through an `Object`-declared field. Nothing sorts those pairs unless a `sortField` reaches that level, so most of the
+time they come out key first anyway — but add one that does reach them and the key and value can swap.
 
-It also requires strict file matching, which is on by default. With `-DfileMatcherStrictFileMatching=false`
-pairs are ordered by content on both sides, and a map then compares equal to the same map with its keys and
-values swapped. Note that an unrecognised value for that property reads as `false`, so a typo such as
-`-DfMStrictMatching=ture` turns strict matching off.
+For a **file matcher** this also requires strict file matching, which is on by default. With
+`-DfileMatcherStrictFileMatching=false` pairs are ordered by content on both sides, and a map then compares
+equal to the same map with its keys and values swapped. Because the written form depends on that setting,
+switching it either way means regenerating any approved file holding such a map. Note also that an
+unrecognised value for the property reads as `false`, so a typo such as `-DfMStrictMatching=ture` turns
+strict matching off. `sameBeanAs` serialises both sides itself, so the key stays first there whatever the
+setting.
 
 A raw JSON string input keeps its pairs exactly as written, unless a `sortField` names the field holding
 them, in which case they are ordered by content.

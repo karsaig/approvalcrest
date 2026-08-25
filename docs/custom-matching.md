@@ -145,7 +145,7 @@ assertThat(actual, sameJsonAsApproved()
     .ignoring("ordersByRef.*.generatedId"));
 ```
 
-Three things to know:
+Things to know:
 
 - **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
   a key literally named `*`, which a JSON document or a `Map<String,?>` may genuinely have. So
@@ -311,7 +311,7 @@ assertThat(actual, sameBeanAs(expected)
 
 A path left behind by a rename therefore asserts nothing, so long as some reference along it is null. Read a passing `nullValue()` assertion over a nested path as evidence about the reference, not about the leaf.
 
-Assert on the reference itself, so the assertion says what you mean:
+The way round it is to assert on the reference itself, so the assertion says what you mean:
 
 ```java
 assertThat(actual, sameBeanAs(expected)
