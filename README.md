@@ -39,7 +39,7 @@ When a test fails, enable machine-readable output so that AI agents and CI tooli
 // Fluent API:
 assertThat(actual, sameJsonAsApproved().withMachineReadableOutput());
 ```
-```
+```bash
 # Or via system property (short alias fmAI also works):
 mvn test -DfileMatcherMachineReadable=true
 ```
@@ -48,7 +48,7 @@ In this mode, failure messages are structured JSON containing the expected/actua
 
 ## Version support
 
-| Dimension | Supported | Constantly tested on |
+| Dimension | Supported | Tested on |
 |---|---|---|
 | JDK | 8+ | 8, 11, 17, 21, 25 |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
@@ -119,6 +119,8 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
 | [Dynamic values](docs/dynamic-values.md) | Handling UUIDs, timestamps, and other run-to-run changes |
 | [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
+| [Shared approvals](docs/shared-approvals.md) | Pointer files, deduplicating identical approved files, the `dedup` and `reinstate` goals |
+| [System properties](docs/system-properties.md) | Every property and its short alias |
 | [Field access modes](docs/field-access-modes.md) | Safe, force, and fallback modes — JDK module handling |
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
 | [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |

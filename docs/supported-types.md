@@ -36,7 +36,7 @@ All serialised as ISO-8601 UTC strings.
 
 A `Set` has no stable iteration order, so its elements are sorted by their JSON representation before being written. Sorting only orders them — every element is kept, including elements that are not `equals()` to each other but happen to serialise identically. That case arises with classes that do not override `equals()`, where two instances holding the same values are distinct set members, and with classes whose distinguishing field is not serialised (a `transient` field, for example).
 
-Before 1.4.3 those elements were collapsed into a single entry, so a set that lost or gained such an element serialised identically either way and the difference could not fail a test. If you have a large approved-file corpus to re-approve, `-DapprovalcrestLegacySetCollapse=true` restores the old behaviour temporarily — see [system-properties](system-properties.md).
+Before 1.5.0 those elements were collapsed into a single entry, so a set that lost or gained such an element serialised identically either way and the difference could not fail a test. If you have a large approved-file corpus to re-approve, `-DapprovalcrestLegacySetCollapse=true` restores the old behaviour temporarily — see [system-properties](system-properties.md).
 
 ## Optional
 

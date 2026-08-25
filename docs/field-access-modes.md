@@ -286,7 +286,7 @@ Safe mode gracefully degrades: `Class.forName("sun.misc.Unsafe")` throws `ClassN
 
 ### Do circular references still work in all modes?
 
-Yes. Circular reference detection (`GraphAdapterBuilder`) operates at the type-adapter level and works identically in all modes. The circular reference marker format (`"0x1"`, `"0x2"`, etc.) is the same regardless of the field access mode.
+Yes. Circular reference detection works identically in all modes. The circular reference marker format (`"0x1"`, `"0x2"`, etc.) is the same regardless of the field access mode.
 
 ### Can I mix modes in the same JVM?
 
