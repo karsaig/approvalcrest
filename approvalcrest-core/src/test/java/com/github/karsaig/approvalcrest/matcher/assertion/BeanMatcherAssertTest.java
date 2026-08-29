@@ -322,6 +322,37 @@ public class BeanMatcherAssertTest extends AbstractTest {
     }
 
     @Test
+    void assertThatShouldNotIncludeAnyLinkOfAMarkerChainInDiagnostics() {
+        // Bean's map field stops the chain at one sentinel, so the guard below cannot catch a strip that
+        // stops after the first link. This shape carries two.
+        NestedMapHolder expected = new NestedMapHolder(1);
+        NestedMapHolder actual = new NestedMapHolder(2);
+
+        AssertionFailedError thrown = Assertions.assertThrows(AssertionFailedError.class,
+                () -> underTest.assertThat(null, actual, matcherFactory.beanMatcher(expected),
+                        comparisonDescriptionHandler()));
+
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MARKER),
+                "expected side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MARKER),
+                "actual side should not contain MARKER sentinel");
+        Assertions.assertFalse(thrown.getExpected().getStringRepresentation().contains(MAP_MARKER),
+                "expected side should not contain MAP_MARKER sentinel");
+        Assertions.assertFalse(thrown.getActual().getStringRepresentation().contains(MAP_MARKER),
+                "actual side should not contain MAP_MARKER sentinel");
+    }
+
+    static class NestedMapHolder {
+        Map<Bean, Map<Bean, Bean>> nested = new HashMap<>();
+
+        NestedMapHolder(int value) {
+            Map<Bean, Bean> inner = new HashMap<>();
+            inner.put(bean().integer(value).build(), bean().integer(value + 10).build());
+            nested.put(bean().integer(value + 20).build(), inner);
+        }
+    }
+
+    @Test
     void assertThatShouldNotIncludeMarkerInDiagnosticsForSets() {
         Bean expected = bean().set(newHashSet(bean().integer(1).build())).build();
         Bean actual = bean().set(newHashSet(bean().integer(2).build())).build();

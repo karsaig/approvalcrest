@@ -154,7 +154,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 matches = appendMismatchDescriptionWithNote(mismatchDescription, expectedJson, "null", "actual was null",
                         ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
             } else {
-                String actualJson = filterJson(gson, actualJsonElement, true, false, false, actual instanceof Map, ignoredTracker, aliasTracker, sortedTracker);
+                String actualJson = filterJson(gson, actualJsonElement, true, false, false, runtimeMarkerChain(actual), ignoredTracker, aliasTracker, sortedTracker);
 
                 matches = assertJsonEquals(expectedJson, actualJson, mismatchDescription, e -> getAssertMessage(fileStoreMatcherUtils, e),
                         ignoredTracker, aliasTracker, sortedTracker, untrackedNote);
@@ -209,7 +209,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     }
 
     private String filterJson(Gson gson, JsonElement jsonElement, boolean sortFile, boolean skipIgnores, boolean skipCustomSortings,
-                              boolean rootIsMap,
+                              String rootChain,
                               IgnoredFieldsTracker ignoredTracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
         Set<String> set = skipIgnores ? emptySet() : new HashSet<>(matcherConfiguration.getPathsToIgnore());
 
@@ -246,7 +246,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         // explicitSortFieldOnAMapKeepsTheKeyFirst and fieldMatcherSortOnAMapKeepsTheKeyFirst are the
         // tests that notice.
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker,
-                fileMatcherConfig.isStrictFileMatching(), rootIsMap);
+                fileMatcherConfig.isStrictFileMatching(), rootChain);
 
         return removeSetMarker(gson.toJson(filteredJson));
     }
@@ -265,7 +265,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     private String serializeToJson(Object toApprove, Gson gson) {
         JsonElement actualJsonElement = getAsJsonElement(gson, toApprove);
-        return filterJson(gson, actualJsonElement, true, false, false, toApprove instanceof Map, null, null, null);
+        return filterJson(gson, actualJsonElement, true, false, false, runtimeMarkerChain(toApprove), null, null, null);
     }
 
     private String filterExpectedJson(Gson gson, boolean sortFile,
@@ -279,7 +279,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
                 fileMatcherConfig.isStrictFileMatching(),
                 // The approved content is parsed text with no object behind it, so nothing here can know a
                 // root array was a map. Inert under strict matching, where this side is never sorted.
-                false,
+                "",
                 ignoredTracker, aliasTracker, sortedTracker);
     }
 

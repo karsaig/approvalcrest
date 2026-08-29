@@ -202,10 +202,33 @@ else is still sorted: entries are ordered by their content, and a collection-val
 other collection. Before 1.5.1 the pair was ordered by content too, so `{a: z}` and `{z: a}` wrote the same
 bytes.
 
-This holds for a map held in a field — including a field *on* another map's value — and for a map at the
-root. It does not hold for a map that *is* another map's value, or one reached as a collection element or
-through an `Object`-declared field. Nothing sorts those pairs unless a `sortField` reaches that level, so most of the
-time they come out key first anyway — but add one that does reach them and the key and value can swap.
+This holds wherever the declared type of the field holding the map says how deep the nesting goes:
+`Map<K, Map<K2, V>>` at any depth, a map inside a `Set`, `List` or array, and any mix of the two, such as
+`Set<Map<K, Set<Map<K2, V>>>>`. A map at the root is covered too, and there the *object itself* is inspected
+rather than a declared type, so a root `Map<K, Object>` whose values are all maps is protected where the same
+field would not be.
+
+It does not hold where nothing describes the level:
+
+- a value the declared type leaves open — `Map<K, Object>`, a raw `Map<K, Map>`, a type variable;
+- a map used as a **key** rather than a value, since the pair's key half is not described;
+- a map reached through a field that carries no marker at all, such as a plain `List<Map<K, V>>` or an
+  `Object`-declared field;
+- a `Map` subtype that declares its own type parameters, such as `class MyMap<V> extends HashMap<String, V>`,
+  where which argument is the value cannot be read off the declaration.
+
+In each of those the pairs behave as they did before 1.5.1: nothing sorts them unless a `sortField` reaches
+that level, so most of the time they still come out key first — but add one that does reach them and the key
+and value can swap. Nesting deeper than eight container levels is left undescribed below the eighth for the
+same reason.
+
+Two more things follow from the declared type being what decides. A `Map` whose keys are all strings,
+primitives or enums is written as one object per entry rather than as pairs, so nothing there needs
+protecting, and a level claimed for such a map costs nothing. And a custom type adapter registered for a
+`Map` type can render it as anything: where what it writes is an array of two-element arrays, that is
+indistinguishable from an entry array and is treated as one, so those inner arrays keep their order rather
+than being sorted. A `Map`-typed *field* has always been taken at its word this way; what is new is that the
+levels below it are too.
 
 For a **file matcher** this also requires strict file matching, which is on by default. With
 `-DfileMatcherStrictFileMatching=false` pairs are ordered by content on both sides, and a map then compares

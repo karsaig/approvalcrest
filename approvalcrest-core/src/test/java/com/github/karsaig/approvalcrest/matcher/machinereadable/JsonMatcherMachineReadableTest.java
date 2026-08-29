@@ -393,7 +393,9 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         Map<ChildBean, String> mapField = new LinkedHashMap<>();
         mapField.put(child().childString("k").build(), "v");
         Set<String> setField = new LinkedHashSet<>(Arrays.asList("b", "a"));
-        MarkedFields actual = new MarkedFields(mapField, setField);
+        Map<ChildBean, Map<ChildBean, String>> nestedMapField = new LinkedHashMap<>();
+        nestedMapField.put(child().childString("outer").build(), mapField);
+        MarkedFields actual = new MarkedFields(mapField, setField, nestedMapField);
 
         inMemoryUnixFs(imfsi -> {
             JsonMatcher<MarkedFields> underTest =
@@ -416,11 +418,19 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
     static class MarkedFields {
         final Map<ChildBean, String> mapField;
         final Set<String> setField;
+        /**
+         * A field whose declared type describes a level below it, so its name carries more than one
+         * sentinel. Without it every field here is a single prefix and the guard cannot catch a strip that
+         * stops after the first.
+         */
+        final Map<ChildBean, Map<ChildBean, String>> nestedMapField;
 
         MarkedFields(Map<ChildBean, String> mapField,
-                     Set<String> setField) {
+                     Set<String> setField,
+                     Map<ChildBean, Map<ChildBean, String>> nestedMapField) {
             this.mapField = mapField;
             this.setField = setField;
+            this.nestedMapField = nestedMapField;
         }
     }
 }

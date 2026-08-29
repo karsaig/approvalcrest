@@ -13,7 +13,9 @@ import com.google.gson.stream.JsonWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
@@ -35,6 +38,32 @@ public class GsonProviderTest {
 
     private static final Set<Class<?>> NO_CIRCULAR = Collections.emptySet();
 
+    static class MyMap<V> extends HashMap<String, V> {
+        private static final long serialVersionUID = 1L;
+    }
+
+    static class TypeVariableHolder<T extends Map<String, String>> {
+        T data;
+    }
+
+    /**
+     * Every field here is marked today; what the chain adds is what comes after the first sentinel. The
+     * assertions compare whole keys, because containsString cannot tell a chain from an over-long one.
+     */
+    @SuppressWarnings("unused")
+    static class ChainHolder {
+        Map<String, String> plainMap = new LinkedHashMap<>();
+        Map<String, Map<String, String>> nestedMap = new LinkedHashMap<>();
+        Set<Map<String, String>> setOfMaps = new LinkedHashSet<>();
+        Set<Map<String, Set<Map<String, String>>>> setOfMapOfSetOfMap = new LinkedHashSet<>();
+        Map<String, List<List<Map<String, String>>>> mapUnderTwoCollections = new LinkedHashMap<>();
+        Map<String, Map<String, String>[]> mapOfArrayOfMaps = new LinkedHashMap<>();
+        Set<List<String>> setOfLists = new LinkedHashSet<>();
+        Map<String, SortMe> mapToBean = new LinkedHashMap<>();
+        MyMap<String> mapSubtypeWithOneArgument = new MyMap<>();
+        TypeVariableHolder<Map<String, String>> typeVariable = new TypeVariableHolder<>();
+    }
+
     static class SortMe {
         final int v;
         SortMe(int v) { this.v = v; }
@@ -47,6 +76,42 @@ public class GsonProviderTest {
         List<SortMe> sortList = Arrays.asList(new SortMe(1));
         SortMe[] sortArr = new SortMe[]{new SortMe(2)};
         String plain = "p";
+    }
+
+    @Test
+    void markSortedFieldsDescribesTheContainerLevelsBelowAMarkedField() {
+        Gson gson = GsonProvider.gson(new MatcherConfiguration(), NO_CIRCULAR);
+        String map = FieldsIgnorer.MAP_MARKER;
+        String collection = FieldsIgnorer.MARKER;
+
+        List<String> keys = new ArrayList<>(gson.toJsonTree(new ChainHolder()).getAsJsonObject().keySet());
+
+        assertThat(keys, contains(
+                map + "plainMap",
+                map + map + "nestedMap",
+                collection + map + "setOfMaps",
+                collection + map + collection + map + "setOfMapOfSetOfMap",
+                map + collection + collection + map + "mapUnderTwoCollections",
+                map + collection + map + "mapOfArrayOfMaps",
+                // A chain with no map level below the field describes nothing the sorter does differently,
+                // so it is dropped and the field is marked exactly as it is today.
+                collection + "setOfLists",
+                // A bean stops the walk: its own fields carry their own markers.
+                map + "mapToBean",
+                // One type argument where a Map has two, so the walk cannot say which is the value.
+                map + "mapSubtypeWithOneArgument",
+                "typeVariable"));
+    }
+
+    @Test
+    void markSortedFieldsKeepsMarkingAFieldWhoseGenericTypeSaysNothing() {
+        // The chain is appended to today's decision rather than derived from the walk. Derived, a field
+        // declared by a type variable would lose its marker and stop being sorted.
+        Gson gson = GsonProvider.gson(new MatcherConfiguration(), NO_CIRCULAR);
+        TypeVariableHolder<Map<String, String>> holder = new TypeVariableHolder<>();
+        holder.data = new LinkedHashMap<>();
+
+        assertThat(gson.toJson(holder), containsString(FieldsIgnorer.MAP_MARKER + "data"));
     }
 
     @Test

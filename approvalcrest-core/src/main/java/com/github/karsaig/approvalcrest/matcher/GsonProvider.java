@@ -11,21 +11,41 @@ package com.github.karsaig.approvalcrest.matcher;
 
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MAP_MARKER;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.MARKER;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.MAX_CHAIN_DEPTH;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.truncateAfterLastMapLevel;
 import static com.github.karsaig.approvalcrest.JsonElementUtil.anyMatchesFieldName;
 import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.AbstractMap;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
+import java.util.Queue;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -190,32 +210,123 @@ class GsonProvider {
 
     private static void markSortedFields(GsonBuilder gsonBuilder, List<Class<?>> typesToSort) {
         gsonBuilder.setFieldNamingStrategy(f -> {
-            // A Map gets its own marker: both queue the field for sorting, but only a Map's array holds
-            // [key, value] entries, and the sorter must not reorder a key with its value.
-            if (Map.class.isAssignableFrom(f.getType())) {
-                return MAP_MARKER + f.getName();
+            String ownMarker = ownMarkerOf(f, typesToSort);
+            if (ownMarker == null) {
+                return f.getName();
             }
-            if (Set.class.isAssignableFrom(f.getType())) {
-                return MARKER + f.getName();
-            }
-            if (!typesToSort.isEmpty()) {
-                if (Collection.class.isAssignableFrom(f.getType())) {
-                    java.lang.reflect.Type generic = f.getGenericType();
-                    if (generic instanceof ParameterizedType) {
-                        java.lang.reflect.Type arg = ((ParameterizedType) generic).getActualTypeArguments()[0];
-                        if (typesToSort.contains(arg)) {
-                            return MARKER + f.getName();
-                        }
-                    }
-                } else if (f.getType().isArray()) {
-                    if (typesToSort.contains(f.getType().getComponentType())) {
-                        return MARKER + f.getName();
-                    }
-                }
-            }
-            return f.getName();
+            // The field's own marker first, then one sentinel per container level below it, so the sorter
+            // can tell a map's [key, value] pair from a nested collection wherever the declared type says
+            // so. Appended to today's decision rather than derived from the walk: a field whose generic
+            // type says nothing -- Object, raw, a type variable -- must keep the marker it has now, or it
+            // silently stops being sorted.
+            return ownMarker + markerChainBelow(f.getGenericType()) + f.getName();
         });
     }
+
+    /**
+     * The marker the field itself carries, or null when it carries none. A Map gets its own: both queue
+     * the field for sorting, but only a Map's array holds [key, value] entries, and the sorter must not
+     * reorder a key with its value.
+     */
+    private static String ownMarkerOf(Field f, List<Class<?>> typesToSort) {
+        if (Map.class.isAssignableFrom(f.getType())) {
+            return MAP_MARKER;
+        }
+        if (Set.class.isAssignableFrom(f.getType())) {
+            return MARKER;
+        }
+        if (!typesToSort.isEmpty()) {
+            if (Collection.class.isAssignableFrom(f.getType())) {
+                Type generic = f.getGenericType();
+                if (generic instanceof ParameterizedType) {
+                    Type arg = ((ParameterizedType) generic).getActualTypeArguments()[0];
+                    if (typesToSort.contains(arg)) {
+                        return MARKER;
+                    }
+                }
+            } else if (f.getType().isArray()) {
+                if (typesToSort.contains(f.getType().getComponentType())) {
+                    return MARKER;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Describes the container levels below {@code fieldType}, one sentinel per level: {@code MAP_MARKER}
+     * for a map, {@code MARKER} for a collection or array. The field's own level is not included -- that is
+     * the marker {@link #ownMarkerOf} returns.
+     *
+     * <p>The walk stops at the first level the declared type does not describe: a bean, {@code Object}, a
+     * raw or wildcard type, a type variable. Stopping at a bean is right, since a bean's own fields carry
+     * their own markers and the nesting re-enters through them. Stopping anywhere else costs a fix the
+     * sorter cannot make, which is the safe direction -- nothing stops being sorted.
+     *
+     * <p>Only the JDK types below are walked, and only at the arity they declare. A subtype is free to
+     * reorder or drop its parameters -- {@code class MyMap<V> extends HashMap<String,V>} has one argument,
+     * {@code class Flipped<V,K> extends HashMap<K,V>} has two in the other order -- so reading argument 1
+     * off an arbitrary Map-assignable type either throws inside this lambda, failing every serialisation of
+     * a bean holding such a field, or silently describes the key. Resolving it properly needs supertype
+     * resolution, which only gson's internal type helper does.
+     */
+    private static String markerChainBelow(Type fieldType) {
+        StringBuilder chain = new StringBuilder();
+        Type current = valueTypeOf(fieldType);
+        for (int depth = 0; current != null && depth < MAX_CHAIN_DEPTH; depth++) {
+            Type below = valueTypeOf(current);
+            if (below == null) {
+                break;
+            }
+            chain.append(isMapLevel(current) ? MAP_MARKER : MARKER);
+            current = below;
+        }
+        return truncateAfterLastMapLevel(chain.toString());
+    }
+
+    /**
+     * Which sentinel a level takes. Only asked of a level {@link #valueTypeOf} has already accepted, so the
+     * raw type and its arity are known good and the map test alone decides.
+     */
+    private static boolean isMapLevel(Type type) {
+        return type instanceof ParameterizedType
+                && WALKABLE_MAP_TYPES.contains(((ParameterizedType) type).getRawType());
+    }
+
+    /**
+     * What a level holds — a map's value type, a collection's element type, an array's component type — or
+     * null where the declared type does not say, which is what stops the walk.
+     */
+    private static Type valueTypeOf(Type type) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterized = (ParameterizedType) type;
+            Type raw = parameterized.getRawType();
+            Type[] arguments = parameterized.getActualTypeArguments();
+            if (WALKABLE_MAP_TYPES.contains(raw) && arguments.length == 2) {
+                return arguments[1];
+            }
+            if (WALKABLE_COLLECTION_TYPES.contains(raw) && arguments.length == 1) {
+                return arguments[0];
+            }
+            return null;
+        }
+        if (type instanceof GenericArrayType) {
+            return ((GenericArrayType) type).getGenericComponentType();
+        }
+        if (type instanceof Class<?> && ((Class<?>) type).isArray()) {
+            return ((Class<?>) type).getComponentType();
+        }
+        return null;
+    }
+
+    private static final Set<Type> WALKABLE_MAP_TYPES = new HashSet<>(Arrays.asList(
+            Map.class, AbstractMap.class, HashMap.class, LinkedHashMap.class, TreeMap.class,
+            SortedMap.class, NavigableMap.class, ConcurrentMap.class, ConcurrentHashMap.class));
+
+    private static final Set<Type> WALKABLE_COLLECTION_TYPES = new HashSet<>(Arrays.asList(
+            Collection.class, Iterable.class, List.class, Set.class, Queue.class, Deque.class,
+            ArrayList.class, LinkedList.class, ArrayDeque.class, HashSet.class, LinkedHashSet.class,
+            TreeSet.class, SortedSet.class, NavigableSet.class));
 
     private static void registerMapSerialisation(GsonBuilder gsonBuilder) {
         gsonBuilder.registerTypeHierarchyAdapter(Map.class, (JsonSerializer<Map>) (map, type, context) -> {
