@@ -221,12 +221,13 @@ class GsonProvider {
         }
         if (!typesToSort.isEmpty()) {
             if (Collection.class.isAssignableFrom(f.getType())) {
-                Type generic = f.getGenericType();
-                if (generic instanceof ParameterizedType) {
-                    Type arg = ((ParameterizedType) generic).getActualTypeArguments()[0];
-                    if (typesToSort.contains(arg)) {
-                        return MARKER;
-                    }
+                // Resolved rather than read off argument 0, for the same reason the level walk resolves:
+                // a subclass need not declare an argument there, or any at all. sortType promises to sort
+                // any Collection whose element type matches, and class OrderList extends ArrayList<Order>
+                // is one.
+                Type element = valueTypeOf(f.getGenericType());
+                if (element != null && typesToSort.contains(element)) {
+                    return MARKER;
                 }
             } else if (f.getType().isArray()) {
                 if (typesToSort.contains(f.getType().getComponentType())) {
