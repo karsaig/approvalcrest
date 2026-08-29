@@ -204,18 +204,21 @@ bytes.
 
 This holds wherever the declared type of the field holding the map says how deep the nesting goes:
 `Map<K, Map<K2, V>>` at any depth, a map inside a `Set`, `List` or array, and any mix of the two, such as
-`Set<Map<K, Set<Map<K2, V>>>>`. A map at the root is covered too, and there the *object itself* is inspected
+`Set<Map<K, Set<Map<K2, V>>>>`. Subclasses count — `class Registry extends HashMap<Ref, Map<Ref, Order>>`,
+`EnumMap`, `Hashtable`, guava's `ImmutableMap`, anything of your own — because the value type is resolved
+through the supertypes rather than read off the declaration's second argument. A map at the root is covered too, and there the *object itself* is inspected
 rather than a declared type, so a root `Map<K, Object>` whose values are all maps is protected where the same
 field would not be.
 
 It does not hold where nothing describes the level:
 
-- a value the declared type leaves open — `Map<K, Object>`, a raw `Map<K, Map>`, a type variable;
+- a value the declared type leaves open — `Map<K, Object>`, an unbounded type variable, a wildcard, and so
+  any subclass fixing the value to `Object`, including `Properties` and the common
+  `class Payload extends HashMap<String, Object>`. A raw `Map<K, Map>` is different: the level itself is a
+  map, so it *is* described; only what sits below it is not;
 - a map used as a **key** rather than a value, since the pair's key half is not described;
 - a map reached through a field that carries no marker at all, such as a plain `List<Map<K, V>>` or an
-  `Object`-declared field;
-- a `Map` subtype that declares its own type parameters, such as `class MyMap<V> extends HashMap<String, V>`,
-  where which argument is the value cannot be read off the declaration.
+  `Object`-declared field.
 
 In each of those the pairs behave as they did before 1.5.1: nothing sorts them unless a `sortField` reaches
 that level, so most of the time they still come out key first — but add one that does reach them and the key

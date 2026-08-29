@@ -18,34 +18,18 @@ import static com.google.common.collect.Sets.newTreeSet;
 import static org.apache.commons.lang3.ClassUtils.isPrimitiveOrWrapper;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.AbstractMap;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.NavigableSet;
-import java.util.Queue;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -263,70 +247,108 @@ class GsonProvider {
      * their own markers and the nesting re-enters through them. Stopping anywhere else costs a fix the
      * sorter cannot make, which is the safe direction -- nothing stops being sorted.
      *
-     * <p>Only the JDK types below are walked, and only at the arity they declare. A subtype is free to
-     * reorder or drop its parameters -- {@code class MyMap<V> extends HashMap<String,V>} has one argument,
-     * {@code class Flipped<V,K> extends HashMap<K,V>} has two in the other order -- so reading argument 1
-     * off an arbitrary Map-assignable type either throws inside this lambda, failing every serialisation of
-     * a bean holding such a field, or silently describes the key. Resolving it properly needs supertype
-     * resolution, which only gson's internal type helper does.
+     * <p>Any map or collection is walked, subclasses included, because what a level holds is resolved through
+     * its supertypes rather than read off argument 1. Reading positionally needs a fence -- a subtype is free
+     * to drop a parameter ({@code class MyMap<V> extends HashMap<String,V>}) or reorder them
+     * ({@code class Flipped<V,K> extends HashMap<K,V>}), so argument 1 either does not exist or is the key --
+     * and any such fence is a list of known types, which is a list of the types nobody has subclassed.
      */
     private static String markerChainBelow(Type fieldType) {
         StringBuilder chain = new StringBuilder();
         Type current = valueTypeOf(fieldType);
-        for (int depth = 0; current != null && depth < MAX_CHAIN_DEPTH; depth++) {
-            Type below = valueTypeOf(current);
-            if (below == null) {
-                break;
-            }
+        // Two questions, deliberately separate. A level takes a sentinel because IT is a container; what it
+        // holds only decides whether there is another level after it. Conflating them -- stopping because the
+        // contents are undescribed -- silently drops the inner level of Map<K, Map<K2, Object>>.
+        for (int depth = 0; current != null && isContainerLevel(current) && depth < MAX_CHAIN_DEPTH; depth++) {
             chain.append(isMapLevel(current) ? MAP_MARKER : MARKER);
-            current = below;
+            current = valueTypeOf(current);
         }
         return truncateAfterLastMapLevel(chain.toString());
     }
 
     /**
-     * Which sentinel a level takes. Only asked of a level {@link #valueTypeOf} has already accepted, so the
-     * raw type and its arity are known good and the map test alone decides.
+     * Guava's token, not gson's — this file imports that one, so the name is spelled out once here and the
+     * rest of the walk goes through this method.
      */
+    private static com.google.common.reflect.TypeToken<?> tokenOf(Type type) {
+        return com.google.common.reflect.TypeToken.of(type);
+    }
+
+    /** Whether this level holds things at all, which is what decides that it takes a sentinel. */
+    private static boolean isContainerLevel(Type type) {
+        Class<?> raw = tokenOf(type).getRawType();
+        return Map.class.isAssignableFrom(raw) || Collection.class.isAssignableFrom(raw)
+                || raw == Iterable.class || raw.isArray();
+    }
+
+    /** Which sentinel a level takes, asked only of a level {@link #isContainerLevel} has accepted. */
     private static boolean isMapLevel(Type type) {
-        return type instanceof ParameterizedType
-                && WALKABLE_MAP_TYPES.contains(((ParameterizedType) type).getRawType());
+        return Map.class.isAssignableFrom(tokenOf(type).getRawType());
     }
 
     /**
      * What a level holds — a map's value type, a collection's element type, an array's component type — or
      * null where the declared type does not say, which is what stops the walk.
+     *
+     * <p>Memoised because it is the only place a type resolution happens, and that resolution is
+     * not cheap: it captures wildcards and walks the whole generic supertype graph, and guava caches the
+     * resolver on the token, which a fresh {@code TypeToken.of} reuses none of. The naming strategy runs for
+     * every field of every class each time Gson builds an adapter, and this project builds a Gson per
+     * assertion and another inside the map and set serialisers, so the same handful of declared types is
+     * asked about over and over. The map is static, so it holds the {@code Class}es it has seen for the life
+     * of the JVM — bounded by the number of distinct declared field types, but worth knowing where
+     * classloaders are reloaded. It is a pure function of the type, and the values are immutable.
      */
     private static Type valueTypeOf(Type type) {
-        if (type instanceof ParameterizedType) {
-            ParameterizedType parameterized = (ParameterizedType) type;
-            Type raw = parameterized.getRawType();
-            Type[] arguments = parameterized.getActualTypeArguments();
-            if (WALKABLE_MAP_TYPES.contains(raw) && arguments.length == 2) {
-                return arguments[1];
-            }
-            if (WALKABLE_COLLECTION_TYPES.contains(raw) && arguments.length == 1) {
-                return arguments[0];
-            }
-            return null;
-        }
-        if (type instanceof GenericArrayType) {
-            return ((GenericArrayType) type).getGenericComponentType();
-        }
-        if (type instanceof Class<?> && ((Class<?>) type).isArray()) {
-            return ((Class<?>) type).getComponentType();
-        }
-        return null;
+        Type memoised = VALUE_TYPES.computeIfAbsent(type, GsonProvider::resolveValueType);
+        return memoised == NOTHING_DESCRIBED ? null : memoised;
     }
 
-    private static final Set<Type> WALKABLE_MAP_TYPES = new HashSet<>(Arrays.asList(
-            Map.class, AbstractMap.class, HashMap.class, LinkedHashMap.class, TreeMap.class,
-            SortedMap.class, NavigableMap.class, ConcurrentMap.class, ConcurrentHashMap.class));
+    private static Type resolveValueType(Type type) {
+        com.google.common.reflect.TypeToken<?> token = tokenOf(type);
+        Class<?> raw = token.getRawType();
+        if (Map.class.isAssignableFrom(raw)) {
+            return resolvedArgument(token, MAP_VALUE);
+        }
+        if (Collection.class.isAssignableFrom(raw)) {
+            return resolvedArgument(token, COLLECTION_ELEMENT);
+        }
+        // Iterable itself and only itself, as the list this replaces had it. Widening to
+        // Iterable.class.isAssignableFrom would newly admit java.nio.file.Path and gson's own JsonArray,
+        // both Iterable over themselves, and walk to the depth cap describing levels that are not there.
+        if (raw == Iterable.class) {
+            return resolvedArgument(token, ITERABLE_ELEMENT);
+        }
+        if (token.isArray()) {
+            return token.getComponentType().getType();
+        }
+        return NOTHING_DESCRIBED;
+    }
 
-    private static final Set<Type> WALKABLE_COLLECTION_TYPES = new HashSet<>(Arrays.asList(
-            Collection.class, Iterable.class, List.class, Set.class, Queue.class, Deque.class,
-            ArrayList.class, LinkedList.class, ArrayDeque.class, HashSet.class, LinkedHashSet.class,
-            TreeSet.class, SortedSet.class, NavigableSet.class));
+    private static Type resolvedArgument(com.google.common.reflect.TypeToken<?> token, TypeVariable<?> parameter) {
+        Type resolved = token.resolveType(parameter).getType();
+        // An unresolved variable says nothing about what is there, and a wildcard arrives as one: resolution
+        // is invariant, so `? extends Map<K,V>` comes back captured as an artificial variable rather than a
+        // WildcardType. Object is deliberately not filtered here -- ownMarkerOf tests membership rather than
+        // description, and sortType(Object.class) over a List<Object> is a caller saying something real.
+        return resolved instanceof TypeVariable ? NOTHING_DESCRIBED : resolved;
+    }
+
+    private static final TypeVariable<?> MAP_VALUE = Map.class.getTypeParameters()[1];
+
+    private static final TypeVariable<?> COLLECTION_ELEMENT = Collection.class.getTypeParameters()[0];
+
+    private static final TypeVariable<?> ITERABLE_ELEMENT = Iterable.class.getTypeParameters()[0];
+
+    /** Stands in for null, which a {@link ConcurrentHashMap} cannot hold. */
+    private static final Type NOTHING_DESCRIBED = new Type() {
+        @Override
+        public String toString() {
+            return "nothing described";
+        }
+    };
+
+    private static final ConcurrentHashMap<Type, Type> VALUE_TYPES = new ConcurrentHashMap<>();
 
     private static void registerMapSerialisation(GsonBuilder gsonBuilder) {
         gsonBuilder.registerTypeHierarchyAdapter(Map.class, (JsonSerializer<Map>) (map, type, context) -> {

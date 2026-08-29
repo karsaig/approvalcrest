@@ -69,6 +69,24 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         Map<String, Map<ChildBean, ChildBean>> outer = new LinkedHashMap<>();
     }
 
+    /** A Map subtype with no arguments of its own: what it holds is knowable only from its supertype. */
+    static class Registry extends LinkedHashMap<ChildBean, Map<ChildBean, ChildBean>> {
+        private static final long serialVersionUID = 1L;
+    }
+
+    static class RegistryHolder {
+        Registry outer = new Registry();
+    }
+
+    /** Two arguments in the other order, so reading argument 1 would describe the key. */
+    static class Flipped<V, K> extends LinkedHashMap<K, V> {
+        private static final long serialVersionUID = 1L;
+    }
+
+    static class FlippedHolder {
+        Flipped<Map<ChildBean, ChildBean>, ChildBean> outer = new Flipped<>();
+    }
+
     static class MapOfLooselyTypedMaps {
         Map<ChildBean, Map<Object, Object>> outer = new LinkedHashMap<>();
     }
@@ -623,6 +641,32 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     }
 
     @Test
+    public void aNestedMapUnderAMapSubtypeKeepsItsKeyFirst() {
+        // Registry extends LinkedHashMap<C, Map<C,C>> and declares no arguments of its own, so there is
+        // nothing to read positionally; the value type comes from its supertype or not at all.
+        RegistryHolder h = new RegistryHolder();
+        h.outer.put(key("L1-c"), threeEntries());
+        h.outer.put(key("L1-a"), threeEntries());
+        h.outer.put(key("L1-b"), threeEntries());
+
+        assertJsonMatcherWithDummyTestInfo(h, obj(member("outer", nestedMapsRendered())),
+                Function.identity(), null);
+    }
+
+    @Test
+    public void aNestedMapUnderAMapSubtypeWithReorderedParametersKeepsItsKeyFirst() {
+        // Flipped<V,K> extends LinkedHashMap<K,V>: argument 1 is the KEY here, so a positional read would
+        // describe the wrong half and leave the value's map undescribed.
+        FlippedHolder h = new FlippedHolder();
+        h.outer.put(key("L1-c"), threeEntries());
+        h.outer.put(key("L1-a"), threeEntries());
+        h.outer.put(key("L1-b"), threeEntries());
+
+        assertJsonMatcherWithDummyTestInfo(h, obj(member("outer", nestedMapsRendered())),
+                Function.identity(), null);
+    }
+
+    @Test
     public void aMapAsAnotherMapsValueKeepsItsKeyFirst() {
         // The flagged gap. The marker is on a FIELD name and the inner map is a value, so nothing named it;
         // the field naming strategy now describes that level too, and the sorter carries the description
@@ -797,14 +841,18 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     @SuppressWarnings("rawtypes")
-    public void aRawMapValueKeepsTheOldOrder() {
+    public void aRawMapValueKeepsItsKeyFirst() {
+        // A raw Map says nothing about what IT holds, but it is still a map, and that is what decides the
+        // level: its own entries are pairs whatever their types turn out to be. Only the level below it is
+        // undescribed. This was pinned as a limitation while the value type was read positionally, because
+        // a raw declaration has no argument to read.
         MapToRawMap h = new MapToRawMap();
         Map<ChildBean, ChildBean> inner = new LinkedHashMap<>();
         inner.put(key("zk"), key("av"));
         h.m.put(key("L1-a"), inner);
 
         assertJsonMatcherWithDummyTestInfo(h,
-                obj(member("m", arr(entry(bean("L1-a"), arr(arr(bean("av"), bean("zk"))))))),
+                obj(member("m", arr(entry(bean("L1-a"), arr(arr(bean("zk"), bean("av"))))))),
                 Function.identity(), null);
     }
 
