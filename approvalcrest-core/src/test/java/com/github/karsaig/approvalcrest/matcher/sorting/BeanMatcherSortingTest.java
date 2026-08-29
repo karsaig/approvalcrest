@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
 import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.containsString;
@@ -218,6 +219,49 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingMatcher(actual, expected,
                 matcher -> matcher.sortType(ChildBean.class));
+    }
+
+    @Test
+    public void sortTypeSortsACollectionSubtypeOfThatElementType() {
+        // The element type of a subclass is only knowable from its supertype: OrderList declares no
+        // arguments of its own. sortType promises "any Collection whose element type matches", and a
+        // declaration like this one was silently skipped.
+        SubtypeListHolder actual = new SubtypeListHolder("banana", "apple");
+        SubtypeListHolder expected = new SubtypeListHolder("apple", "banana");
+
+        assertDiagnosingMatcher(actual, expected, matcher -> matcher.sortType(ChildBean.class));
+    }
+
+    @Test
+    public void sortTypeOverObjectStillSortsAListOfObject() {
+        // Object is a legitimate thing to name here — this is a membership test, not a description — so the
+        // resolution must hand it back rather than treat it as "says nothing".
+        ObjectListHolder actual = new ObjectListHolder("banana", "apple");
+        ObjectListHolder expected = new ObjectListHolder("apple", "banana");
+
+        assertDiagnosingMatcher(actual, expected, matcher -> matcher.sortType(Object.class));
+    }
+
+    static class OrderList extends java.util.ArrayList<ChildBean> {
+        private static final long serialVersionUID = 1L;
+    }
+
+    static class SubtypeListHolder {
+        OrderList list = new OrderList();
+
+        SubtypeListHolder(String... names) {
+            for (String name : names) {
+                list.add(child().childString(name).build());
+            }
+        }
+    }
+
+    static class ObjectListHolder {
+        java.util.List<Object> list;
+
+        ObjectListHolder(String... values) {
+            list = java.util.Arrays.asList((Object[]) values);
+        }
     }
 
     @Test

@@ -150,6 +150,29 @@ public class JsonElementUtilTest {
         assertThat((FanoutResult) result.getRight(), contains("val"));
     }
     @Test
+    void findsValueBehindAChainOfMarkerPrefixes() {
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k.leaf",
+                parse("{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER
+                        + "aMap\":[{\"k\":{\"leaf\":\"val\"}}]}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), instanceOf(FanoutResult.class));
+        assertThat((FanoutResult) result.getRight(), contains("val"));
+    }
+
+    @Test
+    void prefersThePlainKeyOverAChainPrefixedOne() {
+        // The bare name still wins, which is why the chained form is looked for only after the exact
+        // candidates have been tried.
+        Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("x",
+                parse("{\"x\":\"plain\",\"" + FieldsIgnorer.MARKER + FieldsIgnorer.MAP_MARKER
+                        + "x\":\"marked\"}"));
+
+        assertTrue(result.isRight());
+        assertThat(result.getRight(), is("plain"));
+    }
+
+    @Test
     void prefersThePlainKeyOverTheMarkerPrefixedOne() {
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("x",
                 parse("{\"x\":\"plain\",\"" + FieldsIgnorer.MARKER + "x\":\"marked\"}"));

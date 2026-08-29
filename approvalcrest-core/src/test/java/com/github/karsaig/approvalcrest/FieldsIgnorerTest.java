@@ -806,6 +806,58 @@ public class FieldsIgnorerTest {
         assertThat(FieldsIgnorer.removeSetMarker(json), is("{\"s\":[],\"m\":[]}"));
     }
 
+    // -------------------------------------------------------------------------
+    // Chained sentinels
+    //
+    // A field whose declared type describes container levels below it carries one sentinel per level, so a
+    // name can hold several. Every site that recognised a single prefix has to recognise a sequence; as
+    // with the twins above, missing one is not a compile error.
+    // -------------------------------------------------------------------------
+
+    @Test
+    void ignoresAPathUnderAChainMarkedField() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1,\"keep\":2}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.toString(), is("{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER + "a\":{\"keep\":2}}"));
+    }
+
+    @Test
+    void cascadesRemovalWhenAChainMarkedParentBecomesEmpty() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":\"drop\"}}");
+
+        FieldsIgnorer.findPaths(json, paths("a.b"));
+
+        assertThat(json.size(), is(0));
+    }
+
+    @Test
+    void removesAChainMarkedFieldByItsBareName() {
+        JsonObject json = parseObject("{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1},\"keep\":2}");
+
+        FieldsIgnorer.findPaths(json, paths("a"));
+
+        assertThat(json.toString(), is("{\"keep\":2}"));
+    }
+
+    @Test
+    void removesAChainMarkedFieldInsideAnEnvelope() {
+        JsonObject json = parseObject("{\"0x1\":{\"" + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MAP_MARKER + "a\":{\"b\":1},\"keep\":2}}");
+
+        FieldsIgnorer.findPaths(json, paths("a"));
+
+        assertThat(json.toString(), is("{\"0x1\":{\"keep\":2}}"));
+    }
+
+    @Test
+    void removeSetMarkerStripsEveryLinkOfAChain() {
+        String json = "{\"" + FieldsIgnorer.MARKER + FieldsIgnorer.MAP_MARKER + FieldsIgnorer.MARKER
+                + FieldsIgnorer.MAP_MARKER + "m\":[]}";
+
+        assertThat(FieldsIgnorer.removeSetMarker(json), is("{\"m\":[]}"));
+    }
+
     @Test
     void removesElementsByMatcherRule() {
         JsonObject json = parseObject(

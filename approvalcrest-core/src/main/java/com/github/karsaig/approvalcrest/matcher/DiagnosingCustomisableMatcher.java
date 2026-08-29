@@ -38,6 +38,7 @@ import static com.github.karsaig.approvalcrest.FieldsIgnorer.applyRootCollection
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.findPaths;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeMatchingElements;
 import static com.github.karsaig.approvalcrest.FieldsIgnorer.removeSetMarker;
+import static com.github.karsaig.approvalcrest.FieldsIgnorer.runtimeMarkerChain;
 import static com.github.karsaig.approvalcrest.matcher.GsonProvider.gson;
 
 /**
@@ -219,10 +220,10 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         // Unconditionally true here: sameBeanAs serialises both sides itself, through the same Gson, so
         // both carry the Map marker and suppression is symmetric. There is no approved file and no
         // strict-matching setting to consult.
-        // The root's map-ness has to be passed here, not left to applyRootCollectionSorting below: this
-        // call runs first, so a root map's pairs would already be swapped by the time that ran.
-        boolean rootIsMap = objectForTypeCheck != null && java.util.Map.class.isAssignableFrom(objectForTypeCheck.getClass());
-        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker, true, rootIsMap);
+        // The root's shape has to be passed here, not left to applyRootCollectionSorting below: this call
+        // runs first, so a root map's pairs -- at any depth -- would already be swapped by the time that ran.
+        String rootChain = runtimeMarkerChain(objectForTypeCheck);
+        applySorting(filteredJson, matcherConfiguration.getPathsToSort(), matcherConfiguration.getPatternsToSort(), true, sortedTracker, true, rootChain);
         applyRootCollectionSorting(filteredJson, objectForTypeCheck, matcherConfiguration.getPatternsToSort(), matcherConfiguration.getPathsToSort(), matcherConfiguration.getTypesToSort(), sortedTracker, true);
         return removeSetMarker(gson.toJson(filteredJson));
     }
