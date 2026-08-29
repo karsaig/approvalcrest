@@ -189,7 +189,9 @@ public class FieldsIgnorer {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
-                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, "", false);
+                // true, as everywhere else on this route: with no chain to suppress anything the flag has
+                // no effect here, and two spellings of one meaning read as though they differed.
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, "", true);
             }
         }
         return filteredJson;
@@ -211,7 +213,9 @@ public class FieldsIgnorer {
             // Other Collections (e.g. List) are sorted only when explicitly configured via "" path
             List<SortField<String>> rootSortFields = pathsToSort.getOrDefault("", emptyList());
             if (!rootSortFields.isEmpty() || !fieldMatchersToSort.isEmpty()) {
-                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, "", false);
+                // true, as everywhere else on this route: with no chain to suppress anything the flag has
+                // no effect here, and two spellings of one meaning read as though they differed.
+                sortJsonArray(filteredJson.getAsJsonArray(), rootSortFields, fieldMatchersToSort, "", true);
             }
         }
         return filteredJson;
