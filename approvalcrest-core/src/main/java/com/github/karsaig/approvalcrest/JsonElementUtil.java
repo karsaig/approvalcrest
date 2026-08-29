@@ -266,17 +266,22 @@ public class JsonElementUtil {
             Iterator<Map.Entry<String, JsonElement>> iter = jsonObject.entrySet().iterator();
             while (iter.hasNext()) {
                 Map.Entry<String, JsonElement> entry = iter.next();
-                Matcher<String> matchedPattern = findMatchingPattern(entry.getKey(), matchers);
+                // The name the caller declared, not the key: a Set-, Map- or type-selected field is held
+                // under a name the field naming strategy has prefixed. Matching the key meant a pattern
+                // could match only the internal form and take such a field away -- and the path recorded
+                // for it carried the sentinel into machine-readable output, which nothing strips.
+                String fieldName = FieldsIgnorer.getOriginalFieldName(entry.getKey());
+                Matcher<String> matchedPattern = findMatchingPattern(fieldName, matchers);
                 if (matchedPattern != null) {
                     iter.remove();
                     changes = true;
                     if (tracker != null && reason != null) {
-                        String childPath = currentPath.isEmpty() ? entry.getKey() : currentPath + "." + entry.getKey();
+                        String childPath = currentPath.isEmpty() ? fieldName : currentPath + "." + fieldName;
                         tracker.recordIgnoredPattern(childPath, reason, matchedPattern.toString());
                     }
                 } else {
                     JsonElement je = entry.getValue();
-                    String childPath = tracker != null ? (currentPath.isEmpty() ? entry.getKey() : currentPath + "." + entry.getKey()) : "";
+                    String childPath = tracker != null ? (currentPath.isEmpty() ? fieldName : currentPath + "." + fieldName) : "";
                     boolean changed = filterFieldsByFieldMatchers(je, matchers, tracker, reason, childPath);
                     if (changed && isEmpty(je)) {
                         iter.remove();
@@ -379,7 +384,9 @@ public class JsonElementUtil {
         if (element.isJsonObject()) {
             JsonObject obj = element.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : new ArrayList<>(obj.entrySet())) {
-                String childField = entry.getKey();
+                // The declared name, as the ignore pass above uses: an alias is written against the name
+                // the caller knows, and a recorded path is read by whoever reads the report.
+                String childField = FieldsIgnorer.getOriginalFieldName(entry.getKey());
                 String childPath = currentPath.isEmpty() ? childField : currentPath + "." + childField;
                 JsonElement child = entry.getValue();
                 if (child.isJsonPrimitive()) {
@@ -388,7 +395,7 @@ public class JsonElementUtil {
                         String coerced = prim.getAsString();
                         Optional<String> alias = aliases.resolve(childPath, childField, coerced);
                         if (alias.isPresent()) {
-                            obj.addProperty(childField, alias.get());
+                            obj.addProperty(entry.getKey(), alias.get());
                             if (tracker != null) {
                                 tracker.recordAlias(childPath, coerced, alias.get());
                             }

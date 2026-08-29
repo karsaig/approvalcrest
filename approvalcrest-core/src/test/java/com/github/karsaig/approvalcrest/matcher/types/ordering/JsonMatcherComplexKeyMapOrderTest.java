@@ -906,6 +906,19 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
                 jsonMatcher -> jsonMatcher.withGsonConfiguration(config), null);
     }
 
+    @Test
+    public void aPatternMatchingOnlyTheInternalNameLeavesTheFieldAlone() {
+        // An ignore pattern is written against the name the caller declared. A Set- or Map-typed field is
+        // held under a prefixed one, and matching that meant a pattern naming nothing real could take such
+        // a field away -- silently, since a removed field simply stops being compared.
+        MapOfMaps h = new MapOfMaps();
+        h.outer.put(key("L1-a"), threeEntries());
+
+        assertJsonMatcherWithDummyTestInfo(h,
+                obj(member("outer", arr(entry(bean("L1-a"), threeEntriesRendered())))),
+                jsonMatcher -> jsonMatcher.ignoring(startsWith("!")), null);
+    }
+
     // --- the writer and the comparator must agree --------------------------------------------------
 
     @Test

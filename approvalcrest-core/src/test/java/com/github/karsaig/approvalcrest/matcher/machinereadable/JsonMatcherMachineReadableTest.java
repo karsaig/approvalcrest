@@ -415,6 +415,47 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         });
     }
 
+    @Test
+    public void shouldNotLeakASortingMarkerIntoATrackedPath() {
+        // The message guard above covers what is compared; a tracker path is built separately, from the key
+        // as it stands in the tree, and nothing strips those. An entry ignored by pattern inside a
+        // Map-typed field is the shortest route to one.
+        Map<String, String> lookup = new LinkedHashMap<>();
+        lookup.put("dropMe", "v");
+        lookup.put("keepMe", "w");
+        TrackedPathHolder actual = new TrackedPathHolder(lookup);
+
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<TrackedPathHolder> underTest =
+                    MATCHER_FACTORY.jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+            underTest.withMachineReadableOutput();
+            underTest.ignoring(org.hamcrest.Matchers.equalTo("dropMe"));
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", "{}");
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class, () -> assertThat(actual, underTest));
+
+            JsonObject json = JsonParser.parseString(error.getMessage()).getAsJsonObject();
+            String ignoredFields = json.get("ignoredFields").toString();
+            assertAll(
+                    () -> assertFalse(ignoredFields.contains(FieldsIgnorer.MARKER),
+                            "MARKER leaked into a tracked path: " + ignoredFields),
+                    () -> assertFalse(ignoredFields.contains(FieldsIgnorer.MAP_MARKER),
+                            "MAP_MARKER leaked into a tracked path: " + ignoredFields),
+                    () -> assertTrue(ignoredFields.contains("lookup[0].dropMe"),
+                            "Expected the path under its declared name, was: " + ignoredFields));
+        });
+    }
+
+    static class TrackedPathHolder {
+        final Map<String, String> lookup;
+
+        TrackedPathHolder(Map<String, String> lookup) {
+            this.lookup = lookup;
+        }
+    }
+
     static class MarkedFields {
         final Map<ChildBean, String> mapField;
         final Set<String> setField;
