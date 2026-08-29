@@ -1160,13 +1160,17 @@ public class FieldsIgnorer {
         return new FieldNamePair(input, getOriginalFieldName(input));
     }
 
-    private static String getOriginalFieldName(String input) {
+    /**
+     * The field's own name, with every sentinel the naming strategy wrote in front of it stripped. Package
+     * visible because the pattern-matching side of {@link JsonElementUtil} has to test a user's
+     * {@code Matcher<String>} against the name the user knows, not the marked key.
+     */
+    static String getOriginalFieldName(String input) {
         String result = input;
-        // Strips every prefix, not just the first: the field naming strategy writes one sentinel per
-        // container level below a marked field, so a name can carry several. MAP_MARKER first: it is not
-        // a prefix of MARKER, but checking the longer sentinel first keeps this correct if either string
-        // ever changes. Stripping matters beyond cosmetics -- the result feeds path matching and every
-        // tracker string, neither of which removeSetMarker ever sees.
+        // Every prefix, not just the first: one sentinel per container level means a name can carry several.
+        // MAP_MARKER first: it is not a prefix of MARKER, but checking the longer sentinel first keeps this
+        // correct if either string ever changes. Stripping matters beyond cosmetics -- the result feeds path
+        // matching and every tracker string, neither of which removeSetMarker ever sees.
         while (true) {
             if (result.startsWith(MAP_MARKER)) {
                 result = result.substring(MAP_MARKER.length());

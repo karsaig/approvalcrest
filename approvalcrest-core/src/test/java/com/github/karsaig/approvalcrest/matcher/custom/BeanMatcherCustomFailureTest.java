@@ -6,6 +6,13 @@ import com.github.karsaig.approvalcrest.testdata.ParentBean;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import static com.github.karsaig.approvalcrest.matchers.ChildBeanMatchers.childStringEqualTo;
 import static com.github.karsaig.approvalcrest.testdata.ChildBean.Builder.child;
 import static com.github.karsaig.approvalcrest.testdata.ParentBean.Builder.parent;
@@ -19,6 +26,49 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
+
+    static class MarkedFieldHolder {
+        Set<String> tagSet = new LinkedHashSet<>(Arrays.asList("a", "b"));
+        Map<ChildBean, String> lookup = new LinkedHashMap<>();
+        List<String> plainList = Arrays.asList("a", "b");
+
+        MarkedFieldHolder() {
+            lookup.put(child().childString("k").build(), "v");
+        }
+    }
+
+    // --- a name pattern has to reach a Set- or Map-typed field ------------------------------------
+    // The field naming strategy writes a sentinel in front of such a field's name, and the pattern was
+    // tested against that key rather than the declared name. It never matched, and withMatcher treats
+    // "nothing matched" as nothing to check -- so these assertions could not fail, whatever the data.
+
+    @Test
+    public void failsWhenTheMatcherOnASetTypedFieldDoesNotHold() {
+        assertDiagnosingMatcher(new MarkedFieldHolder(), new MarkedFieldHolder(),
+                sameBeanAs -> sameBeanAs.withMatcher(equalTo("tagSet"), hasSize(99)),
+                AssertionError.class,
+                thrown -> Assertions.assertTrue(thrown.getMessage().contains("tagSet"),
+                        "Expected the failure to name the pattern, was: " + thrown.getMessage()));
+    }
+
+    @Test
+    public void failsWhenTheMatcherOnAMapTypedFieldDoesNotHold() {
+        assertDiagnosingMatcher(new MarkedFieldHolder(), new MarkedFieldHolder(),
+                sameBeanAs -> sameBeanAs.withMatcher(equalTo("lookup"), hasSize(99)),
+                AssertionError.class,
+                thrown -> Assertions.assertTrue(thrown.getMessage().contains("lookup"),
+                        "Expected the failure to name the pattern, was: " + thrown.getMessage()));
+    }
+
+    @Test
+    public void failsWhenTheMatcherOnAnUnmarkedCollectionFieldDoesNotHold() {
+        // The control: an unmarked field was always reached, so this failed before the fix too.
+        assertDiagnosingMatcher(new MarkedFieldHolder(), new MarkedFieldHolder(),
+                sameBeanAs -> sameBeanAs.withMatcher(equalTo("plainList"), hasSize(99)),
+                AssertionError.class,
+                thrown -> Assertions.assertTrue(thrown.getMessage().contains("plainList"),
+                        "Expected the failure to name the pattern, was: " + thrown.getMessage()));
+    }
 
     @Test
     public void includesDescriptionAndMismatchDescriptionForFailingMatcherOnPrimiteField() {

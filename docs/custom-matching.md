@@ -356,6 +356,10 @@ assertThat(actual, sameJsonAsApproved()
     .withMatcher(is("tags"), hasSize(2)));
 ```
 
+A pattern is matched against the field's own name whatever its type, `Set`- and `Map`-typed fields included.
+Note the consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
+to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
+
 ## Works With
 
 - `sameBeanAs` — compare a specific field against a matcher while diffing the rest against `expected`

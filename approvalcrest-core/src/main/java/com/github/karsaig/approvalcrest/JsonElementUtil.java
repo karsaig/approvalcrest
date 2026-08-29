@@ -342,7 +342,11 @@ public class JsonElementUtil {
         }
         if (element.isJsonObject()) {
             for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
-                if (fieldNamePattern.matches(entry.getKey())) {
+                // The stripped name, not the key: a Set-, Map- or type-selected field is written with one
+                // or more sentinels in front of it, and a pattern is written against the name the caller
+                // declared. Matching the raw key meant such a field never matched, and withMatcher's
+                // "no field matched, so nothing to check" made the assertion one that could not fail.
+                if (fieldNamePattern.matches(FieldsIgnorer.getOriginalFieldName(entry.getKey()))) {
                     result.add(entry.getValue());
                 }
                 collectValuesRecursive(entry.getValue(), fieldNamePattern, result);
