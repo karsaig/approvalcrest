@@ -53,7 +53,7 @@ In this mode, failure messages are structured JSON containing the expected/actua
 | JDK | 8+ | 8, 11, 17, 21, 25 |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
 | TestNG | 6+ | 6.14.3, 7.10.2 |
-| Kotlin | 1.x+ | 2.2.21 |
+| Kotlin | 2.1+ | 2.2.21 |
 
 ## Installation
 
