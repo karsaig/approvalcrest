@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -115,6 +116,118 @@ public class ReflectUtilTest {
     void getFieldValueViaUnsafeReadsNullReferenceField() throws Exception {
         assumeTrue(ReflectUtil.isUnsafeAvailable(), "Unsafe not available on this JDK");
         assertThat(ReflectUtil.getFieldValueViaUnsafe(field("nullField"), new AllTypes()), is((Object) null));
+    }
+
+    // --- memory-access probe ---
+    //
+    // From JDK 26 sun.misc.Unsafe is disabled rather than removed: Class.forName, the theUnsafe
+    // field and every getMethod call still succeed, but invoking a memory-access method throws
+    // UnsupportedOperationException. Resolution is therefore no longer evidence that a field can
+    // be read, and treating it as such made safe mode claim locked-module types it could not
+    // serialize. These stubs stand in for that JDK, which cannot be reproduced from inside a JVM
+    // that was started with Unsafe working.
+
+    /** Behaves as JDK 26+ does by default: resolves fine, throws on every call. */
+    public static class DisabledUnsafe {
+        public long objectFieldOffset(Field field) {
+            throw new UnsupportedOperationException("objectFieldOffset");
+        }
+
+        public int getInt(Object obj, long offset) {
+            throw new UnsupportedOperationException("getInt");
+        }
+
+        public Object getObject(Object obj, long offset) {
+            throw new UnsupportedOperationException("getObject");
+        }
+    }
+
+    /** Resolves and returns, but hands back values that were never in those fields. */
+    public static class LyingUnsafe {
+        public long objectFieldOffset(Field field) {
+            return 0L;
+        }
+
+        public int getInt(Object obj, long offset) {
+            return 0;
+        }
+
+        public Object getObject(Object obj, long offset) {
+            return "not the probe value";
+        }
+    }
+
+    private static Method stub(Class<?> stubType, String name, Class<?>... params) throws NoSuchMethodException {
+        return stubType.getMethod(name, params);
+    }
+
+    private static Method[] stubMethods(Class<?> stubType) throws NoSuchMethodException {
+        return new Method[]{
+                stub(stubType, "objectFieldOffset", Field.class),
+                stub(stubType, "getInt", Object.class, long.class),
+                stub(stubType, "getObject", Object.class, long.class)
+        };
+    }
+
+    @Test
+    void memoryAccessProbePassesWithTheRealUnsafe() throws Exception {
+        assumeTrue(ReflectUtil.isUnsafeAvailable(), "requires a JDK where Unsafe still reads memory");
+
+        Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+        Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
+        theUnsafe.setAccessible(true);
+
+        assertThat(ReflectUtil.memoryAccessWorks(
+                theUnsafe.get(null),
+                unsafeClass.getMethod("objectFieldOffset", Field.class),
+                unsafeClass.getMethod("getInt", Object.class, long.class),
+                unsafeClass.getMethod("getObject", Object.class, long.class)), is(true));
+    }
+
+    @Test
+    void memoryAccessProbeFailsWhenTheMethodsThrow() throws Exception {
+        Method[] methods = stubMethods(DisabledUnsafe.class);
+
+        assertThat(ReflectUtil.memoryAccessWorks(new DisabledUnsafe(), methods[0], methods[1], methods[2]), is(false));
+    }
+
+    /**
+     * A probe that only checked for an absent exception would pass here and let safe mode go on
+     * claiming locked-module types, so the read-back values are compared too.
+     */
+    @Test
+    void memoryAccessProbeFailsWhenTheValuesReadBackWrong() throws Exception {
+        Method[] methods = stubMethods(LyingUnsafe.class);
+
+        assertThat(ReflectUtil.memoryAccessWorks(new LyingUnsafe(), methods[0], methods[1], methods[2]), is(false));
+    }
+
+    @Test
+    void memoryAccessProbeFailsWhenAnythingIsMissing() throws Exception {
+        Method[] methods = stubMethods(LyingUnsafe.class);
+
+        assertThat(ReflectUtil.memoryAccessWorks(null, methods[0], methods[1], methods[2]), is(false));
+        assertThat(ReflectUtil.memoryAccessWorks(new Object(), null, methods[1], methods[2]), is(false));
+        assertThat(ReflectUtil.memoryAccessWorks(new Object(), methods[0], null, methods[2]), is(false));
+        assertThat(ReflectUtil.memoryAccessWorks(new Object(), methods[0], methods[1], null), is(false));
+    }
+
+    /**
+     * isUnsafeAvailable() is what UnsafeFieldTypeAdapterFactory uses to decide whether to claim a
+     * locked-module type, so a true answer has to mean a read will actually succeed. Reporting
+     * availability on the strength of the class merely resolving is what produced empty JSON.
+     */
+    @Test
+    void unsafeAvailabilityMatchesWhetherAReadSucceeds() throws Exception {
+        boolean readSucceeded;
+        try {
+            readSucceeded = Integer.valueOf(42)
+                    .equals(ReflectUtil.getFieldValueViaUnsafe(field("intField"), new AllTypes()));
+        } catch (InaccessibleFieldException e) {
+            readSucceeded = false;
+        }
+
+        assertThat(ReflectUtil.isUnsafeAvailable(), is(readSucceeded));
     }
 
     // --- locked-module detection guard rails ---

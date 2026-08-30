@@ -81,6 +81,8 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
                             + "The type is in a locked module and has no public accessor methods (getX(), isX(), or record-style).\n"
                             + "\nOptions:\n"
                             + "  1. Use the default 'safe' mode (no system property needed) which opens modules automatically.\n"
+                            + "     On JDK 26+ that needs --sun-misc-unsafe-memory-access=allow as well, because safe mode\n"
+                            + "     cannot open modules once sun.misc.Unsafe is disabled.\n"
                             + "  2. Use 'force' mode with --add-opens: -DapprovalcrestReflection=force\n"
                             + "  3. Add --add-opens JVM flags for the specific module/package.\n"
                             + "\nSee https://github.com/karsaig/approvalcrest for details."

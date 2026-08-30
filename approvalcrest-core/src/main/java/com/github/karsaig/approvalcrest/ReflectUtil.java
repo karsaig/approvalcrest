@@ -23,10 +23,20 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  * <p>
  * IMPORTANT: All access to sun.misc.Unsafe, java.lang.Module, and MethodHandles.Lookup is
- * done via reflection. There is NO import of any of these. When Unsafe is removed from a
- * future JDK, Class.forName will throw ClassNotFoundException, module opening won't work,
- * and the code will gracefully fall back to getter-based serialization —
- * zero compile errors, zero runtime errors.
+ * done via reflection. There is NO import of any of these. The code degrades gracefully to
+ * getter-based serialization in both of the ways Unsafe goes away:
+ * </p>
+ * <ul>
+ *   <li><b>Disabled</b> — from JDK 26 this is the default (JEP 471/498). The class, its
+ *       {@code theUnsafe} field and its {@code Method} objects all still resolve, but every
+ *       memory-access call throws {@code UnsupportedOperationException}. Resolution alone is
+ *       therefore not evidence that a field can be read, so a probe call is made at
+ *       class-initialization time and Unsafe is treated as absent when that probe fails.</li>
+ *   <li><b>Removed</b> — in a later release. Class.forName throws ClassNotFoundException
+ *       and the Unsafe initialization is skipped.</li>
+ * </ul>
+ * <p>
+ * Either way: zero compile errors, zero runtime errors.
  * </p>
  */
 public class ReflectUtil {
@@ -140,6 +150,21 @@ public class ReflectUtil {
             }
         }
 
+        // sun.misc.Unsafe resolving is no longer evidence that it works. From JDK 26 the
+        // memory-access methods throw UnsupportedOperationException by default while the class,
+        // theUnsafe and the Method objects all still resolve, so prove the field-read path with a
+        // probe call. Dropping the reference here is what makes every downstream branch - Tier 2
+        // in getFieldValue, getFieldValueViaUnsafe, the module opening below and
+        // isUnsafeAvailable() - degrade to the getter-based path instead of failing on first read.
+        //
+        // Only on Java 9+, keyed off the Module API. Java 8 has no way to disable Unsafe, so there
+        // is nothing to detect; probing there could only ever turn a working field-based run into a
+        // getter-based one, which would change the output of every Java 8 consumer.
+        if (unsafe != null && getModule != null
+                && !memoryAccessWorks(unsafe, objectFieldOffset, getInt, getObject)) {
+            unsafe = null;
+        }
+
         UNSAFE = unsafe;
         OBJECT_FIELD_OFFSET = objectFieldOffset;
         GET_OBJECT = getObject;
@@ -209,6 +234,47 @@ public class ReflectUtil {
             } catch (Exception ignored) {
                 // Best-effort; if it fails, fallback behavior still works
             }
+        }
+    }
+
+    /**
+     * Instance fields read by {@link #memoryAccessWorks} to prove that Unsafe can still read
+     * memory. Deliberately a type we own, so the probe never depends on module access.
+     */
+    private static final class MemoryAccessProbe {
+        static final int INT_VALUE = 0x5A5A5A5A;
+        static final String REF_VALUE = "approvalcrest-memory-access-probe";
+
+        private int intField = INT_VALUE;
+        private Object refField = REF_VALUE;
+    }
+
+    /**
+     * Checks that Unsafe's memory-access methods actually read memory, rather than merely
+     * resolving. Reads back a known int and a known reference and compares them, so a method that
+     * throws and a method that silently returns nothing useful are both reported as unavailable.
+     *
+     * @return true only if both probe reads returned the expected values
+     */
+    static boolean memoryAccessWorks(Object unsafe, Method objectFieldOffset, Method getInt, Method getObject) {
+        if (unsafe == null || objectFieldOffset == null || getInt == null || getObject == null) {
+            return false;
+        }
+        try {
+            MemoryAccessProbe probe = new MemoryAccessProbe();
+
+            Field intField = MemoryAccessProbe.class.getDeclaredField("intField");
+            long intOffset = (long) objectFieldOffset.invoke(unsafe, intField);
+            if (!Integer.valueOf(MemoryAccessProbe.INT_VALUE).equals(getInt.invoke(unsafe, probe, intOffset))) {
+                return false;
+            }
+
+            Field refField = MemoryAccessProbe.class.getDeclaredField("refField");
+            long refOffset = (long) objectFieldOffset.invoke(unsafe, refField);
+            return MemoryAccessProbe.REF_VALUE.equals(getObject.invoke(unsafe, probe, refOffset));
+        } catch (Exception e) {
+            // Disabled (UnsupportedOperationException on JDK 26+), or otherwise unusable
+            return false;
         }
     }
 
@@ -409,7 +475,9 @@ public class ReflectUtil {
     }
 
     /**
-     * @return true if Unsafe is available and not in fallback mode
+     * @return true if Unsafe can actually read fields on this JDK and we are not in fallback mode.
+     *         False from JDK 26 onwards unless {@code --sun-misc-unsafe-memory-access=allow} is
+     *         set, because the memory-access methods resolve there but throw when called.
      */
     public static boolean isUnsafeAvailable() {
         return UNSAFE != null && !FALLBACK_MODE;

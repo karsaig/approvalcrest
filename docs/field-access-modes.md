@@ -24,7 +24,7 @@ When approvalcrest encounters a type from a locked module (e.g. `java.time.Local
 
 1. **Programmatic module opening** — at startup, uses `sun.misc.Unsafe` to obtain a trusted `MethodHandles.Lookup`, then calls `Module.implAddOpens()` to open locked packages. This is the runtime equivalent of `--add-opens` but happens automatically.
 2. **Standard reflection** — once the module package is opened, `field.setAccessible(true)` works normally. Gson's built-in serialization produces the same field-based JSON as always.
-3. **Graceful degradation** — if Unsafe is ever removed from a future JDK, the code catches `ClassNotFoundException` and transparently falls back to getter-based serialization (same as fallback mode).
+3. **Graceful degradation** — if Unsafe stops working, the code transparently falls back to getter-based serialization (same as fallback mode). This covers both stages of the JDK's plan: from **JDK 26** the memory-access methods throw `UnsupportedOperationException` by default even though `sun.misc.Unsafe` still exists, and in a later release the class is removed outright.
 
 ### When to use
 
@@ -145,7 +145,7 @@ Fallback mode disables Unsafe entirely and serializes locked-module types using 
 
 ### When to use
 
-- **Future-proofing** — if `sun.misc.Unsafe` is removed from a future JDK (planned for eventual removal), this is what approvalcrest will degrade to automatically in safe mode. Use fallback mode today to prepare your approved files for that future.
+- **Future-proofing** — this is what approvalcrest degrades to automatically in safe mode once Unsafe stops working, which for most projects means **JDK 26**. Use fallback mode today to prepare your approved files for that.
 - **Strict compliance** — your organization forbids any use of `sun.misc.Unsafe` or module-bypassing hacks.
 - **Testing** — verify that your test suite works without relying on internal JDK APIs.
 
@@ -249,10 +249,12 @@ test {
 | 8 | ✅ Field-based (no modules) | ✅ Field-based | ✅ Field-based (no locked modules) |
 | 9–15 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 | 16 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| 17–25+ | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
-| Future (no Unsafe) | ✅ Auto-degrades to getter-based | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 17–25 | ✅ Field-based (opens modules) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
+| 26+ | ⚠️ Getter-based for locked types (see below) | ✅ Field-based (with --add-opens) | ✅ Getter-based for locked types |
 
-Note: JDK 16 is where strong encapsulation became the default (`--illegal-access=deny`). On JDK 9–15 the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on all versions.
+Note: JDK 16 is where strong encapsulation became the default (`--illegal-access=deny`). On JDK 9–15 the default was `--illegal-access=permit`, which allowed reflective access with a warning. Safe mode works identically on JDK 8 through 25.
+
+JDK 26 is the break. [JEP 471](https://openjdk.org/jeps/471) deprecated the `sun.misc.Unsafe` memory-access methods for removal, [JEP 498](https://openjdk.org/jeps/498) made JDK 24 warn on first use (the `WARNING: A terminally deprecated method in sun.misc.Unsafe has been called` line you may already see in your build logs), and from JDK 26 they throw by default. Safe mode can no longer open modules there, so locked-module types switch to getter-based output. To keep field-based output on JDK 26, either run with `--sun-misc-unsafe-memory-access=allow` or switch to force mode with the relevant `--add-opens` flags.
 
 ## Migration Guide
 
@@ -280,9 +282,13 @@ Only approved files for types in JDK locked modules will change. Your own POJO t
 
 No. Safe mode produces identical field-based JSON to what force mode (with `--add-opens`) produces. Your approved files will match without changes.
 
-### What happens when Unsafe is removed from a future JDK?
+### What happens on JDK 26, when Unsafe stops working?
 
-Safe mode gracefully degrades: `Class.forName("sun.misc.Unsafe")` throws `ClassNotFoundException`, the Unsafe initialization is skipped, and locked-module types are serialized via public getters (same as fallback mode). Your tests won't crash — but approved files for locked-module types will need regenerating, as the output format changes from field-based to getter-based.
+Safe mode gracefully degrades to getter-based serialization for locked-module types, exactly as fallback mode does. Your tests won't crash — but approved files for locked-module types will need regenerating, as the output format changes from field-based to getter-based.
+
+Note that on JDK 26 `sun.misc.Unsafe` is disabled rather than removed: the class still loads and its methods still resolve, but calling one throws `UnsupportedOperationException`. Approvalcrest therefore makes a probe call at start-up and treats a failing probe as "no Unsafe", rather than assuming that the class being present means it works. The same degradation happens when the class is removed for real in a later release.
+
+To postpone the change, run with `--sun-misc-unsafe-memory-access=allow` (available from JDK 24) or switch to force mode with `--add-opens`. Both keep field-based output and leave your approved files untouched.
 
 ### Do circular references still work in all modes?
 
