@@ -94,6 +94,21 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>fallback-mode-with-agent</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <argLine>@{argLine} -DapprovalcrestReflection=fallback
+                                -javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</argLine>
+                            <includes>
+                                <include>**/FallbackModeWithAgentTest.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>unsafe-denied-with-agent</id>
                         <phase>integration-test</phase>
                         <goals>

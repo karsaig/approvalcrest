@@ -3,6 +3,7 @@ package com.github.karsaig.approvalcrest;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -201,14 +202,24 @@ public class ReflectUtil {
         if (getModule != null) {
             try {
                 ourModule = getModule.invoke(ReflectUtil.class);
-                Object gsonModule = getModule.invoke(com.google.gson.Gson.class);
-                modulesToOpenTo = ourModule.equals(gsonModule)
-                        ? new Object[]{ourModule}
-                        : new Object[]{ourModule, gsonModule};
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 ourModule = null;
-                modulesToOpenTo = null;
             }
+        }
+        if (ourModule != null) {
+            // Gson performs the field read, so it has to be named in the open too. Resolved by name
+            // and independently of our own module: failing to find it must not cost us the module we
+            // already have, and it is the only module we could not name that would still leave the
+            // Unsafe route working.
+            Object gsonModule = null;
+            try {
+                gsonModule = getModule.invoke(Class.forName("com.google.gson.Gson"));
+            } catch (Throwable t) {
+                gsonModule = null;
+            }
+            modulesToOpenTo = (gsonModule == null || ourModule.equals(gsonModule))
+                    ? new Object[]{ourModule}
+                    : new Object[]{ourModule, gsonModule};
         }
         OUR_MODULE = ourModule;
         MODULES_TO_OPEN_TO = modulesToOpenTo;
@@ -218,7 +229,10 @@ public class ReflectUtil {
         // JDK 26, so nothing about resolving it may depend on Unsafe.
         Object instrumentation = null;
         Method redefineModule = null;
-        if (getModule != null) {
+        // Gated on fallback mode exactly as the Unsafe route is. Fallback exists for suites that
+        // want no module bypass at all, and opening java.lang through Instrumentation is still a
+        // bypass even though it needs no Unsafe.
+        if (getModule != null && !FALLBACK_MODE) {
             try {
                 Class<?> agentClass = ClassLoader.getSystemClassLoader()
                         .loadClass("com.github.karsaig.approvalcrest.agent.ApprovalcrestAgent");
@@ -232,7 +246,7 @@ public class ReflectUtil {
                     redefineModule = instrumentationClass.getMethod("redefineModule",
                             moduleClass, Set.class, Map.class, Map.class, Set.class, Map.class);
                 }
-            } catch (Exception e) {
+            } catch (Throwable t) {
                 // No agent on the command line, or an Instrumentation that cannot be used
                 instrumentation = null;
                 redefineModule = null;
@@ -440,9 +454,31 @@ public class ReflectUtil {
             return false;
         }
         for (Class<?> c = clazz.getSuperclass(); c != null && c != Object.class; c = c.getSuperclass()) {
-            if (isInLockedModule(c)) {
+            if (isInLockedModule(c) && declaresSerializedField(c)) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the class declares a field that would actually be serialized, using the same rule as
+     * the field-reading factories: not static, not transient, not compiler-generated.
+     * <p>
+     * A superclass being locked is not on its own a reason to take a subclass off the field-based
+     * path. {@code java.util.EventObject}'s only field is transient, so nothing ever read it and
+     * the subclass serialized fine; claiming it would change that output for no gain.
+     * {@code java.lang.Throwable} declares four readable fields, which is why its subclasses need
+     * the getter-based path when those fields cannot be reached.
+     * </p>
+     */
+    static boolean declaresSerializedField(Class<?> clazz) {
+        for (Field field : clazz.getDeclaredFields()) {
+            int mods = field.getModifiers();
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods) || field.isSynthetic()) {
+                continue;
+            }
+            return true;
         }
         return false;
     }

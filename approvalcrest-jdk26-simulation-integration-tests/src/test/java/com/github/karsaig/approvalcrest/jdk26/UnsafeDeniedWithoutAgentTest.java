@@ -54,6 +54,21 @@ class UnsafeDeniedWithoutAgentTest {
         assertThat(mismatch, containsString("ticket"));
     }
 
+    /**
+     * The counterweight to the entry above. Only a superclass that actually contributes a field
+     * takes a subclass off the field-based path; a locked superclass whose fields nobody reads
+     * must not, or output changes for types that were never affected.
+     */
+    @Test
+    void aSubclassOfALockedClassWithNoReadableFieldsKeepsFieldBasedOutput() {
+        String mismatch = Jdk26Fixtures.describeMismatch(
+                Jdk26Fixtures.eventSubclass("one"), Jdk26Fixtures.eventSubclass("two"));
+
+        assertThat(mismatch, containsString("label"));
+        assertThat("the transient superclass field is not serialised in any mode",
+                mismatch, not(containsString("source")));
+    }
+
     @Test
     void equalExceptionsStillCompareEqual() {
         assertThat(Jdk26Fixtures.matches(

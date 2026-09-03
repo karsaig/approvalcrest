@@ -37,6 +37,30 @@ final class Jdk26Fixtures {
         }
     }
 
+    /**
+     * Extends a locked JDK class whose only field is transient, so nothing was ever read from the
+     * superclass. Such a type must stay on the field-based path even where modules cannot be
+     * opened - pulling it onto the getter-based path would change output for no gain.
+     */
+    public static class EventSubclass extends java.util.EventObject {
+        private static final long serialVersionUID = 1L;
+
+        private final String label;
+
+        public EventSubclass(Object source, String label) {
+            super(source);
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    static EventSubclass eventSubclass(String label) {
+        return new EventSubclass("source", label);
+    }
+
     static RuntimeException jdkException(String message) {
         RuntimeException thrown = new RuntimeException(message);
         thrown.setStackTrace(new StackTraceElement[0]);

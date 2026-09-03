@@ -393,6 +393,53 @@ public class ReflectUtilTest {
         assertThat(ReflectUtil.isInLockedModule(UserDefinedException.class), is(false));
     }
 
+    @SuppressWarnings("unused")
+    static class OnlyStaticsAndTransients {
+        static String constant = "c";
+        transient String scratch = "s";
+    }
+
+    /**
+     * A locked superclass only matters if it actually contributes a field to the output. The rule
+     * has to match the one the field-reading factories use, or a subclass gets pulled onto the
+     * getter-based path over fields nobody was reading.
+     */
+    @Test
+    void onlySuperclassesThatContributeAFieldCount() {
+        assertThat("Throwable declares detailMessage and friends",
+                ReflectUtil.declaresSerializedField(Throwable.class), is(true));
+        assertThat("EventObject's only field is transient",
+                ReflectUtil.declaresSerializedField(java.util.EventObject.class), is(false));
+        assertThat(ReflectUtil.declaresSerializedField(OnlyStaticsAndTransients.class), is(false));
+        assertThat(ReflectUtil.declaresSerializedField(AllTypes.class), is(true));
+    }
+
+    /**
+     * The narrowing above has to hold whatever the mode, so assert it against the locked state
+     * rather than against a fixed value: even when the superclass is locked, a subclass of one that
+     * contributes no field is not treated as inheriting locked fields.
+     */
+    @Test
+    void aSubclassOfALockedClassWithNoReadableFieldsIsNotClaimed() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(EventSubclass.class), is(false));
+    }
+
+    @SuppressWarnings("unused")
+    static class EventSubclass extends java.util.EventObject {
+        private static final long serialVersionUID = 1L;
+
+        private final String label;
+
+        EventSubclass(Object source, String label) {
+            super(source);
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
     @Test
     void aClassExtendingOnlyObjectInheritsNothingLocked() {
         assertThat(ReflectUtil.inheritsFromLockedModule(AllTypes.class), is(false));
