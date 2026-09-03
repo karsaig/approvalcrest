@@ -360,6 +360,31 @@ public class ReflectUtil {
     }
 
     /**
+     * Checks whether the given class inherits fields from a locked module, which is not the same
+     * question as {@link #isInLockedModule(Class)} asks.
+     * <p>
+     * A user's own exception class is in the unnamed module, so it is not itself locked, but it
+     * carries {@code java.lang.Throwable}'s private fields. When no module can be opened those
+     * fields are unreadable, and standard reflection throws rather than returning nothing - so
+     * such a type has to be serialized from its getters like a locked type, instead of being left
+     * to fail.
+     * </p>
+     *
+     * @return true if any superclass above the given one is in a locked module
+     */
+    public static boolean inheritsFromLockedModule(Class<?> clazz) {
+        if (clazz == null || clazz.isArray() || clazz.isPrimitive()) {
+            return false;
+        }
+        for (Class<?> c = clazz.getSuperclass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            if (isInLockedModule(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Attempts to open a locked module package to our module using Unsafe + trusted Lookup.
      * This is equivalent to {@code --add-opens module/package=ALL-UNNAMED} but done at runtime.
      *

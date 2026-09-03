@@ -232,6 +232,57 @@ public class ReflectUtilTest {
 
     // --- locked-module detection guard rails ---
 
+    // --- inherited locked-module fields ---
+    //
+    // A user's own exception class is in the unnamed module, so isInLockedModule is false for it
+    // and neither fallback factory claimed it - but it still carries Throwable's private fields.
+    // Where no module can be opened, Gson's reflective adapter threw JsonIOException on
+    // detailMessage instead of the type degrading to getters.
+
+    /** Public on purpose: getter-based serialization has to be able to invoke the accessors. */
+    public static class UserDefinedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        private final String ticket;
+
+        public UserDefinedException(String message, String ticket) {
+            super(message);
+            this.ticket = ticket;
+        }
+
+        public String getTicket() {
+            return ticket;
+        }
+    }
+
+    /**
+     * Asserted as a relationship rather than a fixed value, because both sides depend on whether
+     * this JDK could open java.lang - which is exactly the condition the guard exists for.
+     */
+    @Test
+    void aSubclassInheritsWhateverItsSuperclassLockedStateIs() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(UserDefinedException.class),
+                is(ReflectUtil.isInLockedModule(RuntimeException.class)));
+    }
+
+    @Test
+    void theSubclassItselfIsNeverLocked() {
+        // It lives in the unnamed module; only what it inherits can be locked.
+        assertThat(ReflectUtil.isInLockedModule(UserDefinedException.class), is(false));
+    }
+
+    @Test
+    void aClassExtendingOnlyObjectInheritsNothingLocked() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(AllTypes.class), is(false));
+    }
+
+    @Test
+    void inheritanceCheckHandlesArraysPrimitivesAndNull() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(int[].class), is(false));
+        assertThat(ReflectUtil.inheritsFromLockedModule(int.class), is(false));
+        assertThat(ReflectUtil.inheritsFromLockedModule(null), is(false));
+    }
+
     @Test
     void arraysAndPrimitivesAreNeverLocked() {
         assertThat(ReflectUtil.isInLockedModule(int[].class), is(false));

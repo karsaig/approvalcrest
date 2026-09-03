@@ -63,7 +63,11 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
             return null;
         }
 
-        if (!ReflectUtil.isInLockedModule(rawType)) {
+        // A type that merely *inherits* locked-module fields counts too. Its own module is not
+        // locked, so nothing else claims it, and Gson's reflective adapter then throws
+        // JsonIOException on the inherited field instead of the type degrading to getters - which
+        // is what a user's own exception class did on a JDK where no module can be opened.
+        if (!ReflectUtil.isInLockedModule(rawType) && !ReflectUtil.inheritsFromLockedModule(rawType)) {
             return null;
         }
 
