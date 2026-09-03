@@ -266,10 +266,9 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
         // Bean path for an int/Integer field returns Integer(0); equalTo(0L) fails because
         // Integer != Long.  The JSON fallback returns Long(0), which passes the matcher.
         //
-        // The two sides differ on the matched field on purpose. Built identically, this test passed
-        // whether the matcher fired or was silently skipped, because the structural comparison
-        // agreed either way. With expected on 7 and actual on 0, only consuming the path lets it
-        // through.
+        // The two sides differ on the matched field on purpose. Built identically, this test would
+        // pass whether the matcher fired or was skipped, because the structural comparison agrees
+        // either way. With expected on 7 and actual on 0, only consuming the path lets it through.
         ParentBean expected = parent().childBean(child().childString("apple").childInteger(7)).build();
         ParentBean actual = parent().childBean(child().childString("apple")).build();
 
@@ -291,7 +290,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     public void matchesDeeplyNestedFieldPath() {
         // 3-level deep path box.item.value is verified by the custom matcher; box.label and name
         // are compared structurally.
-        // The two sides differ on the matched field on purpose: built identically, this passed
+        // The two sides differ on the matched field on purpose: built identically, this would pass
         // whether the matcher fired or was skipped.
         BeanContainer.BeanBox.BeanItem item = new BeanContainer.BeanBox.BeanItem();
         item.value = "notTheDeepValue";
@@ -556,7 +555,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
 
         assertDiagnosingMatcher(actual, expected, beanMatcher -> beanMatcher.with("childBeanArray.childString",
                 anyOf(equalTo("apple"), equalTo("banana"))));
-        // The negative is what evidences fan-out: pinning one value must fail, because the matcher is
+        // The negative case is the evidence of fan-out: pinning one value must fail, because the matcher is
         // applied to every element rather than to whichever one happens to be found first.
         assertDiagnosingMatcher(actual, expected,
                 beanMatcher -> beanMatcher.with("childBeanArray.childString", equalTo("apple")),
@@ -658,9 +657,9 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     }
 
     /**
-     * A map is traversed by key: the key is a path segment. Until the MARKER-prefixed key fix this
-     * could not resolve at all, because childBeanMap is Map-typed and so carries a prefixed JSON key,
-     * and the bean walker has no Map branch so the path falls through to the JSON tree.
+     * A map is traversed by key: the key is a path segment. childBeanMap is Map-typed and so carries
+     * a prefixed JSON key, and the bean walker has no Map branch, so the path falls through to the
+     * JSON tree and the prefix has to be recognised there.
      */
     @Test
     public void matchesPropertyOfMapEntryAddressedByKey() {
@@ -687,7 +686,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
     /**
      * A Collection matcher must behave the same whether the field is named by a path or by a name
      * pattern. Both routes resolve against the serialised JSON for a field the object walk cannot
-     * reach, so both need the value presented as a Collection; only the path route did.
+     * reach, so both need the value presented as a Collection.
      */
     @Test
     public void withMatcherAgreesWithWithOnACollectionValuedField() {
@@ -891,7 +890,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
      * A guard rather than a regression test: on this shape a leak into the static and transient fields
      * is masked, because the bean-level failure is retried against the serialised JSON, which omits
      * them. It pins the intended field set so a future change is visible. The enum test below is the
-     * discriminating one, since an enum serialises to a bare string and so has no retry to hide behind.
+     * discriminating one, since an enum serialises to a bare string and so has no retry to mask it.
      */
     @Test
     public void wildcardDoesNotWalkStaticOrTransientFields() {
@@ -957,7 +956,7 @@ public class BeanMatcherCustomSuccessTest extends AbstractBeanMatcherTest {
                         "*.leakTarget.childString does not exist", error.getMessage()));
     }
 
-    /** Exists only on the enclosing test class, so it is the bait for the test above. */
+    /** Exists only on the enclosing test class, which is what the test above names. */
     private final ChildBean leakTarget = child().childString("leak-target").build();
 
     /**

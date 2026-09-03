@@ -879,9 +879,9 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
     }
 
     /**
-     * A map is traversed by key: the key is a path segment. Until the MARKER-prefixed key fix this
-     * could not resolve at all, because childBeanMap is Map-typed and so carries a prefixed JSON key,
-     * and the bean walker has no Map branch so the path falls through to the JSON tree.
+     * A map is traversed by key: the key is a path segment. childBeanMap is Map-typed and so carries
+     * a prefixed JSON key, and the bean walker has no Map branch, so the path falls through to the
+     * JSON tree and the prefix has to be recognised there.
      */
     @Test
     public void matchesPropertyOfMapEntryAddressedByKey() {
@@ -995,7 +995,7 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
     // so the matcher cannot be interrogated either.
     //
     // The boundary is covered by the scalar cases in JsonMatcherCustomFailureTest, which do fail
-    // correctly because the list view coerces a scalar on read. Change any of these deliberately.
+    // because the list view coerces a scalar on read. Change any of these deliberately.
     // -----------------------------------------------------------------------
 
     private static final String CHILD_BEAN_LIST_JSON = "{\n"
@@ -1040,13 +1040,13 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
     }
 
     // -----------------------------------------------------------------------
-    // Matchers the compatibility table documents as working, which nothing exercised
+    // Matchers the compatibility table documents as working
     // -----------------------------------------------------------------------
 
     @Test
     public void matchesMapKeyOnObjectInput() {
-        // hasKey is documented and was reachable only through MatcherConfigurationTest, never
-        // through .with(). It works on object input because the map arrives as a java.util.Map.
+        // hasKey works on object input because the map arrives as a java.util.Map. Through a JSON
+        // string it cannot, since a map serialises to a JsonArray of single-entry objects.
         Object input = parent().putToChildBeanMap("key", child().childString("banana")).build();
         String approvedFileContent = "{\n" +
                 "  \"childBean\": null,\n" +
@@ -1059,7 +1059,7 @@ public class JsonMatcherCustomSuccessTest extends AbstractJsonMatcherIgnoreTest 
 
     @Test
     public void matchesEmptyIterableOnObjectInput() {
-        // emptyIterable is documented as working for both input forms and appeared nowhere.
+        // emptyIterable is documented as working for both input forms.
         String approvedFileContent = "{\n" +
                 "  \"childBean\": null,\n" +
                 "  \"childBeanMap\": [],\n" +

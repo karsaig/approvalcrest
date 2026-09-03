@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -231,6 +234,331 @@ public class ReflectUtilTest {
     }
 
     // --- locked-module detection guard rails ---
+
+    // --- module-opening mechanisms ---
+    //
+    // Both routes are invoked reflectively, so a stub with a matching method signature stands in
+    // for a JVM arrangement that cannot be produced from inside this one: an attached agent, or a
+    // JDK 26 where Unsafe is dead. The stubs avoid naming java.lang.Module, which does not exist
+    // in the release 8 API this module compiles against.
+
+    /** Stands in for Instrumentation, recording what it was asked to open. */
+    public static class RecordingInstrumentation {
+        Object target;
+        Map<String, Set<Object>> opens;
+
+        public void redefineModule(Object module, Set<Object> extraReads,
+                                   Map<String, Set<Object>> extraExports,
+                                   Map<String, Set<Object>> extraOpens,
+                                   Set<Class<?>> extraUses,
+                                   Map<Class<?>, List<Class<?>>> extraProvides) {
+            this.target = module;
+            this.opens = extraOpens;
+        }
+    }
+
+    /** Stands in for an Instrumentation that refuses, as an unmodifiable module would. */
+    public static class RefusingInstrumentation {
+        public void redefineModule(Object module, Set<Object> extraReads,
+                                   Map<String, Set<Object>> extraExports,
+                                   Map<String, Set<Object>> extraOpens,
+                                   Set<Class<?>> extraUses,
+                                   Map<Class<?>, List<Class<?>>> extraProvides) {
+            throw new IllegalArgumentException("package not in module");
+        }
+    }
+
+    /** Stands in for MethodHandle.invokeWithArguments. */
+    public static class RefusingHandleInvoker {
+        public Object invokeWithArguments(Object[] arguments) {
+            throw new UnsupportedOperationException("implAddOpens");
+        }
+    }
+
+    private static Method redefineModuleOf(Class<?> stubType) throws NoSuchMethodException {
+        return stubType.getMethod("redefineModule", Object.class, Set.class, Map.class, Map.class,
+                Set.class, Map.class);
+    }
+
+    /**
+     * Every module that performs reflection has to be named in the open, not only this class's.
+     * They are the same module in an ordinary run, but the agent jar joins the system class path
+     * and a suite could resolve approvalcrest and Gson from different loaders — in which case an
+     * open naming only one of them would leave the other unable to read the field.
+     */
+    @Test
+    void instrumentationOpenNamesEveryModuleItWasGiven() throws Exception {
+        RecordingInstrumentation stub = new RecordingInstrumentation();
+        Object moduleA = new Object();
+        Object moduleB = new Object();
+        Object target = new Object();
+
+        boolean called = ReflectUtil.openViaInstrumentation(stub, redefineModuleOf(RecordingInstrumentation.class),
+                target, "java.lang", new Object[]{moduleA, moduleB});
+
+        assertThat(called, is(true));
+        assertThat(stub.target, is(target));
+        assertThat(stub.opens.keySet(), is(java.util.Collections.singleton("java.lang")));
+        assertThat(stub.opens.get("java.lang"), is((Set<Object>) new java.util.LinkedHashSet<Object>(
+                java.util.Arrays.asList(moduleA, moduleB))));
+    }
+
+    @Test
+    void instrumentationOpenReportsFailureWhenTheCallIsRefused() throws Exception {
+        assertThat(ReflectUtil.openViaInstrumentation(new RefusingInstrumentation(),
+                redefineModuleOf(RefusingInstrumentation.class), new Object(), "java.lang",
+                new Object[]{new Object()}), is(false));
+    }
+
+    @Test
+    void instrumentationOpenReportsFailureWhenAnythingIsMissing() throws Exception {
+        Method redefine = redefineModuleOf(RecordingInstrumentation.class);
+        Object[] modules = new Object[]{new Object()};
+
+        RecordingInstrumentation stub = new RecordingInstrumentation();
+        Object target = new Object();
+
+        assertThat(ReflectUtil.openViaInstrumentation(null, redefine, target, "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, null, target, "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, redefine, target, "p", null), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, redefine, target, "p", new Object[0]), is(false));
+    }
+
+    @Test
+    void unsafeOpenReportsFailureWhenTheHandleThrowsOrIsMissing() throws Exception {
+        Method invoker = RefusingHandleInvoker.class.getMethod("invokeWithArguments", Object[].class);
+
+        Object target = new Object();
+        Object ourMod = new Object();
+
+        assertThat(ReflectUtil.openViaUnsafe(new RefusingHandleInvoker(), invoker, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(null, invoker, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), null, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), invoker, target, "p", null), is(false));
+    }
+
+    /**
+     * Only the implication that actually holds. The reverse does not: Unsafe reading fields is not
+     * the same condition as the Unsafe opening route having resolved, and on Java 8 Unsafe works
+     * while there is no module to open at all.
+     */
+    @Test
+    void theAgentRouteAlwaysCountsAsAWayToOpenAModule() {
+        if (ReflectUtil.isInstrumentationAvailable()) {
+            assertThat(ReflectUtil.isModuleOpeningAvailable(), is(true));
+        }
+    }
+
+    /**
+     * Nothing may report an open route while no route exists, which is the direction that would
+     * let a locked type be claimed by a factory that cannot then read it.
+     */
+    @Test
+    void noRouteIsReportedWhenNeitherMechanismResolved() {
+        if (!ReflectUtil.isModuleOpeningAvailable()) {
+            assertThat(ReflectUtil.isInstrumentationAvailable(), is(false));
+        }
+    }
+
+    // --- how the two routes are combined ---
+    //
+    // No real JVM offers both routes at once, so these drive the choice between them directly. Each
+    // one pins a claim the javadoc makes that nothing else checks.
+
+    /** Records whether it ran, and answers however the test tells it to. */
+    private static final class Step implements ReflectUtil.ModuleStep {
+        private final boolean answer;
+        private boolean ran;
+
+        Step(boolean answer) {
+            this.answer = answer;
+        }
+
+        @Override
+        public boolean run(Object targetModule, String pkg) {
+            ran = true;
+            return answer;
+        }
+    }
+
+    @Test
+    void theAgentRouteIsTriedFirstAndTheOtherIsLeftAlone() {
+        Step primary = new Step(true);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(true), new Object(), "p"), is(true));
+        assertThat(primary.ran, is(true));
+        assertThat("a working primary must not cost a second open", fallback.ran, is(false));
+    }
+
+    @Test
+    void aFailedPrimaryFallsThroughWithinTheSameCall() {
+        Step primary = new Step(false);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(true), new Object(), "p"), is(true));
+        assertThat("both routes have to be attempted in one call, or the attempted-packages cache "
+                + "short-circuits every later one", fallback.ran, is(true));
+    }
+
+    /**
+     * redefineModule is documented as a no-op when asked to redefine an unnamed module: it returns
+     * normally having opened nothing. Believing the return value would report a locked package as
+     * open and hand the type to a factory that cannot read it.
+     */
+    @Test
+    void aRouteThatReturnsSuccessWithoutOpeningIsNotBelieved() {
+        Step primary = new Step(true);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(false), new Object(), "p"), is(false));
+        assertThat("an unconfirmed primary still has to let the fallback try", fallback.ran, is(true));
+    }
+
+    @Test
+    void anUnconfirmedPrimaryFallsThroughToAConfirmedFallback() {
+        final boolean[] confirmations = {false, true};
+        final int[] call = {0};
+        ReflectUtil.ModuleStep confirm = new ReflectUtil.ModuleStep() {
+            @Override
+            public boolean run(Object targetModule, String pkg) {
+                return confirmations[call[0]++];
+            }
+        };
+
+        assertThat(ReflectUtil.openConfirming(new Step(true), new Step(true), confirm, new Object(), "p"),
+                is(true));
+        assertThat("both routes were confirmed separately", call[0], is(2));
+    }
+
+    @Test
+    void noRouteWorkingMeansNotOpened() {
+        assertThat(ReflectUtil.openConfirming(new Step(false), new Step(false), new Step(true),
+                new Object(), "p"), is(false));
+    }
+
+    // --- which modules an open names ---
+
+    @Test
+    void oneModuleIsNamedWhenApprovalcrestAndGsonShareIt() {
+        Object shared = new Object();
+
+        assertThat(ReflectUtil.modulesToOpenTo(shared, shared), is(new Object[]{shared}));
+    }
+
+    @Test
+    void bothAreNamedWhenTheyWereLoadedSeparately() {
+        Object ours = new Object();
+        Object gson = new Object();
+
+        assertThat(ReflectUtil.modulesToOpenTo(ours, gson), is(new Object[]{ours, gson}));
+    }
+
+    @Test
+    void anUnresolvableGsonLeavesOurOwnModuleNamed() {
+        Object ours = new Object();
+
+        assertThat("losing Gson must not cost us the module we already have",
+                ReflectUtil.modulesToOpenTo(ours, null), is(new Object[]{ours}));
+    }
+
+    // --- inherited locked-module fields ---
+    //
+    // A user's own exception class is in the unnamed module, so isInLockedModule is false for it
+    // and neither fallback factory claimed it — but it still carries Throwable's private fields.
+    // Where no module can be opened, Gson's reflective adapter threw JsonIOException on
+    // detailMessage instead of the type degrading to getters.
+
+    /** Public on purpose: getter-based serialization has to be able to invoke the accessors. */
+    public static class UserDefinedException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        private final String ticket;
+
+        public UserDefinedException(String message, String ticket) {
+            super(message);
+            this.ticket = ticket;
+        }
+
+        public String getTicket() {
+            return ticket;
+        }
+    }
+
+    /**
+     * Asserted as a relationship rather than a fixed value, because both sides depend on whether
+     * this JDK could open java.lang — which is exactly the condition the guard exists for.
+     */
+    @Test
+    void aSubclassInheritsWhateverItsSuperclassLockedStateIs() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(UserDefinedException.class),
+                is(ReflectUtil.isInLockedModule(RuntimeException.class)));
+    }
+
+    @Test
+    void theSubclassItselfIsNeverLocked() {
+        // It lives in the unnamed module; only what it inherits can be locked.
+        assertThat(ReflectUtil.isInLockedModule(UserDefinedException.class), is(false));
+    }
+
+    @SuppressWarnings("unused")
+    static class OnlyStaticsAndTransients {
+        static String constant = "c";
+        transient String scratch = "s";
+    }
+
+    /**
+     * A locked superclass only matters if it actually contributes a field to the output. The rule
+     * has to match the one the field-reading factories use, or a subclass gets pulled onto the
+     * getter-based path over fields nobody was reading.
+     */
+    @Test
+    void onlySuperclassesThatContributeAFieldCount() {
+        assertThat("Throwable declares detailMessage and friends",
+                ReflectUtil.declaresSerializedField(Throwable.class), is(true));
+        assertThat("EventObject's only field is transient",
+                ReflectUtil.declaresSerializedField(java.util.EventObject.class), is(false));
+        assertThat(ReflectUtil.declaresSerializedField(OnlyStaticsAndTransients.class), is(false));
+        assertThat(ReflectUtil.declaresSerializedField(AllTypes.class), is(true));
+    }
+
+    /**
+     * The narrowing above has to hold whatever the mode, so assert it against the locked state
+     * rather than against a fixed value: even when the superclass is locked, a subclass of one that
+     * contributes no field is not treated as inheriting locked fields.
+     */
+    @Test
+    void aSubclassOfALockedClassWithNoReadableFieldsIsNotClaimed() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(EventSubclass.class), is(false));
+    }
+
+    @SuppressWarnings("unused")
+    static class EventSubclass extends java.util.EventObject {
+        private static final long serialVersionUID = 1L;
+
+        private final String label;
+
+        EventSubclass(Object source, String label) {
+            super(source);
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+    }
+
+    @Test
+    void aClassExtendingOnlyObjectInheritsNothingLocked() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(AllTypes.class), is(false));
+    }
+
+    @Test
+    void inheritanceCheckHandlesArraysPrimitivesAndNull() {
+        assertThat(ReflectUtil.inheritsFromLockedModule(int[].class), is(false));
+        assertThat(ReflectUtil.inheritsFromLockedModule(int.class), is(false));
+        assertThat(ReflectUtil.inheritsFromLockedModule(null), is(false));
+    }
 
     @Test
     void arraysAndPrimitivesAreNeverLocked() {

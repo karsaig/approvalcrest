@@ -224,8 +224,8 @@ public class BeanMatcherSortingTest extends AbstractBeanMatcherTest {
     @Test
     public void sortTypeSortsACollectionSubtypeOfThatElementType() {
         // The element type of a subclass is only knowable from its supertype: OrderList declares no
-        // arguments of its own. sortType promises "any Collection whose element type matches", and a
-        // declaration like this one was silently skipped.
+        // arguments of its own. sortType promises "any Collection whose element type matches", so a
+        // declaration like this one must not be skipped.
         SubtypeListHolder actual = new SubtypeListHolder("banana", "apple");
         SubtypeListHolder expected = new SubtypeListHolder("apple", "banana");
 

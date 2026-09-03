@@ -1371,13 +1371,13 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
     // -----------------------------------------------------------------------
     // A complex-key map keeps its key before its value
     //
-    // A map with a bean key serialises each entry as a [key, value] array. sortJsonArray used to recurse
-    // into that array like any other and reorder it by JSON, which lost the key/value distinction:
-    // Map{a -> z} and Map{z -> a} produced the same bytes, so an approved file written for one matched
-    // the other. The pair is now left in place while both halves are still descended into.
+    // A map with a bean key serialises each entry as a [key, value] array. Recursing into that array
+    // like any other and reordering it by JSON loses the key/value distinction: Map{a -> z} and
+    // Map{z -> a} render the same, so an approved file written for one matches the other. sortJsonArray
+    // leaves the pair in place and still descends into both halves.
     //
-    // These two tests are the pin from opposite directions: the first would pass even before the fix,
-    // because "a" < "z" put the key first by luck; the second is the one that could not.
+    // These two tests pin the rule from opposite directions: the first passes either way, because
+    // "a" < "z" puts the key first by luck; the second is the one that does not.
     // -----------------------------------------------------------------------
 
     private static Bean singleEntryMap(String key, String value) {
@@ -1424,9 +1424,9 @@ public class JsonMatcherIgnoreOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void transposedComplexKeyMapRendersTheOtherWayRound() {
-        // The key is "z" and the value is "a", so this renders [z, a] -- the reverse of the test above
-        // and the whole point. Before the fix both produced [a, z], so an approved file for one matched
-        // the other.
+        // The key is "z" and the value is "a", so this renders [z, a] — the reverse of the test above
+        // and the whole point. Reordering the pair renders both as [a, z], and an approved file for one
+        // then matches the other.
         String expected = "{\n" +
                 "  \"array\": null,\n" +
                 "  \"hashMap\": null,\n" +

@@ -50,14 +50,14 @@ In this mode, failure messages are structured JSON containing the expected/actua
 
 | Dimension | Supported | Tested on |
 |---|---|---|
-| JDK | 8+ | 8, 11, 17, 21, 25 |
+| JDK | 8+ | 8, 11, 17, 21, 25 (26 simulated: `--sun-misc-unsafe-memory-access=deny`) |
 | JUnit | 4, 5, 6 | 4 (4.13.2), 5 (5.14.4), 6 (6.1.0) |
 | TestNG | 6+ | 6.14.3, 7.10.2 |
 | Kotlin | 2.1+ | 2.2.21 |
 
 ## Installation
 
-Choose the artifact that matches your test runner.
+Choose the artifact that matches your test runner. All of them run on JDK 26, where types from locked JDK modules serialise from their getters rather than their fields, so approved files holding such a type need regenerating; adding `com.github.karsaig:approvalcrest-agent` keeps the serialised output byte-identical to earlier JDKs — see [field access modes](docs/field-access-modes.md#the-agent).
 
 ### JUnit 4 & JUnit 5 Vintage
 
@@ -121,7 +121,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [File control](docs/file-control.md) | withUniqueId, withFileName, withPath, in-place update, machine-readable diff |
 | [Shared approvals](docs/shared-approvals.md) | Pointer files, deduplicating identical approved files, the `dedup` and `reinstate` goals |
 | [System properties](docs/system-properties.md) | Every property and its short alias |
-| [Field access modes](docs/field-access-modes.md) | Safe, force, and fallback modes — JDK module handling |
+| [Field access modes](docs/field-access-modes.md) | Safe, force, and fallback modes — JDK module handling, and the agent that keeps field-based output on JDK 26+ |
 | [Supported types](docs/supported-types.md) | java.time.\*, Optional, Path, Throwable, circular references |
 | [Best practices](docs/best-practices.md) | State management, CI workflow, approved file discipline |
 | [JUnit 4 & Vintage](docs/junit4-vintage.md) | JUnit 4 / JUnit 5 Vintage specifics |

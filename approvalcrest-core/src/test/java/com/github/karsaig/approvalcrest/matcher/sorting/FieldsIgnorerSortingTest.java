@@ -152,7 +152,7 @@ public class FieldsIgnorerSortingTest {
 
     @Test
     void trailingWildcardWithoutALiteralStarKeySortsNothing() {
-        // The accepted sharp edge: someone writing map.* expecting every value gets a no-op.
+        // The accepted limitation: someone writing map.* expecting every value gets a no-op.
         JsonElement json = parse("{\"map\":{\"k1\":[3,1]}}");
 
         FieldsIgnorer.applySorting(json, sortPaths("map.*"), NO_MATCHERS, true);
@@ -439,9 +439,9 @@ public class FieldsIgnorerSortingTest {
 
     /**
      * A {@code SortField}'s ignored sub-paths take a {@code *} segment too, so the field can be kept out
-     * of the sort key under every child rather than under one named one. Without it the {@code *} was
-     * read as a literal key name, no child matched, and the field silently stayed in the key — which
-     * bakes an order nobody asked for into the approved file.
+     * of the sort key under every child rather than under one named one. Without it the {@code *} is
+     * read as a literal key name, no child matches, and the field stays in the key silently — writing
+     * an order nobody asked for into the approved file.
      * <p>
      * The three cases together are what make this meaningful: id in the key sorts by id, id out of it
      * sorts by v, and the wildcard must land on the latter.

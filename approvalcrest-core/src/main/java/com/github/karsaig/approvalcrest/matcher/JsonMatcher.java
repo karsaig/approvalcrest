@@ -238,13 +238,13 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
         // like a collection. Passing the strict-matching setting is what makes that safe: the approved
         // content is parsed text and cannot recognise a pair, so it must not be sorted while this side
         // suppresses. Two independent conditions keep it unsorted, and both are needed because they cover
-        // different routes -- sortFile, which is isSortInputFile() for the expected side, gates the
-        // field-level sort via anyPathMatch/anyFieldMatcherMatches; and skipCustomSortings, which empties
-        // the path map, which is what gates the root-array branch's path selectors, since those ignore
-        // sortFile -- its field-name matchers are gated by sortFile like everything else. Widen either for the expected side and pairs would be reordered there while
-        // this side leaves them alone, failing with no way to regenerate out of it --
-        // explicitSortFieldOnAMapKeepsTheKeyFirst and fieldMatcherSortOnAMapKeepsTheKeyFirst are the
-        // tests that notice.
+        // different routes -- sortFile, which is isSortInputFile() for the expected side, switches off
+        // the field-level sort via anyPathMatch/anyFieldMatcherMatches; and skipCustomSortings, which
+        // empties the path map that the root-array branch's path selectors read, since those ignore
+        // sortFile -- its field-name matchers follow sortFile like everything else. Widen either for
+        // the expected side and pairs would be reordered there while this side leaves them alone, failing
+        // with no way to regenerate out of it -- explicitSortFieldOnAMapKeepsTheKeyFirst and
+        // fieldMatcherSortOnAMapKeepsTheKeyFirst are the tests that notice.
         applySorting(filteredJson, skipCustomSortings ? emptyMap() : matcherConfiguration.getPathsToSort(), skipCustomSortings ? emptyList() : matcherConfiguration.getPatternsToSort(), sortFile, sortedTracker,
                 fileMatcherConfig.isStrictFileMatching(), rootChain);
 

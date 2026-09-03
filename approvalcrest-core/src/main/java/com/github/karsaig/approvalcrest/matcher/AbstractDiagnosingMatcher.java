@@ -335,10 +335,10 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
      * <p>
      * A {@code JsonArray} arrives when the path could not be resolved against the object under
      * comparison — a raw JSON string input, or an array segment the bean walker does not traverse — so
-     * the value comes from the serialised JSON instead. That is an {@code Iterable}
-     * but not a {@code Collection}, so {@code hasSize} and {@code empty} answered false on the type
-     * check alone whatever the array held, and their negations were correspondingly true whatever it
-     * held. A {@link JsonElementUtil#asList(JsonArray) list view} lets them answer for real.
+     * the value comes from the serialised JSON instead. That is an {@code Iterable} but not a
+     * {@code Collection}, so {@code hasSize} and {@code empty} answer false on the type check alone
+     * whatever the array holds, and their negations are correspondingly true whatever it holds.
+     * A {@link JsonElementUtil#asList(JsonArray) list view} lets them answer for real.
      * <p>
      * The view copies nothing, and it coerces a scalar element on read, so an element matcher written
      * against the value — {@code hasItem("a")}, {@code contains(1L, 2L)} — matches a collection of

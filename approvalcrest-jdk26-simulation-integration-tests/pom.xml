@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>approvalcrest-parent</artifactId>
+        <groupId>com.github.karsaig</groupId>
+        <version>1.5.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.karsaig.integration.tests</groupId>
+    <artifactId>approvalcrest-jdk26-simulation-integration-tests</artifactId>
+
+    <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, which is JDK 26's default for
+         the Unsafe memory-access methods. That lets these tests run JDK 26's behaviour on today's
+         runners, with and without the agent attached.
+
+         Bound to integration-test on purpose: the javaagent path below points at a built jar, so
+         approvalcrest-agent has to have been packaged. `mvn test` alone will not do that - use
+         'mvn verify -Djava.version.to.run=25'. -->
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-junit-jupiter</artifactId>
+            <version>1.5.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.karsaig</groupId>
+            <artifactId>approvalcrest-agent</artifactId>
+            <version>1.5.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.14.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.14.4</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <release>${java.version.to.run}</release>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-options</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>unsafe-denied-no-agent</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <!-- @{argLine} is kept so attaching flags here never displaces the
+                                 JaCoCo agent, which the coverage build injects via that property. -->
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 --sun-misc-unsafe-memory-access=deny</argLine>
+                            <includes>
+                                <include>**/UnsafeDeniedWithoutAgentTest.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>fallback-mode-with-agent</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 -DapprovalcrestReflection=fallback
+                                -javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</argLine>
+                            <includes>
+                                <include>**/FallbackModeWithAgentTest.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>unsafe-denied-with-agent</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <skip>false</skip>
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 --sun-misc-unsafe-memory-access=deny
+                                -javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</argLine>
+                            <includes>
+                                <include>**/UnsafeDeniedWithAgentTest.java</include>
+                            </includes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

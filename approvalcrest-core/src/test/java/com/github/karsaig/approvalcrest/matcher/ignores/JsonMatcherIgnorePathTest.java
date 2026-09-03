@@ -7043,10 +7043,10 @@ public class JsonMatcherIgnorePathTest extends AbstractJsonMatcherIgnoreTest {
     @Test
     void ignoringEveryFieldUnderAMapEntryRemovesTheMapFieldFromTheGeneratedFile() {
         // A Set- or Map-typed field's JSON key carries the naming strategy's sorting prefix, which
-        // is stripped again before the file is written. Emptying such a field used to leave
-        // "childBeanMap": [] in the file: the emptied child was found under the prefixed name and
-        // removed by the bare one, so nothing went. An unmarked field in the same situation was
-        // removed, so the prefix decided the outcome while being invisible in the result.
+        // is stripped again before the file is written. Finding the emptied child under the prefixed
+        // name and removing it by the bare one leaves "childBeanMap": [] in the file, while an
+        // unmarked field in the same situation is removed — the prefix would decide the outcome
+        // while being invisible in the result.
         Object input = parent().putToChildBeanMap("k1", child().childString("s").childInteger(1)).build();
         String expectedFileContent = "{\n" +
                 "  \"childBean\": null,\n" +

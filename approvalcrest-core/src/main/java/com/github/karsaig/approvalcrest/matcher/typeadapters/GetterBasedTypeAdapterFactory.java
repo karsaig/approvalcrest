@@ -22,13 +22,14 @@ import static java.util.Collections.newSetFromMap;
 /**
  * A TypeAdapterFactory that serializes objects from locked modules using their public getter methods.
  * <p>
- * This is the last-resort fallback (Tier 3) for when both standard reflection and Unsafe
- * are unavailable. It produces JSON based on public getX()/isX() methods instead of fields.
+ * This is the last-resort fallback (Tier 3) for when standard reflection cannot reach the fields
+ * and no module can be opened. It produces JSON based on public getX()/isX() methods instead.
  * <p>
  * Active when:
  * <ul>
  *   <li>Mode is "fallback" (forces this factory regardless of Unsafe availability), OR</li>
- *   <li>Mode is "safe" AND type is in a locked module AND Unsafe is NOT available</li>
+ *   <li>Mode is "safe" AND no module could be opened (no agent attached, and Unsafe unavailable)
+ *       AND the type is in — or inherits fields from — a locked module</li>
  * </ul>
  * <p>
  * The JSON format differs from field-based serialization (different property names/structure),
@@ -63,12 +64,17 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
             return null;
         }
 
-        if (!ReflectUtil.isInLockedModule(rawType)) {
+        // A type that merely *inherits* locked-module fields counts too. Its own module is not
+        // locked, so nothing else claims it, and Gson's reflective adapter then throws
+        // JsonIOException on the inherited field instead of the type degrading to getters — as a
+        // user's own exception class does on a JDK where no module can be opened.
+        if (!ReflectUtil.isInLockedModule(rawType) && !ReflectUtil.inheritsFromLockedModule(rawType)) {
             return null;
         }
 
         // In fallback mode, always handle locked types here.
-        // In safe mode, only handle if Unsafe is NOT available
+        // In safe mode, only handle if Unsafe is NOT available (with the agent attached the type
+        // is not locked at all, so this factory is never reached for it)
         // (if Unsafe is available, UnsafeFieldTypeAdapterFactory handles it first).
         if (!ReflectUtil.isFallbackMode() && ReflectUtil.isUnsafeAvailable()) {
             return null;
@@ -80,11 +86,14 @@ public class GetterBasedTypeAdapterFactory implements TypeAdapterFactory {
                     "approvalcrest cannot serialize type '" + rawType.getName() + "' in the current mode.\n"
                             + "The type is in a locked module and has no public accessor methods (getX(), isX(), or record-style).\n"
                             + "\nOptions:\n"
-                            + "  1. Use the default 'safe' mode (no system property needed) which opens modules automatically.\n"
-                            + "     On JDK 26+ that needs --sun-misc-unsafe-memory-access=allow as well, because safe mode\n"
-                            + "     cannot open modules once sun.misc.Unsafe is disabled.\n"
-                            + "  2. Use 'force' mode with --add-opens: -DapprovalcrestReflection=force\n"
-                            + "  3. Add --add-opens JVM flags for the specific module/package.\n"
+                            + "  1. Attach the approvalcrest agent, which opens modules with no JVM flags beyond it:\n"
+                            + "       -javaagent:/path/to/approvalcrest-agent-<version>.jar\n"
+                            + "     This is the recommended answer on JDK 26+, where safe mode cannot open modules on\n"
+                            + "     its own because sun.misc.Unsafe is disabled.\n"
+                            + "  2. Use the default 'safe' mode (no system property needed), which opens modules\n"
+                            + "     automatically on JDK 8 to 25 without the agent.\n"
+                            + "  3. Use 'force' mode with --add-opens: -DapprovalcrestReflection=force\n"
+                            + "  4. Add --add-opens JVM flags for the specific module/package.\n"
                             + "\nSee https://github.com/karsaig/approvalcrest for details."
             );
         }

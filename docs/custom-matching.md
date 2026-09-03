@@ -83,17 +83,16 @@ assertThat(actual, sameJsonAsApproved()
     .with("orders.trackingCode", notNullValue()));
 ```
 
-Two rules govern this, and they pull in opposite directions, so it is worth separating them. They apply
-to the `*` segment below in exactly the same way.
+These two rules apply to the `*` segment below in exactly the same way.
 
 **Matching is strict:** the matcher must pass on **every** value the path resolved to. If one fails, the
 whole assertion fails, and the message identifies the first failing element.
 
 **Resolution is lenient:** elements that do not have the field are skipped rather than failing. So on a
 list where only some orders carry `trackingCode`, the matcher is applied to the ones that do and the
-assertion can pass. Only a path that resolves against **no** element at all is an error. That leniency is
-what makes a map's array-of-entries shape reachable, but it also means a heterogeneous collection quietly
-narrows what you asserted — assert the container's size alongside it when that matters.
+assertion can pass. Only a path that resolves against **no** element at all is an error. Skipping is what
+makes a map's array-of-entries form reachable, but it also means a heterogeneous collection narrows what
+you asserted without saying so — assert the container's size alongside it when that matters.
 
 **Empty collection fails:** if the fanned-out collection is empty, the assertion fails. This prevents silent vacuous-truth passes when a list is unexpectedly empty.
 
@@ -151,7 +150,7 @@ Things to know:
   a key literally named `*`, which a JSON document or a `Map<String,?>` may genuinely have. So
   `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
   meaning "every value". To assert something about the map as a whole, target the map field itself.
-- **`*` is not needed for collections or arrays.** They are already traversed transparently, so
+- **`*` is not needed for collections or arrays.** They are already traversed, so
   `orders.trackingCode` already means "in every order". Writing `orders.*.trackingCode` is a *different*
   query — "any named field of each order, then trackingCode" — not a synonym.
 - **A `*` that matches nothing is an error** for `.with(...)`, so a mistyped path cannot pass by matching
@@ -242,7 +241,7 @@ Fan-out through an array is unaffected — `.with("orderArray.trackingCode", not
 
 ## Container Matchers and JSON String Input
 
-`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried — which is why negating one behaves as you would expect. On JSON-string input the path never resolves against the object, and one combination there cannot fail; see the negation note below. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
+`sameJsonAsApproved` accepts either an object or a raw JSON string. A container matcher is resolved against the Java object; only if the path cannot be resolved there is it retried against the serialised JSON, where a collection is a Gson `JsonArray`. A container matcher that does resolve against the object is settled by it and never retried, so negating one works. On JSON-string input the path never resolves against the object, and one combination there cannot fail; see the negation note below. A `JsonArray` is an `Iterable` but not a `Collection`, so it is presented to the matcher as a read-only `List` view over the live array. Nothing is copied, and a scalar element is coerced on read — a JSON number arrives as a `Long` or `Double`, a JSON string as a `String`.
 
 Size, emptiness and scalar contents therefore hold for both input forms. What a JSON string cannot supply is element *classes*:
 
@@ -280,7 +279,7 @@ assertThat(actual, sameBeanAs(expected)
     .with("orders", not(hasItem(orderWithRef("A-9")))));
 ```
 
-**One combination cannot fail, and it is worth knowing before you rely on it.** `not(hasItem(...))`, `not(contains(...))` and `not(containsInAnyOrder(...))` pass whatever the data holds when *all three* of these are true: the input is a raw JSON string, the elements are objects rather than scalars, and the element matcher is written against the element's own class.
+**One combination cannot fail.** `not(hasItem(...))`, `not(contains(...))` and `not(containsInAnyOrder(...))` pass whatever the data holds when *all three* of these are true: the input is a raw JSON string, the elements are objects rather than scalars, and the element matcher is written against the element's own class.
 
 ```java
 // Object input: fails when an order with this reference is present. Correct.
@@ -293,7 +292,7 @@ assertThat(jsonString, sameJsonAsApproved()
     .with("orders", not(hasItem(orderWithRef("A-9")))));
 ```
 
-Un-negated the same mismatch is loud rather than silent — `mismatches were: [was JsonObject <{...}>]` — which is the limitation already described in the table above. Negation turns that non-match into a pass.
+Un-negated, the same mismatch is reported — `mismatches were: [was JsonObject <{...}>]` — which is the limitation already described in the table above. Negation turns that non-match into a pass.
 
 The two ways round it: compare the object rather than a JSON string, or write the matcher against the JSON shape. Over **scalar** elements all three work on both input forms, because the list view coerces a scalar on read, so `not(hasItem("urgent"))` over a `tags` array fails correctly whichever form the input takes.
 
@@ -357,7 +356,7 @@ assertThat(actual, sameJsonAsApproved()
 ```
 
 A pattern is matched against the field's own name whatever its type, `Set`- and `Map`-typed fields included.
-Note the consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
+One consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
 to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
 
 ## Works With

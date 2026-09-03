@@ -3,28 +3,33 @@ package com.github.karsaig.approvalcrest;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides reflective field access with module-opening capability.
  * <p>
- * On Java 9+, uses Unsafe to obtain a trusted {@code MethodHandles.Lookup} and then
- * programmatically opens locked module packages (equivalent to {@code --add-opens} JVM flags).
+ * On Java 9+, opens locked module packages programmatically (equivalent to {@code --add-opens}
+ * JVM flags) by one of two routes: {@code Instrumentation.redefineModule} when the approvalcrest
+ * agent was attached with {@code -javaagent}, otherwise Unsafe plus a trusted
+ * {@code MethodHandles.Lookup}.
  * Once a module package is opened, Gson's built-in ReflectiveTypeAdapterFactory works
  * unchanged, producing identical JSON output.
  * </p>
  * <p>
  * Modes (controlled via system property {@code approvalcrestReflection} or alias {@code aCReflection}):
  * <ul>
- *   <li>{@code safe} (default) — opens modules via Unsafe, then standard reflection</li>
+ *   <li>{@code safe} (default) — opens modules via the agent's {@code Instrumentation} if it is
+ *       attached, otherwise via Unsafe, then standard reflection</li>
  *   <li>{@code force} — uses setAccessible(true) directly (requires --add-opens on Java 9+)</li>
  *   <li>{@code fallback} — skips Unsafe entirely, uses getter-based (for testing/future-proofing)</li>
  * </ul>
  * <p>
  * IMPORTANT: All access to sun.misc.Unsafe, java.lang.Module, and MethodHandles.Lookup is
- * done via reflection. There is NO import of any of these. The code degrades gracefully to
- * getter-based serialization in both of the ways Unsafe goes away:
+ * done via reflection. There is NO import of any of these. The code degrades to getter-based
+ * serialization in both of the ways Unsafe goes away:
  * </p>
  * <ul>
  *   <li><b>Disabled</b> — from JDK 26 this is the default (JEP 471/498). The class, its
@@ -36,7 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *       and the Unsafe initialization is skipped.</li>
  * </ul>
  * <p>
- * Either way: zero compile errors, zero runtime errors.
+ * Attaching the approvalcrest agent keeps field-based output in both cases, because
+ * {@code Instrumentation.redefineModule} needs no Unsafe at all; without it, locked-module types
+ * degrade to getter-based serialization.
  * </p>
  */
 public class ReflectUtil {
@@ -65,10 +72,21 @@ public class ReflectUtil {
     private static final Method GET_FLOAT;
     private static final Method GET_DOUBLE;
 
-    // Module opening — cached MethodHandle (typed as Object) + invocation method
+    // Module opening, route 1 — java.lang.instrument, needs the agent, needs no Unsafe
+    private static final Object INSTRUMENTATION;      // java.lang.instrument.Instrumentation
+    private static final Method REDEFINE_MODULE;      // Instrumentation.redefineModule(...)
+
+    // Module opening, route 2 — cached MethodHandle (typed as Object) + invocation method
     private static final Object IMPL_ADD_OPENS_MH;    // MethodHandle for Module.implAddOpens
     private static final Method INVOKE_WITH_ARGS;     // MethodHandle.invokeWithArguments(Object[])
     private static final Object OUR_MODULE;           // the module of this class
+
+    // Every module an open must name: this class's module, plus Gson's. They are the same module
+    // in every ordinary arrangement, since one class loader has one unnamed module, but the agent
+    // jar is appended to the system class path and a suite running with useSystemClassLoader=false
+    // could resolve the two from different loaders. Naming both costs nothing and removes the
+    // possibility of opening to a module that is not the one doing the reflection.
+    private static final Object[] MODULES_TO_OPEN_TO;
 
     // Packages we've already successfully opened (to avoid retrying)
     private static final Set<String> OPENED_PACKAGES = ConcurrentHashMap.newKeySet();
@@ -177,10 +195,67 @@ public class ReflectUtil {
         GET_FLOAT = getFloat;
         GET_DOUBLE = getDouble;
 
-        // Initialize module-opening capability via trusted Lookup
+        // Our own module. Resolved before the blocks below that require Unsafe, because it is
+        // Class.getModule() and needs none, and because both opening routes depend on it.
+        Object ourModule = null;
+        Object[] modulesToOpenTo = null;
+        if (getModule != null) {
+            try {
+                ourModule = getModule.invoke(ReflectUtil.class);
+            } catch (Throwable t) {
+                ourModule = null;
+            }
+        }
+        if (ourModule != null) {
+            // Gson performs the field read, so it has to be named in the open too. Resolved by name
+            // and independently of our own module: failing to find it must not cost us the module we
+            // already have, and it is the only module we could not name that would still leave the
+            // Unsafe route working.
+            Object gsonModule = null;
+            try {
+                gsonModule = getModule.invoke(Class.forName("com.google.gson.Gson"));
+            } catch (Throwable t) {
+                gsonModule = null;
+            }
+            modulesToOpenTo = modulesToOpenTo(ourModule, gsonModule);
+        }
+        OUR_MODULE = ourModule;
+        MODULES_TO_OPEN_TO = modulesToOpenTo;
+
+        // Route 1: java.lang.instrument. Available whenever the agent was attached, on any JDK 9+,
+        // whether or not Unsafe still works. This is the route that keeps safe mode field-based on
+        // JDK 26, so nothing about resolving it may depend on Unsafe.
+        Object instrumentation = null;
+        Method redefineModule = null;
+        // Skipped in fallback mode, as the Unsafe route is. Fallback exists for suites that
+        // want no module bypass at all, and opening java.lang through Instrumentation is still a
+        // bypass even though it needs no Unsafe.
+        if (getModule != null && !FALLBACK_MODE) {
+            try {
+                Class<?> agentClass = ClassLoader.getSystemClassLoader()
+                        .loadClass("com.github.karsaig.approvalcrest.agent.ApprovalcrestAgent");
+                instrumentation = agentClass.getMethod("getInstrumentation").invoke(null);
+                if (instrumentation != null) {
+                    Class<?> moduleClass = getModule.getReturnType();
+                    // Resolve on the interface, not on instrumentation.getClass(). The runtime type
+                    // is sun.instrument.InstrumentationImpl, whose package is not exported, so a
+                    // Method taken from it cannot be made accessible.
+                    Class<?> instrumentationClass = Class.forName("java.lang.instrument.Instrumentation");
+                    redefineModule = instrumentationClass.getMethod("redefineModule",
+                            moduleClass, Set.class, Map.class, Map.class, Set.class, Map.class);
+                }
+            } catch (Throwable t) {
+                // No agent on the command line, or an Instrumentation that cannot be used
+                instrumentation = null;
+                redefineModule = null;
+            }
+        }
+        INSTRUMENTATION = instrumentation;
+        REDEFINE_MODULE = redefineModule;
+
+        // Route 2: Unsafe plus a trusted Lookup.
         Object implAddOpensMh = null;
         Method invokeWithArgs = null;
-        Object ourModule = null;
 
         if (unsafe != null && getModule != null && objectFieldOffset != null && getObject != null) {
             try {
@@ -208,26 +283,30 @@ public class ReflectUtil {
                 // Get MethodHandle.invokeWithArguments(Object[])
                 Class<?> methodHandleClass = Class.forName("java.lang.invoke.MethodHandle");
                 invokeWithArgs = methodHandleClass.getMethod("invokeWithArguments", Object[].class);
-
-                // Cache our module reference
-                ourModule = getModule.invoke(ReflectUtil.class);
             } catch (Exception e) {
-                // Module opening not possible on this JDK
+                // This route is not possible on this JDK; route 1 may still be
                 implAddOpensMh = null;
                 invokeWithArgs = null;
-                ourModule = null;
             }
         }
 
         IMPL_ADD_OPENS_MH = implAddOpensMh;
         INVOKE_WITH_ARGS = invokeWithArgs;
-        OUR_MODULE = ourModule;
 
         // Proactively open java.lang to our module. This is needed because
         // Gson's ReflectiveTypeAdapterFactory accesses Throwable fields (detailMessage etc.)
         // even when the serialized class itself is in an unnamed module (e.g. test framework
         // exception classes that extend java.lang.Throwable).
-        if (implAddOpensMh != null && invokeWithArgs != null && ourModule != null && getModule != null) {
+        // Guarded on either mechanism, not on Unsafe: a user's own exception class is in an unnamed
+        // module, so isInLockedModule returns false for it and nothing about the class itself
+        // triggers an open of the java.lang fields Gson still has to read.
+        //
+        // Not strictly needed as things now stand: inheritsFromLockedModule walks to Throwable,
+        // and that walk opens java.lang on demand before Gson reads a field. Kept because that is
+        // a side effect of a call in another class rather than a guarantee, and because opening
+        // once at start-up costs nothing.
+        if (ourModule != null && getModule != null
+                && ((redefineModule != null) || (implAddOpensMh != null && invokeWithArgs != null))) {
             try {
                 Object javaBaseModule = getModule.invoke(String.class);
                 tryOpenModule(javaBaseModule, "java.lang", ourModule);
@@ -309,7 +388,7 @@ public class ReflectUtil {
      * <p>
      * On Java 8 (no Module API), always returns false.
      * In force mode, always returns false.
-     * In safe mode with Unsafe available: attempts to open the module on-demand.
+     * In safe mode with either opening route available: attempts to open the module on-demand.
      * Arrays, primitives, and types without meaningful packages return false.
      */
     public static boolean isInLockedModule(Class<?> clazz) {
@@ -360,27 +439,203 @@ public class ReflectUtil {
     }
 
     /**
-     * Attempts to open a locked module package to our module using Unsafe + trusted Lookup.
-     * This is equivalent to {@code --add-opens module/package=ALL-UNNAMED} but done at runtime.
+     * Checks whether the given class inherits fields from a locked module, which is not the same
+     * question as {@link #isInLockedModule(Class)} asks.
+     * <p>
+     * A user's own exception class is in the unnamed module, so it is not itself locked, but it
+     * carries {@code java.lang.Throwable}'s private fields. When no module can be opened those
+     * fields are unreadable, and standard reflection throws rather than returning nothing — so
+     * such a type has to be serialized from its getters like a locked type, instead of being left
+     * to fail.
+     * </p>
      *
-     * @return true if the module was successfully opened
+     * @return true if any superclass above the given one is in a locked module
+     */
+    public static boolean inheritsFromLockedModule(Class<?> clazz) {
+        if (clazz == null || clazz.isArray() || clazz.isPrimitive()) {
+            return false;
+        }
+        for (Class<?> c = clazz.getSuperclass(); c != null && c != Object.class; c = c.getSuperclass()) {
+            if (isInLockedModule(c) && declaresSerializedField(c)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the class declares a field that would actually be serialized, using the same rule as
+     * the field-reading factories: not static, not transient, not compiler-generated.
+     * <p>
+     * A superclass being locked is not on its own a reason to take a subclass off the field-based
+     * path. {@code java.util.EventObject}'s only field is transient, so nothing ever read it and
+     * the subclass serialized fine; claiming it would change that output for no gain.
+     * {@code java.lang.Throwable} declares four readable fields, which is why its subclasses need
+     * the getter-based path when those fields cannot be reached.
+     * </p>
+     */
+    static boolean declaresSerializedField(Class<?> clazz) {
+        for (Field field : clazz.getDeclaredFields()) {
+            int mods = field.getModifiers();
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods) || field.isSynthetic()) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Attempts to open a locked module package to our module, equivalent to
+     * {@code --add-opens module/package=ALL-UNNAMED} but done at runtime.
+     * <p>
+     * Two mechanisms, tried in order within a single call:
+     * </p>
+     * <ol>
+     *   <li>{@code Instrumentation.redefineModule} — supported API, needs the agent attached, needs
+     *       no Unsafe. The only one that works on JDK 26 defaults.</li>
+     *   <li>{@code Unsafe} plus a trusted {@code Lookup} calling {@code Module.implAddOpens} — the
+     *       original route, still the one in use on JDK 8 to 25 without the agent.</li>
+     * </ol>
+     * <p>
+     * Both run inside one invocation on purpose. The attempted-packages cache records the key
+     * before trying, so splitting them across calls would let a failure of the first mechanism
+     * short-circuit every later call and the second would never run.
+     * </p>
+     *
+     * @return true if the package is open to {@code ourMod} afterwards
      */
     private static boolean tryOpenModule(Object targetModule, String pkg, Object ourMod) {
-        if (IMPL_ADD_OPENS_MH == null || INVOKE_WITH_ARGS == null) {
+        if (!isModuleOpeningAvailable()) {
             return false;
         }
         String key = System.identityHashCode(targetModule) + "/" + pkg;
         if (!OPENED_PACKAGES.add(key)) {
-            // Already attempted — check if it worked
-            try {
-                return (boolean) IS_OPEN.invoke(targetModule, pkg, ourMod);
-            } catch (Exception e) {
-                return false;
-            }
+            // Already attempted — report what actually happened
+            return isOpenTo(targetModule, pkg, ourMod);
+        }
+
+        final Object ourMod_ = ourMod;
+        return openConfirming(
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return openViaInstrumentation(INSTRUMENTATION, REDEFINE_MODULE, module, name,
+                                MODULES_TO_OPEN_TO);
+                    }
+                },
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return openViaUnsafe(IMPL_ADD_OPENS_MH, INVOKE_WITH_ARGS, module, name, ourMod_);
+                    }
+                },
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return isOpenTo(module, name, ourMod_);
+                    }
+                },
+                targetModule, pkg);
+    }
+
+    /**
+     * The modules an open has to name. Normally one: a class loader has a single unnamed module, so
+     * approvalcrest and Gson share it. Two only when they were loaded separately, which the agent
+     * jar joining the system class path makes possible.
+     *
+     * @param gsonModule may be null if Gson could not be resolved, in which case only ours is named
+     */
+    static Object[] modulesToOpenTo(Object ourModule, Object gsonModule) {
+        if (gsonModule == null || ourModule.equals(gsonModule)) {
+            return new Object[]{ourModule};
+        }
+        return new Object[]{ourModule, gsonModule};
+    }
+
+    /** One step in opening a package: an opening route, or the check that confirms one worked. */
+    interface ModuleStep {
+        boolean run(Object targetModule, String pkg);
+    }
+
+    /**
+     * Tries the primary route, then the fallback, confirming each rather than believing it.
+     * <p>
+     * Split out from {@link #tryOpenModule} because no real JVM offers both routes at once — the
+     * agent route needs an agent, the Unsafe route needs a JDK where Unsafe still works — so the
+     * three properties this method exists for could not otherwise be tested: that the primary is
+     * tried first, that a failed primary falls through to the fallback inside the same call, and
+     * that a route reporting success without the package actually being open is not believed.
+     * </p>
+     * <p>
+     * That last one is not hypothetical: {@code redefineModule} is documented as a no-op when asked
+     * to redefine an unnamed module, so it returns normally having opened nothing.
+     * </p>
+     *
+     * @return true only if a route ran and {@code confirm} then agreed the package is open
+     */
+    static boolean openConfirming(ModuleStep primary, ModuleStep fallback, ModuleStep confirm,
+                                  Object targetModule, String pkg) {
+        if (primary.run(targetModule, pkg) && confirm.run(targetModule, pkg)) {
+            return true;
+        }
+        return fallback.run(targetModule, pkg) && confirm.run(targetModule, pkg);
+    }
+
+    /**
+     * Opens a package via {@code Instrumentation.redefineModule}.
+     * <p>
+     * Package-visible so the JDK 26 arrangement, which cannot be produced from inside a JVM that
+     * started with Unsafe working, can be exercised with a stub.
+     * </p>
+     *
+     * @return true if the call completed; the caller still has to confirm the package is open,
+     *         because redefining an unnamed module is a documented no-op that returns normally
+     */
+    static boolean openViaInstrumentation(Object instrumentation, Method redefineModule,
+                                          Object targetModule, String pkg, Object[] openTo) {
+        if (instrumentation == null || redefineModule == null || openTo == null || openTo.length == 0) {
+            return false;
         }
         try {
-            INVOKE_WITH_ARGS.invoke(IMPL_ADD_OPENS_MH, (Object) new Object[]{targetModule, pkg, ourMod});
+            Set<Object> targets = new java.util.LinkedHashSet<Object>(java.util.Arrays.asList(openTo));
+            Map<String, Set<Object>> extraOpens = java.util.Collections.singletonMap(pkg, targets);
+            redefineModule.invoke(instrumentation, targetModule,
+                    java.util.Collections.emptySet(), java.util.Collections.emptyMap(),
+                    extraOpens,
+                    java.util.Collections.emptySet(), java.util.Collections.emptyMap());
             return true;
+        } catch (Exception e) {
+            // UnmodifiableModuleException, or a package the target module does not contain
+            return false;
+        }
+    }
+
+    /**
+     * Opens a package via Unsafe and a trusted {@code Lookup}. See
+     * {@link #openViaInstrumentation} for why the result still has to be confirmed.
+     *
+     * @return true if the call completed
+     */
+    static boolean openViaUnsafe(Object implAddOpensMh, Method invokeWithArgs,
+                                 Object targetModule, String pkg, Object ourMod) {
+        if (implAddOpensMh == null || invokeWithArgs == null || ourMod == null) {
+            return false;
+        }
+        try {
+            invokeWithArgs.invoke(implAddOpensMh, (Object) new Object[]{targetModule, pkg, ourMod});
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean isOpenTo(Object targetModule, String pkg, Object ourMod) {
+        if (IS_OPEN == null || ourMod == null) {
+            return false;
+        }
+        try {
+            return (boolean) IS_OPEN.invoke(targetModule, pkg, ourMod);
         } catch (Exception e) {
             return false;
         }
@@ -472,6 +727,24 @@ public class ReflectUtil {
      */
     public static boolean isFallbackMode() {
         return FALLBACK_MODE;
+    }
+
+    /**
+     * @return true if some mechanism for opening a locked module package is available: the
+     *         {@code -javaagent} route, or the Unsafe route. False means locked-module types are
+     *         serialized from their public getters instead of their fields.
+     */
+    public static boolean isModuleOpeningAvailable() {
+        return (INSTRUMENTATION != null && REDEFINE_MODULE != null)
+                || (IMPL_ADD_OPENS_MH != null && INVOKE_WITH_ARGS != null);
+    }
+
+    /**
+     * @return true if the {@code -javaagent} route is in use, which is what keeps field-based
+     *         output working on JDK 26 where the Unsafe route no longer can.
+     */
+    public static boolean isInstrumentationAvailable() {
+        return INSTRUMENTATION != null && REDEFINE_MODULE != null;
     }
 
     /**

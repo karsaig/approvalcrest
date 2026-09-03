@@ -13,6 +13,8 @@ Add approvalcrest to your project and write your first assertion in minutes.
 | Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.5.0` |
 | TestNG | `com.github.karsaig:approvalcrest-testng:1.5.0` |
 
+One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-agent:1.5.1` is a java agent that keeps output field-based on JDK 26, where the JDK disables the `sun.misc.Unsafe` calls approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
+
 ### JUnit 4 / Vintage (Maven)
 
 ```xml

@@ -14,7 +14,7 @@ Setting them to **different values** throws `IllegalStateException` at test star
 
 | Property | Alias | Default | Description | Docs |
 |---|---|---|---|---|
-| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode: `safe` (auto-opens modules), `force` (requires --add-opens), or `fallback` (getter-based). | [field-access-modes](field-access-modes.md) |
+| `approvalcrestReflection` | `aCReflection` | `safe` | Field access mode: `safe` (auto-opens modules; on JDK 26+ only with the approvalcrest agent, otherwise getter-based for locked types), `force` (requires --add-opens), or `fallback` (getter-based). | [field-access-modes](field-access-modes.md) |
 | `fileMatcherUpdateInPlace` | `fMUInPlace` | `false` | Re-write approved files in-place from actual output instead of failing. The legacy name `jsonMatcherUpdateInPlace` is also accepted. | [same-json-as-approved](same-json-as-approved.md) |
 | `fileMatcherPassOnCreate` | `fMPOnCreate` | `false` | Pass the test (instead of failing) when no approved file exists yet. | [same-json-as-approved](same-json-as-approved.md) |
 | `useApprovedDirectory` | `uADirectory` | `false` | Store approved files in a dedicated `approved/` directory tree instead of alongside test sources. | [file-control](file-control.md) |

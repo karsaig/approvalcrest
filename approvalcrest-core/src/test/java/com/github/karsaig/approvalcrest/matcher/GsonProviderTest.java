@@ -99,9 +99,9 @@ public class GsonProviderTest {
     }
 
     /**
-     * Subtypes and shapes the old list of known types could not describe. Every one of these is a field
-     * declaration someone can write, and until the value type was resolved through the supertype chain
-     * rather than read off argument 1, all of them were left undescribed.
+     * Subtypes and shapes a fixed list of known types cannot describe. Every one of these is a field
+     * declaration someone can write, and each needs the value type resolved through the supertype chain
+     * rather than read off argument 1.
      */
     @SuppressWarnings("unused")
     static class SubtypeHolder {

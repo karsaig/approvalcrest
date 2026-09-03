@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>approvalcrest-parent</artifactId>
+        <groupId>com.github.karsaig</groupId>
+        <version>1.5.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>approvalcrest-agent</artifactId>
+    <name>Approvalcrest Agent</name>
+    <description>Java agent that lets approvalcrest open locked JDK modules without --add-opens</description>
+
+    <!-- Deliberately a separate artifact rather than a Premain-Class on approvalcrest-core.
+         The consumer-facing modules shade core into themselves with minimizeJar, so core is not a
+         jar any consumer receives, and an agent class nothing references would be minimized away.
+         The JVM appends the agent jar to the system class path. A jar holding one class cannot
+         then split approvalcrest and Gson across two class loaders, which would put them in
+         different unnamed modules and leave an open naming the wrong one. -->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <inherited>true</inherited>
+                <configuration>
+                    <release>${java.target.version}</release>
+                    <showWarnings>true</showWarnings>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-options</arg> <!-- Not needed once JDK 8 support is dropped -->
+                        <arg>-Werror</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven.jar.plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Premain-Class>com.github.karsaig.approvalcrest.agent.ApprovalcrestAgent</Premain-Class>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test;
 import com.github.karsaig.approvalcrest.matcher.AbstractFileMatcherTest;
 
 /**
- * A {@code null} map key. It used to abort the comparison with a NullPointerException, and whether it did
- * depended on what the map's other keys rendered as — the predicate walks keys in natural order of their
- * JSON, so a collection key (rendering {@code [}) short-circuited it before the null was reached while a
- * bean key (rendering <code>{</code>) did not.
+ * A {@code null} map key. Left to itself it aborts the comparison with a NullPointerException, and
+ * whether it does depends on what the map's other keys render as — the predicate walks keys in natural
+ * order of their JSON, so a collection key (rendering {@code [}) short-circuits it before the null is
+ * reached while a bean key (rendering <code>{</code>) does not.
  *
- * <p>It is now recorded as the member name {@code "null"}, which keeps the map in the single-key-object
+ * <p>It is recorded as the member name {@code "null"}, which keeps the map in the single-key-object
  * branch: a form a JSON string input can express and a path can address. In a map whose other keys are not
  * primitives, Strings or enums the whole map takes the pair branch anyway, and the key is written as a bare
  * JSON null there.
@@ -93,7 +93,7 @@ public class JsonMatcherNullMapKeyTest extends AbstractFileMatcherTest {
     @Test
     public void aNullKeyBesideABeanKeyIsWrittenAsABareJsonNull() {
         // The scope limit: one complex key sends the whole map to the pair branch, where the null key is a
-        // bare JSON null rather than a member name. This is the case that threw before.
+        // bare JSON null rather than a member name.
         String expected = "{\n  \"m\": [\n    [\n      null,\n      \"v\"\n    ],\n    [\n      {\n"
                 + "        \"childInteger\": 0,\n        \"childString\": \"b\"\n      },\n      \"w\"\n    ]\n  ]\n}";
 
@@ -104,8 +104,8 @@ public class JsonMatcherNullMapKeyTest extends AbstractFileMatcherTest {
     @Test
     public void aNullKeyBesideACollectionKeyIsUnchanged() {
         // A guard, not proof: a collection key renders "[", which sorts before "null", so the predicate
-        // already returned false before reaching the null and this case never threw. Its output is
-        // byte-identical before and after the fix.
+        // returns false before reaching the null, so this case never threw and the null-key handling
+        // leaves its output alone.
         String expected = "{\n  \"m\": [\n    [\n      [\n        \"x\"\n      ],\n      \"w\"\n    ],\n"
                 + "    [\n      null,\n      \"v\"\n    ]\n  ]\n}";
 
@@ -116,7 +116,7 @@ public class JsonMatcherNullMapKeyTest extends AbstractFileMatcherTest {
     @Test
     public void aNullKeyAndTheStringNullRenderIdentically() {
         // The cost of this rendering. Both entries survive as separate elements in a stable order, so the
-        // file is ambiguous rather than lossy -- but it cannot say which entry had the null key.
+        // file is ambiguous rather than lossy — but it cannot say which entry had the null key.
         assertJsonMatcherWithDummyTestInfo(new Holder(map(null, "a", "null", "b")),
                 "{\n  \"m\": [\n    {\n      \"null\": \"a\"\n    },\n    {\n      \"null\": \"b\"\n    }\n  ]\n}",
                 Function.identity(), null);
