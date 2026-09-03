@@ -57,7 +57,7 @@ In this mode, failure messages are structured JSON containing the expected/actua
 
 ## Installation
 
-Choose the artifact that matches your test runner. On JDK 26, add `com.github.karsaig:approvalcrest-agent` as well and pass `-javaagent:` — see [field access modes](docs/field-access-modes.md#the-agent).
+Choose the artifact that matches your test runner. Everything works on JDK 26 as it stands; adding `com.github.karsaig:approvalcrest-agent` there keeps the serialised output byte-identical to earlier JDKs — see [field access modes](docs/field-access-modes.md#the-agent).
 
 ### JUnit 4 & JUnit 5 Vintage
 

@@ -10,7 +10,7 @@ Starting with version 1.2.0, approvalcrest handles this automatically — no `--
 
 | Mode | Property value | How it accesses fields | Output format | `--add-opens` needed | JDK support |
 |---|---|---|---|---|---|
-| **Safe** | `safe` (default) | Opens modules programmatically — through the agent if attached, otherwise through Unsafe — then standard reflection | Field-based (identical to pre-module era) | No | 8, 9–25; 26+ needs the agent |
+| **Safe** | `safe` (default) | Opens modules programmatically — through the agent if attached, otherwise through Unsafe — then standard reflection | Field-based (identical to pre-module era) | No | 8, 9–25; on 26+ the agent keeps it field-based |
 | **Force** | `force` | `setAccessible(true)` directly | Field-based (identical to pre-module era) | Yes (on JDK 9+) | 8, 9–25+ (with --add-opens) |
 | **Fallback** | `fallback` | Public getter methods (`getX()` / `isX()`) | Getter-based (different property names) | No | 8, 9–25+ |
 
@@ -250,7 +250,7 @@ Add one JVM argument and safe mode keeps producing field-based output on JDK 26,
 -javaagent:/path/to/approvalcrest-agent-1.5.1.jar
 ```
 
-The agent does one thing: it hands approvalcrest a `java.lang.instrument.Instrumentation`, which is the supported way to open a module package. That replaces the `sun.misc.Unsafe` trick JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at startup does not expire.
+The agent does one thing: it hands approvalcrest a `java.lang.instrument.Instrumentation`, which is the supported way to open a module package. Two consequences worth knowing before you add it: the JVM appends the agent jar to the system class path, and anything else on that classpath can read the `Instrumentation` from `ApprovalcrestAgent.getInstrumentation()`. The jar declares only `Premain-Class` — no `Can-Redefine-Classes` or `Can-Retransform-Classes` — so what it hands out cannot redefine or retransform classes, and it cannot be attached to an already-running JVM. That replaces the `sun.misc.Unsafe` trick JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at startup does not expire.
 
 ### Maven
 
@@ -283,7 +283,7 @@ If nothing else in your build defines `argLine`, declare an empty one in `<prope
 </properties>
 ```
 
-**Keep the `@{argLine}`.** JaCoCo's `prepare-agent` publishes its own agent argument through the `argLine` *property*; a plain `<argLine>` replaces that property and silently drops your coverage. The same applies to Mockito's inline-mock agent and to APM agents. Multiple `-javaagent` options are fine — the JVM runs each `premain` in the order given, and approvalcrest's only opens modules, so it does not interact with an agent that transforms classes.
+**Keep the `@{argLine}`.** JaCoCo's `prepare-agent` publishes its own agent argument through the `argLine` *property*; a plain `<argLine>` replaces that property and silently drops your coverage. The same applies to Mockito's inline-mock agent and to APM agents. Multiple `-javaagent` options are fine — the JVM runs each `premain` in the order given, and approvalcrest's `premain` only stores the `Instrumentation` and transforms nothing, so it does not interact with an agent that instruments classes.
 
 ### Gradle
 
@@ -304,10 +304,12 @@ Without the dependency there is nothing on `testRuntimeClasspath` to find, `find
 Adding the dependency without the `-javaagent:` argument is the easy mistake, and on JDK 26 it degrades quietly to getter-based output rather than failing. Assert it in a test if that matters to you:
 
 ```java
+// JDK 9+ only. On Java 8 there are no modules to open, so this is false even with the agent
+// attached and working, and output is field-based regardless.
 assertTrue(com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailable());
 ```
 
-`isModuleOpeningAvailable()` answers the broader question — whether *either* route is live — and is what determines whether locked-module types come out field-based or getter-based.
+`isModuleOpeningAvailable()` answers the broader question — whether *either* route is live. Read it as "was a module opened", not as "what format will the output be": it is false on Java 8, where output is field-based anyway because nothing is locked.
 
 ### Worth adding before you need it
 

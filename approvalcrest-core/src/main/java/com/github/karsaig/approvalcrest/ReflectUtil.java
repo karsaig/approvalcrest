@@ -217,9 +217,7 @@ public class ReflectUtil {
             } catch (Throwable t) {
                 gsonModule = null;
             }
-            modulesToOpenTo = (gsonModule == null || ourModule.equals(gsonModule))
-                    ? new Object[]{ourModule}
-                    : new Object[]{ourModule, gsonModule};
+            modulesToOpenTo = modulesToOpenTo(ourModule, gsonModule);
         }
         OUR_MODULE = ourModule;
         MODULES_TO_OPEN_TO = modulesToOpenTo;
@@ -236,7 +234,7 @@ public class ReflectUtil {
             try {
                 Class<?> agentClass = ClassLoader.getSystemClassLoader()
                         .loadClass("com.github.karsaig.approvalcrest.agent.ApprovalcrestAgent");
-                instrumentation = agentClass.getField("instrumentation").get(null);
+                instrumentation = agentClass.getMethod("getInstrumentation").invoke(null);
                 if (instrumentation != null) {
                     Class<?> moduleClass = getModule.getReturnType();
                     // Resolve on the interface, not on instrumentation.getClass(). The runtime type
@@ -299,10 +297,14 @@ public class ReflectUtil {
         // Gson's ReflectiveTypeAdapterFactory accesses Throwable fields (detailMessage etc.)
         // even when the serialized class itself is in an unnamed module (e.g. test framework
         // exception classes that extend java.lang.Throwable).
-        // Guarded on either mechanism, not on Unsafe: on JDK 26 with the agent attached this is
-        // the only thing that opens java.lang, and a user's own exception class needs it. Such a
-        // class is in an unnamed module, so isInLockedModule returns false for it and nothing ever
-        // triggers an on-demand open of the java.lang fields Gson still has to read.
+        // Guarded on either mechanism, not on Unsafe: a user's own exception class is in an unnamed
+        // module, so isInLockedModule returns false for it and nothing about the class itself
+        // triggers an open of the java.lang fields Gson still has to read.
+        //
+        // Belt and braces as things now stand: inheritsFromLockedModule walks to Throwable, and
+        // that walk opens java.lang on demand before Gson reads a field. Kept because that is a
+        // side effect of a call in another class rather than a guarantee, and because opening once
+        // at start-up costs nothing.
         if (ourModule != null && getModule != null
                 && ((redefineModule != null) || (implAddOpensMh != null && invokeWithArgs != null))) {
             try {
@@ -513,12 +515,71 @@ public class ReflectUtil {
             return isOpenTo(targetModule, pkg, ourMod);
         }
 
-        if (openViaInstrumentation(INSTRUMENTATION, REDEFINE_MODULE, targetModule, pkg, MODULES_TO_OPEN_TO)
-                && isOpenTo(targetModule, pkg, ourMod)) {
+        final Object ourMod_ = ourMod;
+        return openConfirming(
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return openViaInstrumentation(INSTRUMENTATION, REDEFINE_MODULE, module, name,
+                                MODULES_TO_OPEN_TO);
+                    }
+                },
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return openViaUnsafe(IMPL_ADD_OPENS_MH, INVOKE_WITH_ARGS, module, name, ourMod_);
+                    }
+                },
+                new ModuleStep() {
+                    @Override
+                    public boolean run(Object module, String name) {
+                        return isOpenTo(module, name, ourMod_);
+                    }
+                },
+                targetModule, pkg);
+    }
+
+    /**
+     * The modules an open has to name. Normally one: a class loader has a single unnamed module, so
+     * approvalcrest and Gson share it. Two only when they were loaded separately, which the agent
+     * jar joining the system class path makes possible.
+     *
+     * @param gsonModule may be null if Gson could not be resolved, in which case only ours is named
+     */
+    static Object[] modulesToOpenTo(Object ourModule, Object gsonModule) {
+        if (gsonModule == null || ourModule.equals(gsonModule)) {
+            return new Object[]{ourModule};
+        }
+        return new Object[]{ourModule, gsonModule};
+    }
+
+    /** One step in opening a package: an opening route, or the check that confirms one worked. */
+    interface ModuleStep {
+        boolean run(Object targetModule, String pkg);
+    }
+
+    /**
+     * Tries the primary route, then the fallback, confirming each rather than believing it.
+     * <p>
+     * Split out from {@link #tryOpenModule} because no real JVM offers both routes at once - the
+     * agent route needs an agent, the Unsafe route needs a JDK where Unsafe still works - so the
+     * three properties this method exists for could not otherwise be tested: that the primary is
+     * tried first, that a failed primary falls through to the fallback inside the same call, and
+     * that a route reporting success without the package actually being open is not believed.
+     * </p>
+     * <p>
+     * That last one is not hypothetical: {@code redefineModule} is documented as a no-op when asked
+     * to redefine an unnamed module, so it returns normally having opened nothing.
+     * </p>
+     *
+     * @return true only if a route ran and {@code confirm} then agreed the package is open
+     */
+    static boolean openConfirming(ModuleStep primary, ModuleStep fallback, ModuleStep confirm,
+                                  Object targetModule, String pkg) {
+        if (primary.run(targetModule, pkg) && confirm.run(targetModule, pkg)) {
             return true;
         }
-        return openViaUnsafe(IMPL_ADD_OPENS_MH, INVOKE_WITH_ARGS, targetModule, pkg, ourMod)
-                && isOpenTo(targetModule, pkg, ourMod);
+        return fallback.run(targetModule, pkg) && confirm.run(targetModule, pkg);
     }
 
     /**

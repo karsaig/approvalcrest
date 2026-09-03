@@ -87,7 +87,7 @@
                             <skip>false</skip>
                             <!-- @{argLine} is kept so attaching flags here never displaces the
                                  JaCoCo agent, which the coverage build injects via that property. -->
-                            <argLine>@{argLine} --sun-misc-unsafe-memory-access=deny</argLine>
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 --sun-misc-unsafe-memory-access=deny</argLine>
                             <includes>
                                 <include>**/UnsafeDeniedWithoutAgentTest.java</include>
                             </includes>
@@ -101,7 +101,7 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
-                            <argLine>@{argLine} -DapprovalcrestReflection=fallback
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 -DapprovalcrestReflection=fallback
                                 -javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</argLine>
                             <includes>
                                 <include>**/FallbackModeWithAgentTest.java</include>
@@ -116,7 +116,7 @@
                         </goals>
                         <configuration>
                             <skip>false</skip>
-                            <argLine>@{argLine} --sun-misc-unsafe-memory-access=deny
+                            <argLine>@{argLine} -Dfile.encoding=UTF-8 --sun-misc-unsafe-memory-access=deny
                                 -javaagent:${project.basedir}/../approvalcrest-agent/target/approvalcrest-agent-${project.version}.jar</argLine>
                             <includes>
                                 <include>**/UnsafeDeniedWithAgentTest.java</include>

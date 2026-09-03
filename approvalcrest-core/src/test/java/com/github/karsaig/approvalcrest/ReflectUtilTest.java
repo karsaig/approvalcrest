@@ -354,6 +354,108 @@ public class ReflectUtilTest {
         }
     }
 
+    // --- how the two routes are orchestrated ---
+    //
+    // No real JVM offers both routes at once, so these drive the orchestration directly. Each one
+    // pins a claim the javadoc makes that would otherwise be free to rot.
+
+    /** Records whether it ran, and answers however the test tells it to. */
+    private static final class Step implements ReflectUtil.ModuleStep {
+        private final boolean answer;
+        private boolean ran;
+
+        Step(boolean answer) {
+            this.answer = answer;
+        }
+
+        @Override
+        public boolean run(Object targetModule, String pkg) {
+            ran = true;
+            return answer;
+        }
+    }
+
+    @Test
+    void theAgentRouteIsTriedFirstAndTheOtherIsLeftAlone() {
+        Step primary = new Step(true);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(true), new Object(), "p"), is(true));
+        assertThat(primary.ran, is(true));
+        assertThat("a working primary must not cost a second open", fallback.ran, is(false));
+    }
+
+    @Test
+    void aFailedPrimaryFallsThroughWithinTheSameCall() {
+        Step primary = new Step(false);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(true), new Object(), "p"), is(true));
+        assertThat("both routes have to be attempted in one call, or the attempted-packages cache "
+                + "short-circuits every later one", fallback.ran, is(true));
+    }
+
+    /**
+     * redefineModule is documented as a no-op when asked to redefine an unnamed module: it returns
+     * normally having opened nothing. Believing the return value would report a locked package as
+     * open and hand the type to a factory that cannot read it.
+     */
+    @Test
+    void aRouteThatReturnsSuccessWithoutOpeningIsNotBelieved() {
+        Step primary = new Step(true);
+        Step fallback = new Step(true);
+
+        assertThat(ReflectUtil.openConfirming(primary, fallback, new Step(false), new Object(), "p"), is(false));
+        assertThat("an unconfirmed primary still has to let the fallback try", fallback.ran, is(true));
+    }
+
+    @Test
+    void anUnconfirmedPrimaryFallsThroughToAConfirmedFallback() {
+        final boolean[] confirmations = {false, true};
+        final int[] call = {0};
+        ReflectUtil.ModuleStep confirm = new ReflectUtil.ModuleStep() {
+            @Override
+            public boolean run(Object targetModule, String pkg) {
+                return confirmations[call[0]++];
+            }
+        };
+
+        assertThat(ReflectUtil.openConfirming(new Step(true), new Step(true), confirm, new Object(), "p"),
+                is(true));
+        assertThat("both routes were confirmed separately", call[0], is(2));
+    }
+
+    @Test
+    void noRouteWorkingMeansNotOpened() {
+        assertThat(ReflectUtil.openConfirming(new Step(false), new Step(false), new Step(true),
+                new Object(), "p"), is(false));
+    }
+
+    // --- which modules an open names ---
+
+    @Test
+    void oneModuleIsNamedWhenApprovalcrestAndGsonShareIt() {
+        Object shared = new Object();
+
+        assertThat(ReflectUtil.modulesToOpenTo(shared, shared), is(new Object[]{shared}));
+    }
+
+    @Test
+    void bothAreNamedWhenTheyWereLoadedSeparately() {
+        Object ours = new Object();
+        Object gson = new Object();
+
+        assertThat(ReflectUtil.modulesToOpenTo(ours, gson), is(new Object[]{ours, gson}));
+    }
+
+    @Test
+    void anUnresolvableGsonLeavesOurOwnModuleNamed() {
+        Object ours = new Object();
+
+        assertThat("losing Gson must not cost us the module we already have",
+                ReflectUtil.modulesToOpenTo(ours, null), is(new Object[]{ours}));
+    }
+
     // --- inherited locked-module fields ---
     //
     // A user's own exception class is in the unnamed module, so isInLockedModule is false for it

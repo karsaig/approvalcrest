@@ -37,9 +37,18 @@ public final class ApprovalcrestAgent {
      * the instance, and it avoids putting a non-String value into the system properties of the
      * suite approvalcrest happens to be running inside.
      */
-    public static volatile Instrumentation instrumentation;
+    private static volatile Instrumentation instrumentation;
 
     private ApprovalcrestAgent() {
+    }
+
+    /**
+     * @return the instance supplied by the JVM, or null when this class was never loaded as an
+     *         agent. Readable by anything on the classpath, as it must be for approvalcrest to
+     *         reach it; kept behind an accessor so it cannot be replaced or cleared.
+     */
+    public static Instrumentation getInstrumentation() {
+        return instrumentation;
     }
 
     /**
