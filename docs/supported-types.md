@@ -98,7 +98,7 @@ Serialised as the fully qualified class name:
 
 ## `Throwable`
 
-Serialised with the following fields:
+Serialised with the following fields. On JDK 26 this switches to getter-based property names unless the [agent](field-access-modes.md#the-agent) is attached — see [field-access-modes](field-access-modes.md).
 
 ```json
 {

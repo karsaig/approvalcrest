@@ -104,6 +104,11 @@
             <artifactId>approvalcrest-jdk17-integration-tests</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.karsaig.integration.tests</groupId>
+            <artifactId>approvalcrest-jdk26-simulation-integration-tests</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

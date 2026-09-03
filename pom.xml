@@ -6,6 +6,7 @@
     <version>1.5.1-SNAPSHOT</version>
     <modules>
         <module>testing-common</module>
+        <module>approvalcrest-agent</module>
         <module>approvalcrest-core</module>
         <module>approvalcrest-dedup</module>
         <module>approvalcrest</module>
@@ -31,6 +32,7 @@
         <java.version.to.run>11</java.version.to.run>
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.source.plugin.version>3.4.0</maven.source.plugin.version>
+        <maven.jar.plugin.version>3.5.0</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
         <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
         <central.publishing.maven.plugin.version>0.11.0</central.publishing.maven.plugin.version>
@@ -257,6 +259,21 @@
                 <module>approvalcrest-junit-jupiter-integration-tests-junit6</module>
                 <module>approvalcrest-junit-vintage-integration-tests-junit6</module>
                 <module>approvalcrest-jdk17-integration-tests</module>
+            </modules>
+        </profile>
+        <profile>
+            <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, JDK 26's default, so the
+                 JDK 26 arrangement can be exercised on today's runners. Kept separate from
+                 junit6-25, whose modules are a different concern. -->
+            <id>jdk26-simulation</id>
+            <activation>
+                <property>
+                    <name>java.version.to.run</name>
+                    <value>25</value>
+                </property>
+            </activation>
+            <modules>
+                <module>approvalcrest-jdk26-simulation-integration-tests</module>
             </modules>
         </profile>
         <profile>

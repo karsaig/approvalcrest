@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 
 /**
  * Thrown when a field cannot be read via any available access strategy
- * (trySetAccessible failed and Unsafe is not available).
+ * (trySetAccessible failed and no module could be opened, so Unsafe is not available either).
  * Signals to callers that they should use an alternative approach (e.g. getter-based serialization).
  */
 public class InaccessibleFieldException extends RuntimeException {

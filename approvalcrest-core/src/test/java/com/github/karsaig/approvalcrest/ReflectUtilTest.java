@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -231,6 +234,125 @@ public class ReflectUtilTest {
     }
 
     // --- locked-module detection guard rails ---
+
+    // --- module-opening mechanisms ---
+    //
+    // Both routes are invoked reflectively, so a stub with a matching method signature stands in
+    // for a JVM arrangement that cannot be produced from inside this one: an attached agent, or a
+    // JDK 26 where Unsafe is dead. The stubs avoid naming java.lang.Module, which does not exist
+    // in the release 8 API this module compiles against.
+
+    /** Stands in for Instrumentation, recording what it was asked to open. */
+    public static class RecordingInstrumentation {
+        Object target;
+        Map<String, Set<Object>> opens;
+
+        public void redefineModule(Object module, Set<Object> extraReads,
+                                   Map<String, Set<Object>> extraExports,
+                                   Map<String, Set<Object>> extraOpens,
+                                   Set<Class<?>> extraUses,
+                                   Map<Class<?>, List<Class<?>>> extraProvides) {
+            this.target = module;
+            this.opens = extraOpens;
+        }
+    }
+
+    /** Stands in for an Instrumentation that refuses, as an unmodifiable module would. */
+    public static class RefusingInstrumentation {
+        public void redefineModule(Object module, Set<Object> extraReads,
+                                   Map<String, Set<Object>> extraExports,
+                                   Map<String, Set<Object>> extraOpens,
+                                   Set<Class<?>> extraUses,
+                                   Map<Class<?>, List<Class<?>>> extraProvides) {
+            throw new IllegalArgumentException("package not in module");
+        }
+    }
+
+    /** Stands in for MethodHandle.invokeWithArguments. */
+    public static class RefusingHandleInvoker {
+        public Object invokeWithArguments(Object[] arguments) {
+            throw new UnsupportedOperationException("implAddOpens");
+        }
+    }
+
+    private static Method redefineModuleOf(Class<?> stubType) throws NoSuchMethodException {
+        return stubType.getMethod("redefineModule", Object.class, Set.class, Map.class, Map.class,
+                Set.class, Map.class);
+    }
+
+    /**
+     * Every module that performs reflection has to be named in the open, not just this class's.
+     * They are the same module in an ordinary run, but the agent jar joins the system class path
+     * and a suite could resolve approvalcrest and Gson from different loaders - in which case an
+     * open naming only one of them would leave the other unable to read the field.
+     */
+    @Test
+    void instrumentationOpenNamesEveryModuleItWasGiven() throws Exception {
+        RecordingInstrumentation stub = new RecordingInstrumentation();
+        Object moduleA = new Object();
+        Object moduleB = new Object();
+        Object target = new Object();
+
+        boolean called = ReflectUtil.openViaInstrumentation(stub, redefineModuleOf(RecordingInstrumentation.class),
+                target, "java.lang", new Object[]{moduleA, moduleB});
+
+        assertThat(called, is(true));
+        assertThat(stub.target, is(target));
+        assertThat(stub.opens.keySet(), is(java.util.Collections.singleton("java.lang")));
+        assertThat(stub.opens.get("java.lang"), is((Set<Object>) new java.util.LinkedHashSet<Object>(
+                java.util.Arrays.asList(moduleA, moduleB))));
+    }
+
+    @Test
+    void instrumentationOpenReportsFailureWhenTheCallIsRefused() throws Exception {
+        assertThat(ReflectUtil.openViaInstrumentation(new RefusingInstrumentation(),
+                redefineModuleOf(RefusingInstrumentation.class), new Object(), "java.lang",
+                new Object[]{new Object()}), is(false));
+    }
+
+    @Test
+    void instrumentationOpenReportsFailureWhenAnythingIsMissing() throws Exception {
+        Method redefine = redefineModuleOf(RecordingInstrumentation.class);
+        Object[] modules = new Object[]{new Object()};
+
+        assertThat(ReflectUtil.openViaInstrumentation(null, redefine, new Object(), "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), null, new Object(), "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), redefine, new Object(), "p", null), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), redefine, new Object(), "p", new Object[0]), is(false));
+    }
+
+    @Test
+    void unsafeOpenReportsFailureWhenTheHandleThrowsOrIsMissing() throws Exception {
+        Method invoker = RefusingHandleInvoker.class.getMethod("invokeWithArguments", Object[].class);
+
+        assertThat(ReflectUtil.openViaUnsafe(new RefusingHandleInvoker(), invoker, new Object(), "p", new Object()), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(null, invoker, new Object(), "p", new Object()), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), null, new Object(), "p", new Object()), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), invoker, new Object(), "p", null), is(false));
+    }
+
+    /**
+     * Only the implication that actually holds. The reverse does not: Unsafe reading fields is not
+     * the same condition as the Unsafe opening route having resolved, and on Java 8 Unsafe works
+     * while there is no module to open at all.
+     */
+    @Test
+    void theAgentRouteAlwaysCountsAsAWayToOpenAModule() {
+        if (ReflectUtil.isInstrumentationAvailable()) {
+            assertThat(ReflectUtil.isModuleOpeningAvailable(), is(true));
+        }
+    }
+
+    /**
+     * Nothing may report an open route while no route exists, which is the direction that would
+     * let a locked type be claimed by a factory that cannot then read it.
+     */
+    @Test
+    void noRouteIsReportedWhenNeitherMechanismResolved() {
+        if (!ReflectUtil.isModuleOpeningAvailable()) {
+            assertThat(ReflectUtil.isInstrumentationAvailable(), is(false));
+        }
+    }
 
     // --- inherited locked-module fields ---
     //

@@ -31,8 +31,10 @@ import static java.util.Collections.newSetFromMap;
  *   <li>Unsafe is available</li>
  * </ul>
  * <p>
- * When Unsafe is not available (future JDK or "fallback" mode), this factory returns null,
- * and the {@link GetterBasedTypeAdapterFactory} handles the type instead.
+ * When Unsafe is not available (JDK 26+, a future JDK, or "fallback" mode), this factory returns
+ * null. What happens next depends on whether a module could still be opened: with the approvalcrest
+ * agent attached it can, so the type is not locked at all and Gson's own reflective adapter
+ * serializes it field-based; without the agent the {@link GetterBasedTypeAdapterFactory} handles it.
  */
 public class UnsafeFieldTypeAdapterFactory implements TypeAdapterFactory {
 

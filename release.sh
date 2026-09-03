@@ -188,6 +188,11 @@ else
         sed -i -E '/groupId.*com\.github\.karsaig/,/<\/dependency>/{s|<version>[^<]+</version>|<version>'"${new_ver}"'</version>|;}' "$file"
         # Pattern 2: inline artifact coordinates like com.github.karsaig:approvalcrest[-...]:VERSION
         sed -i -E 's|(com\.github\.karsaig:approvalcrest[a-z-]*):[0-9][0-9a-zA-Z._-]*|\1:'"${new_ver}"'|g' "$file"
+        # Pattern 3: jar file names like approvalcrest-agent-VERSION.jar, used by the -javaagent
+        # documentation. Anchored on the artifact name so prose such as "before 1.5.1" is untouched.
+        sed -i -E 's|(approvalcrest[a-z-]*)-[0-9][0-9a-zA-Z._-]*\.jar|\1-'"${new_ver}"'.jar|g' "$file"
+        # Pattern 4: repository paths like .../approvalcrest-agent/VERSION/approvalcrest-agent-...
+        sed -i -E 's|(approvalcrest[a-z-]*)/[0-9][0-9a-zA-Z._-]*/|\1/'"${new_ver}"'/|g' "$file"
     }
 
     update_doc_versions "${version}" README.md
