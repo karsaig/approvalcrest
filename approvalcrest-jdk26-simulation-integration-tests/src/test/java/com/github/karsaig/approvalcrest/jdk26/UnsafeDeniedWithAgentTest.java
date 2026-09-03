@@ -10,7 +10,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Runs with the sun-misc-unsafe-memory-access=deny flag - JDK 26's default - and the approvalcrest
+ * Runs with the sun-misc-unsafe-memory-access=deny flag — JDK 26's default — and the approvalcrest
  * agent attached. Asserts that field-based output survives, which is the whole point of the agent.
  */
 class UnsafeDeniedWithAgentTest {
@@ -46,7 +46,7 @@ class UnsafeDeniedWithAgentTest {
      */
     @Test
     void userDefinedExceptionKeepsItsFieldBasedShape() {
-        // Vary the message, because a mismatch description names only the fields that differ - so
+        // Vary the message, because a mismatch description names only the fields that differ — so
         // this is what makes the property carrying the message visible in the first place.
         String mismatch = Jdk26Fixtures.describeMismatch(
                 Jdk26Fixtures.userException("boom", "T-1"), Jdk26Fixtures.userException("bang", "T-1"));

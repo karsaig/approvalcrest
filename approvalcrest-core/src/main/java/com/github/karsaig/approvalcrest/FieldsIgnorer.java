@@ -46,9 +46,9 @@ public class FieldsIgnorer {
     private static final String PATH_SEPARATOR_PATTERN = Pattern.quote(".");
 
     /**
-     * How many levels a marker chain may describe. Reaching it truncates the chain, so the levels below
-     * are simply undescribed and keep the behaviour they had before chains existed. No real declaration or
-     * object graph comes close; this only stops a self-referential one walking for ever.
+     * How many levels a marker chain may describe. Reaching it truncates the chain, so the levels below are
+     * undescribed and keep the behaviour they had before chains existed. No real declaration or object graph
+     * comes close; this only stops a self-referential one walking for ever.
      */
     public static final int MAX_CHAIN_DEPTH = 8;
 
@@ -243,7 +243,7 @@ public class FieldsIgnorer {
             // what the cascade logic needs and must not be widened -- widening it would delete
             // parents that still hold other fields. But it is the wrong question for the tracker:
             // .ignoring("a.b.c") where a.b keeps other fields removes c and returns false all the
-            // way up, so the rule went unrecorded. The accumulator answers "did anything change".
+            // way up, so the rule would go unrecorded. The accumulator answers "did anything change".
             boolean[] changedAnywhere = new boolean[1];
             findPath(jsonElement, pathToFind, pathSegments, false, changedAnywhere);
             if (changedAnywhere[0] && tracker != null && reasonMap != null) {
@@ -300,13 +300,13 @@ public class FieldsIgnorer {
             // never does, and neither does a nested collection of any other length.
             //
             // Clearing anything else discards values the caller never mentioned. Ignoring "list.a"
-            // over {"list":[{"a":1},"keep-me",42]} emptied the object, found only primitives left,
-            // deleted those too and so dropped the whole field. The two-element test is what extends
-            // that protection past the outermost level: without it, the same loss happened one level
+            // over {"list":[{"a":1},"keep-me",42]} empties the object, leaves only primitives, and
+            // deleting those too drops the whole field. The two-element test is what extends that
+            // protection past the outermost level: without it, the same loss happens one level
             // down, in {"ll":[[{"a":1},"keep",7]]}.
             //
             // A nested collection of exactly two elements is still indistinguishable from a map
-            // entry and is still cleared. That residue is accepted and recorded in the CHANGELOG.
+            // entry and is still cleared. That residue is accepted.
             if (result && parentIsArray && sizeBeforeRemoval == 2) {
                 boolean hasNonPrimitive = false;
                 for (JsonElement remaining : jsonArray) {
@@ -342,9 +342,9 @@ public class FieldsIgnorer {
                     }
                     // The field naming strategy prefixes Set-typed fields with MARKER and Map-typed fields
                     // with MAP_MARKER, and repeats a sentinel per container level it can describe below the
-                    // field, so the child may sit under the bare name or any such sequence. Take the key as well as the
-                    // value: removing an emptied child by the bare name silently does nothing when
-                    // it was found under a prefixed one, leaving an empty husk whose prefix
+                    // field, so the child may sit under the bare name or any such sequence. Take the key as
+                    // well as the value: removing an emptied child by the bare name silently does nothing
+                    // when it was found under a prefixed one, leaving an empty husk whose prefix
                     // removeSetMarker strips, so the file shows an empty collection where the field
                     // should have gone.
                     // Prefers the bare name when an object somehow holds both. That is reachable —
@@ -501,10 +501,10 @@ public class FieldsIgnorer {
         // Keys are snapshotted: emptied children are removed from the map below.
         for (String key : new ArrayList<>(jo.keySet())) {
             JsonElement child = jo.get(key);
-            // Skip nulls and scalars, as the array fan-out above does: a scalar child simply has no
-            // field for the rest of the path to name, and descending into one reaches ignorePath,
-            // which rejects a non-object. Without this a wildcard would be unusable at any position
-            // with a scalar sibling -- which is the ordinary shape of a bean.
+            // Skip nulls and scalars, as the array fan-out above does: a scalar child has no field
+            // for the rest of the path to name, and descending into one reaches ignorePath, which
+            // rejects a non-object. Without this a wildcard would be unusable at any position with
+            // a scalar sibling -- which is the ordinary shape of a bean.
             if (child == null || child.isJsonNull() || child.isJsonPrimitive()) {
                 continue;
             }
@@ -1105,7 +1105,7 @@ public class FieldsIgnorer {
             return newKey;
         }
 
-                /**
+        /**
          * The sentinel sequence the field naming strategy put in front of the name, describing this field's
          * own level and every container level below it that the declared type could describe. Empty for an
          * unmarked field.
@@ -1171,7 +1171,7 @@ public class FieldsIgnorer {
      */
     static String getOriginalFieldName(String input) {
         String result = input;
-        // Every prefix, not just the first: one sentinel per container level means a name can carry several.
+        // Every prefix, not only the first: one sentinel per container level means a name can carry several.
         // MAP_MARKER first: it is not a prefix of MARKER, but checking the longer sentinel first keeps this
         // correct if either string ever changes. Stripping matters beyond cosmetics -- the result feeds path
         // matching and every tracker string, neither of which removeSetMarker ever sees.
@@ -1188,8 +1188,7 @@ public class FieldsIgnorer {
 
     /**
      * Removes {@code field} from {@code jo} whatever sentinel sequence the field naming strategy gave it,
-     * and reports whether anything went. Every form is removed rather than the first found, which is what
-     * the three separate removes this replaces did.
+     * and reports whether anything went. Every form is removed, not the first found.
      */
     private static boolean removeChildInAnyMarkedForm(JsonObject jo, String field) {
         List<String> keysToRemove = new ArrayList<>();

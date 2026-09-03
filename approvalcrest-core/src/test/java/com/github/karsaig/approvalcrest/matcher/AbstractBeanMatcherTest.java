@@ -48,7 +48,7 @@ public abstract class AbstractBeanMatcherTest extends AbstractTest {
 
     /**
      * Holds a single array of ChildBean so array matchers can be exercised on an array field.
-     * Shared by the custom-matcher success and failure suites, which had byte-identical copies.
+     * Shared by the custom-matcher success and failure suites.
      */
     public static class ArrayHolder {
         ChildBean[] childBeanArray;

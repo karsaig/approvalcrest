@@ -16,9 +16,9 @@
     <!-- Deliberately a separate artifact rather than a Premain-Class on approvalcrest-core.
          The consumer-facing modules shade core into themselves with minimizeJar, so core is not a
          jar any consumer receives, and an agent class nothing references would be minimized away.
-         A one-class agent jar also keeps the JVM's "append the agent jar to the system class path"
-         behaviour harmless: it cannot split approvalcrest and Gson across two class loaders, which
-         would put them in different unnamed modules and make an open target the wrong one. -->
+         The JVM appends the agent jar to the system class path. A jar holding one class cannot
+         then split approvalcrest and Gson across two class loaders, which would put them in
+         different unnamed modules and leave an open naming the wrong one. -->
 
     <build>
         <plugins>

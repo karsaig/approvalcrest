@@ -23,13 +23,13 @@ import com.github.karsaig.approvalcrest.matcher.sorting.SortField;
 import com.github.karsaig.approvalcrest.testdata.ChildBean;
 
 /**
- * A complex-key map entry is written as {@code [key, value]}. The sorter used to recurse into that array
- * like any other and reorder it by JSON, which lost the key/value distinction, so a map and its transpose
- * produced identical bytes. These cover every flow the fix touches, at every level a field's declared type
- * can describe -- a map held by another map, by a set, by a list of lists, and so on down.
+ * A complex-key map entry is written as {@code [key, value]}. Recursing into that array like any other
+ * and reordering it by JSON loses the key/value distinction, so a map and its transpose render identically.
+ * These cover every flow that keeps the key first, at every level a field's declared type can describe —
+ * a map held by another map, by a set, by a list of lists, and so on down.
  *
- * <p>Tests named {@code ...IsUnaffected} or {@code ...KeepsTheOldOrder} are regression guards and pass
- * before and after the fix; the rest fail before it.
+ * <p>Tests named {@code ...IsUnaffected} or {@code ...KeepsTheOldOrder} pin shapes the key-first rule does
+ * not reach, where ordering stays exactly as it is; the rest pin the rule itself.
  */
 public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
@@ -232,7 +232,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     /**
      * Three entries, inserted in an order that is neither the sorted one nor its reverse, and mixing both
      * key/value orderings: one entry whose key sorts after its value, so a swap shows; one whose key sorts
-     * before it, where a swap would be invisible -- which is what proves the rule is applied per pair
+     * before it, where a swap would be invisible — which is what proves the rule is applied per pair
      * rather than to the map as a whole; and one whose halves differ only in a nested field.
      */
     private static Map<ChildBean, ChildBean> threeEntries() {
@@ -261,7 +261,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     /**
      * The same three entries in the order serialisation gives them, which a level nothing re-sorts keeps.
      * The two orders differ, and deliberately: entries are ordered by their serialised text, and at
-     * serialisation a bean's members are still in declaration order, so childString decides -- while the
+     * serialisation a bean's members are still in declaration order, so childString decides — while the
      * JSON-level re-sort compares the member-sorted form, where childInteger decides. Only the eq entry,
      * whose halves differ in childInteger alone, can tell them apart.
      */
@@ -281,10 +281,9 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void anApprovedFileForOneMapDoesNotMatchItsTranspose() {
-        // The reported symptom, and it needs both legs in one test. Before the fix a map and its transpose
-        // produced identical bytes, so ONE file matched both. Asserting only "the transpose fails" passes
-        // either way, because the file literal itself differs between the two behaviours -- the positive
-        // leg is what pins it.
+        // The reported symptom, and it needs both assertions in one test. A transpose-only assertion
+        // passes whether or not the key is kept first, because the file literal itself differs between the
+        // two behaviours; the passing assertion is what pins the order.
         String fileForKeyZk = mapOf(pair("zk", "av"));
 
         assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), fileForKeyZk, Function.identity(), null);
@@ -311,7 +310,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void aPairReachedAsTheSortInputItselfKeepsItsOrder() {
-        // A pair arrives at the sorter as its own input, not just as an element, when a field matcher
+        // A pair arrives at the sorter as its own input, not only as an element, when a field matcher
         // matches at pair level. That is a separate branch from the element case and the only reader of
         // the "I am a pair" flag; without it the key and value swap here.
         assertJsonMatcherWithDummyTestInfo(new MapHolder("zk", "av"), mapOf(pair("zk", "av")),
@@ -367,7 +366,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         h.outer.put("k-b", threeEntries("b-"));
 
         // Only k-a is named, so only its entries are re-sorted; k-b and k-c keep the order serialisation
-        // gave them. Both orders are shown rather than smoothed over -- the difference is what says the
+        // gave them. Both orders are asserted rather than normalised — the difference is what says the
         // sort reached one level and not the others, while every pair stays key first either way.
         String expected = obj(member("outer", arr(obj(member("k-a", threeEntriesRendered("a-"))),
                 obj(member("k-b", threeEntriesAsSerialised("b-"))),
@@ -379,7 +378,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     @Test
     public void aNestedMapWithAMixedKeyMapKeepsItsKeyFirst() {
         // One complex key sends the whole inner map into the pair form, so a String key sits at a pair
-        // position too -- and the value half is still the one the chain continues into.
+        // position too — and the value half is still the one the chain continues into.
         MapOfLooselyTypedMaps h = new MapOfLooselyTypedMaps();
         Map<Object, Object> inner = new LinkedHashMap<>();
         inner.put("zs", "av");
@@ -396,7 +395,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void aNestedMapWithANullKeyKeepsItsKeyFirst() {
-        // A null key is a bare JSON null at a pair position -- the half the chain deliberately says nothing
+        // A null key is a bare JSON null at a pair position — the half the chain deliberately says nothing
         // about. The entry beside it still keeps its key first.
         MapOfLooselyTypedMaps h = new MapOfLooselyTypedMaps();
         Map<Object, Object> inner = new LinkedHashMap<>();
@@ -523,8 +522,8 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     @Test
     public void aSetOfMapsIsStillOrderedAcrossItsEntriesAndKeepsEveryKeyFirst() {
         // The set field carries the collection marker and the level below it is described too, so the maps
-        // it holds are recognised without being named by a field -- that is the `c m` case. Both halves are
-        // asserted at once: this fails before the fix on the pairs, and would fail after it on the order.
+        // it holds are recognised without being named by a field — that is the `c m` case. Both halves are
+        // asserted at once: the pairs stay key first and the entries stay ordered.
         SetOfMaps forward = new SetOfMaps();
         forward.s.addAll(setOfThreeMaps());
 
@@ -561,7 +560,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     @Test
     public void aHashMapOfHashMapsRendersTheSameOnEveryRunAndKeepsEveryKeyFirst() {
         // Real HashMaps, whose iteration order is unspecified, built from differently ordered sources. Keys
-        // still come out in order at every level -- key-before-value inside an entry costs nothing here.
+        // still come out in order at every level — key-before-value inside an entry costs nothing here.
         assertJsonMatcherWithDummyTestInfo(hashMaps(false), hashMapsRendered(), Function.identity(), null);
         assertJsonMatcherWithDummyTestInfo(hashMaps(true), hashMapsRendered(), Function.identity(), null);
     }
@@ -668,18 +667,18 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void aMapAsAnotherMapsValueKeepsItsKeyFirst() {
-        // The flagged gap. The marker is on a FIELD name and the inner map is a value, so nothing named it;
-        // the field naming strategy now describes that level too, and the sorter carries the description
-        // down. Three entries at each level, so a suppressed pair cannot be confused with luck.
+        // The marker is on a FIELD name and the inner map is a value, so nothing names it; the field
+        // naming strategy describes that level too and the sorter carries the description down. Three
+        // entries at each level, so a suppressed pair cannot be confused with luck.
         assertJsonMatcherWithDummyTestInfo(nestedMaps(), obj(member("outer", nestedMapsRendered())),
                 Function.identity(), null);
     }
 
     @Test
     public void anApprovedFileForANestedMapDoesNotMatchItsTranspose() {
-        // Both legs, as the one-level twin above needs them: the file for one map must match, and the file
-        // for its transpose must not. Asserting only the failure passes either way, because the literal
-        // itself differs between the two behaviours.
+        // Both assertions, as the one-level counterpart above needs them: the file for one map must match,
+        // and the file for its transpose must not. Asserting only the failure passes either way, because
+        // the literal itself differs between the two behaviours.
         String fileForNestedMaps = obj(member("outer", nestedMapsRendered()));
 
         assertJsonMatcherWithDummyTestInfo(nestedMaps(), fileForNestedMaps, Function.identity(), null);
@@ -756,10 +755,10 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
 
     @Test
     public void jsonStringInputStillReordersUnderAnExplicitSortField() {
-        // The one configuration where the input-form limitation is observable, and it was unpinned: the test
-        // above uses no sort, so nothing sorted the pairs either way. Naming the field does reach them, and a
-        // parsed tree carries no marker to say they are entries, so here they are reordered -- which is the
-        // limitation docs/sorting.md records. Compare with explicitSortFieldOnAMapKeepsTheKeyFirst, the same
+        // The one configuration where the input-form limitation is observable: the test above uses no sort,
+        // so nothing sorts the pairs either way. Naming the field does reach them, and a parsed tree carries
+        // no marker to say they are entries, so here they are reordered — which is the limitation
+        // docs/sorting.md records. Compare with explicitSortFieldOnAMapKeepsTheKeyFirst, the same
         // configuration over object input, where the key stays first.
         String input = mapOf(pair("zk", "av"));
 
@@ -785,7 +784,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     @Test
     public void aTypeVariableDeclaredMapFieldIsUnaffected() {
         // The generic type says nothing, but the erasure is a Map, so the field keeps the marker it has
-        // today and its entries are still re-sorted -- which the eq entry is what proves, since it lands in
+        // today and its entries are still re-sorted — which the eq entry proves, since it lands in
         // a different place under the serialisation order.
         TypeVariableHolder<Map<ChildBean, ChildBean>> h = new TypeVariableHolder<>();
         h.data = threeEntries();
@@ -844,8 +843,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     public void aRawMapValueKeepsItsKeyFirst() {
         // A raw Map says nothing about what IT holds, but it is still a map, and that is what decides the
         // level: its own entries are pairs whatever their types turn out to be. Only the level below it is
-        // undescribed. This was pinned as a limitation while the value type was read positionally, because
-        // a raw declaration has no argument to read.
+        // undescribed.
         MapToRawMap h = new MapToRawMap();
         Map<ChildBean, ChildBean> inner = new LinkedHashMap<>();
         inner.put(key("zk"), key("av"));
@@ -893,7 +891,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         // Ignoring both of ChildBean's fields empties the KEY half only, so it is removed and the entry is
         // left one position long with its value still there. A list-valued map, because a pair whose only
         // survivor is a primitive is cleared by the orphan cleanup instead. That is the shape the sorter
-        // must survive -- a chain says "the value is at index 1" and there is no index 1 -- and the lists
+        // must survive — a chain says "the value is at index 1" and there is no index 1 — and the lists
         // are still sorted afterwards.
         MapToList h = new MapToList();
         h.m.put(key("zk"), Arrays.asList("z-b", "z-a"));
@@ -910,7 +908,7 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
         // can arrive as anything. Where what arrives is an array of two-position arrays, it is
         // indistinguishable from an entry array and is treated as one: the inner arrays keep their order.
         // That is the type being trusted where JSON cannot tell, which is what the field's OWN level has
-        // always done -- see the leg below, which behaves the same before this change and after it.
+        // always done — see aCustomAdapterOnAMapFieldItselfIsUnaffected below, which is the same either way.
         GsonConfiguration config = new GsonConfiguration();
         config.addTypeAdapter(AdaptedMap.class,
                 (com.google.gson.JsonSerializer<AdaptedMap>) (src, type, context) -> {
@@ -957,8 +955,8 @@ public class JsonMatcherComplexKeyMapOrderTest extends AbstractFileMatcherTest {
     @Test
     public void aPatternMatchingOnlyTheInternalNameLeavesTheFieldAlone() {
         // An ignore pattern is written against the name the caller declared. A Set- or Map-typed field is
-        // held under a prefixed one, and matching that meant a pattern naming nothing real could take such
-        // a field away -- silently, since a removed field simply stops being compared.
+        // held under a prefixed one, and matching that would let a pattern naming nothing real take the
+        // field away — silently, since a removed field stops being compared.
         MapOfMaps h = new MapOfMaps();
         h.outer.put(key("L1-a"), threeEntries());
 

@@ -23,7 +23,7 @@ import com.github.karsaig.approvalcrest.testdata.cyclic.One;
  * no strict-matching setting to consult.
  *
  * <p>Also covers a map at the ROOT, which has no field name to mark and is instead described from the
- * object itself -- and depth, where a rendered expectation would be larger than what it proves: a transpose
+ * object itself — and depth, where a rendered expectation would be larger than what it proves: a transpose
  * that no longer matches says the key and the value stayed apart.
  */
 public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
@@ -70,8 +70,8 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
 
     @Test
     public void aMapNoLongerMatchesItsTranspose() {
-        // Both sides are serialised here, so before the fix both were normalised to the same bytes and
-        // this passed -- a map and its transpose were indistinguishable.
+        // Both sides are serialised here, so normalising both to the same bytes would let this pass —
+        // a map and its transpose would be indistinguishable.
         assertDiagnosingMatcher(new MapHolder("zk", "av"), new MapHolder("av", "zk"),
                 beanMatcher -> beanMatcher, AssertionError.class,
                 error -> Assertions.assertTrue(
@@ -151,8 +151,8 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
 
     @Test
     public void aNestedMapInACircularReferenceGraphNoLongerMatchesItsTranspose() {
-        // A graph-adapter envelope wraps only beans -- the cyclic-reference detector excludes Maps and
-        // Iterables -- and the walk that describes levels stops at a bean, so no level is ever pending at
+        // A graph-adapter envelope wraps only beans — the cyclic-reference detector excludes Maps and
+        // Iterables — and the walk that describes levels stops at a bean, so no level is ever pending at
         // an envelope. This is that invariant: with envelopes in the tree, the nested map is still
         // protected, and if the two ever met the envelope would have to be stepped over without consuming
         // a level.
@@ -234,7 +234,7 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
     @Test
     public void aRootMapNoLongerMatchesItsTransposeWhenASelectorReachesTheRoot() {
         // The root case is only protected because applySorting is told the root is a map. It runs before
-        // applyRootCollectionSorting, so that method cannot make up for a wrong answer here -- the halves
+        // applyRootCollectionSorting, so that method cannot make up for a wrong answer here — the halves
         // would already be swapped. The tests above never reach this code, because with no selector
         // matching "" the root array is not sorted at all.
         assertDiagnosingMatcher(rootMap("zk", "av"), rootMap("av", "zk"),
@@ -286,7 +286,7 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
 
     @Test
     public void aRootMapOfObjectDeclaredValuesHoldingMapsIsProtected() {
-        // Declared as Object, so no generic type could describe this -- the object itself can.
+        // Declared as Object, so no generic type could describe this — the object itself can.
         assertDiagnosingMatcher(looselyTypedRootMap("zk", "av"), looselyTypedRootMap("av", "zk"),
                 beanMatcher -> beanMatcher, AssertionError.class,
                 error -> Assertions.assertTrue(
@@ -311,9 +311,9 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
     public void aRootMapWithOnlySomeMapValuesKeepsTheOldOrder() {
         // The walk appends a level only while every value at it is the same kind of container, so a root map
         // whose values are not all maps is described one level deep and no further. Its inner map is then
-        // unprotected and still matches its transpose, exactly as before the fix. Pinned as it behaves, not
-        // as an endorsement: claiming the level for the values that are maps would claim it for the one that
-        // is not, and nothing in the tree says which is which.
+        // unprotected and still matches its transpose. Pinned as it behaves, not as an endorsement:
+        // claiming the level for the values that are maps would claim it for the one that is not, and
+        // nothing in the tree says which is which.
         assertDiagnosingMatcher(mixedRootMap("zk", "av"), mixedRootMap("av", "zk"));
     }
 
@@ -322,7 +322,7 @@ public class BeanMatcherComplexKeyMapOrderTest extends AbstractBeanMatcherTest {
         // The root's shape is read off the object, and both sides are read separately, so it has to depend
         // on content alone. Reading one representative child would make it depend on values() iteration
         // order instead, and two maps that are equal could then be described differently and fail against
-        // each other -- with no file to regenerate out of it.
+        // each other — with no file to regenerate out of it.
         Map<ChildBean, Object> forward = new LinkedHashMap<>();
         forward.put(child().childString("L1-a").build(), rootMap("zk", "av"));
         forward.put(child().childString("L1-b").build(), child().childString("notAMap").build());

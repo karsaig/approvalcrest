@@ -450,8 +450,7 @@ public abstract class AbstractJsonMatcherIgnoreTest extends AbstractFileMatcherT
 
     /**
      * A ParentBean with childBeanList consumed by a custom matcher, so the approved file holds only
-     * the remaining fields. Shared by the custom-matcher success and failure suites, which had
-     * byte-identical copies.
+     * the remaining fields. Shared by the custom-matcher success and failure suites.
      */
     protected static final String APPROVED_WITHOUT_CHILD_BEAN_LIST = "{\n" +
             "  \"childBean\": null,\n" +

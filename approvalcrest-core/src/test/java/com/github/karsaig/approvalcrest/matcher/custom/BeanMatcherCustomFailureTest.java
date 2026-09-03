@@ -38,9 +38,9 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
     }
 
     // --- a name pattern has to reach a Set- or Map-typed field ------------------------------------
-    // The field naming strategy writes a sentinel in front of such a field's name, and the pattern was
-    // tested against that key rather than the declared name. It never matched, and withMatcher treats
-    // "nothing matched" as nothing to check -- so these assertions could not fail, whatever the data.
+    // The field naming strategy writes a sentinel in front of such a field's name. A pattern tested
+    // against that key rather than against the declared name never matches, and withMatcher treats
+    // "nothing matched" as nothing to check — so the assertion cannot fail, whatever the data.
 
     @Test
     public void failsWhenTheMatcherOnASetTypedFieldDoesNotHold() {
@@ -62,7 +62,7 @@ public class BeanMatcherCustomFailureTest extends AbstractBeanMatcherTest {
 
     @Test
     public void failsWhenTheMatcherOnAnUnmarkedCollectionFieldDoesNotHold() {
-        // The control: an unmarked field was always reached, so this failed before the fix too.
+        // The control: an unmarked field carries no sentinel, so the pattern reaches it either way.
         assertDiagnosingMatcher(new MarkedFieldHolder(), new MarkedFieldHolder(),
                 sameBeanAs -> sameBeanAs.withMatcher(equalTo("plainList"), hasSize(99)),
                 AssertionError.class,

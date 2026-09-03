@@ -264,7 +264,7 @@ public class BeanMatcherIgnoreElementsTest extends AbstractBeanMatcherTest {
 
     /**
      * A * segment moves the rule from one named entry to every entry, which is the case a map of
-     * lists could not express before: the filtered array sits under each map value.
+     * lists cannot otherwise express: the filtered array sits under each map value.
      */
     @Test
     public void wildcardRemovesMatchingElementsUnderEveryMapValue() {

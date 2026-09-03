@@ -36,7 +36,7 @@ public class BeanMatcherNullMapKeyTest extends AbstractBeanMatcherTest {
     @Test
     public void aNullKeyMatchesTheStringNull() {
         // The cost of rendering a null key as the member name "null": it is indistinguishable from a String
-        // key spelling the same thing, so this assertion passes on data that differs. Pinned deliberately --
+        // key spelling the same thing, so this assertion passes on data that differs. Pinned deliberately —
         // the alternative rendering avoids it but breaks path navigation for every other key in the map.
         assertDiagnosingMatcher(new Holder(null, "a"), new Holder("null", "a"));
     }

@@ -69,7 +69,7 @@ public class FieldsIgnorerTest {
 
     @Test
     void wildcardOverATwoKeyMapDoesNotMatchNamingOneKey() {
-        // The negative twin: naming one key must leave the other alone.
+        // The negative case: naming one key must leave the other alone.
         String input = "{\"map\":[{\"k1\":{\"leaf\":1}},{\"k2\":{\"leaf\":2}}]}";
         JsonObject viaWildcard = parseObject(input);
         JsonObject viaKey = parseObject(input);
@@ -86,7 +86,7 @@ public class FieldsIgnorerTest {
     void wildcardResolvesTheValueEvenWhenAKeyCollidesWithAFieldNameOfTheValues() {
         // The case that rules out deciding by shape: the first entry's key is also a field name of
         // the values, so an implementation that treated the entry itself as the child would strip a
-        // different field here than in the sibling entry -- and empty this entry away entirely.
+        // different field here than in the sibling entry — and empty this entry away entirely.
         JsonObject json = parseObject(
                 "{\"map\":[{\"firstName\":{\"firstName\":\"x\",\"o\":1}},"
                         + "{\"p2\":{\"firstName\":\"y\",\"o\":2}}]}");
@@ -108,7 +108,7 @@ public class FieldsIgnorerTest {
     @Test
     void wildcardFindsAMarkerPrefixedChild() {
         // Set- and Map-typed field names carry the MARKER prefix; the wildcard matches any named
-        // child, so it needs no special handling -- this pins that.
+        // child, so it needs no special handling — this pins that.
         JsonObject json = parseObject(
                 "{\"" + FieldsIgnorer.MARKER + "aSet\":{\"leaf\":1,\"keep\":9}}");
 
@@ -120,7 +120,7 @@ public class FieldsIgnorerTest {
 
     @Test
     void wildcardDescendsThroughAGraphAdapterEnvelopeRatherThanMatchingIt() {
-        // An envelope key is a named child too, so the wildcard must not consume it -- otherwise
+        // An envelope key is a named child too, so the wildcard must not consume it — otherwise
         // "*.leaf" would mean "the leaf of the envelope" and find nothing.
         JsonObject json = parseObject("{\"0x1\":{\"a\":{\"leaf\":7,\"keep\":9}}}");
 
@@ -180,8 +180,8 @@ public class FieldsIgnorerTest {
     @Test
     void wildcardSkipsScalarChildren() {
         // A bean's ordinary shape is some object fields and some scalar ones. A scalar child has no
-        // field for the rest of the path to name, so it is skipped -- exactly as the array fan-out
-        // skips a scalar element -- rather than being descended into, which would reject a non-object
+        // field for the rest of the path to name, so it is skipped — exactly as the array fan-out
+        // skips a scalar element — rather than being descended into, which would reject a non-object
         // and take the whole assertion down with it.
         JsonObject json = parseObject("{\"a\":{\"name\":1,\"keep\":9},\"s\":\"str\"}");
 
@@ -216,8 +216,8 @@ public class FieldsIgnorerTest {
 
     @Test
     void trailingWildcardRemovesTheKeyLiterallyNamedStar() {
-        // "*" is a legal JSON key and a legal Map<String,?> key -- CORS configs and route tables use
-        // one -- so as the final segment it keeps its ordinary meaning.
+        // "*" is a legal JSON key and a legal Map<String,?> key — CORS configs and route tables use
+        // one — so as the final segment it keeps its ordinary meaning.
         JsonObject json = parseObject("{\"headers\":{\"*\":\"any\",\"accept\":\"json\"}}");
 
         FieldsIgnorer.findPaths(json, paths("headers.*"));
@@ -227,7 +227,7 @@ public class FieldsIgnorerTest {
 
     @Test
     void trailingWildcardWithoutALiteralStarKeyIsANoOp() {
-        // The accepted sharp edge: someone writing map.* expecting every value gets a no-op, which is
+        // The accepted limitation: someone writing map.* expecting every value gets a no-op, which is
         // what any non-matching ignore path against an object already does.
         JsonObject json = parseObject("{\"map\":{\"k1\":{\"leaf\":1}}}");
 
@@ -534,10 +534,9 @@ public class FieldsIgnorerTest {
 
     @Test
     void removesEveryEnvelopeThatEmpties() {
-        // Named for what it asserts. Each envelope holds only the ignored path, so both empty and
-        // both go; the case its old name described -- an envelope that changes without emptying --
-        // is covered by ignoresPathInEveryEnvelopeWhenNoneEmpties, ignoresPathWhenOnlyOneEnvelopeEmpties
-        // and keepsAnEnvelopeThatLosesAChildButHasASibling.
+        // Each envelope holds only the ignored path, so both empty and both go. An envelope that
+        // changes without emptying is covered by ignoresPathInEveryEnvelopeWhenNoneEmpties,
+        // ignoresPathWhenOnlyOneEnvelopeEmpties and keepsAnEnvelopeThatLosesAChildButHasASibling.
         JsonObject json = parseObject("{\"0x1\":{\"a\":{\"b\":1}},\"0x2\":{\"a\":{\"b\":2}},\"keep\":9}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));
@@ -588,9 +587,9 @@ public class FieldsIgnorerTest {
     void cascadesRemovalWhenAMarkedParentBecomesEmpty() {
         // Same shape and same outcome as cascadesRemovalWhenParentBecomesEmpty, which is the point:
         // the MARKER prefix the naming strategy puts on Set- and Map-typed fields is stripped before
-        // anyone reads the file, so it must not decide whether an emptied parent survives. It used
-        // to: the child was found under the prefixed name and removed by the bare one, so the empty
-        // husk stayed and the file showed an empty collection where the field should have gone.
+        // anyone reads the file, so it must not decide whether an emptied parent survives. Finding
+        // the child under the prefixed name and removing it by the bare one leaves the emptied field
+        // in place, so the file shows an empty collection where the field should have gone.
         JsonObject json = parseObject("{\"" + FieldsIgnorer.MARKER + "a\":{\"b\":\"drop\"}}");
 
         FieldsIgnorer.findPaths(json, paths("a.b"));
@@ -602,9 +601,9 @@ public class FieldsIgnorerTest {
     @Test
     void keepsUnmentionedValuesWhenAnObjectElementIsIgnoredAway() {
         // Ignoring list.a empties the object element, which goes. The two primitives beside it were
-        // never mentioned by the rule and must stay: they used to be deleted as well, taking the
-        // whole field with them, because the cleanup below treated any array left holding only
-        // primitives as the remains of a map entry.
+        // never mentioned by the rule and must stay: a cleanup that treats any array left holding
+        // only primitives as the remains of a map entry deletes them too, taking the whole field
+        // with them.
         JsonObject json = parseObject("{\"list\":[{\"a\":1},\"keep-me\",42]}");
 
         FieldsIgnorer.findPaths(json, paths("list.a"));
@@ -614,10 +613,10 @@ public class FieldsIgnorerTest {
 
     @Test
     void clearsOrphanedValuesWhenAComplexKeyMapKeyIsIgnoredAway() {
-        // The case the cleanup exists for, and the reason it cannot simply be dropped. A map with a
-        // bean key serialises as [[key, value]]; emptying the key leaves the value with nothing to
-        // belong to, so the entry goes. A pair like this is always an array inside an array, which
-        // is what distinguishes it from the collection above.
+        // The case the cleanup exists for, and the reason it cannot be dropped. A map with a bean key
+        // serialises as [[key, value]]; emptying the key leaves the value with nothing to belong to, so
+        // the entry goes. A pair like this is always an array inside an array, which is what
+        // distinguishes it from the collection above.
         JsonObject json = parseObject("{\"map\":[[{\"a\":1},\"someValue\"]]}");
 
         FieldsIgnorer.findPaths(json, paths("map.a"));
@@ -632,8 +631,8 @@ public class FieldsIgnorerTest {
     @Test
     void recordsARuleWhoseParentKeepsItsOtherFields() {
         // findPath returns "a direct child of mine went", which is false all the way up here: c is
-        // removed but b keeps another field, so nothing cascades. The rule did apply, and used to go
-        // unrecorded -- which is the ordinary case, not an edge one.
+        // removed but b keeps another field, so nothing cascades. The rule still applied and must be
+        // recorded — this is the ordinary case, not an edge one.
         JsonObject json = parseObject("{\"a\":{\"b\":{\"c\":1,\"keep\":2}}}");
         IgnoredFieldsTracker tracker = new IgnoredFieldsTracker();
 
@@ -670,8 +669,8 @@ public class FieldsIgnorerTest {
 
     @Test
     void keepsUnmentionedValuesOneLevelDownAsWell() {
-        // The same loss as above, a level deeper. Guarding only on "my parent is an array" left this
-        // untouched, because a nested collection IS an array element; the entry-shaped test — exactly
+        // The same loss as above, a level deeper. Guarding only on "my parent is an array" leaves
+        // this untouched, because a nested collection IS an array element; the entry-shaped test — exactly
         // two elements — is what covers it.
         JsonObject json = parseObject("{\"ll\":[[{\"a\":1},\"keep\",7]]}");
 
@@ -717,7 +716,7 @@ public class FieldsIgnorerTest {
     // serialised text separates the two: a Map<String,?> entry serialises to a single-key object, and
     // so does an envelope.
     //
-    // The one discriminator that looked available -- an envelope is never an array element -- was
+    // The one discriminator that looked available — an envelope is never an array element — was
     // measured and is false: a List of graph-typed objects writes an envelope at each array position.
     // Fixing this needs a different wire format for envelopes, which would invalidate every approved
     // file holding a circular reference and every hand-written one, so it is recorded rather than
@@ -755,7 +754,7 @@ public class FieldsIgnorerTest {
     }
 
     // -------------------------------------------------------------------------
-    // MAP_MARKER twins of the MARKER cases
+    // MAP_MARKER counterparts of the MARKER cases
     //
     // A Map-typed field carries its own sentinel so the sorter can tell a [key, value] entry from a
     // nested collection. Every site that recognised the old prefix must recognise this one; none of those
@@ -811,7 +810,7 @@ public class FieldsIgnorerTest {
     //
     // A field whose declared type describes container levels below it carries one sentinel per level, so a
     // name can hold several. Every site that recognised a single prefix has to recognise a sequence; as
-    // with the twins above, missing one is not a compile error.
+    // with the counterparts above, missing one is not a compile error.
     // -------------------------------------------------------------------------
 
     @Test

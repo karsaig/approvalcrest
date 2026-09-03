@@ -12,9 +12,9 @@
     <groupId>com.github.karsaig.integration.tests</groupId>
     <artifactId>approvalcrest-jdk26-simulation-integration-tests</artifactId>
 
-    <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, which is JDK 26's default behaviour
-         for the Unsafe memory-access methods. That lets the JDK 26 arrangement be exercised on
-         today's runners, with and without the agent attached.
+    <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, which is JDK 26's default for
+         the Unsafe memory-access methods. That lets these tests run JDK 26's behaviour on today's
+         runners, with and without the agent attached.
 
          Bound to integration-test on purpose: the javaagent path below points at a built jar, so
          approvalcrest-agent has to have been packaged. `mvn test` alone will not do that - use

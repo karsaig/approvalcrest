@@ -281,9 +281,9 @@ public class ReflectUtilTest {
     }
 
     /**
-     * Every module that performs reflection has to be named in the open, not just this class's.
+     * Every module that performs reflection has to be named in the open, not only this class's.
      * They are the same module in an ordinary run, but the agent jar joins the system class path
-     * and a suite could resolve approvalcrest and Gson from different loaders - in which case an
+     * and a suite could resolve approvalcrest and Gson from different loaders — in which case an
      * open naming only one of them would leave the other unable to read the field.
      */
     @Test
@@ -315,20 +315,26 @@ public class ReflectUtilTest {
         Method redefine = redefineModuleOf(RecordingInstrumentation.class);
         Object[] modules = new Object[]{new Object()};
 
-        assertThat(ReflectUtil.openViaInstrumentation(null, redefine, new Object(), "p", modules), is(false));
-        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), null, new Object(), "p", modules), is(false));
-        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), redefine, new Object(), "p", null), is(false));
-        assertThat(ReflectUtil.openViaInstrumentation(new RecordingInstrumentation(), redefine, new Object(), "p", new Object[0]), is(false));
+        RecordingInstrumentation stub = new RecordingInstrumentation();
+        Object target = new Object();
+
+        assertThat(ReflectUtil.openViaInstrumentation(null, redefine, target, "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, null, target, "p", modules), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, redefine, target, "p", null), is(false));
+        assertThat(ReflectUtil.openViaInstrumentation(stub, redefine, target, "p", new Object[0]), is(false));
     }
 
     @Test
     void unsafeOpenReportsFailureWhenTheHandleThrowsOrIsMissing() throws Exception {
         Method invoker = RefusingHandleInvoker.class.getMethod("invokeWithArguments", Object[].class);
 
-        assertThat(ReflectUtil.openViaUnsafe(new RefusingHandleInvoker(), invoker, new Object(), "p", new Object()), is(false));
-        assertThat(ReflectUtil.openViaUnsafe(null, invoker, new Object(), "p", new Object()), is(false));
-        assertThat(ReflectUtil.openViaUnsafe(new Object(), null, new Object(), "p", new Object()), is(false));
-        assertThat(ReflectUtil.openViaUnsafe(new Object(), invoker, new Object(), "p", null), is(false));
+        Object target = new Object();
+        Object ourMod = new Object();
+
+        assertThat(ReflectUtil.openViaUnsafe(new RefusingHandleInvoker(), invoker, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(null, invoker, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), null, target, "p", ourMod), is(false));
+        assertThat(ReflectUtil.openViaUnsafe(new Object(), invoker, target, "p", null), is(false));
     }
 
     /**
@@ -354,10 +360,10 @@ public class ReflectUtilTest {
         }
     }
 
-    // --- how the two routes are orchestrated ---
+    // --- how the two routes are combined ---
     //
-    // No real JVM offers both routes at once, so these drive the orchestration directly. Each one
-    // pins a claim the javadoc makes that would otherwise be free to rot.
+    // No real JVM offers both routes at once, so these drive the choice between them directly. Each
+    // one pins a claim the javadoc makes that nothing else checks.
 
     /** Records whether it ran, and answers however the test tells it to. */
     private static final class Step implements ReflectUtil.ModuleStep {
@@ -459,7 +465,7 @@ public class ReflectUtilTest {
     // --- inherited locked-module fields ---
     //
     // A user's own exception class is in the unnamed module, so isInLockedModule is false for it
-    // and neither fallback factory claimed it - but it still carries Throwable's private fields.
+    // and neither fallback factory claimed it — but it still carries Throwable's private fields.
     // Where no module can be opened, Gson's reflective adapter threw JsonIOException on
     // detailMessage instead of the type degrading to getters.
 
@@ -481,7 +487,7 @@ public class ReflectUtilTest {
 
     /**
      * Asserted as a relationship rather than a fixed value, because both sides depend on whether
-     * this JDK could open java.lang - which is exactly the condition the guard exists for.
+     * this JDK could open java.lang — which is exactly the condition the guard exists for.
      */
     @Test
     void aSubclassInheritsWhateverItsSuperclassLockedStateIs() {

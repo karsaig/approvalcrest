@@ -28,8 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  * <p>
  * IMPORTANT: All access to sun.misc.Unsafe, java.lang.Module, and MethodHandles.Lookup is
- * done via reflection. There is NO import of any of these. The code degrades gracefully to
- * getter-based serialization in both of the ways Unsafe goes away:
+ * done via reflection. There is NO import of any of these. The code degrades to getter-based
+ * serialization in both of the ways Unsafe goes away:
  * </p>
  * <ul>
  *   <li><b>Disabled</b> — from JDK 26 this is the default (JEP 471/498). The class, its
@@ -41,9 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *       and the Unsafe initialization is skipped.</li>
  * </ul>
  * <p>
- * Either way: zero compile errors, zero runtime errors. Attaching the approvalcrest agent keeps
- * field-based output in both cases, because {@code Instrumentation.redefineModule} needs no Unsafe
- * at all; without it, locked-module types degrade to getter-based serialization.
+ * Attaching the approvalcrest agent keeps field-based output in both cases, because
+ * {@code Instrumentation.redefineModule} needs no Unsafe at all; without it, locked-module types
+ * degrade to getter-based serialization.
  * </p>
  */
 public class ReflectUtil {
@@ -195,8 +195,8 @@ public class ReflectUtil {
         GET_FLOAT = getFloat;
         GET_DOUBLE = getDouble;
 
-        // Our own module. Deliberately resolved outside every Unsafe-gated block below: it is
-        // just Class.getModule(), it needs no Unsafe, and both opening routes depend on it.
+        // Our own module. Resolved before the blocks below that require Unsafe, because it is
+        // Class.getModule() and needs none, and because both opening routes depend on it.
         Object ourModule = null;
         Object[] modulesToOpenTo = null;
         if (getModule != null) {
@@ -227,7 +227,7 @@ public class ReflectUtil {
         // JDK 26, so nothing about resolving it may depend on Unsafe.
         Object instrumentation = null;
         Method redefineModule = null;
-        // Gated on fallback mode exactly as the Unsafe route is. Fallback exists for suites that
+        // Skipped in fallback mode, as the Unsafe route is. Fallback exists for suites that
         // want no module bypass at all, and opening java.lang through Instrumentation is still a
         // bypass even though it needs no Unsafe.
         if (getModule != null && !FALLBACK_MODE) {
@@ -301,10 +301,10 @@ public class ReflectUtil {
         // module, so isInLockedModule returns false for it and nothing about the class itself
         // triggers an open of the java.lang fields Gson still has to read.
         //
-        // Belt and braces as things now stand: inheritsFromLockedModule walks to Throwable, and
-        // that walk opens java.lang on demand before Gson reads a field. Kept because that is a
-        // side effect of a call in another class rather than a guarantee, and because opening once
-        // at start-up costs nothing.
+        // Not strictly needed as things now stand: inheritsFromLockedModule walks to Throwable,
+        // and that walk opens java.lang on demand before Gson reads a field. Kept because that is
+        // a side effect of a call in another class rather than a guarantee, and because opening
+        // once at start-up costs nothing.
         if (ourModule != null && getModule != null
                 && ((redefineModule != null) || (implAddOpensMh != null && invokeWithArgs != null))) {
             try {
@@ -444,7 +444,7 @@ public class ReflectUtil {
      * <p>
      * A user's own exception class is in the unnamed module, so it is not itself locked, but it
      * carries {@code java.lang.Throwable}'s private fields. When no module can be opened those
-     * fields are unreadable, and standard reflection throws rather than returning nothing - so
+     * fields are unreadable, and standard reflection throws rather than returning nothing — so
      * such a type has to be serialized from its getters like a locked type, instead of being left
      * to fail.
      * </p>
@@ -561,8 +561,8 @@ public class ReflectUtil {
     /**
      * Tries the primary route, then the fallback, confirming each rather than believing it.
      * <p>
-     * Split out from {@link #tryOpenModule} because no real JVM offers both routes at once - the
-     * agent route needs an agent, the Unsafe route needs a JDK where Unsafe still works - so the
+     * Split out from {@link #tryOpenModule} because no real JVM offers both routes at once — the
+     * agent route needs an agent, the Unsafe route needs a JDK where Unsafe still works — so the
      * three properties this method exists for could not otherwise be tested: that the primary is
      * tried first, that a failed primary falls through to the fallback inside the same call, and
      * that a route reporting success without the package actually being open is not believed.

@@ -24,7 +24,7 @@ When approvalcrest encounters a type from a locked module (e.g. `java.time.Local
 
 1. **Programmatic module opening** — at startup, opens locked packages by whichever route is available: `Instrumentation.redefineModule` when the [agent](#the-agent) is attached, otherwise `sun.misc.Unsafe` to obtain a trusted `MethodHandles.Lookup` and then `Module.implAddOpens()`. Either is the runtime equivalent of `--add-opens`, done automatically.
 2. **Standard reflection** — once the module package is opened, `field.setAccessible(true)` works normally. Gson's built-in serialization produces the same field-based JSON as always.
-3. **Graceful degradation** — if no route can open a module, the code transparently falls back to getter-based serialization (same as fallback mode). With the agent attached this does not arise, because `Instrumentation` needs no Unsafe. Without it, this covers both stages of the JDK's plan: from **JDK 26** the memory-access methods throw `UnsupportedOperationException` by default even though `sun.misc.Unsafe` still exists, and in a later release the class is removed outright.
+3. **Degradation** — if no route can open a module, the code falls back to getter-based serialization (same as fallback mode). With the agent attached this does not arise, because `Instrumentation` needs no Unsafe. Without it, this covers both stages of the JDK's plan: from **JDK 26** the memory-access methods throw `UnsupportedOperationException` by default even though `sun.misc.Unsafe` still exists, and in a later release the class is removed outright.
 
 ### When to use
 
@@ -145,7 +145,7 @@ Fallback mode disables Unsafe entirely and serializes locked-module types using 
 
 ### When to use
 
-- **Future-proofing** — this is what approvalcrest degrades to automatically in safe mode once Unsafe stops working, which for most projects means **JDK 26** without the [agent](#the-agent). Use fallback mode today to prepare your approved files for that. Attaching the agent instead keeps field-based output and leaves the files alone.
+- **Preparing for JDK 26** — this is what approvalcrest degrades to automatically in safe mode once Unsafe stops working, which for most projects means **JDK 26** without the [agent](#the-agent). Use fallback mode today to prepare your approved files for that. Attaching the agent instead keeps field-based output and leaves the files alone.
 - **Strict compliance** — your organization forbids any use of `sun.misc.Unsafe` or module-bypassing hacks.
 - **Testing** — verify that your test suite works without relying on internal JDK APIs.
 
@@ -250,7 +250,7 @@ Add one JVM argument and safe mode keeps producing field-based output on JDK 26,
 -javaagent:/path/to/approvalcrest-agent-1.5.1.jar
 ```
 
-The agent does one thing: it hands approvalcrest a `java.lang.instrument.Instrumentation`, which is the supported way to open a module package. Two consequences worth knowing before you add it: the JVM appends the agent jar to the system class path, and anything else on that classpath can read the `Instrumentation` from `ApprovalcrestAgent.getInstrumentation()`. The jar declares only `Premain-Class` — no `Can-Redefine-Classes` or `Can-Retransform-Classes` — so what it hands out cannot redefine or retransform classes, and it cannot be attached to an already-running JVM. That replaces the `sun.misc.Unsafe` trick JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at startup does not expire.
+The agent does one thing: it hands approvalcrest a `java.lang.instrument.Instrumentation`, which is the supported way to open a module package. Two consequences follow: the JVM appends the agent jar to the system class path, and anything else on that classpath can read the `Instrumentation` from `ApprovalcrestAgent.getInstrumentation()`. The jar declares only `Premain-Class` — no `Can-Redefine-Classes` or `Can-Retransform-Classes` — so what it hands out cannot redefine or retransform classes, and it cannot be attached to an already-running JVM. That replaces the `sun.misc.Unsafe` trick JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at startup does not expire.
 
 ### Maven
 
@@ -311,7 +311,7 @@ assertTrue(com.github.karsaig.approvalcrest.ReflectUtil.isInstrumentationAvailab
 
 `isModuleOpeningAvailable()` answers the broader question — whether *either* route is live. Read it as "was a module opened", not as "what format will the output be": it is false on Java 8, where output is field-based anyway because nothing is locked.
 
-### Worth adding before you need it
+### Adding it before JDK 26
 
 Output is unchanged on JDK 8 to 25 whether or not the agent is attached, so adding the flag now costs nothing and means JDK 26 needs no further action later.
 
@@ -364,11 +364,11 @@ No. Safe mode produces identical field-based JSON to what force mode (with `--ad
 
 ### What happens on JDK 26, when Unsafe stops working?
 
-Attach the [agent](#the-agent) and nothing changes: modules are still opened, output stays field-based, and your approved files keep matching. That is the recommended answer.
+Attach the [agent](#the-agent) and nothing changes: modules are still opened, output stays field-based, and your approved files keep matching.
 
-Without it, safe mode gracefully degrades to getter-based serialization for locked-module types, exactly as fallback mode does. Your tests won't crash — but approved files for locked-module types will need regenerating, as the output format changes from field-based to getter-based.
+Without it, safe mode degrades to getter-based serialization for locked-module types, exactly as fallback mode does. Your tests won't crash — but approved files for locked-module types will need regenerating, as the output format changes from field-based to getter-based.
 
-Note that on JDK 26 `sun.misc.Unsafe` is disabled rather than removed: the class still loads and its methods still resolve, but calling one throws `UnsupportedOperationException`. Approvalcrest therefore makes a probe call at start-up and treats a failing probe as "no Unsafe", rather than assuming that the class being present means it works. The same degradation happens when the class is removed for real in a later release.
+On JDK 26 `sun.misc.Unsafe` is disabled rather than removed: the class still loads and its methods still resolve, but calling one throws `UnsupportedOperationException`. Approvalcrest therefore makes a probe call at start-up and treats a failing probe as "no Unsafe", rather than assuming that the class being present means it works. The same degradation happens when the class is removed for real in a later release.
 
 Two alternatives to the agent, both keeping field-based output: `--sun-misc-unsafe-memory-access=allow` (available from JDK 24), which only postpones the change until Unsafe is removed outright; or force mode with `--add-opens`.
 

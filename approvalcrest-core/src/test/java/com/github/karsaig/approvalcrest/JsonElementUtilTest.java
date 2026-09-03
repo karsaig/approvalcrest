@@ -108,7 +108,7 @@ public class JsonElementUtilTest {
     void findsValueBehindMarkerPrefixedKey() {
         // The field naming strategy prefixes a Set-typed field name with MARKER, so a path crossing such
         // a field has to tolerate it the way FieldsIgnorer already does. A Map-typed field carries
-        // MAP_MARKER instead -- see the twin below.
+        // MAP_MARKER instead — see the counterpart below.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k",
                 parse("{\"" + FieldsIgnorer.MARKER + "aMap\":{\"k\":\"val\"}}"));
 
@@ -131,7 +131,7 @@ public class JsonElementUtilTest {
 
     @Test
     void findsValueBehindAMapMarkerPrefixedKey() {
-        // The twin of the MARKER case: a Map-typed field carries its own prefix, and the JSON path
+        // The counterpart of the MARKER case: a Map-typed field carries its own prefix, and the JSON path
         // resolver has to tolerate that one too or no path could cross a map on the fallback route.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("aMap.k",
                 parse("{\"" + FieldsIgnorer.MAP_MARKER + "aMap\":{\"k\":\"val\"}}"));
@@ -219,8 +219,8 @@ public class JsonElementUtilTest {
     @Test
     void wildcardCollectsOnlyFromTheChildrenThatResolveTheRestOfThePath() {
         // Lenient, matching the array fan-out it sits beside: k2 has no leaf, so the result covers k1
-        // only rather than failing. A path where NO child resolves is an error -- see the next test --
-        // so a typo still surfaces, but a heterogeneous map narrows what is asserted.
+        // only rather than failing. A path where NO child resolves is an error — see the next test —
+        // so a typo is still reported, but a heterogeneous map narrows what is asserted.
         Either<RuntimeException, Object> result = JsonElementUtil.findJsonValueAt("map.*.leaf",
                 parse("{\"map\":[{\"k1\":{\"leaf\":1}},{\"k2\":{\"other\":2}}]}"));
 

@@ -389,7 +389,7 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
     public void shouldNotLeakEitherSortingMarkerIntoMachineReadableOutput() {
         // The sorting markers are stripped from the written JSON by removeSetMarker, which never sees the
         // machine-readable message: tracker paths are built from the field name as resolved, so a missed
-        // strip in getOriginalFieldName would surface here and nowhere else.
+        // strip in getOriginalFieldName would show up here and nowhere else.
         Map<ChildBean, String> mapField = new LinkedHashMap<>();
         mapField.put(child().childString("k").build(), "v");
         Set<String> setField = new LinkedHashSet<>(Arrays.asList("b", "a"));

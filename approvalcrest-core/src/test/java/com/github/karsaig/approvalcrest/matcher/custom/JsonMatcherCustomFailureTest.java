@@ -316,11 +316,11 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     // accepts that. A path left behind by a rename asserts nothing, as long as some reference along
     // it is null.
     //
-    // Rejecting such a path by checking the field's DECLARED TYPE for the next segment was tried and
-    // reverted as unsound: the retry resolves serialised MEMBER names, and those are not Java field
-    // names. @SerializedName renames a member, a registered JsonSerializer invents them freely, a
-    // JsonObject-typed field's members are data, a bounded type variable erases to its bound rather
-    // than to Object, and a field declared as a supertype legitimately carries a subtype's fields.
+    // Rejecting such a path by checking the field's DECLARED TYPE for the next segment is unsound:
+    // the retry resolves serialised MEMBER names, and those are not Java field names. @SerializedName
+    // renames a member, a registered JsonSerializer invents them freely, a JsonObject-typed field's
+    // members are data, a bounded type variable erases to its bound rather than to Object, and a
+    // field declared as a supertype legitimately carries a subtype's fields.
     // Each makes "does not exist" a false statement about a path that resolves for real data.
     // Throwing also escapes not(...), so a negated matcher could no longer express "does not match".
     // -----------------------------------------------------------------------
@@ -661,9 +661,9 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     // -----------------------------------------------------------------------
 
     /**
-     * not(empty()) on an empty collection must fail. Previously the bean-level rejection was
-     * retried against the JsonArray form, where empty() is false on type grounds, making the
-     * negation true and the assertion unfailable.
+     * not(empty()) on an empty collection must fail. Retrying the bean-level rejection against the
+     * JsonArray form makes empty() false on type grounds, which makes the negation true and the
+     * assertion unfailable.
      */
     @Test
     public void failsWhenNegatedEmptyIsFalseForAnEmptyCollection() {
@@ -723,8 +723,8 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     // The boundary of the negated-element-matcher limitation: scalar elements
     //
     // Over objects on JSON-string input these three cannot fail, which is pinned in
-    // JsonMatcherCustomSuccessTest. Over scalars they fail correctly, because the read-only list
-    // view over the JsonArray coerces a JSON scalar on read -- a string arrives as a String. That
+    // JsonMatcherCustomSuccessTest. Over scalars they do fail, because the read-only list view
+    // over the JsonArray coerces a JSON scalar on read — a string arrives as a String. That
     // is what makes the limitation about element classes rather than about the input form, and it
     // is what any future fix must not break.
     // -----------------------------------------------------------------------
@@ -773,7 +773,7 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
 
     @Test
     public void negatedHasSizeFailsOnJsonStringInput() {
-        // Claimed in the CHANGELOG and the docs for both input forms; only object input was covered.
+        // Claimed in the CHANGELOG and the docs for both input forms.
         assertJsonMatcherWithDummyTestInfo(SCALAR_LIST_JSON, SCALAR_LIST_JSON_APPROVED,
                 enableExpectedFileSortingWithLenientMatching(),
                 jsonMatcher -> jsonMatcher.with("tags", not(hasSize(2))),
@@ -783,7 +783,7 @@ public class JsonMatcherCustomFailureTest extends AbstractJsonMatcherIgnoreTest 
     }
 
     // -----------------------------------------------------------------------
-    // Map matchers on JSON-string input: the table's "fails" cells, asserted nowhere until now
+    // Map matchers on JSON-string input: the table's "fails" cells
     //
     // A map serialises to a JsonArray of single-entry objects, so nothing hands a java.util.Map to
     // the matcher and a Map-typed matcher cannot match. These pin the documented behaviour rather

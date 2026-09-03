@@ -262,11 +262,11 @@
             </modules>
         </profile>
         <profile>
-            <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, JDK 26's default, so the
-                 JDK 26 arrangement can be exercised on today's runners. Kept separate from
+            <!-- JDK 25 accepts the sun-misc-unsafe-memory-access=deny flag, JDK 26's default, so
+                 these tests run JDK 26's behaviour on today's runners. Kept separate from
                  junit6-25, whose modules are a different concern.
-                 When a real JDK 26 job is added, widen this activation or these tests stop
-                 running - the flag is accepted from JDK 24 onwards, not only on 25. -->
+                 The flag is accepted from JDK 24 onwards, so widen this activation when a real
+                 JDK 26 job is added, or these tests stop running. -->
             <id>jdk26-simulation</id>
             <activation>
                 <property>

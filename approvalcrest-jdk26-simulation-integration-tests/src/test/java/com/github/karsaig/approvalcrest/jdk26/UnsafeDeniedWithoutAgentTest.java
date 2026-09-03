@@ -9,7 +9,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 /**
- * Runs with the sun-misc-unsafe-memory-access=deny flag - JDK 26's default - and no agent, which is
+ * Runs with the sun-misc-unsafe-memory-access=deny flag — JDK 26's default — and no agent, which is
  * what a project that has not opted in gets. Locks in the documented degradation: getter-based
  * output, and no exception.
  */
@@ -32,12 +32,12 @@ class UnsafeDeniedWithoutAgentTest {
     }
 
     /**
-     * This threw JsonIOException on java.lang.Throwable#detailMessage before types that merely
-     * inherit locked-module fields were treated as locked too.
+     * Unless a type that merely inherits locked-module fields is treated as locked too, this throws
+     * JsonIOException on java.lang.Throwable#detailMessage.
      */
     @Test
     void userDefinedExceptionFallsBackToGettersRatherThanThrowing() {
-        // Vary the message, because a mismatch description names only the fields that differ - so
+        // Vary the message, because a mismatch description names only the fields that differ — so
         // this is what makes the property carrying the message visible in the first place.
         String mismatch = Jdk26Fixtures.describeMismatch(
                 Jdk26Fixtures.userException("boom", "T-1"), Jdk26Fixtures.userException("bang", "T-1"));

@@ -82,16 +82,16 @@ assertThat(actual, sameJsonAsApproved()
 behaves the same in `.with(path, matcher)`, so an ignore and a custom matcher written over the same
 shape agree.
 
-Two limits worth knowing:
+Two limits:
 
 - **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
   a key literally named `*`, which a JSON document or a `Map<String,?>` may have. So
   `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
   meaning "every value", which is a silent no-op if there is none.
-- **Emptying every value cascades.** If the ignored field is the only one on each value, every value
-  empties, so each entry is removed, the array empties, and the map field disappears from the output
-  altogether. That is the same cascade a named key triggers, but `*` hits every entry at once, so it is
-  the common case rather than the corner.
+- **Emptying every value removes the field.** If the ignored field is the only one on each value, every
+  value empties, so each entry is removed, the array empties, and the map field disappears from the
+  output altogether. A named key does the same for one entry; `*` applies to every entry at once, so the
+  whole field usually goes.
 
 ### Removing elements under every map entry
 
@@ -104,7 +104,7 @@ assertThat(actual, sameJsonAsApproved()
     .ignoringElementsWhere("ordersByRef.*.tag.system", FLOW_ID_TAG_SYSTEM));
 ```
 
-The comparison to draw is against the **wildcard-free** form, not against a named key.
+Compare it against the **wildcard-free** form, not against a named key.
 `ordersByRef.system` filters the outer array of map entries, testing each entry object for a `system`
 field — which matches nothing, so it is a silent no-op. `ordersByRef.*.system` filters the list *inside*
 each entry, which is what you want for a map of lists. Naming a key, `ordersByRef.A-1.system`, reaches
@@ -113,8 +113,8 @@ that same inner list for that one entry, so the wildcard is the named form appli
 A `*` that ends the whole path is the leaf field name rather than a wildcard, as everywhere else.
 
 A map with non-primitive keys serialises differently — as pairs rather than as single-entry objects — so
-a path through it reaches fields of the **key** objects as well as the values. That is pre-existing
-behaviour for a named path; `*` inherits it.
+a path through it reaches fields of the **key** objects as well as the values. That is existing
+behaviour for a named path, and `*` behaves the same.
 
 ## Removing Array Elements by Value
 

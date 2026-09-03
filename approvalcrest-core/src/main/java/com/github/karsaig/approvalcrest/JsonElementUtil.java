@@ -267,9 +267,9 @@ public class JsonElementUtil {
             while (iter.hasNext()) {
                 Map.Entry<String, JsonElement> entry = iter.next();
                 // The name the caller declared, not the key: a Set-, Map- or type-selected field is held
-                // under a name the field naming strategy has prefixed. Matching the key meant a pattern
-                // could match only the internal form and take such a field away -- and the path recorded
-                // for it carried the sentinel into machine-readable output, which nothing strips.
+                // under a name the field naming strategy has prefixed. Matching the key lets a pattern
+                // match only the internal form and take such a field away -- and the path recorded for
+                // it then carries the sentinel into machine-readable output, which nothing strips.
                 String fieldName = FieldsIgnorer.getOriginalFieldName(entry.getKey());
                 Matcher<String> matchedPattern = findMatchingPattern(fieldName, matchers);
                 if (matchedPattern != null) {
@@ -349,8 +349,8 @@ public class JsonElementUtil {
             for (Map.Entry<String, JsonElement> entry : element.getAsJsonObject().entrySet()) {
                 // The stripped name, not the key: a Set-, Map- or type-selected field is written with one
                 // or more sentinels in front of it, and a pattern is written against the name the caller
-                // declared. Matching the raw key meant such a field never matched, and withMatcher's
-                // "no field matched, so nothing to check" made the assertion one that could not fail.
+                // declared. Matching the raw key leaves such a field unmatched, and withMatcher's
+                // "no field matched, so nothing to check" then makes the assertion one that cannot fail.
                 if (fieldNamePattern.matches(FieldsIgnorer.getOriginalFieldName(entry.getKey()))) {
                     result.add(entry.getValue());
                 }

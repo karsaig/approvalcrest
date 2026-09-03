@@ -19,7 +19,7 @@ final class Jdk26Fixtures {
     }
 
     /**
-     * A user's own exception. Its module is not locked, so nothing claims it on the way in - but it
+     * A user's own exception. Its module is not locked, so nothing claims it on the way in — but it
      * carries {@code java.lang.Throwable}'s private fields, which is what needs java.lang opened.
      */
     public static class UserDefinedException extends RuntimeException {
@@ -40,7 +40,7 @@ final class Jdk26Fixtures {
     /**
      * Extends a locked JDK class whose only field is transient, so nothing was ever read from the
      * superclass. Such a type must stay on the field-based path even where modules cannot be
-     * opened - pulling it onto the getter-based path would change output for no gain.
+     * opened — pulling it onto the getter-based path would change output for no gain.
      */
     public static class EventSubclass extends java.util.EventObject {
         private static final long serialVersionUID = 1L;

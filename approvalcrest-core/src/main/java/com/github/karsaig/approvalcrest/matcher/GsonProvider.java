@@ -200,9 +200,9 @@ class GsonProvider {
             }
             // The field's own marker first, then one sentinel per container level below it, so the sorter
             // can tell a map's [key, value] pair from a nested collection wherever the declared type says
-            // so. Appended to today's decision rather than derived from the walk: a field whose generic
-            // type says nothing -- Object, raw, a type variable -- must keep the marker it has now, or it
-            // silently stops being sorted.
+            // so. Appended to the marker ownMarkerOf gives rather than derived from the walk: a field
+            // whose generic type says nothing -- Object, raw, a type variable -- must keep that marker,
+            // or it silently stops being sorted.
             return ownMarker + markerChainBelow(f.getGenericType()) + f.getName();
         });
     }
@@ -249,10 +249,10 @@ class GsonProvider {
      * sorter cannot make, which is the safe direction -- nothing stops being sorted.
      *
      * <p>Any map or collection is walked, subclasses included, because what a level holds is resolved through
-     * its supertypes rather than read off argument 1. Reading positionally needs a fence -- a subtype is free
-     * to drop a parameter ({@code class MyMap<V> extends HashMap<String,V>}) or reorder them
-     * ({@code class Flipped<V,K> extends HashMap<K,V>}), so argument 1 either does not exist or is the key --
-     * and any such fence is a list of known types, which is a list of the types nobody has subclassed.
+     * its supertypes rather than read off argument 1. Reading positionally needs a list of the types it is
+     * safe for -- a subtype is free to drop a parameter ({@code class MyMap<V> extends HashMap<String,V>})
+     * or reorder them ({@code class Flipped<V,K> extends HashMap<K,V>}), so argument 1 either does not exist
+     * or is the key -- and any such list is a list of the types nobody has subclassed.
      */
     private static String markerChainBelow(Type fieldType) {
         StringBuilder chain = new StringBuilder();
@@ -314,9 +314,9 @@ class GsonProvider {
         if (Collection.class.isAssignableFrom(raw)) {
             return resolvedArgument(token, COLLECTION_ELEMENT);
         }
-        // Iterable itself and only itself, as the list this replaces had it. Widening to
-        // Iterable.class.isAssignableFrom would newly admit java.nio.file.Path and gson's own JsonArray,
-        // both Iterable over themselves, and walk to the depth cap describing levels that are not there.
+        // Iterable itself and only itself. Widening to Iterable.class.isAssignableFrom would newly admit
+        // java.nio.file.Path and gson's own JsonArray, both Iterable over themselves, and walk to the depth
+        // cap describing levels that are not there.
         if (raw == Iterable.class) {
             return resolvedArgument(token, ITERABLE_ELEMENT);
         }

@@ -207,8 +207,8 @@ This holds wherever the declared type of the field holding the map says how deep
 `Set<Map<K, Set<Map<K2, V>>>>`. Subclasses count — `class Registry extends HashMap<Ref, Map<Ref, Order>>`,
 `EnumMap`, `Hashtable`, guava's `ImmutableMap`, anything of your own — because the value type is resolved
 through the supertypes rather than read off the declaration's second argument. A map at the root is covered too, and there the *object itself* is inspected
-rather than a declared type, so a root `Map<K, Object>` whose values are all maps is protected where the same
-field would not be.
+rather than a declared type, so a root `Map<K, Object>` whose values are all maps keeps its pair order
+where the same field would not.
 
 It does not hold where nothing describes the level:
 
@@ -230,13 +230,13 @@ primitives or enums is written as one object per entry rather than as pairs, so 
 protecting, and a level claimed for such a map costs nothing. And a custom type adapter registered for a
 `Map` type can render it as anything: where what it writes is an array of two-element arrays, that is
 indistinguishable from an entry array and is treated as one, so those inner arrays keep their order rather
-than being sorted. A `Map`-typed *field* has always been taken at its word this way; what is new is that the
+than being sorted. A `Map`-typed *field* has always been treated this way; what is new is that the
 levels below it are too.
 
 For a **file matcher** this also requires strict file matching, which is on by default. With
 `-DfileMatcherStrictFileMatching=false` pairs are ordered by content on both sides, and a map then compares
 equal to the same map with its keys and values swapped. Because the written form depends on that setting,
-switching it either way means regenerating any approved file holding such a map. Note also that an
+switching it either way means regenerating any approved file holding such a map. An
 unrecognised value for the property reads as `false`, so a typo such as `-DfMStrictMatching=ture` turns
 strict matching off. `sameBeanAs` serialises both sides itself, so the key stays first there whatever the
 setting.
