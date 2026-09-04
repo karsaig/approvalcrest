@@ -435,7 +435,7 @@ public class JsonMatcherAlsoCheckTest extends AbstractJsonMatcherIgnoreTest {
     // ------------------------------------------------------- more value shapes
 
     @Test
-    public void matchesSetSizeKeepingTheSetInTheFile() {
+    public void matchesSetContentKeepingTheSetInTheFile() {
         assertJsonMatcherWithDummyTestInfoForNotApprovedFile(
                 new SetHolder(),
                 "{\n" +

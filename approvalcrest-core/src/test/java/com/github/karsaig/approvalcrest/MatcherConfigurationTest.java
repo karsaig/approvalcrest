@@ -72,6 +72,9 @@ public class MatcherConfigurationTest {
                 .addAdditionalCustomMatcher("a.b", is("y"));
 
         assertThat(configuration.getCustomMatcherPathsToIgnore(), hasSize(0));
+        // matcher instances are not equal to each other, so assert which one is stored by what it accepts
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("y"), is(true));
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("x"), is(false));
     }
 
     @Test
@@ -81,6 +84,9 @@ public class MatcherConfigurationTest {
                 .addCustomMatcher("a.b", is("y"));
 
         assertThat(configuration.getCustomMatcherPathsToIgnore(), containsInAnyOrder("a.b"));
+        // matcher instances are not equal to each other, so assert which one is stored by what it accepts
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("y"), is(true));
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("x"), is(false));
     }
 
     @Test

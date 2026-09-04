@@ -169,6 +169,9 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
 
         JsonObject json = JsonParser.parseString(error.getMessage()).getAsJsonObject();
         com.google.gson.JsonArray ignoredFields = json.getAsJsonArray("ignoredFields");
+        // The loop below is vacuous on an empty array, so assert the size first -- that is the actual claim.
+        assertEquals(0, ignoredFields.size(),
+                "alsoCheck removes nothing, so nothing is reported as ignored: " + ignoredFields);
         for (int i = 0; i < ignoredFields.size(); i++) {
             assertNotEquals("beanInteger", ignoredFields.get(i).getAsJsonObject().get("path").getAsString(),
                     "alsoCheck removes nothing, so it must not appear in ignoredFields");

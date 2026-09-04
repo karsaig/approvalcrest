@@ -27,7 +27,7 @@ import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameContentAsApp
 
 ## Why a Kotlin-Specific Module?
 
-Kotlin's type inference mishandles F-bounded (recursive) generics — [KT-5464](https://youtrack.jetbrains.com/issue/KT-5464). Without the Kotlin module, chaining methods like `.with()`, `.ignoring()`, and `.withUniqueId()` fail to compile. The `approvalcrest-junit-jupiter-kotlin` module provides extension functions that work around this.
+Kotlin's type inference mishandles F-bounded (recursive) generics — [KT-5464](https://youtrack.jetbrains.com/issue/KT-5464). Without the Kotlin module, chaining methods like `.with()` / `.alsoCheck()`, `.ignoring()`, and `.withUniqueId()` fail to compile. The `approvalcrest-junit-jupiter-kotlin` module provides extension functions that work around this.
 
 ## Basic Tests
 

@@ -464,19 +464,19 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
         Level1 actual = new Level1();
 
         assertDiagnosingMatcher(actual, expected,
-                m -> m.alsoCheck("level2.level3.values", contains("L3-c", "L3-a", "L3-b")));
+                m -> m.alsoCheck("level2c.level3a.values", contains("L4-c", "L4-a", "L4-b")));
     }
 
     @Test
     public void deeplyNestedFieldIsStillComparedUnlikeUnderWith() {
         Level1 expected = new Level1();
         Level1 actual = new Level1();
-        actual.level2.level3.values.set(2, "L3-zzz");
+        actual.level2c.level3a.values.set(2, "L4-zzz");
 
         assertDiagnosingMatcher(actual, expected,
-                m -> m.alsoCheck("level2.level3.values", hasSize(3)),
-                AssertionError.class, expectMessageContaining("L3-zzz"));
-        assertDiagnosingMatcher(actual, expected, m -> m.with("level2.level3.values", hasSize(3)));
+                m -> m.alsoCheck("level2c.level3a.values", hasSize(3)),
+                AssertionError.class, expectMessageContaining("L4-zzz"));
+        assertDiagnosingMatcher(actual, expected, m -> m.with("level2c.level3a.values", hasSize(3)));
     }
 
     // --------------------------------------------------------- pattern form
@@ -537,6 +537,123 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
                 .alsoCheckMatching(containsString("childString"), containsString("L2-")));
     }
 
+    // ---------------------------------- drift: the matcher holds, the value moved
+
+    /**
+     * Each of these pairs a matcher that passes with data that differs from expected. Under {@code with} the
+     * field is gone and the difference is invisible; under {@code alsoCheck} it has to fail. Without them a
+     * shape is only tested for "the matcher runs", which {@code with} satisfies too.
+     */
+    @Test
+    public void mapContentIsStillComparedUnlikeUnderWith() {
+        MapHolder expected = new MapHolder();
+        MapHolder actual = new MapHolder();
+        actual.values.put("k-a", "L1-zzz");
+
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("values", aMapWithSize(3)),
+                AssertionError.class, expectMessageContaining("L1-zzz"));
+        assertDiagnosingMatcher(actual, expected, m -> m.with("values", aMapWithSize(3)));
+    }
+
+    @Test
+    public void arrayContentDriftIsStillCompared() {
+        ArrayThreeHolder expected = new ArrayThreeHolder("L1-c", "L1-a", "L1-b");
+        ArrayThreeHolder actual = new ArrayThreeHolder("L1-c", "L1-a", "L1-zzz");
+
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("values", arrayContaining("L1-c", "L1-a", "L1-zzz")),
+                AssertionError.class, expectMessageContaining("L1-zzz"));
+        assertDiagnosingMatcher(actual, expected, m -> m.with("values", arrayContaining("L1-c", "L1-a", "L1-zzz")));
+    }
+
+    @Test
+    public void fanOutContentIsStillComparedUnlikeUnderWith() {
+        ParentBean expected = threeChildren("L1-c", "L1-a", "L1-b").build();
+        ParentBean actual = threeChildren("L1-c", "L1-a", "L1-b")
+                .parentString("drifted").build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheck("childBeanList.childString", startsWith("L1-")),
+                AssertionError.class, expectMessageContaining("drifted"));
+    }
+
+    @Test
+    public void aWildcardPathLeavesTheMapValuesComparedUnlikeUnderWith() {
+        ParentBean expected = parent()
+                .putToChildBeanMap("k-c", child().childString("L2-c"))
+                .putToChildBeanMap("k-a", child().childString("L2-a"))
+                .putToChildBeanMap("k-b", child().childString("L2-b")).build();
+        ParentBean actual = parent()
+                .putToChildBeanMap("k-c", child().childString("L2-c"))
+                .putToChildBeanMap("k-a", child().childString("L2-zzz"))
+                .putToChildBeanMap("k-b", child().childString("L2-b")).build();
+
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("childBeanMap.*.childString", startsWith("L2-")),
+                AssertionError.class, expectMessageContaining("L2-zzz"));
+        assertDiagnosingMatcher(actual, expected, m -> m.with("childBeanMap.*.childString", startsWith("L2-")));
+    }
+
+    @Test
+    public void aMapKeyPathLeavesTheEntryComparedUnlikeUnderWith() {
+        ParentBean expected = parent()
+                .putToChildBeanMap("k-c", child().childString("L2-c"))
+                .putToChildBeanMap("k-a", child().childString("L2-a"))
+                .putToChildBeanMap("k-b", child().childString("L2-b")).build();
+        ParentBean actual = parent()
+                .putToChildBeanMap("k-c", child().childString("L2-c"))
+                .putToChildBeanMap("k-a", child().childString("L2-zzz"))
+                .putToChildBeanMap("k-b", child().childString("L2-b")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheck("childBeanMap.k-a.childString", startsWith("L2-")),
+                AssertionError.class, expectMessageContaining("L2-zzz"));
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.with("childBeanMap.k-a.childString", startsWith("L2-")));
+    }
+
+    // ------------------------- the pattern form over marker-prefixed fields
+
+    /**
+     * A Set- or Map-typed field is held under an internal name, which is exactly where a name pattern used to
+     * silently reach nothing -- and a pattern that matches no field passes whatever the data holds. These pin
+     * that {@code alsoCheckMatching} reaches such a field *and* leaves it compared.
+     */
+    @Test
+    public void alsoCheckMatchingReachesASetTypedFieldAndLeavesItCompared() {
+        SetHolder expected = new SetHolder("L1-c", "L1-a", "L1-b");
+        SetHolder actual = new SetHolder("L1-c", "L1-a", "L1-zzz");
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheckMatching(containsString("childStringSet"), iterableWithSize(3)),
+                AssertionError.class, expectMessageContaining("L1-zzz"));
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.withMatcher(containsString("childStringSet"), iterableWithSize(3)));
+    }
+
+    @Test
+    public void alsoCheckMatchingFailsWhenTheMatcherDoesNotHoldOnASetTypedField() {
+        SetHolder expected = new SetHolder("L1-c", "L1-a", "L1-b");
+        SetHolder actual = new SetHolder("L1-c", "L1-a", "L1-b");
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheckMatching(containsString("childStringSet"), iterableWithSize(2)),
+                AssertionError.class, expectMessageContaining("childStringSet"));
+    }
+
+    @Test
+    public void alsoCheckMatchingReachesAMapTypedFieldAndLeavesItCompared() {
+        MapHolder expected = new MapHolder();
+        MapHolder actual = new MapHolder();
+        actual.values.put("k-a", "L1-zzz");
+
+        // the pattern form reads the serialised tree, where a map is an array of single-key objects, so the
+        // matcher has to be written against that shape -- aMapWithSize would not apply on either mode
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheckMatching(containsString("values"), iterableWithSize(3)),
+                AssertionError.class, expectMessageContaining("L1-zzz"));
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.withMatcher(containsString("values"), iterableWithSize(3)));
+    }
+
     // ------------------------------------------------------------- describeTo
 
     /**
@@ -582,6 +699,56 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
         };
     }
 
+    /**
+     * The three cases the wording cannot see, pinned so they cannot drift unnoticed in either direction. The
+     * branch reads the registration, not the rendered content, so a field removed for a reason that does not
+     * name the path still reads "and also". This affects the description only, never a verdict —
+     * {@link com.github.karsaig.approvalcrest.matcher.AbstractDiagnosingMatcher} documents it.
+     */
+    @Test
+    public void describeToStillSaysAndAlsoForAFieldRemovedWithItsParent() {
+        ParentBean expected = parent().childBean(child().childString("L1-c").childInteger(7)).build();
+
+        org.hamcrest.StringDescription description = new org.hamcrest.StringDescription();
+        MATCHER_FACTORY.beanMatcher(expected)
+                .alsoCheck("childBean.childInteger", greaterThan(0))
+                .ignoring("childBean")
+                .describeTo(description);
+        String text = description.toString();
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                text.contains("\nand also childBean.childInteger"), text);
+        org.junit.jupiter.api.Assertions.assertFalse(text.contains("childInteger\":"), text);
+    }
+
+    @Test
+    public void describeToStillSaysAndAlsoForAFieldRemovedByType() {
+        ParentBean expected = parent().parentString("L1-cherry").build();
+
+        org.hamcrest.StringDescription description = new org.hamcrest.StringDescription();
+        MATCHER_FACTORY.beanMatcher(expected)
+                .alsoCheck("parentString", notNullValue())
+                .ignoring(String.class)
+                .describeTo(description);
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                description.toString().contains("\nand also parentString"), description.toString());
+    }
+
+    @Test
+    public void describeToStillSaysAndAlsoForAFieldRemovedByNamePattern() {
+        ParentBean expected = parent().parentString("L1-cherry").build();
+
+        org.hamcrest.StringDescription description = new org.hamcrest.StringDescription();
+        MATCHER_FACTORY.beanMatcher(expected)
+                .alsoCheck("parentString", notNullValue())
+                .ignoring(containsString("parentString"))
+                .describeTo(description);
+
+        org.junit.jupiter.api.Assertions.assertTrue(
+                description.toString().contains("\nand also parentString"), description.toString());
+    }
+
     // ------------------------------------------------------------- fixtures
 
     /** Three entries per level, inserted neither in sorted nor reversed order. */
@@ -611,20 +778,35 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
         }
     }
 
-    static class Level1 {
-        Level2 level2 = new Level2();
-    }
-
-    static class Level2 {
-        Level3 level3 = new Level3();
-    }
-
     /** A List of scalars, so container matchers can be applied to the field itself. */
     static class ScalarListHolder {
         List<String> values = new ArrayList<>(Arrays.asList("L1-c", "L1-a", "L1-b"));
     }
 
+    /** Three named children at every level, so a resolver that reaches a sibling branch is caught. */
+    static class Level1 {
+        Level2 level2c = new Level2("L2-c");
+        Level2 level2a = new Level2("L2-a");
+        Level2 level2b = new Level2("L2-b");
+    }
+
+    static class Level2 {
+        String tag;
+        Level3 level3c = new Level3("L3-c");
+        Level3 level3a = new Level3("L3-a");
+        Level3 level3b = new Level3("L3-b");
+
+        Level2(String tag) {
+            this.tag = tag;
+        }
+    }
+
     static class Level3 {
-        List<String> values = new ArrayList<>(Arrays.asList("L3-c", "L3-a", "L3-b"));
+        String tag;
+        List<String> values = new ArrayList<>(Arrays.asList("L4-c", "L4-a", "L4-b"));
+
+        Level3(String tag) {
+            this.tag = tag;
+        }
     }
 }

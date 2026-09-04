@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.Matchers.not;
 
 /**
  * An ordering matcher written with the wrong kind of number must report a mismatch, not crash.
@@ -54,7 +55,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     private static void assertExplainsTheBoxing(AssertionError err) {
         String text = err.getMessage();
         Assertions.assertTrue(text.contains("value"), text);
-        Assertions.assertTrue(text.contains("which this matcher cannot compare"), text);
+        Assertions.assertTrue(text.contains("could not compare it"), text);
         Assertions.assertTrue(text.contains("java.lang.Long"), text);
         Assertions.assertTrue(text.contains("cannot be cast"), text);
         Assertions.assertTrue(text.contains("docs/custom-matching.md"), text);
@@ -86,7 +87,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
                 m -> m.with("value", lessThan(100)),
                 AssertionError.class,
                 err -> Assertions.assertTrue(
-                        err.getMessage().contains("which this matcher cannot compare"), err.getMessage()));
+                        err.getMessage().contains("could not compare it"), err.getMessage()));
     }
 
     @Test
@@ -96,7 +97,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
                 m -> m.alsoCheckMatching(equalTo("value"), greaterThan(0)),
                 AssertionError.class,
                 err -> Assertions.assertTrue(
-                        err.getMessage().contains("which this matcher cannot compare"), err.getMessage()));
+                        err.getMessage().contains("could not compare it"), err.getMessage()));
     }
 
     // --- combinators: the crash was in matches, before any verdict ---
@@ -131,6 +132,18 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
                 m -> m.alsoCheck("scores", hasItem(greaterThan(0))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("scores"), err.getMessage()));
+    }
+
+    /**
+     * The one shape whose verdict changes rather than only its message: a combinator over an {@code int} field
+     * with a Long-boxed bound. The bean walk's cast failure used to escape before any verdict existed; now it
+     * is an ordinary "no match" there, so the JSON retry runs and settles it -- and the JSON value is a Long,
+     * which the matcher does accept.
+     */
+    @Test
+    public void aCombinatorOverAnIntFieldIsNowSettledByTheJsonRetry() {
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
+                m -> m.alsoCheck("value", allOf(greaterThan(0L), lessThan(100L))));
     }
 
     // --- the matching boxing is unaffected ---
@@ -196,6 +209,69 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
                     String text = err.getMessage();
                     Assertions.assertTrue(text.contains("value <7> was less than <100>"), text);
                     Assertions.assertFalse(text.contains("cannot compare"), text);
+                });
+    }
+
+    // --- the combination that cannot fail, pinned so it cannot change unnoticed ---
+
+    /**
+     * Hamcrest answers false for a mismatched boxing rather than raising, so negating it yields a pass whatever
+     * the data holds. Nothing outside Hamcrest can see the difference between "false because the value did not
+     * satisfy it" and "false because it could not compare" -- the inner catch has already discarded that. This
+     * pins the documented limitation; see custom-matching.md.
+     */
+    @Test
+    public void aNegatedOrderingMatcherOnTheWrongBoxingCannotFail() {
+        assertDiagnosingMatcher(new LongHolder(42L), new LongHolder(42L),
+                m -> m.alsoCheck("value", not(greaterThan(0))));
+        // the same configuration passes for a value that plainly does not satisfy it either
+        assertDiagnosingMatcher(new LongHolder(-42L), new LongHolder(-42L),
+                m -> m.alsoCheck("value", not(greaterThan(0))));
+    }
+
+    /** Written with the value's own boxing, the negation discriminates again. */
+    @Test
+    public void aNegatedOrderingMatcherOnTheRightBoxingStillFails() {
+        assertDiagnosingMatcher(new LongHolder(42L), new LongHolder(42L),
+                m -> m.alsoCheck("value", not(greaterThan(0L))),
+                AssertionError.class,
+                err -> Assertions.assertTrue(err.getMessage().contains("value"), err.getMessage()));
+    }
+
+    // --- a caller's own mistyped matcher must still say so ---
+
+    /**
+     * The cast is swallowed so the JSON retry can run, which would otherwise lose the only evidence that a
+     * caller's matcher is mistyped. Before the guard existed this threw and named the bug; it must not now read
+     * as an ordinary value mismatch.
+     */
+    @Test
+    public void aMistypedCallerMatcherStillNamesTheCastItFailed() {
+        org.hamcrest.Matcher<Object> mistyped = new org.hamcrest.BaseMatcher<Object>() {
+            @Override
+            public boolean matches(Object item) {
+                return ((String) item).length() > 0;
+            }
+
+            @Override
+            public void describeMismatch(Object item, org.hamcrest.Description description) {
+                description.appendText("was ").appendValue(item);
+            }
+
+            @Override
+            public void describeTo(org.hamcrest.Description description) {
+                description.appendText("a non-empty string");
+            }
+        };
+
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
+                m -> m.alsoCheck("value", mistyped),
+                AssertionError.class,
+                err -> {
+                    String text = err.getMessage();
+                    Assertions.assertTrue(text.contains("could not compare it"), text);
+                    Assertions.assertTrue(text.contains("cannot be cast"), text);
+                    Assertions.assertTrue(text.contains("java.lang.String"), text);
                 });
     }
 

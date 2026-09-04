@@ -44,6 +44,9 @@ assertThat(actual, sameJsonAsApproved()
     .alsoCheck("score", greaterThan(0L)));
 ```
 
+(The `0L` is not a typo. An ordering matcher compares only within one boxing, and a whole number often reaches
+the matcher as a `Long` — see [Numbers and boxing](#numbers-and-boxing).)
+
 The difference is what reaches the approved file. Under `.with("score", ...)` the field is never written, so a
 score that later drifts from 5 to 5000 cannot fail. Under `.alsoCheck("score", ...)` it is written and compared as
 usual.
@@ -230,11 +233,29 @@ both, so `greaterThan(0)` matches nothing however large the value — and a fiel
 `.withMatcher(...)` / `.alsoCheckMatching(...)` is read from the serialised tree only, so a whole number there
 is always a `Long`.
 
+### Numbers and boxing
+
 **Write the matcher's number in the same form as the value's** — `greaterThan(0L)` for a `long` field, and for
-any name-pattern matcher. A `double` field needs `greaterThan(1.0)` rather than `greaterThan(1)` for the same
-reason. Getting it wrong is a mismatch, not an error, and the failure message names the value, the type it
-arrived as and the cast that failed. The same applies to a matcher wrapped in `allOf`, `both().and()`,
-`hasItem` or `everyItem`.
+any name-pattern matcher. A `double` field is a `Double` on the object walk, so `greaterThan(1.0)` is right
+there; but a *whole-valued* double such as `2.0` is written as a whole number and comes back from the
+serialised output as a `Long`, so the name-pattern forms need `greaterThan(1L)` for it. Getting it wrong is a
+mismatch, and the failure message names the value, the type it arrived as and the cast that failed. The same
+applies to a matcher wrapped in `allOf`, `both().and()`, `hasItem` or `everyItem`.
+
+**One combination cannot fail.** `not(greaterThan(...))` — and the same for `lessThan`,
+`greaterThanOrEqualTo` and `lessThanOrEqualTo` — passes whatever the data holds when the matcher's number is
+written in a different form from the value's. Hamcrest answers false for the pairing rather than raising, and
+the negation turns that into a pass, so nothing can make the assertion fail:
+
+```java
+// long id = 42. Passes, and would pass for any value at all.
+assertThat(actual, sameBeanAs(expected)
+    .with("id", not(greaterThan(0))));
+
+// Correct: the matcher's number written the same way as the field's.
+assertThat(actual, sameBeanAs(expected)
+    .with("id", not(greaterThan(0L))));
+```
 
 ## Matching the Container Itself
 
@@ -428,6 +449,10 @@ assertThat(actual, sameJsonAsApproved()
 A pattern is matched against the field's own name whatever its type, `Set`- and `Map`-typed fields included.
 One consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
 to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
+
+A whole number is **always** a `Long` here, because this form reads the serialised output and never the
+object — so an ordering matcher in a pattern needs `greaterThan(0L)`, never `greaterThan(0)`. See
+[Numbers and boxing](#numbers-and-boxing).
 
 `.withMatcher(...)` removes every field it matches, the same way `.with(...)` does. To keep those fields in the
 comparison and assert them as well, use `.alsoCheckMatching(fieldNamePattern, matcher)` — see

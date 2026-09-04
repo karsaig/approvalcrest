@@ -53,7 +53,8 @@ public class MatcherConfiguration {
     /**
      * The subset of {@link #getCustomMatchers()} whose fields are removed from the comparison, which is what
      * makes a custom matcher stand in for the field rather than add to it. A matcher registered through
-     * {@link #addAdditionalCustomMatcher} is absent here, so its field is compared as usual.
+     * {@link #addAdditionalCustomMatcher} is absent here, so its field is compared as usual -- unless the same
+     * path was also passed to {@link #addPathToIgnore}, which removes it regardless and is not undone by this.
      */
     public Set<String> getCustomMatcherPathsToIgnore() {
         return customMatcherPathsToIgnore;

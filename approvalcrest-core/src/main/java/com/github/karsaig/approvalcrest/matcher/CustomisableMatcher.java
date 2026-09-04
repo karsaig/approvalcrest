@@ -66,14 +66,20 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     U ignoring(Class<?>... clazz);
 
     /**
-     * Specify the path of the field to be matched with a specific matcher.
+     * Specify the path of a field to be matched with a specific matcher <em>instead of</em> being compared.
+     * The field is removed from the comparison, so it never reaches the approved file and only the matcher
+     * speaks for it — which is what makes this the right choice for a value you cannot pin down, such as a
+     * generated id or a timestamp.
      * Example:
      * <pre>sameBeanAs(expected).with("beanField.subBeanField", contains("element"))</pre>
+     *
+     * <p>To assert a field <em>as well as</em> comparing it, use {@link #alsoCheck(String, Matcher)}.
      *
      * @param fieldPath the path of the field to be matched with the provided matcher.
      * @param matcher   the Hamcrest matcher used to match the specified field.
      * @param <V>       type of actual object to match
      * @return the instance of the matcher
+     * @see #alsoCheck(String, Matcher)
      */
     <V> U with(String fieldPath, Matcher<V> matcher);
 
@@ -102,15 +108,20 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
 
     /**
      * Specify a field name pattern and a custom matcher. All fields at any depth whose name
-     * matches the pattern will be matched with the provided matcher. If no fields match the
-     * pattern, the matcher passes vacuously.
+     * matches the pattern will be matched with the provided matcher <em>instead of</em> being compared: every
+     * matched field is removed from the comparison, as {@link #with(String, Matcher)} does for one path. If no
+     * fields match the pattern, the matcher passes vacuously.
      * Example:
      * <pre>sameJsonAsApproved().withMatcher(containsString("Date"), notNullValue())</pre>
+     *
+     * <p>To assert the matched fields <em>as well as</em> comparing them, use
+     * {@link #alsoCheckMatching(Matcher, Matcher)}.
      *
      * @param fieldNamePattern the Hamcrest matcher used to match field names.
      * @param matcher          the Hamcrest matcher used to match the field value.
      * @param <V>              type of the field value to match
      * @return the instance of the matcher
+     * @see #alsoCheckMatching(Matcher, Matcher)
      */
     <V> U withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher);
 
