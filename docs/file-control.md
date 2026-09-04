@@ -163,7 +163,29 @@ mvn test -DfileMatcherUpdateInPlace=true
 
 Use this **locally** after intentional changes (e.g. adding a field, changing serialisation). Review the diffs, then commit the updated approved files.
 
-**Never pass this flag in CI** — all approved files must exist before CI runs.
+**Never set this in the build that gates merge.** A verification build has to fail on drift rather than absorb it, and every approved file must exist before it runs. A deliberate regeneration job is a different thing, triggered on demand and reviewed before its output is committed — see [best-practices](best-practices.md#ci-workflow).
+
+### Custom matchers during a regeneration run
+
+JSON only — `sameContentAsApproved` compares text and has no custom matchers.
+
+Custom matchers are evaluated before the content comparison and stop the assertion on the first failure, which also stops the rewrite. That file then never regenerates, however many times the job is re-run — and any later assertion in the same test method is skipped with it, as is every later module unless the build uses `--fail-at-end`. `-DfileMatcherSkipCustomMatchersOnUpdate=true` defers the evaluation for that run:
+
+```bash
+mvn test -DfileMatcherUpdateInPlace=true -DfileMatcherSkipCustomMatchersOnUpdate=true
+```
+
+It does nothing unless `fileMatcherUpdateInPlace` is also set, so a verification build is unaffected however the property is configured.
+
+**It applies to the whole run.** A test whose approved file is already current has its matchers skipped too, so it passes where it would otherwise have failed. Nothing is lost permanently — a custom matcher's verdict comes from the actual object, never from the approved file, so no regeneration can fix one and the failure returns on the next verification run. But a regeneration run is not a verification of anything, and its green result must not be read as one. That is why the flag is off by default and belongs on the regeneration job alone.
+
+What it changes, and what it does not:
+
+- `.with()` and `.withMatcher()` still remove their field, so the regenerated file is byte-for-byte the one a run whose matchers happened to pass would have written. That is the point: the file has to be what the next verification run compares against.
+- `.alsoCheck()` and `.alsoCheckMatching()` keep their field, so the regenerated file carries the value the matcher rejects. Expect that test to fail on the next verification run.
+- A field path that names nothing is no longer an error **for a file that needed rewriting**, because the check that raised it was part of the evaluation. On a file already in sync the deferred evaluation still runs, and still raises.
+- A path that crosses a non-object — `beanChar.subpath` — still fails, exactly as the same path under `.ignoring()` does. That comes from removing the field, not from matching it.
+- With `-DfmSharedEnabled=true`, tests that previously stopped at a failing matcher can now attach to or detach from a shared canonical.
 
 ## Machine-Readable / AI-Friendly Output
 
@@ -221,7 +243,7 @@ The `ignoredFields` array records **which fields were actually removed** during 
 
 **Reason values:**
 - `IGNORE_PATH` — removed by `.ignoring("fieldPath")`
-- `CUSTOM_MATCHER` — removed by `.with("fieldPath", matcher)` (validated separately)
+- `CUSTOM_MATCHER` — removed by `.with("fieldPath", matcher)` (validated separately, unless a regeneration run deferred it)
 - `CUSTOM_MATCHER_PATTERN` — removed by `.withMatcher(patternMatcher, valueMatcher)`
 - `IGNORE_PATTERN` — removed by `.ignoring(Matcher<String>)` applied to the JSON tree
 - `REMOVED_EMPTY` — parent became empty after its children were removed

@@ -27,6 +27,8 @@ public class FileMatcherConfigPropertyAliasTest {
         System.clearProperty("uADirectory");
         System.clearProperty("sortInputFile");
         System.clearProperty("sIFile");
+        System.clearProperty("fileMatcherSkipCustomMatchersOnUpdate");
+        System.clearProperty("fMSCMOUpdate");
         System.clearProperty("fileMatcherStrictFileMatching");
         System.clearProperty("fMStrictMatching");
         System.clearProperty("fileMatcherSharedDir");
@@ -70,6 +72,56 @@ public class FileMatcherConfigPropertyAliasTest {
     public void fMStrictMatchingAliasConfiguresStrictFileMatching() {
         System.setProperty("fMStrictMatching", "false");
         assertFalse(new FileMatcherConfig().isStrictFileMatching());
+    }
+
+    @Test
+    public void fileMatcherSkipCustomMatchersOnUpdateCanonicalNameIsRead() {
+        System.setProperty("fileMatcherSkipCustomMatchersOnUpdate", "true");
+        assertTrue(new FileMatcherConfig().isSkipCustomMatchersOnUpdateEnabled());
+    }
+
+    @Test
+    public void fMSCMOUpdateAliasIsRead() {
+        System.setProperty("fMSCMOUpdate", "true");
+        assertTrue(new FileMatcherConfig().isSkipCustomMatchersOnUpdateEnabled());
+    }
+
+    @Test
+    public void skipCustomMatchersOnUpdateDefaultsToFalse() {
+        assertFalse(new FileMatcherConfig().isSkipCustomMatchersOnUpdateEnabled());
+    }
+
+    @Test
+    public void skipCustomMatchersOnUpdateAcceptsCanonicalAndAliasAgreeing() {
+        System.setProperty("fileMatcherSkipCustomMatchersOnUpdate", "true");
+        System.setProperty("fMSCMOUpdate", "true");
+        assertTrue(new FileMatcherConfig().isSkipCustomMatchersOnUpdateEnabled());
+    }
+
+    @Test
+    public void skipCustomMatchersOnUpdateRejectsCanonicalAndAliasDisagreeing() {
+        System.setProperty("fileMatcherSkipCustomMatchersOnUpdate", "true");
+        System.setProperty("fMSCMOUpdate", "false");
+        assertThrows(IllegalStateException.class, FileMatcherConfig::new);
+    }
+
+    /**
+     * The property on its own says nothing about whether custom matchers are skipped -- an update has to be
+     * running as well. Keeping both halves in the configuration is what makes that testable without a filesystem.
+     */
+    @Test
+    public void customMatcherEvaluationIsSkippedOnlyWhileUpdatingInPlace() {
+        System.setProperty("fileMatcherSkipCustomMatchersOnUpdate", "true");
+        assertFalse(new FileMatcherConfig().isCustomMatcherEvaluationSkipped());
+
+        System.setProperty("fileMatcherUpdateInPlace", "true");
+        assertTrue(new FileMatcherConfig().isCustomMatcherEvaluationSkipped());
+    }
+
+    @Test
+    public void customMatcherEvaluationIsNotSkippedWhenUpdatingWithoutTheFlag() {
+        System.setProperty("fileMatcherUpdateInPlace", "true");
+        assertFalse(new FileMatcherConfig().isCustomMatcherEvaluationSkipped());
     }
 
     @Test
