@@ -57,6 +57,11 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
         List<Long> scores = new ArrayList<>(Arrays.asList(3L, 1L, 2L));
     }
 
+    private static java.util.function.Consumer<AssertionError> expectMismatchNaming(String path) {
+        return err -> org.junit.jupiter.api.Assertions.assertTrue(err.getMessage().contains(path),
+                err.getMessage());
+    }
+
     private static void assertExplainsTheBoxing(AssertionError err) {
         String text = err.getMessage();
         Assertions.assertTrue(text.contains("value"), text);
@@ -215,6 +220,41 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
                     Assertions.assertTrue(text.contains("value <7> was less than <100>"), text);
                     Assertions.assertFalse(text.contains("cannot compare"), text);
                 });
+    }
+
+    // --- the one shape whose verdict moved: it now agrees with the bare form ---
+
+    /**
+     * A combinator used to throw where the bare matcher answered, so the two disagreed about the same data. The
+     * bare form has always been settled by the JSON retry; the combinator is now too. These assert the agreement
+     * directly, because "the verdict changed" is only acceptable if it changed towards the existing answer.
+     */
+    @Test
+    public void aCombinatorAgreesWithTheBareFormOnAnIntField() {
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.with("value", greaterThan(0L)));
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
+                m -> m.with("value", allOf(greaterThan(0L), lessThan(100L))));
+    }
+
+    @Test
+    public void aCombinatorAgreesWithTheBareFormWhenNeitherHolds() {
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
+                m -> m.with("value", greaterThan(1000L)),
+                AssertionError.class, expectMismatchNaming("value"));
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
+                m -> m.with("value", allOf(greaterThan(1000L), lessThan(2000L))),
+                AssertionError.class, expectMismatchNaming("value"));
+    }
+
+    /**
+     * The swallow cannot manufacture a pass on its own: it yields "no match", so only the retry can produce one,
+     * and only by genuinely satisfying the matcher. Where the retry cannot compare either, the assertion fails.
+     */
+    @Test
+    public void aSwallowedCastCannotProduceAPassWhenTheRetryCannotCompareEither() {
+        assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
+                m -> m.with("value", allOf(greaterThan(0), lessThan(100))),
+                AssertionError.class, expectMismatchNaming("value"));
     }
 
     // --- the combination that cannot fail, pinned so it cannot change unnoticed ---

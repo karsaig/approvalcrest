@@ -80,6 +80,13 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @param <V>       type of actual object to match
      * @return the instance of the matcher
      * @see #alsoCheck(String, Matcher)
+     *
+     * <p><strong>An ordering matcher must be written in the field's own number type.</strong> A whole number
+     * reaches a matcher as a {@code Long} whenever it comes from the serialised output, and Hamcrest compares
+     * only within one boxing, so {@code greaterThan(0)} against a {@code long} field matches nothing. Negated,
+     * it is worse: {@code not(greaterThan(0))} passes whatever the field holds, because Hamcrest answers false
+     * for the pairing and the negation turns that into a pass. Nothing here can tell that apart from a genuine
+     * false — write {@code greaterThan(0L)}. See {@code docs/custom-matching.md}.
      */
     <V> U with(String fieldPath, Matcher<V> matcher);
 
@@ -103,6 +110,13 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
      * @return the instance of the matcher
      * @see #with(String, Matcher)
      * @see #alsoCheckMatching(Matcher, Matcher)
+     *
+     * <p><strong>An ordering matcher must be written in the field's own number type.</strong> A whole number
+     * reaches a matcher as a {@code Long} whenever it comes from the serialised output, and Hamcrest compares
+     * only within one boxing, so {@code greaterThan(0)} against a {@code long} field matches nothing. Negated,
+     * it is worse: {@code not(greaterThan(0))} passes whatever the field holds, because Hamcrest answers false
+     * for the pairing and the negation turns that into a pass. Nothing here can tell that apart from a genuine
+     * false — write {@code greaterThan(0L)}. See {@code docs/custom-matching.md}.
      */
     <V> U alsoCheck(String fieldPath, Matcher<V> matcher);
 
