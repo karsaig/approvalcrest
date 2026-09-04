@@ -61,6 +61,79 @@ public class JsonMatcherMachineReadableTest extends AbstractFileMatcherTest {
         });
     }
 
+    /**
+     * An alsoCheck field is not ignored, so it produces no ignoredFields record. The counterpart of
+     * shouldTrackCustomMatcherPathInIgnoredFields on the bean route.
+     */
+    @Test
+    public void shouldNotTrackAnAlsoCheckPathInIgnoredFields() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                    .jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+            underTest.alsoCheck("beanInteger", org.hamcrest.Matchers.notNullValue())
+                    .withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            JsonObject json = JsonParser.parseString(error.getMessage()).getAsJsonObject();
+            com.google.gson.JsonArray ignoredFields = json.getAsJsonArray("ignoredFields");
+            // The loop below is vacuous on an empty array, so assert the size first -- that is the actual claim.
+            assertEquals(0, ignoredFields.size(),
+                    "alsoCheck removes nothing, so nothing is reported as ignored: " + ignoredFields);
+            for (int i = 0; i < ignoredFields.size(); i++) {
+                assertNotEquals("beanInteger", ignoredFields.get(i).getAsJsonObject().get("path").getAsString(),
+                        "alsoCheck removes nothing, so it must not appear in ignoredFields");
+            }
+        });
+    }
+
+    /**
+     * Guards the removal-set rewiring on the JsonMatcher route: {@code with(...)} no longer writes into
+     * pathsToIgnore, so the reason map is now built from a different collection. This pins that a
+     * {@code with(...)} path keeps its CUSTOM_MATCHER attribution and an {@code ignoring(...)} path keeps
+     * IGNORE_PATH.
+     *
+     * <p>This checks attribution, not order. The rewiring also changes the order of the ignoredFields array,
+     * because the removal set is now built in two stages rather than one and a HashSet's iteration order
+     * depends on that -- but the divergence needs about a dozen paths before the two sizings differ, so it is
+     * documented as an accepted consequence rather than pinned here.
+     */
+    @Test
+    public void ignoredFieldsKeepsTheReasonAttributionForWithAndForIgnoring() {
+        BeanWithPrimitives actual = getBeanWithPrimitives();
+        inMemoryUnixFs(imfsi -> {
+            JsonMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                    .jsonMatcher(dummyInformation(imfsi), getDefaultFileMatcherConfig());
+            underTest.with("beanInteger", org.hamcrest.Matchers.notNullValue())
+                    .ignoring("beanLong")
+                    .withMachineReadableOutput();
+
+            Path jsonDir = imfsi.getTestPath().resolve("4ac405");
+            writeApprovedFile(jsonDir, "11b2ef-approved.json", EXISTING_APPROVED_CONTENT);
+
+            AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                    () -> assertThat(actual, underTest));
+
+            JsonObject json = JsonParser.parseString(error.getMessage()).getAsJsonObject();
+            com.google.gson.JsonArray ignoredFields = json.getAsJsonArray("ignoredFields");
+
+            Map<String, String> reasonByPath = new LinkedHashMap<>();
+            for (int i = 0; i < ignoredFields.size(); i++) {
+                JsonObject entry = ignoredFields.get(i).getAsJsonObject();
+                reasonByPath.put(entry.get("path").getAsString(), entry.get("reason").getAsString());
+            }
+            assertEquals("CUSTOM_MATCHER", reasonByPath.get("beanInteger"),
+                    "a with(...) path keeps its CUSTOM_MATCHER attribution after the rewiring");
+            assertEquals("IGNORE_PATH", reasonByPath.get("beanLong"),
+                    "an explicit ignoring(...) path is still attributed to the ignore rule");
+        });
+    }
+
     // Case B — mismatch via system property
     @Test
     public void shouldOutputMachineReadableMessageOnMismatchWhenSystemPropertyEnabled() {

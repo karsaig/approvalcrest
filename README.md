@@ -114,7 +114,7 @@ For Gradle, replace the `<dependency>` blocks with the equivalent `testImplement
 | [sameJsonAsApproved](docs/same-json-as-approved.md) | JSON approval workflow and file naming |
 | [sameContentAsApproved](docs/same-content-as-approved.md) | Raw-text approval workflow |
 | [Ignoring fields](docs/ignoring-fields.md) | `.ignoring()` by path, Hamcrest matcher, or type; `.ignoringElementsWhere()` to drop array elements by value |
-| [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` for field-level assertions |
+| [Custom matching](docs/custom-matching.md) | `.with(path, matcher)` to assert a field instead of comparing it, `.alsoCheck(path, matcher)` to do both |
 | [Sorting](docs/sorting.md) | Stable collection ordering |
 | [Aliasing](docs/aliasing.md) | Replace volatile values with readable placeholders |
 | [Dynamic values](docs/dynamic-values.md) | Handling UUIDs, timestamps, and other run-to-run changes |

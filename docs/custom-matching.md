@@ -2,7 +2,7 @@
 
 # custom-matching
 
-Replace field-level comparison with a custom Hamcrest matcher.
+Assert a field with a custom Hamcrest matcher, either instead of comparing it or as well as comparing it.
 
 ## Basic Usage
 
@@ -29,6 +29,48 @@ import static org.hamcrest.Matchers.startsWith;
 assertThat(actual, sameBeanAs(expected)
     .with("address.streetName", startsWith("Via")));
 ```
+
+## Asserting *in addition to* the comparison
+
+`.with(...)` removes the field, which is what you want for a value you cannot pin down. When you *can* pin the value down but want a stronger guarantee about it, use `.alsoCheck(String path, Matcher<T> matcher)` instead. The field stays in the comparison and the matcher runs on top:
+
+```java
+import static org.hamcrest.Matchers.greaterThan;
+
+// score must still equal the value in the approved file, AND be positive
+assertThat(actual, sameJsonAsApproved()
+    .alsoCheck("score", greaterThan(0L)));
+```
+
+(The `0L` is not a typo. An ordering matcher compares only within one boxing, and a whole number often reaches the matcher as a `Long` — see [Numbers and boxing](#numbers-and-boxing).)
+
+The difference is what reaches the approved file. Under `.with("score", ...)` the field is never written, so a score that later drifts from 5 to 5000 cannot fail. Under `.alsoCheck("score", ...)` it is written and compared as usual.
+
+It works the same way for `sameBeanAs`, where "the approved file" is instead the expected object: `.with` removes the field from both sides before they are diffed, `.alsoCheck` leaves it in.
+
+```java
+// address.streetName must equal expected's value AND start with "Via"
+assertThat(actual, sameBeanAs(expected)
+    .alsoCheck("address.streetName", startsWith("Via")));
+```
+
+| | in the approved file | comparison | custom matcher |
+|---|---|---|---|
+| `.with(path, m)` | removed | skipped for that field | runs |
+| `.alsoCheck(path, m)` | kept | runs | runs |
+
+`.alsoCheckMatching(namePattern, matcher)` is the same choice for the name-pattern form of [`.withMatcher(...)`](#match-all-fields-whose-name-matches-a-pattern).
+
+Everything else on this page — path syntax, fan-out through collections, the `*` wildcard, container matchers, and how a path behaves when it hits a null — applies identically to both modes. They register into the same place and are evaluated by the same code; only the removal differs.
+
+Registering the same path both ways is allowed and **the last call wins**. An explicit `.ignoring(path)` still removes the field whichever order the two are written in.
+
+**Two limitations worth knowing.**
+
+- **The pattern form cannot be undone.** Patterns accumulate and two matcher instances never compare equal, so `.withMatcher(is("tags"), m1).alsoCheckMatching(is("tags"), m2)` still ignores `tags`. Only the path form has last-call-wins.
+- **A field that fails both is reported once.** Custom matchers are evaluated before the content comparison and the first failure stops there, so a field that both fails its matcher and differs from the approved file reports the matcher mismatch only.
+
+**Switching an existing `.with(...)` call to `.alsoCheck(...)` needs the approved file regenerating.** That file was written while the field was being removed, so it has never contained it. Re-run with `-DfileMatcherUpdateInPlace=true`, which works as long as the new matcher passes — it is applied before the rewrite.
 
 ## Chaining with `.ignoring()`
 
@@ -85,14 +127,9 @@ assertThat(actual, sameJsonAsApproved()
 
 These two rules apply to the `*` segment below in exactly the same way.
 
-**Matching is strict:** the matcher must pass on **every** value the path resolved to. If one fails, the
-whole assertion fails, and the message identifies the first failing element.
+**Matching is strict:** the matcher must pass on **every** value the path resolved to. If one fails, the whole assertion fails, and the message identifies the first failing element.
 
-**Resolution is lenient:** elements that do not have the field are skipped rather than failing. So on a
-list where only some orders carry `trackingCode`, the matcher is applied to the ones that do and the
-assertion can pass. Only a path that resolves against **no** element at all is an error. Skipping is what
-makes a map's array-of-entries form reachable, but it also means a heterogeneous collection narrows what
-you asserted without saying so — assert the container's size alongside it when that matters.
+**Resolution is lenient:** elements that do not have the field are skipped rather than failing. So on a list where only some orders carry `trackingCode`, the matcher is applied to the ones that do and the assertion can pass. Only a path that resolves against **no** element at all is an error. Skipping is what makes a map's array-of-entries form reachable, but it also means a heterogeneous collection narrows what you asserted without saying so — assert the container's size alongside it when that matters.
 
 **Empty collection fails:** if the fanned-out collection is empty, the assertion fails. This prevents silent vacuous-truth passes when a list is unexpectedly empty.
 
@@ -105,8 +142,7 @@ assertThat(actual, sameJsonAsApproved()
     .with("orders.items.sku", notNullValue()));
 ```
 
-Fan-out applies to `Collection` fields and to Java arrays. A `Map` works differently: it is not fanned
-out over, it is **traversed by key**. The key is a path segment, so name the entry you mean:
+Fan-out applies to `Collection` fields and to Java arrays. A `Map` works differently: it is not fanned out over, it is **traversed by key**. The key is a path segment, so name the entry you mean:
 
 ```java
 // The trackingCode of the order stored under key "A-1"
@@ -114,8 +150,7 @@ assertThat(actual, sameJsonAsApproved()
     .with("ordersByRef.A-1.trackingCode", notNullValue()));
 ```
 
-Skipping the key does not reach the values — there is no entry called `trackingCode`, so the path is
-rejected:
+Skipping the key does not reach the values — there is no entry called `trackingCode`, so the path is rejected:
 
 ```java
 // throws IllegalArgumentException: "ordersByRef.trackingCode does not exist"
@@ -123,8 +158,7 @@ assertThat(actual, sameJsonAsApproved()
     .with("ordersByRef.trackingCode", notNullValue()));
 ```
 
-To assert something about the map as a whole rather than one entry, target the map itself with a map
-matcher — see below.
+To assert something about the map as a whole rather than one entry, target the map itself with a map matcher — see below.
 
 ### Every value: the `*` segment
 
@@ -136,8 +170,7 @@ assertThat(actual, sameJsonAsApproved()
     .with("ordersByRef.*.trackingCode", notNullValue()));
 ```
 
-`*` stands for **every named child at that position** — a map key, an object property, or a bean field.
-It works the same way in `.ignoring(path)`, so the two agree:
+`*` stands for **every named child at that position** — a map key, an object property, or a bean field. It works the same way in `.ignoring(path)`, so the two agree:
 
 ```java
 assertThat(actual, sameJsonAsApproved()
@@ -146,25 +179,31 @@ assertThat(actual, sameJsonAsApproved()
 
 Things to know:
 
-- **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning —
-  a key literally named `*`, which a JSON document or a `Map<String,?>` may genuinely have. So
-  `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than
-  meaning "every value". To assert something about the map as a whole, target the map field itself.
-- **`*` is not needed for collections or arrays.** They are already traversed, so
-  `orders.trackingCode` already means "in every order". Writing `orders.*.trackingCode` is a *different*
-  query — "any named field of each order, then trackingCode" — not a synonym.
-- **A `*` that matches nothing is an error** for `.with(...)`, so a mistyped path cannot pass by matching
-  nothing. For `.ignoring(...)` it is a no-op, as any non-matching ignore path is.
-- **Strict matching, lenient resolution** — the same two rules as the collection fan-out above. Every
-  child the path resolves against must pass; children that do not carry the rest of the path are
-  skipped.
-- **A scalar child is skipped, not an error.** A bean has scalar fields as well as object ones, so
-  `*.trackingCode` passes over the scalars and applies to the objects.
+- **`*` is only a wildcard in a non-final segment.** As the last segment it keeps its ordinary meaning — a key literally named `*`, which a JSON document or a `Map<String,?>` may genuinely have. So `.ignoring("headers.*")` removes that key, and `.ignoring("ordersByRef.*")` looks for one rather than meaning "every value". To assert something about the map as a whole, target the map field itself.
+- **`*` is not needed for collections or arrays.** They are already traversed, so `orders.trackingCode` already means "in every order". Writing `orders.*.trackingCode` is a *different* query — "any named field of each order, then trackingCode" — not a synonym.
+- **A `*` that matches nothing is an error** for `.with(...)`, so a mistyped path cannot pass by matching nothing. For `.ignoring(...)` it is a no-op, as any non-matching ignore path is.
+- **Strict matching, lenient resolution** — the same two rules as the collection fan-out above. Every child the path resolves against must pass; children that do not carry the rest of the path are skipped.
+- **A scalar child is skipped, not an error.** A bean has scalar fields as well as object ones, so `*.trackingCode` passes over the scalars and applies to the objects.
 
-A `*` resolves against the object when there is one, so the values keep their real types. Naming a key
-instead falls through to the serialised JSON, where a whole number arrives as a `Long`. So
-`.with("ordersByRef.*.quantity", equalTo(1))` and `equalTo(1L)` both match, while
-`.with("ordersByRef.A-1.quantity", equalTo(1))` needs the `1L` form.
+A `*` resolves against the object when there is one, so the values keep their real types. Naming a key instead falls through to the serialised JSON, where a whole number arrives as a `Long`. So `.with("ordersByRef.*.quantity", equalTo(1))` and `equalTo(1L)` both match, while `.with("ordersByRef.A-1.quantity", equalTo(1))` needs the `1L` form.
+
+The same applies to ordering matchers — `greaterThan`, `lessThan`, `greaterThanOrEqualTo` and their counterparts — with one extra trap. A field path is resolved twice: against the object first, then against the serialised JSON if that did not settle it. An `int` field is therefore an `Integer` on the first attempt and a `Long` on the second, so `greaterThan(0L)` is answered by the retry and works. A `long` field is a `Long` on both, so `greaterThan(0)` matches nothing however large the value — and a field reached by `.withMatcher(...)` / `.alsoCheckMatching(...)` is read from the serialised tree only, so a whole number there is always a `Long`.
+
+### Numbers and boxing
+
+**Write the matcher's number in the same form as the value's** — `greaterThan(0L)` for a `long` field, and for any name-pattern matcher. A `double` field is a `Double` on the object walk, so `greaterThan(1.0)` is right there; but a *whole-valued* double such as `2.0` is written as a whole number and comes back from the serialised output as a `Long`, so the name-pattern forms need `greaterThan(1L)` for it. Getting it wrong is a mismatch, and the failure message names the value, the type it arrived as and the cast that failed. The same applies to a matcher wrapped in `allOf`, `both().and()`, `hasItem` or `everyItem`.
+
+**One combination cannot fail.** `not(greaterThan(...))` — and the same for `lessThan`, `greaterThanOrEqualTo` and `lessThanOrEqualTo` — passes whatever the data holds when the matcher's number is written in a different form from the value's. Hamcrest answers false for the pairing rather than raising, and the negation turns that into a pass, so nothing can make the assertion fail:
+
+```java
+// long id = 42. Passes, and would pass for any value at all.
+assertThat(actual, sameBeanAs(expected)
+    .with("id", not(greaterThan(0))));
+
+// Correct: the matcher's number written the same way as the field's.
+assertThat(actual, sameBeanAs(expected)
+    .with("id", not(greaterThan(0L))));
+```
 
 ## Matching the Container Itself
 
@@ -346,8 +385,7 @@ assertThat(actual, sameJsonAsApproved()
 
 Unlike `.with(path, matcher)` — which targets a single named field — `.withMatcher` scans the entire object graph and applies to every matching field name wherever it appears. Pattern-based matchers are applied before sorting.
 
-Values are presented to the matcher exactly as they are for `.with(path, matcher)`, so a
-collection-valued field takes a container matcher here too and the table above applies unchanged:
+Values are presented to the matcher exactly as they are for `.with(path, matcher)`, so a collection-valued field takes a container matcher here too and the table above applies unchanged:
 
 ```java
 // Every field named "tags" must hold two elements
@@ -355,14 +393,20 @@ assertThat(actual, sameJsonAsApproved()
     .withMatcher(is("tags"), hasSize(2)));
 ```
 
-A pattern is matched against the field's own name whatever its type, `Set`- and `Map`-typed fields included.
-One consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
-to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
+A pattern is matched against the field's own name whatever its type, `Set`- and `Map`-typed fields included. One consequence of "every matching field": a pattern matching **no** field passes, since there is nothing to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
+
+A whole number is **always** a `Long` here, because this form reads the serialised output and never the object — so an ordering matcher in a pattern needs `greaterThan(0L)`, never `greaterThan(0)`. See [Numbers and boxing](#numbers-and-boxing).
+
+`.withMatcher(...)` removes every field it matches, the same way `.with(...)` does. To keep those fields in the comparison and assert them as well, use `.alsoCheckMatching(fieldNamePattern, matcher)` — see [Asserting *in addition to* the comparison](#asserting-in-addition-to-the-comparison).
+
+**The pattern form has no last-call-wins.** Patterns accumulate in a list and two matcher instances never compare equal, so `.withMatcher(is("tags"), m1).alsoCheckMatching(is("tags"), m2)` still removes `tags`. Only the path form can be re-registered the other way.
 
 ## Works With
 
-- `sameBeanAs` — compare a specific field against a matcher while diffing the rest against `expected`
-- `sameJsonAsApproved` — override a field's comparison in an approval test
+- `sameBeanAs` — assert a specific field with a matcher, either instead of or as well as diffing it against `expected`
+- `sameJsonAsApproved` — the same, against the approved file
+
+Both modes work with both matchers. `sameContentAsApproved` has no fields, so none of them apply to it.
 
 ## Kotlin
 

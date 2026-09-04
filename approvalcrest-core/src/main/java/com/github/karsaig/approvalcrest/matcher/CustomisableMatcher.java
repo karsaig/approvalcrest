@@ -66,30 +66,99 @@ public interface CustomisableMatcher<T, U extends CustomisableMatcher<T, U>> ext
     U ignoring(Class<?>... clazz);
 
     /**
-     * Specify the path of the field to be matched with a specific matcher.
+     * Specify the path of a field to be matched with a specific matcher <em>instead of</em> being compared.
+     * The field is removed from the comparison, so it never reaches the approved file and only the matcher
+     * speaks for it — which is what makes this the right choice for a value you cannot pin down, such as a
+     * generated id or a timestamp.
      * Example:
      * <pre>sameBeanAs(expected).with("beanField.subBeanField", contains("element"))</pre>
+     *
+     * <p>To assert a field <em>as well as</em> comparing it, use {@link #alsoCheck(String, Matcher)}.
      *
      * @param fieldPath the path of the field to be matched with the provided matcher.
      * @param matcher   the Hamcrest matcher used to match the specified field.
      * @param <V>       type of actual object to match
      * @return the instance of the matcher
+     * @see #alsoCheck(String, Matcher)
+     *
+     * <p><strong>An ordering matcher must be written in the field's own number type.</strong> A whole number
+     * reaches a matcher as a {@code Long} whenever it comes from the serialised output, and Hamcrest compares
+     * only within one boxing, so {@code greaterThan(0)} against a {@code long} field matches nothing. Negated,
+     * it is worse: {@code not(greaterThan(0))} passes whatever the field holds, because Hamcrest answers false
+     * for the pairing and the negation turns that into a pass. Nothing here can tell that apart from a genuine
+     * false — write {@code greaterThan(0L)}. See {@code docs/custom-matching.md}.
      */
     <V> U with(String fieldPath, Matcher<V> matcher);
 
     /**
+     * Specify the path of a field to be matched with a specific matcher <em>in addition to</em> the normal
+     * comparison, rather than instead of it. Where {@link #with(String, Matcher)} takes the field out of the
+     * comparison -- so it never reaches the approved file -- this leaves it in and applies the matcher as well.
+     * Example:
+     * <pre>sameJsonAsApproved().alsoCheck("score", greaterThan(0L))</pre>
+     * asserts that {@code score} still equals the value recorded in the approved file <em>and</em> is positive.
+     *
+     * <p>Use {@link #with(String, Matcher)} for a value you cannot pin down, such as a generated id or a
+     * timestamp; use this for a value you can pin down but want a stronger guarantee about.
+     *
+     * <p>Registering the same path both ways is allowed and the last call wins. An explicit
+     * {@code ignoring(fieldPath)} still removes the field, whichever order the two are written in.
+     *
+     * @param fieldPath the path of the field to be matched with the provided matcher.
+     * @param matcher   the Hamcrest matcher used to match the specified field.
+     * @param <V>       type of actual object to match
+     * @return the instance of the matcher
+     * @see #with(String, Matcher)
+     * @see #alsoCheckMatching(Matcher, Matcher)
+     *
+     * <p><strong>An ordering matcher must be written in the field's own number type.</strong> A whole number
+     * reaches a matcher as a {@code Long} whenever it comes from the serialised output, and Hamcrest compares
+     * only within one boxing, so {@code greaterThan(0)} against a {@code long} field matches nothing. Negated,
+     * it is worse: {@code not(greaterThan(0))} passes whatever the field holds, because Hamcrest answers false
+     * for the pairing and the negation turns that into a pass. Nothing here can tell that apart from a genuine
+     * false — write {@code greaterThan(0L)}. See {@code docs/custom-matching.md}.
+     */
+    <V> U alsoCheck(String fieldPath, Matcher<V> matcher);
+
+    /**
      * Specify a field name pattern and a custom matcher. All fields at any depth whose name
-     * matches the pattern will be matched with the provided matcher. If no fields match the
-     * pattern, the matcher passes vacuously.
+     * matches the pattern will be matched with the provided matcher <em>instead of</em> being compared: every
+     * matched field is removed from the comparison, as {@link #with(String, Matcher)} does for one path. If no
+     * fields match the pattern, the matcher passes vacuously.
      * Example:
      * <pre>sameJsonAsApproved().withMatcher(containsString("Date"), notNullValue())</pre>
+     *
+     * <p>To assert the matched fields <em>as well as</em> comparing them, use
+     * {@link #alsoCheckMatching(Matcher, Matcher)}.
      *
      * @param fieldNamePattern the Hamcrest matcher used to match field names.
      * @param matcher          the Hamcrest matcher used to match the field value.
      * @param <V>              type of the field value to match
      * @return the instance of the matcher
+     * @see #alsoCheckMatching(Matcher, Matcher)
      */
     <V> U withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher);
+
+    /**
+     * The additional-assertion counterpart of {@link #withMatcher(Matcher, Matcher)}, as
+     * {@link #alsoCheck(String, Matcher)} is to {@link #with(String, Matcher)}. Every field at any depth whose
+     * name matches the pattern keeps its place in the comparison and is matched with the provided matcher as
+     * well. If no field matches the pattern, the matcher passes vacuously.
+     * Example:
+     * <pre>sameJsonAsApproved().alsoCheckMatching(containsString("Count"), greaterThan(0L))</pre>
+     *
+     * <p>Unlike the path form, this cannot undo a {@link #withMatcher(Matcher, Matcher)} registration: patterns
+     * accumulate in a list and two matcher instances never compare equal, so a field already made ignorable by
+     * {@code withMatcher} stays ignored however it is registered afterwards.
+     *
+     * @param fieldNamePattern the Hamcrest matcher used to match field names.
+     * @param matcher          the Hamcrest matcher used to match the field value.
+     * @param <V>              type of the field value to match
+     * @return the instance of the matcher
+     * @see #withMatcher(Matcher, Matcher)
+     * @see #alsoCheck(String, Matcher)
+     */
+    <V> U alsoCheckMatching(Matcher<String> fieldNamePattern, Matcher<V> matcher);
 
     /**
      * Remove array elements from the comparison based on the value of a nested field. The path

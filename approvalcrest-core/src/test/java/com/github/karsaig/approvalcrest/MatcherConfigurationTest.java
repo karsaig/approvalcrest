@@ -41,6 +41,73 @@ public class MatcherConfigurationTest {
         assertThat(configuration.getPathsToIgnore(), containsInAnyOrder("a.b", "c.d"));
     }
 
+    // --- custom matchers: which mode removes the field ---
+
+    @Test
+    void addCustomMatcherMarksThePathForRemoval() {
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addCustomMatcher("a.b", is("x"));
+
+        assertThat(configuration.getCustomMatchers(), hasKey("a.b"));
+        assertThat(configuration.getCustomMatcherPathsToIgnore(), containsInAnyOrder("a.b"));
+    }
+
+    @Test
+    void addAdditionalCustomMatcherLeavesThePathInTheComparison() {
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addAdditionalCustomMatcher("a.b", is("x"));
+
+        assertThat(configuration.getCustomMatchers(), hasKey("a.b"));
+        assertThat(configuration.getCustomMatcherPathsToIgnore(), hasSize(0));
+    }
+
+    /**
+     * The two collections have to stay in step, because registering the same path twice already means the last
+     * call wins on the map -- the removal flag must follow it in both directions.
+     */
+    @Test
+    void registeringAdditionallyAfterReplacingTakesThePathBackOutOfTheRemovalSet() {
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addCustomMatcher("a.b", is("x"))
+                .addAdditionalCustomMatcher("a.b", is("y"));
+
+        assertThat(configuration.getCustomMatcherPathsToIgnore(), hasSize(0));
+        // matcher instances are not equal to each other, so assert which one is stored by what it accepts
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("y"), is(true));
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("x"), is(false));
+    }
+
+    @Test
+    void registeringReplacingAfterAdditionallyPutsThePathBackIntoTheRemovalSet() {
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addAdditionalCustomMatcher("a.b", is("x"))
+                .addCustomMatcher("a.b", is("y"));
+
+        assertThat(configuration.getCustomMatcherPathsToIgnore(), containsInAnyOrder("a.b"));
+        // matcher instances are not equal to each other, so assert which one is stored by what it accepts
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("y"), is(true));
+        assertThat(configuration.getCustomMatchers().get("a.b").matches("x"), is(false));
+    }
+
+    @Test
+    void addCustomMatcherPatternMarksThePatternForRemoval() {
+        Matcher<String> pattern = startsWith("gen");
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addCustomMatcherPattern(pattern, is("x"));
+
+        assertThat(configuration.getCustomMatcherPatterns(), hasSize(1));
+        assertThat(configuration.getCustomMatcherPatternsToIgnore(), hasSize(1));
+    }
+
+    @Test
+    void addAdditionalCustomMatcherPatternLeavesTheMatchedFieldsInTheComparison() {
+        MatcherConfiguration configuration = new MatcherConfiguration()
+                .addAdditionalCustomMatcherPattern(startsWith("gen"), is("x"));
+
+        assertThat(configuration.getCustomMatcherPatterns(), hasSize(1));
+        assertThat(configuration.getCustomMatcherPatternsToIgnore(), hasSize(0));
+    }
+
     // --- types to ignore ---
 
     @Test

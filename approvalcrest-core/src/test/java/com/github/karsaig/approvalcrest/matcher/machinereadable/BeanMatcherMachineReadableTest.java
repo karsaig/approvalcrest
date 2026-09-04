@@ -153,6 +153,31 @@ public class BeanMatcherMachineReadableTest extends AbstractTest {
         assertEquals(0, ignoredFields.size(), "ignoredFields should be empty when configured path doesn't exist in data");
     }
 
+    /** alsoCheck removes nothing, so unlike with(...) it leaves no ignoredFields record. */
+    @Test
+    public void shouldNotTrackAnAlsoCheckPathInIgnoredFields() {
+        BeanWithPrimitives expected = beanWithPrimitives().beanInt(99).beanBoolean(false).build();
+        BeanWithPrimitives actual = beanWithPrimitives().beanInt(42).beanBoolean(true).build();
+
+        DiagnosingCustomisableMatcher<BeanWithPrimitives> underTest = MATCHER_FACTORY
+                .beanMatcher(expected)
+                .alsoCheck("beanInteger", org.hamcrest.Matchers.notNullValue())
+                .withMachineReadableOutput();
+
+        AssertionFailedError error = assertThrows(AssertionFailedError.class,
+                () -> assertThat(actual, underTest));
+
+        JsonObject json = JsonParser.parseString(error.getMessage()).getAsJsonObject();
+        com.google.gson.JsonArray ignoredFields = json.getAsJsonArray("ignoredFields");
+        // The loop below is vacuous on an empty array, so assert the size first -- that is the actual claim.
+        assertEquals(0, ignoredFields.size(),
+                "alsoCheck removes nothing, so nothing is reported as ignored: " + ignoredFields);
+        for (int i = 0; i < ignoredFields.size(); i++) {
+            assertNotEquals("beanInteger", ignoredFields.get(i).getAsJsonObject().get("path").getAsString(),
+                    "alsoCheck removes nothing, so it must not appear in ignoredFields");
+        }
+    }
+
     @Test
     public void shouldTrackCustomMatcherPathInIgnoredFields() {
         BeanWithPrimitives expected = beanWithPrimitives().beanInt(99).beanBoolean(false).build();

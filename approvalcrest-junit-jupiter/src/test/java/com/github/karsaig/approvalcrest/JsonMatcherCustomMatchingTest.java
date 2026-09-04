@@ -22,5 +22,16 @@ public class JsonMatcherCustomMatchingTest {
                 .with("childBean.childString", equalTo("banana")));
     }
 
+    /**
+     * The additional mode: childString is asserted by the matcher and still compared against the approved file,
+     * where {@code with} above would have removed it.
+     */
+    @Test
+    public void alsoChecksPrimitiveWhileStillComparingIt() {
+        Object actual = parent().childBean(child().childString("banana")).build();
+        assertThat(actual, sameJsonAsApproved()
+                .alsoCheck("childBean.childString", equalTo("banana")));
+    }
+
 
 }

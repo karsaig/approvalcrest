@@ -1,6 +1,7 @@
 package com.github.karsaig.approvalcrest.kotlin
 
 import com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat
+import com.github.karsaig.approvalcrest.kotlin.matcher.alsoCheck
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameBeanAs
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameContentAsApproved
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers.sameJsonAsApproved
@@ -8,6 +9,7 @@ import com.github.karsaig.approvalcrest.testdata.BeanWithPrimitives
 import org.hamcrest.Matchers.anything
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.`is`
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 /**
@@ -33,6 +35,27 @@ class KotlinExtensionFunctionTest {
         val actual = buildBean(beanInt = 42)
         val expected = buildBean(beanInt = 99)  // different beanInt, but overridden by .with()
         assertThat(actual, sameBeanAs(expected).with("beanInteger", equalTo(42)))
+    }
+
+    /**
+     * The additional mode. Unlike `.with(...)` above, `.alsoCheck(...)` leaves beanInteger in the comparison,
+     * so the two sides have to agree on it as well as satisfying the matcher.
+     */
+    @Test
+    fun sameBeanAsChainedAlsoCheckShouldPassWhenBothTheValueAndTheMatcherAgree() {
+        val actual = buildBean(beanInt = 42)
+        val expected = buildBean(beanInt = 42)
+        assertThat(actual, sameBeanAs(expected).alsoCheck("beanInteger", equalTo(42)))
+    }
+
+    /** The same configuration fails once the value drifts, where `.with(...)` would have passed. */
+    @Test
+    fun sameBeanAsChainedAlsoCheckShouldFailWhenTheValueDiffers() {
+        val actual = buildBean(beanInt = 42)
+        val expected = buildBean(beanInt = 99)
+        assertThrows(AssertionError::class.java) {
+            assertThat(actual, sameBeanAs(expected).alsoCheck("beanInteger", equalTo(42)))
+        }
     }
 
     /**

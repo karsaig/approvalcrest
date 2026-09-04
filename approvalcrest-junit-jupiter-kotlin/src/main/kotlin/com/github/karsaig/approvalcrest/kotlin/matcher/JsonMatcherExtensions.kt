@@ -54,6 +54,14 @@ fun <T, V> JsonMatcher<T>.withMatcher(fieldNamePattern: Matcher<String>, matcher
     (this as CustomisableMatcher<T, JsonMatcher<T>>).withMatcher(fieldNamePattern, matcher)
 
 @Suppress("UNCHECKED_CAST")
+fun <T, V> JsonMatcher<T>.alsoCheck(fieldPath: String, matcher: Matcher<V>): JsonMatcher<T> =
+    (this as CustomisableMatcher<T, JsonMatcher<T>>).alsoCheck(fieldPath, matcher)
+
+@Suppress("UNCHECKED_CAST")
+fun <T, V> JsonMatcher<T>.alsoCheckMatching(fieldNamePattern: Matcher<String>, matcher: Matcher<V>): JsonMatcher<T> =
+    (this as CustomisableMatcher<T, JsonMatcher<T>>).alsoCheckMatching(fieldNamePattern, matcher)
+
+@Suppress("UNCHECKED_CAST")
 fun <T> JsonMatcher<T>.ignoringElementsWhere(elementFieldPath: String, valueMatcher: Matcher<*>): JsonMatcher<T> =
     (this as CustomisableMatcher<T, JsonMatcher<T>>).ignoringElementsWhere(elementFieldPath, valueMatcher)
 
