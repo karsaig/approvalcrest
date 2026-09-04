@@ -66,7 +66,7 @@ See [file-control](file-control.md) for the full list of options.
 The following features are specific to JSON and bean matchers and do **not** apply to `sameContentAsApproved`:
 
 - `.ignoring()` — field exclusion (there are no fields in raw text)
-- `.with()` / `.withMatcher()` — field-level custom matching
+- `.with()` / `.withMatcher()` / `.alsoCheck()` / `.alsoCheckMatching()` — field-level custom matching
 - `.sortField()` / `.sortType()` — collection sorting
 - `.withAlias()` / `.withAliasMap()` — value aliasing
 

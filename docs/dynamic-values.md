@@ -112,8 +112,9 @@ assertThat(actual, sameJsonAsApproved()
 | Value is totally irrelevant | [`.ignoring()`](ignoring-fields.md) |
 | Value is relevant; want a readable approved file | [`.withAlias()`](aliasing.md) |
 | Value must satisfy a constraint | [`.with(path, matcher)`](custom-matching.md) |
+| Value is stable but needs a stronger assertion than equality | [`.alsoCheck(path, matcher)`](custom-matching.md) |
 
-**Note:** `.ignoring()`, `.withAlias()`, and `.with()` apply to `sameJsonAsApproved` and `sameBeanAs` only — they operate on JSON fields. For `sameContentAsApproved`, the fallback is to pre-process the string before asserting (e.g. replace volatile tokens with a stable placeholder using `String.replaceAll`), or better, control the source so the content is deterministic.
+**Note:** `.ignoring()`, `.withAlias()`, `.with()` and `.alsoCheck()` apply to `sameJsonAsApproved` and `sameBeanAs` only — they operate on JSON fields. For `sameContentAsApproved`, the fallback is to pre-process the string before asserting (e.g. replace volatile tokens with a stable placeholder using `String.replaceAll`), or better, control the source so the content is deterministic.
 
 ## Related
 

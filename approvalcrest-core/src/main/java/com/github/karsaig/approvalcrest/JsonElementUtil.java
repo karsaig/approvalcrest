@@ -11,7 +11,6 @@ import org.hamcrest.Matcher;
 
 import java.lang.reflect.Field;
 import java.util.AbstractList;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -206,13 +205,9 @@ public class JsonElementUtil {
 
     public static void filterByCustomMatcherPatterns(JsonElement json, MatcherConfiguration matcherConfiguration,
                                                       IgnoredFieldsTracker tracker) {
-        List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> patterns = matcherConfiguration.getCustomMatcherPatterns();
-        if (!patterns.isEmpty()) {
-            List<Matcher<String>> patternKeys = new ArrayList<>();
-            for (AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>> entry : patterns) {
-                patternKeys.add(entry.getKey());
-            }
-            filterByFieldMatchers(json, patternKeys, tracker, IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN);
+        List<Matcher<String>> patternsToIgnore = matcherConfiguration.getCustomMatcherPatternsToIgnore();
+        if (!patternsToIgnore.isEmpty()) {
+            filterByFieldMatchers(json, patternsToIgnore, tracker, IgnoredFieldsTracker.Reason.CUSTOM_MATCHER_PATTERN);
         }
     }
 

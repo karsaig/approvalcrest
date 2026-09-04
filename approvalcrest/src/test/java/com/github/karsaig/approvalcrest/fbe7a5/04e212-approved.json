@@ -1,0 +1,10 @@
+/*com.github.karsaig.approvalcrest.JsonMatcherCustomMatchingTest.alsoChecksPrimitiveWhileStillComparingIt*/
+{
+  "childBean": {
+    "childInteger": 0,
+    "childString": "banana"
+  },
+  "childBeanList": [],
+  "childBeanMap": [],
+  "parentString": null
+}

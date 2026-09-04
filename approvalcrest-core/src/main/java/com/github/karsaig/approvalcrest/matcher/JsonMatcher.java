@@ -65,10 +65,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     public void describeTo(Description description) {
         Gson gson = GsonProvider.gson(matcherConfiguration, circularReferenceTypes, configuration);
         description.appendText(filterExpectedJson(gson, true, null, null, null));
-        for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
-            description.appendText("\nand ").appendText(fieldPath).appendText(" ")
-                    .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
-        }
+        describeCustomMatchers(description, matcherConfiguration);
     }
 
     @Override
@@ -99,7 +96,9 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
     @Override
     public <V> JsonMatcher<T> with(String fieldPath, Matcher<V> matcher) {
-        ignoring(fieldPath);
+        // No ignoring(fieldPath) here: addCustomMatcher records the removal itself. Routing it through the
+        // general pathsToIgnore instead would put the path somewhere alsoCheck cannot take it back out of,
+        // so registering both ways on one path could not honour the last call.
         matcherConfiguration.addCustomMatcher(fieldPath, matcher);
         return this;
     }
@@ -107,6 +106,18 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
     @Override
     public <V> JsonMatcher<T> withMatcher(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
         matcherConfiguration.addCustomMatcherPattern(fieldNamePattern, matcher);
+        return this;
+    }
+
+    @Override
+    public <V> JsonMatcher<T> alsoCheck(String fieldPath, Matcher<V> matcher) {
+        matcherConfiguration.addAdditionalCustomMatcher(fieldPath, matcher);
+        return this;
+    }
+
+    @Override
+    public <V> JsonMatcher<T> alsoCheckMatching(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        matcherConfiguration.addAdditionalCustomMatcherPattern(fieldNamePattern, matcher);
         return this;
     }
 
@@ -218,7 +229,7 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
             for (String p : matcherConfiguration.getPathsToIgnore()) {
                 reasonMap.put(p, Reason.IGNORE_PATH);
             }
-            for (String p : matcherConfiguration.getCustomMatchers().keySet()) {
+            for (String p : matcherConfiguration.getCustomMatcherPathsToIgnore()) {
                 reasonMap.put(p, Reason.CUSTOM_MATCHER);
                 set.add(p);
             }

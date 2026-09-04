@@ -2,6 +2,8 @@ package com.github.karsaig.approvalcrest.kotlin
 
 import com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers
+import com.github.karsaig.approvalcrest.kotlin.matcher.alsoCheck
+import com.github.karsaig.approvalcrest.kotlin.matcher.alsoCheckMatching
 import com.github.karsaig.approvalcrest.kotlin.matcher.ignoringElementsWhere
 import com.github.karsaig.approvalcrest.kotlin.matcher.sortType
 import com.github.karsaig.approvalcrest.kotlin.matcher.withMachineReadableOutput
@@ -24,6 +26,28 @@ import org.junit.jupiter.api.TestInfo
 class ExtensionFunctionsTest {
 
     private data class TestBean(val name: String = "test", val value: Int = 42)
+
+    @Test
+    fun alsoCheckCanBeChainedOnBeanMatcher() {
+        val expected = TestBean()
+        val actual = TestBean()
+        val matcher = Matchers.sameBeanAs(expected)
+            .alsoCheck("value", equalTo(42))
+            .withMachineReadableOutput()
+        assertNotNull(matcher)
+        assertThat(actual, matcher)
+    }
+
+    @Test
+    fun alsoCheckMatchingCanBeChainedOnBeanMatcher() {
+        val expected = TestBean()
+        val actual = TestBean()
+        val matcher = Matchers.sameBeanAs(expected)
+            .alsoCheckMatching(equalTo("name"), equalTo("test"))
+            .withMachineReadableOutput()
+        assertNotNull(matcher)
+        assertThat(actual, matcher)
+    }
 
     @Test
     fun withMachineReadableOutputCanBeChainedOnBeanMatcher() {

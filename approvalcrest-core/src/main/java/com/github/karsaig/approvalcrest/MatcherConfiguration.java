@@ -28,6 +28,7 @@ public class MatcherConfiguration {
 
     private final Set<String> pathsToIgnore = new HashSet<>();
     private final Map<String, Matcher<?>> customMatchers = new HashMap<>();
+    private final Set<String> customMatcherPathsToIgnore = new HashSet<>();
     private final List<Class<?>> typesToIgnore = new ArrayList<>();
     private final List<Matcher<String>> patternsToIgnore = new ArrayList<>();
     private final List<Function<Object, Boolean>> skipCircularReferenceCheck = new ArrayList<>();
@@ -35,6 +36,7 @@ public class MatcherConfiguration {
     private final List<SortField<Matcher<String>>> patternsToSort = new ArrayList<>();
     private final List<Class<?>> typesToSort = new ArrayList<>();
     private final List<AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>> customMatcherPatterns = new ArrayList<>();
+    private final List<Matcher<String>> customMatcherPatternsToIgnore = new ArrayList<>();
     private final List<ElementIgnoreRule> elementIgnoreRules = new ArrayList<>();
     private AliasMap aliasMap = AliasMap.builder().build();
     private boolean serializeNulls = getBooleanProperties("true", SERIALIZE_NULLS_PROPERTY, SERIALIZE_NULLS_ALIAS);
@@ -46,6 +48,15 @@ public class MatcherConfiguration {
 
     public Map<String, Matcher<?>> getCustomMatchers() {
         return customMatchers;
+    }
+
+    /**
+     * The subset of {@link #getCustomMatchers()} whose fields are removed from the comparison, which is what
+     * makes a custom matcher stand in for the field rather than add to it. A matcher registered through
+     * {@link #addAdditionalCustomMatcher} is absent here, so its field is compared as usual.
+     */
+    public Set<String> getCustomMatcherPathsToIgnore() {
+        return customMatcherPathsToIgnore;
     }
 
     public Set<String> getPathsToIgnore() {
@@ -80,6 +91,14 @@ public class MatcherConfiguration {
         return customMatcherPatterns;
     }
 
+    /**
+     * The field name patterns whose matching fields are removed from the comparison. The counterpart of
+     * {@link #getCustomMatcherPathsToIgnore()} for the pattern form.
+     */
+    public List<Matcher<String>> getCustomMatcherPatternsToIgnore() {
+        return customMatcherPatternsToIgnore;
+    }
+
     public List<ElementIgnoreRule> getElementIgnoreRules() {
         return elementIgnoreRules;
     }
@@ -111,12 +130,42 @@ public class MatcherConfiguration {
         return this;
     }
 
+    /**
+     * Register a matcher that replaces the comparison of {@code fieldPath}: the field is removed from the
+     * compared output and only the matcher speaks for it.
+     *
+     * <p>The path is added to {@link #getCustomMatcherPathsToIgnore()} here rather than being derived from the
+     * key set later, so that {@link #addAdditionalCustomMatcher} can take it back out again. Both write to the
+     * same map, so the last registration for a path wins -- and the removal flag has to follow it.
+     */
     public MatcherConfiguration addCustomMatcher(String fieldPath, Matcher<?> matcher) {
         customMatchers.put(fieldPath, matcher);
+        customMatcherPathsToIgnore.add(fieldPath);
+        return this;
+    }
+
+    /**
+     * Register a matcher that is applied <em>in addition to</em> the normal comparison of {@code fieldPath},
+     * leaving the field in the compared output.
+     */
+    public MatcherConfiguration addAdditionalCustomMatcher(String fieldPath, Matcher<?> matcher) {
+        customMatchers.put(fieldPath, matcher);
+        customMatcherPathsToIgnore.remove(fieldPath);
         return this;
     }
 
     public <V> MatcherConfiguration addCustomMatcherPattern(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        customMatcherPatterns.add(new AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>(fieldNamePattern, matcher));
+        customMatcherPatternsToIgnore.add(fieldNamePattern);
+        return this;
+    }
+
+    /**
+     * The additional-assertion counterpart of {@link #addCustomMatcherPattern}. Patterns accumulate in a list
+     * and two matcher instances never compare equal, so registering an equivalent pattern both ways leaves the
+     * fields ignored -- there is nothing to take back out.
+     */
+    public <V> MatcherConfiguration addAdditionalCustomMatcherPattern(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
         customMatcherPatterns.add(new AbstractMap.SimpleEntry<Matcher<String>, Matcher<?>>(fieldNamePattern, matcher));
         return this;
     }

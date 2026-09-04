@@ -65,11 +65,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
         if(jsonDescription){
         Gson gson = gson(matcherConfiguration, circularReferenceTypes, configuration);
         description.appendText(filterJson(gson, expected, null, null, null));
-        for (String fieldPath : matcherConfiguration.getCustomMatchers().keySet()) {
-            description.appendText("\nand ")
-                    .appendText(fieldPath).appendText(" ")
-                    .appendDescriptionOf(matcherConfiguration.getCustomMatchers().get(fieldPath));
-        }
+        describeCustomMatchers(description, matcherConfiguration);
         }
     }
 
@@ -159,6 +155,18 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
     }
 
     @Override
+    public <V> DiagnosingCustomisableMatcher<T> alsoCheck(String fieldPath, Matcher<V> matcher) {
+        matcherConfiguration.addAdditionalCustomMatcher(fieldPath, matcher);
+        return this;
+    }
+
+    @Override
+    public <V> DiagnosingCustomisableMatcher<T> alsoCheckMatching(Matcher<String> fieldNamePattern, Matcher<V> matcher) {
+        matcherConfiguration.addAdditionalCustomMatcherPattern(fieldNamePattern, matcher);
+        return this;
+    }
+
+    @Override
     public DiagnosingCustomisableMatcher<T> ignoringElementsWhere(String elementFieldPath, Matcher<?> valueMatcher) {
         matcherConfiguration.addElementIgnoreRule(elementFieldPath, valueMatcher);
         return this;
@@ -197,7 +205,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
                                IgnoredFieldsTracker tracker, AliasTracker aliasTracker, SortedFieldsTracker sortedTracker) {
         Set<String> set = new HashSet<>();
         set.addAll(matcherConfiguration.getPathsToIgnore());
-        set.addAll(matcherConfiguration.getCustomMatchers().keySet());
+        set.addAll(matcherConfiguration.getCustomMatcherPathsToIgnore());
 
         Map<String, IgnoredFieldsTracker.Reason> reasonMap = null;
         if (tracker != null) {
@@ -205,7 +213,7 @@ public class DiagnosingCustomisableMatcher<T> extends AbstractDiagnosingMatcher<
             for (String path : matcherConfiguration.getPathsToIgnore()) {
                 reasonMap.put(path, IgnoredFieldsTracker.Reason.IGNORE_PATH);
             }
-            for (String path : matcherConfiguration.getCustomMatchers().keySet()) {
+            for (String path : matcherConfiguration.getCustomMatcherPathsToIgnore()) {
                 reasonMap.put(path, IgnoredFieldsTracker.Reason.CUSTOM_MATCHER);
             }
         }

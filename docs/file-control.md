@@ -226,6 +226,9 @@ The `ignoredFields` array records **which fields were actually removed** during 
 - `IGNORE_PATTERN` — removed by `.ignoring(Matcher<String>)` applied to the JSON tree
 - `REMOVED_EMPTY` — parent became empty after its children were removed
 
+`.alsoCheck(...)` and `.alsoCheckMatching(...)` produce no entry at all: they add an assertion without
+removing anything, so there is nothing to report.
+
 **Note:** Type-based ignoring (`.ignoring(Class)`) and pattern-based ignoring (`.ignoring(Matcher)`) are applied during Gson serialization via an `ExclusionStrategy`, so individual field removals cannot be tracked. When these are configured, a `"note"` field explains this.
 
 ### aliasedFields tracking

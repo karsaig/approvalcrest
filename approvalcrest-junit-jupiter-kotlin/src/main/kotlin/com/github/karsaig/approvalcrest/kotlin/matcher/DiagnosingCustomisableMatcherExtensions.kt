@@ -53,6 +53,14 @@ fun <T, V> DiagnosingCustomisableMatcher<T>.withMatcher(fieldNamePattern: Matche
     (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).withMatcher(fieldNamePattern, matcher)
 
 @Suppress("UNCHECKED_CAST")
+fun <T, V> DiagnosingCustomisableMatcher<T>.alsoCheck(fieldPath: String, matcher: Matcher<V>): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).alsoCheck(fieldPath, matcher)
+
+@Suppress("UNCHECKED_CAST")
+fun <T, V> DiagnosingCustomisableMatcher<T>.alsoCheckMatching(fieldNamePattern: Matcher<String>, matcher: Matcher<V>): DiagnosingCustomisableMatcher<T> =
+    (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).alsoCheckMatching(fieldNamePattern, matcher)
+
+@Suppress("UNCHECKED_CAST")
 fun <T> DiagnosingCustomisableMatcher<T>.ignoringElementsWhere(elementFieldPath: String, valueMatcher: Matcher<*>): DiagnosingCustomisableMatcher<T> =
     (this as CustomisableMatcher<T, DiagnosingCustomisableMatcher<T>>).ignoringElementsWhere(elementFieldPath, valueMatcher)
 

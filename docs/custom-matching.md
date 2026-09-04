@@ -2,7 +2,7 @@
 
 # custom-matching
 
-Replace field-level comparison with a custom Hamcrest matcher.
+Assert a field with a custom Hamcrest matcher, either instead of comparing it or as well as comparing it.
 
 ## Basic Usage
 
@@ -29,6 +29,62 @@ import static org.hamcrest.Matchers.startsWith;
 assertThat(actual, sameBeanAs(expected)
     .with("address.streetName", startsWith("Via")));
 ```
+
+## Asserting *in addition to* the comparison
+
+`.with(...)` removes the field, which is what you want for a value you cannot pin down. When you *can* pin the
+value down but want a stronger guarantee about it, use `.alsoCheck(String path, Matcher<T> matcher)` instead. The
+field stays in the comparison and the matcher runs on top:
+
+```java
+import static org.hamcrest.Matchers.greaterThan;
+
+// score must still equal the value in the approved file, AND be positive
+assertThat(actual, sameJsonAsApproved()
+    .alsoCheck("score", greaterThan(0L)));
+```
+
+The difference is what reaches the approved file. Under `.with("score", ...)` the field is never written, so a
+score that later drifts from 5 to 5000 cannot fail. Under `.alsoCheck("score", ...)` it is written and compared as
+usual.
+
+It works the same way for `sameBeanAs`, where "the approved file" is instead the expected object: `.with` removes
+the field from both sides before they are diffed, `.alsoCheck` leaves it in.
+
+```java
+// address.streetName must equal expected's value AND start with "Via"
+assertThat(actual, sameBeanAs(expected)
+    .alsoCheck("address.streetName", startsWith("Via")));
+```
+
+| | in the approved file | comparison | custom matcher |
+|---|---|---|---|
+| `.with(path, m)` | removed | skipped for that field | runs |
+| `.alsoCheck(path, m)` | kept | runs | runs |
+
+`.alsoCheckMatching(namePattern, matcher)` is the same choice for the name-pattern form of
+[`.withMatcher(...)`](#match-all-fields-whose-name-matches-a-pattern).
+
+Everything else on this page — path syntax, fan-out through collections, the `*` wildcard, container matchers,
+and how a path behaves when it hits a null — applies identically to both modes. They register into the same place
+and are evaluated by the same code; only the removal differs.
+
+Registering the same path both ways is allowed and **the last call wins**. An explicit `.ignoring(path)` still
+removes the field whichever order the two are written in.
+
+**Two limitations worth knowing.**
+
+- **The pattern form cannot be undone.** Patterns accumulate and two matcher instances never compare equal, so
+  `.withMatcher(is("tags"), m1).alsoCheckMatching(is("tags"), m2)` still ignores `tags`. Only the path form has
+  last-call-wins.
+- **A field that fails both is reported once.** Custom matchers are evaluated before the content comparison and
+  the first failure stops there, so a field that both fails its matcher and differs from the approved file reports
+  the matcher mismatch only.
+
+**Switching an existing `.with(...)` call to `.alsoCheck(...)` needs the approved file regenerating.** That file
+was written while the field was being removed, so it has never contained it. Re-run with
+`-DfileMatcherUpdateInPlace=true`, which works as long as the new matcher passes — it is applied before the
+rewrite.
 
 ## Chaining with `.ignoring()`
 
@@ -359,10 +415,20 @@ A pattern is matched against the field's own name whatever its type, `Set`- and 
 One consequence of "every matching field": a pattern matching **no** field passes, since there is nothing
 to check — so a pattern that names a field wrongly reads as a green assertion rather than an error.
 
+`.withMatcher(...)` removes every field it matches, the same way `.with(...)` does. To keep those fields in the
+comparison and assert them as well, use `.alsoCheckMatching(fieldNamePattern, matcher)` — see
+[Asserting *in addition to* the comparison](#asserting-in-addition-to-the-comparison).
+
+**The pattern form has no last-call-wins.** Patterns accumulate in a list and two matcher instances never compare
+equal, so `.withMatcher(is("tags"), m1).alsoCheckMatching(is("tags"), m2)` still removes `tags`. Only the path
+form can be re-registered the other way.
+
 ## Works With
 
-- `sameBeanAs` — compare a specific field against a matcher while diffing the rest against `expected`
-- `sameJsonAsApproved` — override a field's comparison in an approval test
+- `sameBeanAs` — assert a specific field with a matcher, either instead of or as well as diffing it against `expected`
+- `sameJsonAsApproved` — the same, against the approved file
+
+Both modes work with both matchers. `sameContentAsApproved` has no fields, so none of them apply to it.
 
 ## Kotlin
 

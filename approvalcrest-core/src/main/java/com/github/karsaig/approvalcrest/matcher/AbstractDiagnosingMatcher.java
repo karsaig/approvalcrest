@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -388,6 +389,35 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             }
         }
         return asMatchableValue(value);
+    }
+
+    /**
+     * Append the custom matchers to a description, after the expected content.
+     *
+     * <p>The two modes need different wording. A matcher registered with {@code with(...)} replaces the field's
+     * comparison, so the field is absent from the content above and the clause is the only thing said about it.
+     * One registered with {@code alsoCheck(...)} leaves the field in that content, so the same clause would be
+     * ambiguous -- "and also" marks it as an extra constraint on a value already shown.
+     *
+     * <p>One pass over the map, branching per entry, so the order of the replacing clauses is exactly what it
+     * was before the additional mode existed.
+     *
+     * <p>The branch reads the registration, not the rendered content, so it recognises the two rules that name
+     * the path itself -- the replacing mode and {@code ignoring(path)}. It cannot see a field removed for some
+     * other reason: an ignored <em>parent</em>, an ignored type, or a name pattern. In those cases an additional
+     * matcher still reads "and also" while its field is absent from the content above. That affects the
+     * description only, never a verdict.
+     */
+    protected void describeCustomMatchers(Description description, MatcherConfiguration matcherConfiguration) {
+        Set<String> removedPaths = matcherConfiguration.getCustomMatcherPathsToIgnore();
+        Set<String> explicitlyIgnored = matcherConfiguration.getPathsToIgnore();
+        for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
+            String fieldPath = entry.getKey();
+            boolean stillCompared = !removedPaths.contains(fieldPath) && !explicitlyIgnored.contains(fieldPath);
+            description.appendText(stillCompared ? "\nand also " : "\nand ")
+                    .appendText(fieldPath).appendText(" ")
+                    .appendDescriptionOf(entry.getValue());
+        }
     }
 
     protected void appendFieldPath(Matcher<?> matcher, Description mismatchDescription, MatcherConfiguration matcherConfiguration) {
