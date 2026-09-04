@@ -113,13 +113,35 @@ public class JsonMatcherAlsoCheckTest extends AbstractJsonMatcherIgnoreTest {
 
     // ------------------------------------------- the discriminating behaviour
 
-    /** The point of the feature: the field is written to the file that gets approved. */
+    /**
+     * The point of the feature: the field is written to the file that gets approved. The matcher has to fail on
+     * a second run too, otherwise this passes just as well when alsoCheck does nothing at all -- a no-op also
+     * leaves the field in the file.
+     */
     @Test
     public void keepsTheFieldInTheGeneratedNotApprovedFile() {
         assertJsonMatcherWithDummyTestInfoForNotApprovedFile(
                 parent().childBean(child().childString("L1-c").childInteger(7)).build(),
                 CHILD_BEAN_JSON,
                 m -> m.alsoCheck("childBean.childInteger", greaterThan(0L)));
+
+        // the same registration is live, not inert: a matcher that cannot hold fails the assertion
+        assertJsonMatcherWithDummyTestInfo(
+                parent().childBean(child().childString("L1-c").childInteger(7)).build(), CHILD_BEAN_JSON,
+                m -> m.alsoCheck("childBean.childInteger", greaterThan(1000L)),
+                (AssertionError err) -> Assertions.assertTrue(
+                        err.getMessage().contains("childBean.childInteger"), err.getMessage()),
+                AssertionError.class);
+    }
+
+    /** actual == null takes its own branch through the evaluation, and it was changed by the boxing fix. */
+    @Test
+    public void reportsTheMatcherWhenActualIsNull() {
+        assertJsonMatcherWithDummyTestInfo(null, CHILD_BEAN_JSON,
+                m -> m.alsoCheck("childBean.childInteger", greaterThan(0L)),
+                (AssertionError err) -> Assertions.assertTrue(
+                        err.getMessage().contains("childBean.childInteger"), err.getMessage()),
+                AssertionError.class);
     }
 
     /** Contrast: {@code with} strips it, so the value is never recorded and can never fail later. */

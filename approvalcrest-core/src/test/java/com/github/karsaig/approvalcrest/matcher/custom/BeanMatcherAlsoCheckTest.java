@@ -654,6 +654,73 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
                 m -> m.withMatcher(containsString("values"), iterableWithSize(3)));
     }
 
+    // ------------------- pattern-form shapes the withMatcher suite covers
+
+    @Test
+    public void alsoCheckMatchingReachesAnObjectTypedField() {
+        ParentBean expected = parent().childBean(child().childString("L2-c")).build();
+        ParentBean actual = parent().childBean(child().childString("L2-c")).build();
+
+        assertDiagnosingMatcher(actual, expected,
+                m -> m.alsoCheckMatching(equalTo("childBean"), notNullValue()));
+    }
+
+    @Test
+    public void twoAlsoCheckMatchingPatternsBothApply() {
+        ParentBean expected = parent().parentString("L1-cherry")
+                .childBean(child().childString("L2-apple")).build();
+        ParentBean actual = parent().parentString("L1-cherry")
+                .childBean(child().childString("L2-apple")).build();
+
+        assertDiagnosingMatcher(actual, expected, m -> m
+                .alsoCheckMatching(equalTo("parentString"), startsWith("L1-"))
+                .alsoCheckMatching(equalTo("childString"), startsWith("L2-")));
+
+        // and the second one really is live
+        assertDiagnosingMatcher(actual, expected, m -> m
+                        .alsoCheckMatching(equalTo("parentString"), startsWith("L1-"))
+                        .alsoCheckMatching(equalTo("childString"), startsWith("nope")),
+                AssertionError.class, expectMessageContaining("L2-apple"));
+    }
+
+    @Test
+    public void alsoCheckMatchingCombinesWithAPathMatcher() {
+        ParentBean expected = parent().parentString("L1-cherry")
+                .childBean(child().childString("L2-apple").childInteger(7)).build();
+        ParentBean actual = parent().parentString("L1-cherry")
+                .childBean(child().childString("L2-apple").childInteger(7)).build();
+
+        assertDiagnosingMatcher(actual, expected, m -> m
+                .alsoCheck("childBean.childInteger", greaterThan(0))
+                .alsoCheckMatching(equalTo("parentString"), startsWith("L1-")));
+    }
+
+    // --------------------------------- inherited fields take the same route
+
+    /**
+     * A field declared on a superclass is reached by the same walk, and the additional mode has to leave it in
+     * the comparison there too. Mirrors BeanMatcherCustomMatchOnInheritedFieldsTest for the new methods.
+     */
+    @Test
+    public void alsoCheckReachesAnInheritedFieldAndLeavesItCompared() {
+        Derived expected = new Derived("L1-c", 7);
+        Derived actual = new Derived("L1-zzz", 7);
+
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("inheritedCount", greaterThan(0)),
+                AssertionError.class, expectMessageContaining("L1-zzz"));
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("inheritedCount", greaterThan(0))
+                .ignoring("ownTag"));
+    }
+
+    @Test
+    public void alsoCheckFailsOnAnInheritedFieldWhenTheMatcherDoesNotHold() {
+        Derived expected = new Derived("L1-c", 7);
+        Derived actual = new Derived("L1-c", 7);
+
+        assertDiagnosingMatcher(actual, expected, m -> m.alsoCheck("inheritedCount", greaterThan(100)),
+                AssertionError.class, expectMessageContaining("inheritedCount"));
+    }
+
     // ------------------------------------------------------------- describeTo
 
     /**
@@ -680,14 +747,14 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
         org.junit.jupiter.api.Assertions.assertTrue(text.contains("\"childInteger\": 7"), text);
     }
 
-    /** Asserts the message names the path and shows both sides, the way the sibling suites do. */
+    /**
+     * Asserts the rendered diff block verbatim, so the two sides cannot be swapped and still pass. The sibling
+     * failure suites assert the whole message; this pins the part that carries the verdict.
+     */
     private static java.util.function.Consumer<AssertionError> expectMismatchOn(String path, String expected, String got) {
-        return err -> {
-            String text = err.getMessage();
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains(path), text);
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains(expected), text);
-            org.junit.jupiter.api.Assertions.assertTrue(text.contains(got), text);
-        };
+        String block = path + "\nExpected: " + expected + "\n     got: " + got;
+        return err -> org.junit.jupiter.api.Assertions.assertTrue(err.getMessage().contains(block),
+                "expected to contain:" + block + "\nbut was:\n" + err.getMessage());
     }
 
     private static java.util.function.Consumer<AssertionError> expectMessageContaining(String... fragments) {
@@ -747,6 +814,23 @@ public class BeanMatcherAlsoCheckTest extends AbstractBeanMatcherTest {
 
         org.junit.jupiter.api.Assertions.assertTrue(
                 description.toString().contains("\nand also parentString"), description.toString());
+    }
+
+    static class Base {
+        int inheritedCount;
+
+        Base(int inheritedCount) {
+            this.inheritedCount = inheritedCount;
+        }
+    }
+
+    static class Derived extends Base {
+        String ownTag;
+
+        Derived(String ownTag, int inheritedCount) {
+            super(inheritedCount);
+            this.ownTag = ownTag;
+        }
     }
 
     // ------------------------------------------------------------- fixtures

@@ -3,13 +3,16 @@ package com.github.karsaig.approvalcrest.kotlin
 import com.github.karsaig.approvalcrest.jupiter.MatcherAssert.assertThat
 import com.github.karsaig.approvalcrest.kotlin.matcher.Matchers
 import com.github.karsaig.approvalcrest.kotlin.matcher.alsoCheck
+import com.github.karsaig.approvalcrest.kotlin.matcher.with
 import com.github.karsaig.approvalcrest.kotlin.matcher.alsoCheckMatching
 import com.github.karsaig.approvalcrest.kotlin.matcher.ignoringElementsWhere
 import com.github.karsaig.approvalcrest.kotlin.matcher.sortType
 import com.github.karsaig.approvalcrest.kotlin.matcher.withMachineReadableOutput
 import com.github.karsaig.approvalcrest.kotlin.matcher.withoutSerializingNulls
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.greaterThan
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInfo
 
@@ -38,6 +41,28 @@ class ExtensionFunctionsTest {
         assertThat(actual, matcher)
     }
 
+    /** The extension must forward to the real method, not merely compile: a matcher that cannot hold fails. */
+    @Test
+    fun alsoCheckThroughTheExtensionActuallyRunsTheMatcher() {
+        val expected = TestBean()
+        val actual = TestBean()
+        assertThrows(AssertionError::class.java) {
+            assertThat(actual, Matchers.sameBeanAs(expected).alsoCheck("value", equalTo(9999)))
+        }
+    }
+
+    /** And it leaves the field compared, where `with` would have removed it. */
+    @Test
+    fun alsoCheckThroughTheExtensionLeavesTheFieldCompared() {
+        val expected = TestBean(value = 42)
+        val actual = TestBean(value = 43)
+        assertThrows(AssertionError::class.java) {
+            assertThat(actual, Matchers.sameBeanAs(expected).alsoCheck("value", greaterThan(0)))
+        }
+        // the replacing form tolerates the same drift
+        assertThat(actual, Matchers.sameBeanAs(expected).with("value", greaterThan(0)))
+    }
+
     @Test
     fun alsoCheckMatchingCanBeChainedOnBeanMatcher() {
         val expected = TestBean()
@@ -47,6 +72,15 @@ class ExtensionFunctionsTest {
             .withMachineReadableOutput()
         assertNotNull(matcher)
         assertThat(actual, matcher)
+    }
+
+    @Test
+    fun alsoCheckMatchingThroughTheExtensionActuallyRunsTheMatcher() {
+        val expected = TestBean()
+        val actual = TestBean()
+        assertThrows(AssertionError::class.java) {
+            assertThat(actual, Matchers.sameBeanAs(expected).alsoCheckMatching(equalTo("name"), equalTo("nope")))
+        }
     }
 
     @Test

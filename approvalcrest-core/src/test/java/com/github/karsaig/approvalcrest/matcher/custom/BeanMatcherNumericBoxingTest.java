@@ -29,6 +29,11 @@ import static org.hamcrest.Matchers.not;
  *
  * <p>The verdict is deliberately unchanged: requiring the matcher's number to be written in the same form as the
  * value's is the documented contract, and approved files depend on it. Only the crash is fixed.
+ *
+ * <p>Written entirely against {@code with} / {@code withMatcher}, because the defect predates the additional
+ * mode and has nothing to do with it. That lets the whole suite compile and run against a tree that has no
+ * {@code alsoCheck} in it, which is what makes the pre-fix baseline meaningful. The additional mode reaches the
+ * same code and is covered in BeanMatcherAlsoCheckTest.
  */
 public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
 
@@ -68,7 +73,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void aLongFieldAgainstAnIntMatcherExplainsTheBoxingInsteadOfThrowing() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", greaterThan(100)),
+                m -> m.with("value", greaterThan(100)),
                 AssertionError.class,
                 BeanMatcherNumericBoxingTest::assertExplainsTheBoxing);
     }
@@ -76,7 +81,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void aLongFieldAgainstASatisfiableIntMatcherAlsoExplainsTheBoxing() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", greaterThan(0)),
+                m -> m.with("value", greaterThan(0)),
                 AssertionError.class,
                 BeanMatcherNumericBoxingTest::assertExplainsTheBoxing);
     }
@@ -94,7 +99,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     public void thePatternFormTakesTheSameRoute() {
         // the pattern form reads the serialised tree only, so a whole number is always a Long there
         assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
-                m -> m.alsoCheckMatching(equalTo("value"), greaterThan(0)),
+                m -> m.withMatcher(equalTo("value"), greaterThan(0)),
                 AssertionError.class,
                 err -> Assertions.assertTrue(
                         err.getMessage().contains("could not compare it"), err.getMessage()));
@@ -105,7 +110,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void allOfOverAnOrderingMatcherReportsAMismatchRatherThanThrowing() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", allOf(greaterThan(0), lessThan(100))),
+                m -> m.with("value", allOf(greaterThan(0), lessThan(100))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("value"), err.getMessage()));
     }
@@ -113,7 +118,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void bothAndOverAnOrderingMatcherReportsAMismatchRatherThanThrowing() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", both(greaterThan(0)).and(lessThan(100))),
+                m -> m.with("value", both(greaterThan(0)).and(lessThan(100))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("value"), err.getMessage()));
     }
@@ -121,7 +126,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void everyItemOverAnOrderingMatcherReportsAMismatchRatherThanThrowing() {
         assertDiagnosingMatcher(new ScoreHolder(), new ScoreHolder(),
-                m -> m.alsoCheck("scores", everyItem(greaterThan(0))),
+                m -> m.with("scores", everyItem(greaterThan(0))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("scores"), err.getMessage()));
     }
@@ -129,7 +134,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void hasItemOverAnOrderingMatcherReportsAMismatchRatherThanThrowing() {
         assertDiagnosingMatcher(new ScoreHolder(), new ScoreHolder(),
-                m -> m.alsoCheck("scores", hasItem(greaterThan(0))),
+                m -> m.with("scores", hasItem(greaterThan(0))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("scores"), err.getMessage()));
     }
@@ -143,32 +148,32 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void aCombinatorOverAnIntFieldIsNowSettledByTheJsonRetry() {
         assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
-                m -> m.alsoCheck("value", allOf(greaterThan(0L), lessThan(100L))));
+                m -> m.with("value", allOf(greaterThan(0L), lessThan(100L))));
     }
 
     // --- the matching boxing is unaffected ---
 
     @Test
     public void anIntFieldAgainstAnIntMatcherStillMatches() {
-        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.alsoCheck("value", greaterThan(0)));
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.with("value", greaterThan(0)));
     }
 
     @Test
     public void aLongFieldAgainstALongMatcherStillMatches() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", greaterThan(0L)));
+                m -> m.with("value", greaterThan(0L)));
     }
 
     @Test
     public void allOfOnTheMatchingBoxingStillMatches() {
         assertDiagnosingMatcher(new LongHolder(7L), new LongHolder(7L),
-                m -> m.alsoCheck("value", allOf(greaterThan(0L), lessThan(100L))));
+                m -> m.with("value", allOf(greaterThan(0L), lessThan(100L))));
     }
 
     @Test
     public void everyItemOnTheMatchingBoxingStillMatches() {
         assertDiagnosingMatcher(new ScoreHolder(), new ScoreHolder(),
-                m -> m.alsoCheck("scores", everyItem(greaterThan(0L))));
+                m -> m.with("scores", everyItem(greaterThan(0L))));
     }
 
     /**
@@ -177,7 +182,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
      */
     @Test
     public void anIntFieldAgainstALongMatcherIsRescuedByTheJsonRetry() {
-        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.alsoCheck("value", greaterThan(0L)));
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.with("value", greaterThan(0L)));
     }
 
     // --- a correctly written matcher that simply does not hold must say so ---
@@ -190,7 +195,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void aGenuineMismatchIsNotReportedAsABoxingProblem() {
         assertDiagnosingMatcher(new IntHolder(-5), new IntHolder(-5),
-                m -> m.alsoCheck("value", greaterThan(0L)),
+                m -> m.with("value", greaterThan(0L)),
                 AssertionError.class,
                 err -> {
                     String text = err.getMessage();
@@ -203,7 +208,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void anOrdinaryMismatchIsUnchanged() {
         assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
-                m -> m.alsoCheck("value", greaterThan(100)),
+                m -> m.with("value", greaterThan(100)),
                 AssertionError.class,
                 err -> {
                     String text = err.getMessage();
@@ -223,17 +228,17 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
     @Test
     public void aNegatedOrderingMatcherOnTheWrongBoxingCannotFail() {
         assertDiagnosingMatcher(new LongHolder(42L), new LongHolder(42L),
-                m -> m.alsoCheck("value", not(greaterThan(0))));
+                m -> m.with("value", not(greaterThan(0))));
         // the same configuration passes for a value that plainly does not satisfy it either
         assertDiagnosingMatcher(new LongHolder(-42L), new LongHolder(-42L),
-                m -> m.alsoCheck("value", not(greaterThan(0))));
+                m -> m.with("value", not(greaterThan(0))));
     }
 
     /** Written with the value's own boxing, the negation discriminates again. */
     @Test
     public void aNegatedOrderingMatcherOnTheRightBoxingStillFails() {
         assertDiagnosingMatcher(new LongHolder(42L), new LongHolder(42L),
-                m -> m.alsoCheck("value", not(greaterThan(0L))),
+                m -> m.with("value", not(greaterThan(0L))),
                 AssertionError.class,
                 err -> Assertions.assertTrue(err.getMessage().contains("value"), err.getMessage()));
     }
@@ -265,7 +270,7 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
         };
 
         assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
-                m -> m.alsoCheck("value", mistyped),
+                m -> m.with("value", mistyped),
                 AssertionError.class,
                 err -> {
                     String text = err.getMessage();
@@ -279,13 +284,13 @@ public class BeanMatcherNumericBoxingTest extends AbstractBeanMatcherTest {
 
     @Test
     public void equalToIsUnchangedAcrossBoxings() {
-        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.alsoCheck("value", equalTo(7L)));
+        assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7), m -> m.with("value", equalTo(7L)));
     }
 
     @Test
     public void equalToStillFailsOnAGenuinelyDifferentValue() {
         assertDiagnosingMatcher(new IntHolder(7), new IntHolder(7),
-                m -> m.alsoCheck("value", equalTo(9L)),
+                m -> m.with("value", equalTo(9L)),
                 AssertionError.class,
                 err -> {
                     String text = err.getMessage();

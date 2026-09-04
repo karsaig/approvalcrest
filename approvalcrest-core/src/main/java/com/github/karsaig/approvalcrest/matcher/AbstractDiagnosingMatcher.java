@@ -217,7 +217,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             if (actual == null) {
                 for (Map.Entry<String, Matcher<?>> entry : matcherConfiguration.getCustomMatchers().entrySet()) {
                     Matcher<?> matcher = entry.getValue();
-                    if (!matcher.matches(null)) {
+                    if (!matchesWithoutCastFailure(matcher, null)) {
                         appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
                         describeMismatchSafely(matcher, null, mismatchDescription);
                         appendFieldJsonSnippet(null, mismatchDescription, gson);

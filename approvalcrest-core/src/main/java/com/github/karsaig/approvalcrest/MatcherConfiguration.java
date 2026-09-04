@@ -135,11 +135,11 @@ public class MatcherConfiguration {
      * Register a matcher that replaces the comparison of {@code fieldPath}: the field is removed from the
      * compared output and only the matcher speaks for it.
      *
-     * <p>The path is added to {@link #getCustomMatcherPathsToIgnore()} here rather than being derived from the
-     * key set later, so that {@link #addAdditionalCustomMatcher} can take it back out again. Both write to the
-     * same map, so the last registration for a path wins -- and the removal flag has to follow it.
      */
     public MatcherConfiguration addCustomMatcher(String fieldPath, Matcher<?> matcher) {
+        // The path is recorded here rather than derived from the key set later, so that
+        // addAdditionalCustomMatcher can take it back out. Both write the same map, so the last registration
+        // for a path wins -- and the removal flag has to follow it.
         customMatchers.put(fieldPath, matcher);
         customMatcherPathsToIgnore.add(fieldPath);
         return this;
