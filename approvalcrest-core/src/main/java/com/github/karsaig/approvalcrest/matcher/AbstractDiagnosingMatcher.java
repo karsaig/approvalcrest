@@ -15,6 +15,7 @@ import com.google.gson.JsonElement;
 import org.hamcrest.Description;
 import org.hamcrest.DiagnosingMatcher;
 import org.hamcrest.Matcher;
+import org.hamcrest.StringDescription;
 import org.json.JSONException;
 import org.skyscreamer.jsonassert.JSONAssert;
 
@@ -218,7 +219,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                     Matcher<?> matcher = entry.getValue();
                     if (!matcher.matches(null)) {
                         appendFieldPath(matcher, mismatchDescription, matcherConfiguration);
-                        matcher.describeMismatch(null, mismatchDescription);
+                        describeMismatchSafely(matcher, null, mismatchDescription);
                         appendFieldJsonSnippet(null, mismatchDescription, gson);
                         return false;
                     }
@@ -253,7 +254,11 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                         if (jsonResult.isRight()) {
                             Object jsonValue = jsonResult.getRight();
                             if (!matcherPassesOnValue(retryEntry.matcher, jsonValue)) {
-                                if (retryEntry.kind == FailEntry.Kind.MATCHER_FAILED) {
+                                // Normally the bean value gives the better message -- <7> rather than <7L>. But
+                                // when the matcher cannot describe it at all, keeping it would replace the real
+                                // reason for the failure with a cast complaint about a boxing the user never wrote.
+                                if (retryEntry.kind == FailEntry.Kind.MATCHER_FAILED
+                                        && canDescribeMismatch(retryEntry.matcher, retryEntry.value)) {
                                     finalFailures.add(retryEntry);
                                 } else {
                                     finalFailures.add(FailEntry.jsonFailed(retryEntry.path, retryEntry.matcher, reportValueFor(retryEntry.matcher, jsonValue)));
@@ -275,7 +280,7 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                             throw e;
                         }
                         appendFieldPath(first.matcher, mismatchDescription, matcherConfiguration);
-                        first.matcher.describeMismatch(first.value, mismatchDescription);
+                        describeMismatchSafely(first.matcher, first.value, mismatchDescription);
                         appendFieldJsonSnippet(first.value, mismatchDescription, gson);
                         return false;
                     }
@@ -293,9 +298,9 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
                     // Same presentation as the path-based matchers get, so the two agree on a
                     // collection-valued field: hasSize works here as it does in with(path, matcher).
                     Object value = asMatchableValue(jsonElementToJavaValue(je));
-                    if (!valueMatcher.matches(value)) {
+                    if (!matchesWithoutCastFailure(valueMatcher, value)) {
                         mismatchDescription.appendDescriptionOf(fieldNamePattern).appendText(" ");
-                        valueMatcher.describeMismatch(value, mismatchDescription);
+                        describeMismatchSafely(valueMatcher, value, mismatchDescription);
                         appendFieldJsonSnippet(value, mismatchDescription, gson);
                         return false;
                     }
@@ -326,7 +331,77 @@ public abstract class AbstractDiagnosingMatcher<T> extends DiagnosingMatcher<T> 
             }
             return true;
         }
-        return matcher.matches(asMatchableValue(value));
+        return matchesWithoutCastFailure(matcher, asMatchableValue(value));
+    }
+
+    /**
+     * Applies the matcher, treating a failed cast as "cannot compare, so does not match".
+     *
+     * <p>Hamcrest's ordering matchers resolve their type parameter to {@code Object}, so nothing is rejected on
+     * a type check and the cast inside {@code compareTo} is what fails. A bare ordering matcher catches that
+     * itself and answers false, but several combinators -- {@code allOf}, {@code both().and()}, {@code hasItem},
+     * {@code everyItem}, {@code contains} -- call the inner matcher's {@code describeMismatch} from inside their
+     * own {@code matches}, where nothing catches it, so the exception escaped the whole assertion.
+     *
+     * <p>False is the answer the bare matcher already gives for the same pairing, so this makes the composed
+     * forms agree with it rather than changing what either means. It also lets the JSON retry run, which is what
+     * rescues an {@code int}-valued field compared against a {@code Long}-boxed matcher.
+     */
+    private static boolean matchesWithoutCastFailure(Matcher<?> matcher, Object matchable) {
+        try {
+            return matcher.matches(matchable);
+        } catch (ClassCastException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Describes why {@code value} did not match, without letting the description itself fail.
+     *
+     * <p>A Hamcrest ordering matcher catches the failed cast inside {@code matchesSafely} and answers false,
+     * but {@code describeMismatch} does not -- so {@code greaterThan(0)} against a {@code Long} threw
+     * {@code ClassCastException} while building the message for a mismatch it had already decided. The
+     * assertion failed either way; the exception replaced the explanation with a stack trace naming Hamcrest
+     * internals rather than the field.
+     *
+     * <p>Whole numbers reach a matcher as {@code Long} whenever the value comes from the serialised JSON rather
+     * than the object, so this is reachable from any ordering matcher written with an {@code int} literal. The
+     * verdict is unchanged and remains the documented one -- the matcher's number has to be written in the same
+     * form as the value's -- but the message now says so.
+     */
+    protected static void describeMismatchSafely(Matcher<?> matcher, Object value, Description mismatchDescription) {
+        // Into a scratch buffer first: a matcher may append part of its text before the cast fails, and that
+        // fragment would otherwise be left stranded in front of the replacement -- "was was <7L>".
+        StringDescription scratch = new StringDescription();
+        try {
+            matcher.describeMismatch(value, scratch);
+            mismatchDescription.appendText(scratch.toString());
+        } catch (ClassCastException e) {
+            mismatchDescription.appendText("was ").appendValue(value);
+            if (value != null) {
+                mismatchDescription.appendText(" (").appendText(value.getClass().getName())
+                        .appendText("), which this matcher cannot compare: ")
+                        .appendText(String.valueOf(e.getMessage()));
+                if (value instanceof Number) {
+                    // Naming both types is the useful part; the remedy is the same whichever pair it is, and
+                    // hard-coding a Long example would misdirect a Double or a BigDecimal.
+                    mismatchDescription.appendText(". Write the matcher's number in the same form as the"
+                            + " value's -- a whole number read from the serialised output is a Long."
+                            + " See docs/custom-matching.md");
+                }
+                mismatchDescription.appendText(".");
+            }
+        }
+    }
+
+    /** Whether this matcher can describe a mismatch against this value without failing a cast. */
+    private static boolean canDescribeMismatch(Matcher<?> matcher, Object value) {
+        try {
+            matcher.describeMismatch(value, new StringDescription());
+            return true;
+        } catch (ClassCastException e) {
+            return false;
+        }
     }
 
     /**

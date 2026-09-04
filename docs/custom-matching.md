@@ -222,6 +222,20 @@ instead falls through to the serialised JSON, where a whole number arrives as a 
 `.with("ordersByRef.*.quantity", equalTo(1))` and `equalTo(1L)` both match, while
 `.with("ordersByRef.A-1.quantity", equalTo(1))` needs the `1L` form.
 
+The same applies to ordering matchers — `greaterThan`, `lessThan`, `greaterThanOrEqualTo` and their
+counterparts — with one extra trap. A field path is resolved twice: against the object first, then against the
+serialised JSON if that did not settle it. An `int` field is therefore an `Integer` on the first attempt and a
+`Long` on the second, so `greaterThan(0L)` is answered by the retry and works. A `long` field is a `Long` on
+both, so `greaterThan(0)` matches nothing however large the value — and a field reached by
+`.withMatcher(...)` / `.alsoCheckMatching(...)` is read from the serialised tree only, so a whole number there
+is always a `Long`.
+
+**Write the matcher's number in the same form as the value's** — `greaterThan(0L)` for a `long` field, and for
+any name-pattern matcher. A `double` field needs `greaterThan(1.0)` rather than `greaterThan(1)` for the same
+reason. Getting it wrong is a mismatch, not an error, and the failure message names the value, the type it
+arrived as and the cast that failed. The same applies to a matcher wrapped in `allOf`, `both().and()`,
+`hasItem` or `everyItem`.
+
 ## Matching the Container Itself
 
 To assert a property of the container rather than of each element, point the path **at the container field** and use a container matcher. The path stops there, so no fan-out happens and the matcher receives the collection, map or array itself.
