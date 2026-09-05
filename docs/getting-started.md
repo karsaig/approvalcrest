@@ -8,12 +8,12 @@ Add approvalcrest to your project and write your first assertion in minutes.
 
 | Test framework | Artifact |
 |---|---|
-| JUnit 4 / JUnit 5 Vintage | `com.github.karsaig:approvalcrest:1.5.0` |
-| JUnit 5 & 6 Jupiter (Java) | `com.github.karsaig:approvalcrest-junit-jupiter:1.5.0` |
-| Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.5.0` |
-| TestNG | `com.github.karsaig:approvalcrest-testng:1.5.0` |
+| JUnit 4 / JUnit 5 Vintage | `com.github.karsaig:approvalcrest:1.6.0` |
+| JUnit 5 & 6 Jupiter (Java) | `com.github.karsaig:approvalcrest-junit-jupiter:1.6.0` |
+| Kotlin + JUnit 5 & 6 | `com.github.karsaig:approvalcrest-junit-jupiter-kotlin:1.6.0` |
+| TestNG | `com.github.karsaig:approvalcrest-testng:1.6.0` |
 
-One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-agent:1.5.1` is a java agent that keeps output field-based on JDK 26, where the JDK disables the `sun.misc.Unsafe` calls approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
+One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-agent:1.6.0` is a java agent that keeps output field-based on JDK 26, where the JDK disables the `sun.misc.Unsafe` calls approvalcrest uses to open locked modules. See [field-access-modes](field-access-modes.md#the-agent).
 
 ### JUnit 4 / Vintage (Maven)
 
@@ -21,7 +21,7 @@ One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-a
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -32,7 +32,7 @@ One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-a
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-junit-jupiter</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -43,7 +43,7 @@ One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-a
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-junit-jupiter-kotlin</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -54,7 +54,7 @@ One optional extra, whatever your framework: `com.github.karsaig:approvalcrest-a
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-testng</artifactId>
-    <version>1.5.0</version>
+    <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
 ```

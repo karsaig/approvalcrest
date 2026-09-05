@@ -247,7 +247,7 @@ test {
 Add one JVM argument and safe mode keeps producing field-based output on JDK 26, with no `--add-opens` and no other flags:
 
 ```
--javaagent:/path/to/approvalcrest-agent-1.5.1.jar
+-javaagent:/path/to/approvalcrest-agent-1.6.0.jar
 ```
 
 The agent does one thing: it hands approvalcrest a `java.lang.instrument.Instrumentation`, which is the supported way to open a module package. Two consequences follow: the JVM appends the agent jar to the system class path, and anything else on that classpath can read the `Instrumentation` from `ApprovalcrestAgent.getInstrumentation()`. The jar declares only `Premain-Class` — no `Can-Redefine-Classes` or `Can-Retransform-Classes` — so what it hands out cannot redefine or retransform classes, and it cannot be attached to an already-running JVM. That replaces the `sun.misc.Unsafe` trick JDK 26 disables. [JEP 451](https://openjdk.org/jeps/451) restricts only *dynamically attached* agents, so a `-javaagent` at startup does not expire.
@@ -260,7 +260,7 @@ Add the artifact and put the agent on surefire's command line:
 <dependency>
     <groupId>com.github.karsaig</groupId>
     <artifactId>approvalcrest-agent</artifactId>
-    <version>1.5.1</version>
+    <version>1.6.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -270,7 +270,7 @@ Add the artifact and put the agent on surefire's command line:
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-surefire-plugin</artifactId>
     <configuration>
-        <argLine>@{argLine} -javaagent:${settings.localRepository}/com/github/karsaig/approvalcrest-agent/1.5.1/approvalcrest-agent-1.5.1.jar</argLine>
+        <argLine>@{argLine} -javaagent:${settings.localRepository}/com/github/karsaig/approvalcrest-agent/1.6.0/approvalcrest-agent-1.6.0.jar</argLine>
     </configuration>
 </plugin>
 ```
@@ -289,7 +289,7 @@ If nothing else in your build defines `argLine`, declare an empty one in `<prope
 
 ```groovy
 dependencies {
-    testImplementation 'com.github.karsaig:approvalcrest-agent:1.5.1'
+    testImplementation 'com.github.karsaig:approvalcrest-agent:1.6.0'
 }
 
 test {
