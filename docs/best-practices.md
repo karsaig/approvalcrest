@@ -104,6 +104,8 @@ mvn test -DfileMatcherUpdateInPlace=true
 git diff > approved-files.patch
 ```
 
+If any test uses a custom matcher (`.with`, `.withMatcher`, `.alsoCheck`, `.alsoCheckMatching`), add `-DfileMatcherSkipCustomMatchersOnUpdate=true`. A failing custom matcher stops its own file being rewritten, so without this that file stays stale no matter how often the job runs. Treat that job's result as a file-producing step, not a test result — with the flag set, custom matchers do not run at all, so Job 1 is what tells you whether the regenerated files are right. See [file-control](file-control.md#custom-matchers-during-a-regeneration-run).
+
 Publish `approved-files.patch` as a CI artifact. After reviewing the patch, download and apply it:
 
 ```bash

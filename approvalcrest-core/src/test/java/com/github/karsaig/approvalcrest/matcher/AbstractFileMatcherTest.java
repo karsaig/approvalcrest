@@ -322,6 +322,15 @@ public abstract class AbstractFileMatcherTest extends AbstractTest {
         return new FileMatcherConfig(true, false, false, false, true);
     }
 
+    public static FileMatcherConfig enableInPlaceOverwriteSkippingCustomMatchers() {
+        return enableInPlaceOverwrite().withSkipCustomMatchersOnUpdate(true);
+    }
+
+    /** The skip asked for without an update running: it has to stay inert. */
+    public static FileMatcherConfig skipCustomMatchersWithoutInPlaceOverwrite() {
+        return getDefaultFileMatcherConfig().withSkipCustomMatchersOnUpdate(true);
+    }
+
     public static FileMatcherConfig enableInPlaceOverwriteNonStrict() {
         return new FileMatcherConfig(true, false, false, false, false);
     }

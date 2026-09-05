@@ -152,7 +152,11 @@ public class JsonMatcher<T> extends AbstractDiagnosingFileMatcher<T, JsonMatcher
 
         JsonElement actualJsonElement = getAsJsonElement(gson, actual);
 
-        if (areCustomMatchersMatchingBeanOrJson(actual, actualJsonElement, mismatchDescription, gson, matcherConfiguration)) {
+        // Short-circuit, so that under a regeneration run the matchers are not merely ignored but never applied:
+        // a failing one would otherwise stop the rewrite, and a bad bean path would throw out of the evaluation.
+        // The removal those registrations drive stays on regardless -- see FileMatcherConfig.
+        if (fileMatcherConfig.isCustomMatcherEvaluationSkipped()
+                || areCustomMatchersMatchingBeanOrJson(actual, actualJsonElement, mismatchDescription, gson, matcherConfiguration)) {
 
             IgnoredFieldsTracker ignoredTracker = machineReadableOutput ? new IgnoredFieldsTracker() : null;
             AliasTracker aliasTracker = machineReadableOutput ? new AliasTracker() : null;
