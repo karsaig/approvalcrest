@@ -3,14 +3,23 @@
 
 name: CI build
 
+# A change to documents only skips this workflow. The Doc snippets workflow tests README.md and docs/.
 on:
   push:
     paths-ignore:
       - 'docs/**'
-      - '*.md'
+      - '**.md'
       - '*.sh'
+      - 'LICENSE'
+      - '.gitignore'
     branches: [ master ]
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '*.sh'
+      - 'LICENSE'
+      - '.gitignore'
     branches: [ master ]
 
 jobs:
