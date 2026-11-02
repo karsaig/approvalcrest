@@ -42,7 +42,7 @@ public class ApprovalReinstateTest {
 
     private String writeCanonicalAndGetRelative(Path workDir, String content, String extension) throws IOException {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils(extension,
-                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, 2));
+                new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, 2));
         return utils.writeCanonical(content, "shared", workDir, SHARED_DIR, 2);
     }
 
@@ -55,7 +55,7 @@ public class ApprovalReinstateTest {
 
     private String computeKey(String content, String extension) {
         FileStoreMatcherUtils utils = new FileStoreMatcherUtils(extension,
-                new FileMatcherConfig(false, false, false, false, true, SHARED_DIR, true, 2));
+                new FileMatcherConfig(false, false, false, true, SHARED_DIR, true, 2));
         return utils.computeContentKey(content);
     }
 
@@ -307,6 +307,29 @@ public class ApprovalReinstateTest {
                     new InMemoryPermissions(ap(workDir, "src/test/java/y/another-approved.json"), FILE_CREATE_PERMISSONS)
             ));
             assertEquals(expected, new HashSet<>(InMemoryFsUtil.getPermissons(fs)));
+        }
+    }
+
+    @Test
+    public void dryRunCountsOnlyTheCanonicalsThatTheRealRunDeletes() throws IOException {
+        try (FileSystem fs = newFs()) {
+            Path workDir = workingDir(fs);
+            String sharedWithOtherModule = writeCanonicalAndGetRelative(workDir, "{\"v\":\"shared\"}", "json");
+            String onlyInScanDir = writeCanonicalAndGetRelative(workDir, "{\"v\":\"local\"}", "json");
+            writePointerFile(workDir, "moduleA/src/test/java/c/c1-approved.json", "c.c1", sharedWithOtherModule);
+            writePointerFile(workDir, "moduleA/src/test/java/a/a1-approved.json", "a.a1", sharedWithOtherModule);
+            writePointerFile(workDir, "moduleA/src/test/java/b/b1-approved.json", "b.b1", sharedWithOtherModule);
+            writePointerFile(workDir, "moduleA/src/test/java/d/d1-approved.json", "d.d1", onlyInScanDir);
+            writePointerFile(workDir, "moduleB/src/test/java/e/e1-approved.json", "e.e1", sharedWithOtherModule);
+            Path scanDir = workDir.resolve("moduleA/src/test/java");
+
+            ApprovalReinstate.ReinstateResult dryRun = new ApprovalReinstate(workDir, scanDir, SHARED_DIR, true).reinstate();
+            ApprovalReinstate.ReinstateResult realRun = new ApprovalReinstate(workDir, scanDir, SHARED_DIR, false).reinstate();
+
+            assertEquals("Dry run, no files changed. Reinstate complete: 4 pointer(s) replaced with standalone content, 1 canonical(s) deleted.", dryRun.toString());
+            assertEquals("Reinstate complete: 4 pointer(s) replaced with standalone content, 1 canonical(s) deleted.", realRun.toString());
+            assertTrue(Files.exists(workDir.resolve(sharedWithOtherModule)), "moduleB still points to this canonical");
+            assertFalse(Files.exists(workDir.resolve(onlyInScanDir)), "no pointer uses this canonical after the reinstate");
         }
     }
 }

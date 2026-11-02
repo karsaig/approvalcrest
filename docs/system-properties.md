@@ -2,6 +2,8 @@
 
 You can set each boolean system property of approvalcrest with `-Dproperty=value` on the command line, or with `System.setProperty(...)` in the test setup.
 
+Maven Surefire passes each `-D` property of the command line to the test JVM. On Gradle, the approvalcrest plugin does this. See [getting-started](getting-started.md#gradle).
+
 These values mean true (case-insensitive): `true`, `t`, `1`, `yes`, `y`.  
 All other values mean `false`.
 
@@ -18,7 +20,6 @@ If you set them to **different values**, approvalcrest throws `IllegalStateExcep
 | `fileMatcherUpdateInPlace` | `fMUInPlace` | `false` | When the output differs, rewrite the approved file in place from the actual output. Do not fail the test. Approvalcrest also accepts the legacy name `jsonMatcherUpdateInPlace`. | [same-json-as-approved](same-json-as-approved.md) |
 | `fileMatcherSkipCustomMatchersOnUpdate` | `fMSCMOUpdate` | `false` | Do not evaluate custom matchers (`.with`, `.withMatcher`, `.alsoCheck`, `.alsoCheckMatching`) while `fileMatcherUpdateInPlace` rewrites approved files. Then a custom matcher that fails does not stop the regeneration of the rest of the run. This property has no effect unless an in-place update runs. | [file-control](file-control.md) |
 | `fileMatcherPassOnCreate` | `fMPOnCreate` | `false` | Pass the test, and do not fail it, when there is no approved file yet. | [same-json-as-approved](same-json-as-approved.md) |
-| `useApprovedDirectory` | `uADirectory` | `false` | Store approved files in a separate `approved/` directory tree, not next to the test sources. | [file-control](file-control.md) |
 | `fileMatcherSourceRoot` | `fmSourceRoot` | `src/test/java`, or `src/test/kotlin` for the Kotlin matchers | The base directory of the test sources (relative to the project root) that contains the approved files. When tests are outside the standard directory, set it to a value such as `src/it/java`. Only the default is different for each framework. When you set the property, the value applies to all matchers. | [file-control](file-control.md) |
 | `fileMatcherSharedDir` | `fmSharedDir` | `src/test/java/shared-approvals` | The path (relative to the project root) of the directory for shared canonical files. Shared approvals use this directory. | [shared-approvals](shared-approvals.md) |
 | `fileMatcherSharedEnabled` | `fmSharedEnabled` | `false` | Turns on write-side integration. New approved files and in-place updates look for a canonical that matches, and write a pointer file instead of duplicate content. Accepts `true`/`all` for both file types, `json` or `content` for one type, and `false`/`none` for neither. | [shared-approvals](shared-approvals.md) |
@@ -33,12 +34,15 @@ If you set them to **different values**, approvalcrest throws `IllegalStateExcep
 ## Example usage
 
 ```shell
-# Update approved files in-place using the short alias
-mvn test -DfMUInPlace=true
+# Update approved files in place, with the short alias
+mvn test -DfMUInPlace=true        # Maven
+./gradlew test -DfMUInPlace=true  # Gradle
 
-# Disable null serialization globally using the short alias
-mvn test -DaSerNulls=false
+# Disable null serialisation for all tests, with the short alias
+mvn test -DaSerNulls=false        # Maven
+./gradlew test -DaSerNulls=false  # Gradle
 
 # Enable machine-readable output for AI agents
-mvn test -DfmAI=true
+mvn test -DfmAI=true        # Maven
+./gradlew test -DfmAI=true  # Gradle
 ```
